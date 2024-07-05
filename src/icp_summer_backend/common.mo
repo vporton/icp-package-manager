@@ -8,6 +8,8 @@ module {
 
     public type Version = Text;
 
+    public type VersionRange = (Version, Version);
+
     /// Common properties of package and virtual package.
     public type CommonPackageInfo = {
         name: PackageName;
@@ -17,6 +19,9 @@ module {
     };
 
     public type Location = (canister: Principal, id: Text);
+
+    /// Shared/query method name.
+    public type MethodName = Text;
 
     // FIXME: advanced choice of package versions
 
