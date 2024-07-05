@@ -23,22 +23,20 @@ module {
     /// Shared/query method name.
     public type MethodName = Text;
 
-    // FIXME: advanced choice of package versions
-
     public type RealPackageInfo = {
         base: CommonPackageInfo;
         /// it's an array, because may contain several canisters.
         wasms: [Location];
         /// Empty versions list means any version.
-        dependencies: [(PackageName, [Version])];
+        dependencies: [(PackageName, [VersionRange])];
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
-        functions: [(PackageName, [Version])];
+        functions: [(PackageName, [VersionRange])];
         permissions: HashMap.HashMap<Text, [(Principal, MethodName)]>;
     };
 
     public type VirtualPackageInfo = {
         base: CommonPackageInfo;
         /// Empty versions list means any version.
-        choice: [(PackageName, [Version])];
+        choice: [(PackageName, [VersionRange])];
     };
 }
