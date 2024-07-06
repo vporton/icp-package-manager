@@ -1,6 +1,5 @@
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
-import PackageManager "package_manager";
 
 module {
     // TODO: updating the packages.
@@ -65,7 +64,7 @@ module {
         ///
         /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
         getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
-        getPackage: query (name: Text, version: Version) -> async Common.PackageInfo;
-        packagesByFunction: query (function: Text) -> [(Common.PackageName, Common.Version)];
+        getPackage: query (name: Text, version: Version) -> async PackageInfo;
+        packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
     };
 }

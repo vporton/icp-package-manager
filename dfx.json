@@ -2,7 +2,12 @@
   "canisters": {
     "indirect_caller": {
       "type": "motoko",
-      "main": "src/indirect_caller.mo"
+      "main": "src/icp_summer_backend/indirect_caller.mo"
+    },
+    "package_manager": {
+      "type": "motoko",
+      "main": "src/icp_summer_backend/package_manager.mo",
+      "dependencies": ["indirect_caller"]
     },
     "icp_summer_frontend": {
       "dependencies": [
