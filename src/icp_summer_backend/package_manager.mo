@@ -3,13 +3,15 @@ import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
+import Array "mo:base/Array";
 import Common "common";
 
 shared({caller}) actor class PackageManager() = this {
-    stable let owners: HashMap.HashMap<Principal, ()> = HashMap.fromIter([caller].vals());
+    stable let owners: HashMap.HashMap<Principal, ()> =
+        HashMap.fromIter<Principal, ()>([(caller, ())].vals(), 1, Principal.equal, Principal.hash);
 
     func onlyOwner(caller: Principal) {
-        if (not owners.hasKey(caller)) {
+        if (owners.get(caller) == null) {
             Debug.trap("not the owner");
         }
     };
@@ -24,7 +26,7 @@ shared({caller}) actor class PackageManager() = this {
     type canister_id = Principal;
     type wasm_module = Blob;
 
-    type CanistorCreator = actor {
+    type CanisterCreator = actor {
         create_canister : shared { settings : ?canister_settings } -> async {
             canister_id : canister_id;
         };
@@ -39,14 +41,16 @@ shared({caller}) actor class PackageManager() = this {
     public shared({caller}) func installPackage({
         part: Common.RepositoryPartitionRO;
         packageName: Common.PackageName;
-        version: Common.PackageVersion;
+        version: Common.Version;
     })
-        : async InstallationId
+        : async Common.InstallationId
     {
-        let package = part.getPackage(packageName);
+        // TODO: Install dependencies.
+
+        let package = await part.getPackage(packageName);
         let IC: CanisterCreator = actor("aaaaa-aa");
 
-        let canisters = Buffer.new(Array.size(package.wasms));
+        let canisters = Buffer.Buffer(Array.size(package.wasms));
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModuleLocation in package.base.wasms) {
             // TODO: cycles (and monetization)

@@ -31,7 +31,7 @@ module {
         dependencies: [(PackageName, [VersionRange])];
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
-        permissions: HashMap.HashMap<Text, [(Principal, MethodName)]>;
+        permissions: [(Text, [(Principal, MethodName)])];
     };
 
     public type VirtualPackageInfo = {
@@ -47,9 +47,9 @@ module {
         };
     };
 
-    type InstallationId = Nat;
+    public type InstallationId = Nat;
 
-    type RepositoryIndexRO = actor {
+    public type RepositoryIndexRO = actor {
         getPartitions: query () -> async [RepositoryPartitionRO];
         getRepositoryName: query () -> async Text;
         getRepositoryInfoURL: query () -> async Text;
@@ -58,7 +58,7 @@ module {
         getReleases: query () -> async [(Text, ?Text)];
     };
 
-    type RepositoryPartitionRO = actor {
+    public type RepositoryPartitionRO = actor {
         /// Returns versions with optional other version name
         /// (like `("stable", ?"2.0.4")`).
         ///
