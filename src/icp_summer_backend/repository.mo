@@ -1,3 +1,5 @@
+import Common "common";
+
 actor {
-    
+
 }

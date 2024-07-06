@@ -1,9 +1,5 @@
 {
   "canisters": {
-    "icp_summer_backend": {
-      "main": "src/icp_summer_backend/main.mo",
-      "type": "motoko"
-    },
     "icp_summer_frontend": {
       "dependencies": [
         "icp_summer_backend"
