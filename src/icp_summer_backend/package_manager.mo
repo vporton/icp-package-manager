@@ -38,6 +38,7 @@ shared({caller}) actor class PackageManager() = this {
         } -> async ();
     };
 
+    /// We don't install dependencies here (see `specs.odt`).
     public shared({caller}) func installPackage({
         part: Common.RepositoryPartitionRO;
         packageName: Common.PackageName;
