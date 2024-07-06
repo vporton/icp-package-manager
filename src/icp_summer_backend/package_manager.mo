@@ -5,6 +5,8 @@ import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
+import Nat "mo:base/Nat";
+import Int "mo:base/Int";
 import Common "common";
 
 shared({caller}) actor class PackageManager() = this {
@@ -20,7 +22,7 @@ shared({caller}) actor class PackageManager() = this {
     };
 
     stable let installedPackages: HashMap.HashMap<Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Nat.hash);
+        HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     stable let installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
         HashMap.fromIter([].vals(), 0, Text.equal, Text.hash);
