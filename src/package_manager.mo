@@ -46,6 +46,12 @@ shared({caller}) actor class PackageManager = this {
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)
             });
+            await IC.install_code({
+                arg = to_candid();
+                wasm_module : wasm_module;
+                mode : { #reinstall; #upgrade; #install };
+                canister_id : canister_id;
+            });
         };
         //
         for (wasm in package.wasms) {
