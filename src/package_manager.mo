@@ -40,7 +40,7 @@ shared({caller}) actor class PackageManager = this {
 
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasm in package.wasms) {
-            await IC.create_canister({
+            let {canister_id} = await IC.create_canister({
                 freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
                 controllers = null; // We are the controller.
                 compute_allocation = null; // TODO
