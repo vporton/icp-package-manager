@@ -26,7 +26,6 @@ module {
     public type MethodName = Text;
 
     public type RealPackageInfo = {
-        base: CommonPackageInfo;
         /// it's an array, because may contain several canisters.
         wasms: [Location];
         /// Empty versions list means any version.
@@ -37,14 +36,16 @@ module {
     };
 
     public type VirtualPackageInfo = {
-        base: CommonPackageInfo;
         /// Empty versions list means any version.
         choice: [(PackageName, [VersionRange])];
     };
 
     public type PackageInfo = {
-        #real : RealPackageInfo;
-        #virtual : VirtualPackageInfo;
+        base: CommonPackageInfo;
+        specific: {
+            #real : RealPackageInfo;
+            #virtual : VirtualPackageInfo;
+        };
     };
 
     type InstallationId = Nat;
