@@ -1,5 +1,9 @@
 {
   "canisters": {
+    "indirect_caller": {
+      "type": "motoko",
+      "main": "src/indirect_caller.mo"
+    },
     "icp_summer_frontend": {
       "dependencies": [
         "icp_summer_backend"
@@ -25,7 +29,7 @@
   "defaults": {
     "build": {
       "args": "",
-      "packtool": ""
+      "packtool": "mops sources"
     }
   },
   "output_env_file": ".env",

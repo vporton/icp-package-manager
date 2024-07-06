@@ -1,5 +1,10 @@
+import IC "mo:base/ExperimentalInternetComputer";
+
 actor {
-    public shared func callCanisters(canister: Principal, methods: [{name: Text; cbor: Blob}]): () {
-        // TODO
+    /// Call methods in the given order and don't return.
+    public shared func callCanisters(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        for (method in methods.vals()) {
+            ignore await IC.call(method.canister, method.name, method.data); 
+        };
     }
 }
