@@ -4,11 +4,34 @@ import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
+import Text "mo:base/Text";
 import Common "common";
 
 shared({caller}) actor class PackageManager() = this {
     stable let owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter<Principal, ()>([(caller, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter([(caller, ())].vals(), 1, Principal.equal, Principal.hash);
+
+    /// TODO: Move to `common.mo`.
+    type InstalledPackageInfo = {
+        id: Common.InstallationId;
+        name: Common.PackageName;
+        version: Common.Version;
+        modules: [Principal];
+    };
+
+    stable let installedPackages: HashMap.HashMap<Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>> =
+        HashMap.fromIter([].vals(), 0, Nat.equal, Nat.hash);
+
+    stable let installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
+        HashMap.fromIter([].vals(), 0, Text.equal, Text.hash);
+
+    /// TODO: Move to `common.mo`.
+    type HalfInstalledPackageInfo = {
+        shouldHaveModules: Nat;
+        package: InstalledPackageInfo;
+    };
+
+    stable let halfInstalledPackages: Buffer.Buffer<HalfInstalledPackageInfo> = Buffer.Buffer(1);
 
     func onlyOwner(caller: Principal) {
         if (owners.get(caller) == null) {
