@@ -80,7 +80,7 @@ shared({caller}) actor class PackageManager() = this {
                     (
                         {
                             canister = canisters[i];
-                            name = "init";
+                            name = Common.NamespacePrefix # "init";
                             data = to_candid({
                                 user = caller;
                                 previousCanisters = Array.subArray(canisters, 0, i);
