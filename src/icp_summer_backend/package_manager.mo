@@ -84,7 +84,7 @@ shared({caller}) actor class PackageManager() = this {
                                 user = caller;
                                 previousCanisters = Array.subArray(canisters, 0, i);
                                 packageManager = this;
-                            })
+                            });
                         }
                     );
                 },
