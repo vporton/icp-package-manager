@@ -73,8 +73,7 @@ shared({caller}) actor class PackageManager() = this {
             });
             canisters.add(canister_id);
         };
-        // FIXME: If an `init` method is missing in a canister, then the rest are not called, too.
-        indirect_caller.call(
+        indirect_caller.callIgnoringMissing(
             Iter.toArray(Iter.map(
                 canisters.keys(),
                 func (i) {
