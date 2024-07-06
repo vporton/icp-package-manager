@@ -79,8 +79,7 @@ shared({caller}) actor class PackageManager = this {
                         }
                     );
                 },
-            ));
+            )),
         );
-        // TODO
     };
 }}
