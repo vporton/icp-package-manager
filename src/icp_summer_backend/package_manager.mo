@@ -61,7 +61,8 @@ shared({caller}) actor class PackageManager() = this {
             });
             let wasmModuleSourcePartition: CanDBPartition = actor(wasmModuleLocation.0);
             let ?(#blob wasm_module) = wasmModuleSourcePartition.get({sk = wasmModuleLocation.1}) else {
-                // TODO: Delete installed modules and start anew.
+                // TODO: Delete installed modules and start anew. (Should we deinit them?)
+                // TODO: What to do if deleting fails, too? Should track partly installed and use frontend to delete.
                 Debug.trap("package WASM code is not available");
             };
             await IC.install_code({
