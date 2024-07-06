@@ -45,8 +45,6 @@ shared({caller}) actor class PackageManager() = this {
     })
         : async Common.InstallationId
     {
-        // TODO: Install dependencies.
-
         let package = await part.getPackage(packageName);
         let IC: CanisterCreator = actor("aaaaa-aa");
 
