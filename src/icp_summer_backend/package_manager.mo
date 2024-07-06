@@ -90,5 +90,7 @@ shared({caller}) actor class PackageManager() = this {
                 },
             )),
         );
+
+        // TODO: Write to the local registry of installed packages.
     };
 }
