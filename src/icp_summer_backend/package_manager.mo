@@ -76,16 +76,14 @@ shared({caller}) actor class PackageManager() = this {
         indirect_caller.callIgnoringMissing(
             Iter.toArray(Iter.map(
                 canisters.keys(),
-                func (i) {
-                    {
-                        canister = canisters[i];
-                        name = Common.NamespacePrefix # "init";
-                        data = to_candid({
-                            user = caller;
-                            previousCanisters = Array.subArray(canisters, 0, i);
-                            packageManager = this;
-                        });
-                    }
+                func (i) = {
+                    canister = canisters[i];
+                    name = Common.NamespacePrefix # "init";
+                    data = to_candid({
+                        user = caller;
+                        previousCanisters = Array.subArray(canisters, 0, i);
+                        packageManager = this;
+                    });
                 },
             )),
         );
