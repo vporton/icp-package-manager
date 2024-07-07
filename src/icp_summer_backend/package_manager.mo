@@ -8,6 +8,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Common "common";
+import indirect_caller "canister:indirect_caller";
 
 shared({caller}) actor class PackageManager() = this {
     stable var _ownersSave: [(Principal, ())] = [];
@@ -40,7 +41,13 @@ shared({caller}) actor class PackageManager() = this {
         modules: Buffer.Buffer<Principal>;
     };
 
-    stable let halfInstalledPackages: Buffer.Buffer<HalfInstalledPackageInfo> = Buffer.Buffer(1);
+    stable var _halfInstalledPackagesSave: [{
+        shouldHaveModules: Nat;
+        name: Common.PackageName;
+        version: Common.Version;
+        modules: [Principal];
+    }] = [];
+    var halfInstalledPackages: Buffer.Buffer<HalfInstalledPackageInfo> = Buffer.Buffer(1);
 
     func onlyOwner(caller: Principal) {
         if (owners.get(caller) == null) {
@@ -78,20 +85,21 @@ shared({caller}) actor class PackageManager() = this {
     })
         : async Common.InstallationId
     {
-        let package = await part.getPackage(packageName);
+        let package = await part.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
         let numPackages = Array.size(realPackage.wasms);
 
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
         let ourHalfInstalled = {
             shouldHaveModules = numPackages;
-            id = nextInstallationId;
+            id = installationId;
             name = package.base.name;
             version = package.base.version;
             modules = Buffer.Buffer<Principal>(numPackages);
         };
-        nextInstallationId += 1;
         halfInstalledPackages.add(ourHalfInstalled);
 
         let IC: CanisterCreator = actor("aaaaa-aa");
@@ -121,14 +129,14 @@ shared({caller}) actor class PackageManager() = this {
             canisters.add(canister_id);
         };
         indirect_caller.callIgnoringMissing(
-            Iter.toArray(Iter.map(
-                canisters.keys(),
-                func (i) = {
-                    canister = canisters[i];
+            Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
+                Buffer.toArray(canisters).keys(), // TODO: inefficient?
+                func (i: Nat) = {
+                    canister = canisters.get(i);
                     name = Common.NamespacePrefix # "init";
                     data = to_candid({
                         user = caller;
-                        previousCanisters = Array.subArray(canisters, 0, i);
+                        previousCanisters = Array.subArray<Principal>(Buffer.toArray(canisters), 0, i);
                         packageManager = this;
                     });
                 },
@@ -136,6 +144,7 @@ shared({caller}) actor class PackageManager() = this {
         );
 
         // TODO: Write to the local registry of installed packages.
+        installationId;
     };
 
     system func preupgrade() {
@@ -151,6 +160,17 @@ shared({caller}) actor class PackageManager() = this {
         ));
 
         _installedPackagesByNameSave := Iter.toArray(installedPackagesByName.entries());
+
+        // TODO:
+        // _halfInstalledPackagesSave := Iter.toArray(Iter.map(
+        //     halfInstalledPackages,
+        //     {
+        //         shouldHaveModules: Nat;
+        //         name: Common.PackageName;
+        //         version: Common.Version;
+        //         modules: [Principal];
+        //     }
+        // ));
     };
 
     system func postupgrade() {
@@ -183,5 +203,8 @@ shared({caller}) actor class PackageManager() = this {
             Text.hash,
         );
         _installedPackagesByNameSave := []; // Free memory.
+
+        // halfInstalledPackages := TODO;
+        _halfInstalledPackagesSave := []; // Free memory.
     };
 }
