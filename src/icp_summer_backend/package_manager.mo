@@ -8,6 +8,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Common "common";
+import CanDBPartition "CanDBPartition";
 import indirect_caller "canister:indirect_caller";
 
 shared({caller}) actor class PackageManager() = this {
@@ -116,7 +117,7 @@ shared({caller}) actor class PackageManager() = this {
                 memory_allocation = null; // TODO (a low priority task)
             });
             let wasmModuleSourcePartition: CanDBPartition = actor(wasmModuleLocation.0);
-            let ?(#blob wasm_module) = wasmModuleSourcePartition.get({sk = wasmModuleLocation.1}) else {
+            let ?(#blob wasm_module) = await wasmModuleSourcePartition.get({sk = wasmModuleLocation.1}) else {
                 // TODO: Delete installed modules and start anew. (Should we deinit them?)
                 // TODO: What to do if deleting fails, too? Should track partly installed and use frontend to delete.
                 Debug.trap("package WASM code is not available");
