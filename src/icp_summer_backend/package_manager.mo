@@ -25,8 +25,8 @@ shared({caller}) actor class PackageManager() = this {
         modules: [Principal];
     };
 
-    stable var _installedPackagesSave: [(Common.InstallationId, [InstalledPackageInfo])] = [];
-    var installedPackages: HashMap.HashMap<Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>> =
+    stable var _installedPackagesSave: [(Common.InstallationId, InstalledPackageInfo)] = [];
+    var installedPackages: HashMap.HashMap<Common.InstallationId, InstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     stable var _installedPackagesByNameSave: [(Common.PackageName, [Common.InstallationId])] = [];
@@ -41,13 +41,14 @@ shared({caller}) actor class PackageManager() = this {
         modules: Buffer.Buffer<Principal>;
     };
 
-    stable var _halfInstalledPackagesSave: [{
+    stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         shouldHaveModules: Nat;
         name: Common.PackageName;
         version: Common.Version;
         modules: [Principal];
-    }] = [];
-    var halfInstalledPackages: Buffer.Buffer<HalfInstalledPackageInfo> = Buffer.Buffer(1);
+    })] = [];
+    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
+        HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     func onlyOwner(caller: Principal) {
         if (owners.get(caller) == null) {
@@ -100,11 +101,11 @@ shared({caller}) actor class PackageManager() = this {
             version = package.base.version;
             modules = Buffer.Buffer<Principal>(numPackages);
         };
-        halfInstalledPackages.add(ourHalfInstalled);
+        halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         // let IC: CanisterCreator = actor("aaaaa-aa"); // FIXME: Weird, can it compile withotu this?
 
-        let canisters = Buffer.Buffer<Principal>(numPackages);
+        // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModuleLocation in realPackage.wasms.vals()) {
             // TODO: cycles (and monetization)
@@ -121,43 +122,45 @@ shared({caller}) actor class PackageManager() = this {
                 Debug.trap("package WASM code is not available");
             };
             await IC.install_code({
-                arg = to_candid({user = caller; previousCanisters = canisters; packageManager = this});
+                arg = to_candid({user = caller; previousCanisters = ourHalfInstalled.modules; packageManager = this});
                 wasm_module;
                 mode = #install;
                 canister_id;
             });
-            canisters.add(canister_id);
+            // canisters.add(canister_id);
+            ourHalfInstalled.modules.add(canister_id);
         };
         indirect_caller.callIgnoringMissing(
             Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
-                Buffer.toArray(canisters).keys(), // TODO: inefficient?
+                Buffer.toArray(ourHalfInstalled.modules).keys(), // TODO: inefficient?
                 func (i: Nat) = {
-                    canister = canisters.get(i);
+                    canister = ourHalfInstalled.modules.get(i);
                     name = Common.NamespacePrefix # "init";
                     data = to_candid({
                         user = caller;
-                        previousCanisters = Array.subArray<Principal>(Buffer.toArray(canisters), 0, i);
+                        previousCanisters = Array.subArray<Principal>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
                         packageManager = this;
                     });
                 },
             )),
         );
 
-        // TODO: Write to the local registry of installed packages.
+        installedPackages.put(installationId, {
+            id = installationId;
+            name = package.base.name;
+            version = package.base.version;
+            modules = Buffer.toArray(ourHalfInstalled.modules);
+        });
+        halfInstalledPackages.delete(installationId);
+        // TODO: installedPackagesByName
+
         installationId;
     };
 
     system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
 
-        _installedPackagesSave := Iter.toArray(Iter.map<
-            (Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>), (Common.InstallationId, [InstalledPackageInfo])
-        >(
-            installedPackages.entries(),
-            func (p: (Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>))
-                : (Common.InstallationId, [InstalledPackageInfo])
-                = (p.0, Buffer.toArray(p.1)),
-        ));
+        _installedPackagesSave := Iter.toArray(installedPackages.entries());
 
         _installedPackagesByNameSave := Iter.toArray(installedPackagesByName.entries());
 
@@ -182,14 +185,8 @@ shared({caller}) actor class PackageManager() = this {
         );
         _ownersSave := []; // Free memory.
 
-        installedPackages := HashMap.fromIter(Iter.map<
-            (Common.InstallationId, [InstalledPackageInfo]), (Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>)
-        >(
+        installedPackages := HashMap.fromIter(
             _installedPackagesSave.vals(),
-            func (p: (Common.InstallationId, [InstalledPackageInfo]))
-                : (Common.InstallationId, Buffer.Buffer<InstalledPackageInfo>)
-                = (p.0, Buffer.fromArray(p.1))
-            ),
             Array.size(_installedPackagesSave),
             Nat.equal,
             Int.hash,
