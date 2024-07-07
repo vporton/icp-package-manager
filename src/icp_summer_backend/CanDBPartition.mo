@@ -1,5 +1,6 @@
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
+import Debug "mo:base/Debug";
 import CA "mo:candb/CanisterActions";
 import CanDB "mo:candb/CanDB";
 import Entity "mo:candb/Entity";

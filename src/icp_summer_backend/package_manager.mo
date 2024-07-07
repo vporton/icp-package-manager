@@ -7,6 +7,7 @@ import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
+import Blob "mo:base/Blob";
 import Common "common";
 import CanDBPartition "CanDBPartition";
 import indirect_caller "canister:indirect_caller";
@@ -104,26 +105,36 @@ shared({caller}) actor class PackageManager() = this {
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        // let IC: CanisterCreator = actor("aaaaa-aa"); // FIXME: Weird, can it compile withotu this?
+        let IC: CanisterCreator = actor("aaaaa-aa");
 
         // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModuleLocation in realPackage.wasms.vals()) {
             // TODO: cycles (and monetization)
             let {canister_id} = await IC.create_canister({
-                freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                controllers = null; // We are the controller.
-                compute_allocation = null; // TODO
-                memory_allocation = null; // TODO (a low priority task)
+                settings = ?{
+                    freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                    controllers = null; // We are the controller.
+                    compute_allocation = null; // TODO
+                    memory_allocation = null; // TODO (a low priority task)
+                }
             });
-            let wasmModuleSourcePartition: CanDBPartition = actor(wasmModuleLocation.0);
-            let ?(#blob wasm_module) = await wasmModuleSourcePartition.get({sk = wasmModuleLocation.1}) else {
+            let wasmModuleSourcePartition: CanDBPartition.CanDBPartition =
+                actor(Principal.toText(wasmModuleLocation.0));
+            let ?(#blob wasm_module) =
+                await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "p")
+            else {
                 // TODO: Delete installed modules and start anew. (Should we deinit them?)
                 // TODO: What to do if deleting fails, too? Should track partly installed and use frontend to delete.
                 Debug.trap("package WASM code is not available");
             };
+            let installArg = to_candid({
+                user = caller;
+                previousCanisters = Buffer.toArray(ourHalfInstalled.modules);
+                packageManager = this;
+            });
             await IC.install_code({
-                arg = to_candid({user = caller; previousCanisters = ourHalfInstalled.modules; packageManager = this});
+                arg = Blob.toArray(installArg);
                 wasm_module;
                 mode = #install;
                 canister_id;

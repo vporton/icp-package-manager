@@ -12,12 +12,20 @@ import CanDBPartition "CanDBPartition";
 import Utils "mo:candb/Utils";
 
 shared ({caller = owner}) actor class CanDBIndex() = this {
+  let maxSize = #heapSize(500_000_000);
+
   stable var pkToCanisterMap = CanisterMap.init();
 
   stable var initialized: Bool = false;
 
+  private func onlyOwner(caller: Principal) {
+    if (caller != owner) {
+      Debug.trap("not an owner");
+    }
+  };
+
   public shared({caller}) func init(): async () {
-    checkCaller(caller);
+    onlyOwner(caller);
     
     if (initialized) {
       Debug.trap("already initialized");
@@ -45,7 +53,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleUserCanister;
-        sizeLimit = #heapSize 500_000_000;
+        sizeLimit = maxSize;
       };
       owners = ?[owner, Principal.fromActor(this)]; // TODO: need to be our own owner?
     });
@@ -112,6 +120,16 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
     });
   };
 
+  public shared({caller}) func autoScaleCanister(pk: Text): async Text {
+    onlyOwner(caller);
+
+    if (Utils.callingCanisterOwnsPK(caller, pkToCanisterMap, pk)) {
+      await* createStorageCanister(pk, [owner]); // FIXME: Should include self?
+    } else {
+      Debug.trap("error, called by non-controller=" # debug_show(caller));
+    };
+  };
+
   func createStorageCanister(pk: Text, controllers: [Principal]): async* Text {
     Debug.print("creating new storage canister with pk=" # pk);
     // Pre-load 300 billion cycles for the creation of a new storage canister
@@ -127,7 +145,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
       owners = ?controllers;
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
-    Battery.addCanDBPartition(newStorageCanisterPrincipal);
+    // Battery.addCanDBPartition(newStorageCanisterPrincipal); // FIXME
     await CA.updateCanisterSettings({
       canisterId = newStorageCanisterPrincipal;
       settings = {
