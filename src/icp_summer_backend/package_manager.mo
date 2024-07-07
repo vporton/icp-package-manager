@@ -102,7 +102,7 @@ shared({caller}) actor class PackageManager() = this {
         };
         halfInstalledPackages.add(ourHalfInstalled);
 
-        let IC: CanisterCreator = actor("aaaaa-aa");
+        // let IC: CanisterCreator = actor("aaaaa-aa"); // FIXME: Weird, can it compile withotu this?
 
         let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
