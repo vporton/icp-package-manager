@@ -79,6 +79,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
 
   // Repository data methods //
 
+  // FIXME: Can a repository have the same named real package and a virtual package (of different versions)?
   type FullPackageInfo = {
     packages: [(Common.Version, Common.PackageInfo)];
     versionsMap: [(Common.Version, Common.Version)];
