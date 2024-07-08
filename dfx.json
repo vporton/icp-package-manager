@@ -9,9 +9,9 @@
       "main": "src/icp_summer_backend/package_manager.mo",
       "dependencies": ["indirect_caller"]
     },
-    "CanDBIndex": {
+    "RepositoryIndex": {
       "type": "motoko",
-      "main": "src/icp_summer_backend/CanDBIndex.mo"
+      "main": "src/icp_summer_backend/RepositoryIndex.mo"
     },
     "icp_summer_frontend": {
       "dependencies": [

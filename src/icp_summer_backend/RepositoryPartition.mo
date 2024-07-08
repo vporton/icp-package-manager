@@ -6,12 +6,15 @@ import CanDB "mo:candb/CanDB";
 import Entity "mo:candb/Entity";
 import RBT "mo:stable-rbtree/StableRBTree";
 import Itertools "mo:itertools/Iter";
+import Common "common";
 
-shared ({ caller = owner }) actor class CanDBPartition({
+shared ({ caller = owner }) actor class RepositoryPartition({
   partitionKey: Text;
   scalingOptions: CanDB.ScalingOptions;
   owners: [Principal]
 }) {
+  // CanDB paritition methods //
+
   private func onlyOwner(caller: Principal) {
     if (Itertools.find(owners.vals(), func (cur: Principal): Bool { caller == cur }) == null) {
       Debug.trap("not an owner");
@@ -64,4 +67,29 @@ shared ({ caller = owner }) actor class CanDBPartition({
       RBT.put(map, Text.compare, subkey, attribute);
     }});
   };
+
+  // Repository data methods //
+
+  type FullPackageInfo = {
+    packages: [(Common.Version, Common.PackageInfo)];
+    versionsMap: [(Common.Version, Common.Version)];
+  };
+
+  /// TODO: used for testing, remove
+  stable var test: ?FullPackageInfo = null;
+
+  // query func getPackageVersions(name: Text): async [(Version, ?Version)] {
+  //   // TODO: Need to store all versions of a package in a single object for efficient enumeration.
+  // };
+
+  // query func getPackageVersionsMap(name: Text): async [(Version, Version)] {
+  // };
+
+  // query func getPackage(name: Text, version: Version): async PackageInfo {
+
+  // };
+
+  // query func packagesByFunction(function: Text): async [(Common.PackageName, Common.Version)] {
+
+  // };
 }

@@ -2,16 +2,17 @@ import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
-
+import Iter "mo:base/Iter";
 import Buffer "mo:stablebuffer/StableBuffer";
-
 import Admin "mo:candb/CanDBAdmin";
 import CA "mo:candb/CanisterActions";
 import CanisterMap "mo:candb/CanisterMap";
-import CanDBPartition "CanDBPartition";
+import RepositoryPartition "RepositoryPartition";
 import Utils "mo:candb/Utils";
 
-shared ({caller = owner}) actor class CanDBIndex() = this {
+shared ({caller = owner}) actor class RepositoryIndex() = this {
+  // CanDB index methods //
+
   let maxSize = #heapSize(500_000_000);
 
   stable var pkToCanisterMap = CanisterMap.init();
@@ -49,7 +50,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
   func createUserCanister(pk: Text, controllers: ?[Principal]): async Text {
     Debug.print("creating new user canister with pk=" # pk);
     Cycles.add<system>(300_000_000_000);
-    let newUserCanister = await CanDBPartition.CanDBPartition({
+    let newUserCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleUserCanister;
@@ -136,7 +137,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
     // Note that canister creation costs 100 billion cycles, meaning there are 200 billion
     // left over for the new canister when it is created
     Cycles.add<system>(300_000_000_000);
-    let newStorageCanister = await CanDBPartition.CanDBPartition({
+    let newStorageCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleCanister;
@@ -145,7 +146,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
       owners = controllers;
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
-    // Battery.addCanDBPartition(newStorageCanisterPrincipal); // FIXME
+    // Battery.addRepositoryPartition(newStorageCanisterPrincipal); // FIXME
     await CA.updateCanisterSettings({
       canisterId = newStorageCanisterPrincipal;
       settings = {
@@ -161,5 +162,32 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
 
     Debug.print("new storage canisterId=" # newStorageCanisterId);
     newStorageCanisterId;
+  };
+
+  // Repository index methods //
+
+  stable var repositoryName: Text = "";
+
+  stable var repositoryInfoURL: Text = "";
+
+  stable var releases: [(Text, ?Text)] = [];
+
+  public query func getRepositoryPartitions(): async [Principal] {
+    Iter.toArray(Iter.map(
+      getCanisterIdsIfExists("main").vals(),
+      func (t: Text): Principal = Principal.fromText(t),
+    ));
+  };
+
+  public query func getRepositoryName(): async Text {
+    repositoryName;
+  };
+
+  public query func getRepositoryInfoURL(): async Text {
+    repositoryInfoURL;
+  };
+
+  public query func getReleases(): async [(Text, ?Text)] {
+    releases;
   };
 }

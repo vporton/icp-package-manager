@@ -52,7 +52,7 @@ module {
     public type InstallationId = Nat;
 
     public type RepositoryIndexRO = actor {
-        getPartitions: query () -> async [RepositoryPartitionRO];
+        getRepositoryPartitions: query () -> async [RepositoryPartitionRO];
         getRepositoryName: query () -> async Text;
         getRepositoryInfoURL: query () -> async Text;
         /// Returns releases with optional other release name

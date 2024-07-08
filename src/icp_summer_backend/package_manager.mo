@@ -9,7 +9,7 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Common "common";
-import CanDBPartition "CanDBPartition";
+import RepositoryPartition "RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
 
 shared({caller}) actor class PackageManager() = this {
@@ -119,7 +119,7 @@ shared({caller}) actor class PackageManager() = this {
                     memory_allocation = null; // TODO (a low priority task)
                 }
             });
-            let wasmModuleSourcePartition: CanDBPartition.CanDBPartition =
+            let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
                 actor(Principal.toText(wasmModuleLocation.0));
             let ?(#blob wasm_module) =
                 await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "p")
