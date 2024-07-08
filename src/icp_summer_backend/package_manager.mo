@@ -12,6 +12,7 @@ import Common "common";
 import RepositoryPartition "RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
 
+/// TODO: Methods to query for all installed packages.
 shared({caller}) actor class PackageManager() = this {
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
