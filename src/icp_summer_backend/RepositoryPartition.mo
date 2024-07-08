@@ -62,8 +62,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     await* CanDB.put(db, {sk; attributes});
   };
 
-  public shared({caller}) func putAttribute(sk: Text, subkey: Entity.AttributeKey, attribute: Entity.AttributeValue): async () {
-    onlyOwner(caller);
+  private func _putAttribute(sk: Text, subkey: Entity.AttributeKey, attribute: Entity.AttributeValue) {
     ignore CanDB.update(db, { sk; updateAttributeMapFunction = func(old: ?Entity.AttributeMap): Entity.AttributeMap {
       let map = switch (old) {
         case (?old) { old };
@@ -71,6 +70,11 @@ shared ({ caller = owner }) actor class RepositoryPartition({
       };
       RBT.put(map, Text.compare, subkey, attribute);
     }});
+  };
+
+  public shared({caller}) func putAttribute(sk: Text, subkey: Entity.AttributeKey, attribute: Entity.AttributeValue): async () {
+    onlyOwner(caller);
+    _putAttribute(sk, subkey, attribute);
   };
 
   // Repository data methods //
@@ -81,29 +85,38 @@ shared ({ caller = owner }) actor class RepositoryPartition({
   };
 
   private func _getFullPackageInfo(name: Common.PackageName): FullPackageInfo {
-    let ?data = _getAttribute(name, "p") else {
-      Debug.trap("no such package");
+    switch (_getAttribute(name, "v")) { // version
+      case (?#int 0) {
+        switch (_getAttribute(name, "p")) {
+          case (?#blob blob) {
+            let ?result = from_candid(blob): ?FullPackageInfo else {
+              Debug.trap("programming error");
+            };
+            result;
+          };
+          case _ { Debug.trap("programming error"); }
+        }
+      };
+      case null { Debug.trap("no such package"); };
+      case _ {
+        Debug.trap("unsupported data version");
+      };
     };
-    let #tuple data2 = data else {
-      Debug.trap("programming error");
-    };
-    if (data2[0] != #int 0) {
-      Debug.trap("unsupported data version");
-    };
-    if (Array.size(data2) != 2) {
-      Debug.trap("programming error");
-    };
-    let #blob data3 = data2[1] else {
-      Debug.trap("programming error");
-    };
-    let ?data4 = from_candid(data3): ?FullPackageInfo else {
-      Debug.trap("programming error");
-    };
-    data4;
   };
 
-  public composite query func getFullPackageInfo(name: Common.PackageName): async FullPackageInfo {
+  public query func getFullPackageInfo(name: Common.PackageName): async FullPackageInfo {
     _getFullPackageInfo(name);
+  };
+
+  private func _setFullPackageInfo(name: Common.PackageName, info: FullPackageInfo) {
+    let b = to_candid(info);
+    _putAttribute(name, "v", #int 0); // version info
+    _putAttribute(name, "p", #blob b);
+  };
+
+  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: FullPackageInfo): async () {
+    onlyOwner(caller);
+    _setFullPackageInfo(name, info);
   };
 
   // query func getPackageVersions(name: Common.PackageName): async [Common.Version] {
