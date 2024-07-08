@@ -166,6 +166,7 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
 
   // Repository index methods //
 
+  /// Something like "Mandrake ICP".
   stable var repositoryName: Text = "";
 
   stable var repositoryInfoURL: Text = "";
@@ -189,5 +190,20 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
 
   public query func getReleases(): async [(Text, ?Text)] {
     releases;
+  };
+
+  public shared({caller}) func setRepositoryName(value: Text): async () {
+    onlyOwner(caller);
+    repositoryName := value;
+  };
+
+  public shared({caller}) func setRepositoryInfoURL(value: Text): async () {
+    onlyOwner(caller);
+    repositoryInfoURL := value;
+  };
+
+  public shared({caller}) func setReleases(value: [(Text, ?Text)]): async () {
+    onlyOwner(caller);
+    releases := value;
   };
 }
