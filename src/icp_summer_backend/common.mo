@@ -37,6 +37,7 @@ module {
         permissions: [(Text, [(Principal, MethodName)])];
     };
 
+    /// TODO: How to pass its canister principals to packages that sse it?
     public type VirtualPackageInfo = {
         /// Empty versions list means any version.
         choice: [(PackageName, [VersionRange])];
