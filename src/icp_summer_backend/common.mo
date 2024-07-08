@@ -29,6 +29,8 @@ module {
         /// it's an array, because may contain several canisters.
         wasms: [Location];
         /// Empty versions list means any version.
+        ///
+        /// TODO: Suggests/recommends akin Debian.
         dependencies: [(PackageName, [VersionRange])];
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
