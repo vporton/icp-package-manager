@@ -48,14 +48,14 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
   /// Helper function that creates a user canister for a given PK
   func createUserCanister(pk: Text, controllers: ?[Principal]): async Text {
     Debug.print("creating new user canister with pk=" # pk);
-    Cycles.add(300_000_000_000);
+    Cycles.add<system>(300_000_000_000);
     let newUserCanister = await CanDBPartition.CanDBPartition({
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleUserCanister;
         sizeLimit = maxSize;
       };
-      owners = ?[owner, Principal.fromActor(this)]; // TODO: need to be our own owner?
+      owners = [owner, Principal.fromActor(this)]; // TODO: need to be our own owner?
     });
     let newUserCanisterPrincipal = Principal.fromActor(newUserCanister);
     await CA.updateCanisterSettings({
@@ -142,7 +142,7 @@ shared ({caller = owner}) actor class CanDBIndex() = this {
         autoScalingHook = autoScaleCanister;
         sizeLimit = maxSize;
       };
-      owners = ?controllers;
+      owners = controllers;
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
     // Battery.addCanDBPartition(newStorageCanisterPrincipal); // FIXME

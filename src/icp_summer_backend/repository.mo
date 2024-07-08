@@ -1,5 +1,0 @@
-import Common "common";
-
-actor {
-
-}

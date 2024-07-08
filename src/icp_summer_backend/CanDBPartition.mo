@@ -5,14 +5,15 @@ import CA "mo:candb/CanisterActions";
 import CanDB "mo:candb/CanDB";
 import Entity "mo:candb/Entity";
 import RBT "mo:stable-rbtree/StableRBTree";
+import Itertools "mo:itertools/Iter";
 
 shared ({ caller = owner }) actor class CanDBPartition({
   partitionKey: Text;
   scalingOptions: CanDB.ScalingOptions;
-  owners: ?[Principal]
+  owners: [Principal]
 }) {
   private func onlyOwner(caller: Principal) {
-    if (caller != owner) {
+    if (Itertools.find(owners.vals(), func (cur: Principal): Bool { caller == cur }) == null) {
       Debug.trap("not an owner");
     }
   };
