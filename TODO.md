@@ -4,7 +4,10 @@ Remaining things to do:
 
 - Deinstallation, upgrading.
 
-- UI
+- UI:
+    - Showing installed packages.
+    - Managing installation and deinstallation.
+    - Showing half-installed packages, managing repair/removal of them.
     - Scanning package dependencies in the UI.
 
 - A special DAO.
