@@ -40,6 +40,7 @@ module {
     public type VirtualPackageInfo = {
         /// Empty versions list means any version.
         choice: [(PackageName, [VersionRange])];
+        /// TODO: Shall we replace it by Suggests/recommends?
         default: PackageName;
     };
 
