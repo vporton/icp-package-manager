@@ -119,13 +119,6 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     _setFullPackageInfo(name, info);
   };
 
-  // query func getPackageVersions(name: Common.PackageName): async [Common.Version] {
-  //   // TODO: Need to store all versions of a package in a single object for efficient enumeration.
-  // };
-
-  // query func getPackageVersionsMap(name: Common.PackageName): async [(Common.Version, Common.Version)] {
-  // };
-
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.PackageInfo {
     let fullInfo = _getFullPackageInfo(name);
     for ((curVersion, info) in fullInfo.packages.vals()) {
@@ -136,7 +129,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     Debug.trap("no such package");
   };
 
-  // query func packagesByFunction(function: Text): async [(Common.PackageName, Common.Version)] {
+  // query func packagesByFunction(function: Common.PackageName): async [(Common.PackageName, Common.Version)] {
 
   // };
 }
