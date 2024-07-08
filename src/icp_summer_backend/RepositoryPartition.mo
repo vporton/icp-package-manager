@@ -115,6 +115,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     _putAttribute(name, "p", #blob b);
   };
 
+  /// TODO: Put a barrier to make the update atomic.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: FullPackageInfo): async () {
     onlyOwner(caller);
     _setFullPackageInfo(name, info);
