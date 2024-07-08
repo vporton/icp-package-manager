@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
+import Array "mo:base/Array";
 import CA "mo:candb/CanisterActions";
 import CanDB "mo:candb/CanDB";
 import Entity "mo:candb/Entity";
@@ -12,7 +13,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
   partitionKey: Text;
   scalingOptions: CanDB.ScalingOptions;
   owners: [Principal]
-}) {
+}) = this {
   // CanDB paritition methods //
 
   private func onlyOwner(caller: Principal) {
@@ -48,8 +49,12 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     CanDB.get(db, {sk});
   };
 
-  public query func getAttribute(sk: Text, subkey: Text): async ?Entity.AttributeValue { 
+  private func _getAttribute(sk: Text, subkey: Text): ?Entity.AttributeValue { 
     do ? { RBT.get<Text, Entity.AttributeValue>(CanDB.get(db, {sk})!.attributes, Text.compare, subkey)! };
+  };
+
+  public query func getAttribute(sk: Text, subkey: Text): async ?Entity.AttributeValue { 
+    _getAttribute(sk, subkey);
   };
 
   public shared({caller}) func put(sk: Text, attributes: [(Entity.AttributeKey, Entity.AttributeValue)]): async () {
@@ -75,19 +80,48 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     versionsMap: [(Common.Version, Common.Version)];
   };
 
-  /// TODO: used for testing, remove
-  stable var test: ?FullPackageInfo = null;
+  private func _getFullPackageInfo(name: Common.PackageName): FullPackageInfo {
+    let ?data = _getAttribute(name, "p") else {
+      Debug.trap("no such package");
+    };
+    let #tuple data2 = data else {
+      Debug.trap("programming error");
+    };
+    if (data2[0] != #int 0) {
+      Debug.trap("unsupported data version");
+    };
+    if (Array.size(data2) != 2) {
+      Debug.trap("programming error");
+    };
+    let #blob data3 = data2[1] else {
+      Debug.trap("programming error");
+    };
+    let ?data4 = from_candid(data3): ?FullPackageInfo else {
+      Debug.trap("programming error");
+    };
+    data4;
+  };
 
-  // query func getPackageVersions(name: Text): async [(Version, ?Version)] {
+  public composite query func getFullPackageInfo(name: Common.PackageName): async FullPackageInfo {
+    _getFullPackageInfo(name);
+  };
+
+  // query func getPackageVersions(name: Common.PackageName): async [Common.Version] {
   //   // TODO: Need to store all versions of a package in a single object for efficient enumeration.
   // };
 
-  // query func getPackageVersionsMap(name: Text): async [(Version, Version)] {
+  // query func getPackageVersionsMap(name: Common.PackageName): async [(Common.Version, Common.Version)] {
   // };
 
-  // query func getPackage(name: Text, version: Version): async PackageInfo {
-
-  // };
+  public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.PackageInfo {
+    let fullInfo = _getFullPackageInfo(name);
+    for ((curVersion, info) in fullInfo.packages.vals()) {
+      if (curVersion == version) {
+        return info;
+      };
+    };
+    Debug.trap("no such package");
+  };
 
   // query func packagesByFunction(function: Text): async [(Common.PackageName, Common.Version)] {
 
