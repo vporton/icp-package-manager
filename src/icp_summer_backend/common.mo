@@ -38,6 +38,7 @@ module {
     public type VirtualPackageInfo = {
         /// Empty versions list means any version.
         choice: [(PackageName, [VersionRange])];
+        default: PackageName;
     };
 
     public type PackageInfo = {
