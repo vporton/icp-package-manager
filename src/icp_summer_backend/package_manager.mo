@@ -97,15 +97,38 @@ shared({caller}) actor class PackageManager() = this {
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
-        let ourHalfInstalled = {
+
+        let ourHalfInstalled: HalfInstalledPackageInfo = {
             shouldHaveModules = numPackages;
-            id = installationId;
+            // id = installationId;
             name = package.base.name;
             version = package.base.version;
             modules = Buffer.Buffer<Principal>(numPackages);
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
+        await* _finishInstallPackage({
+            // part;
+            // packageName;
+            // version;
+            installationId;
+            ourHalfInstalled;
+            package;
+            realPackage;
+        });
+
+        installationId;
+    };
+
+    private func _finishInstallPackage({
+        // part: Common.RepositoryPartitionRO;
+        // packageName: Common.PackageName;
+        // version: Common.Version;
+        installationId: Nat;
+        ourHalfInstalled: HalfInstalledPackageInfo;
+        package: Common.PackageInfo;
+        realPackage: Common.RealPackageInfo;
+    }): async* () {
         let IC: CanisterCreator = actor("aaaaa-aa");
 
         // let canisters = Buffer.Buffer<Principal>(numPackages);
@@ -166,8 +189,6 @@ shared({caller}) actor class PackageManager() = this {
         });
         halfInstalledPackages.delete(installationId);
         // TODO: installedPackagesByName
-
-        installationId;
     };
 
     system func preupgrade() {
