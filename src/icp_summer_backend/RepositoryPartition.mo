@@ -125,8 +125,6 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     Debug.trap("no such package");
   };
 
-  public shared({caller}) func setPackage()
   // query func packagesByFunction(function: Common.PackageName): async [(Common.PackageName, Common.Version)] {
-
   // };
 }

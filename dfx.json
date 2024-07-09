@@ -13,6 +13,15 @@
       "type": "motoko",
       "main": "src/icp_summer_backend/RepositoryIndex.mo"
     },
+    "counter": {
+      "type": "motoko",
+      "main": "src/example/counter.mo"
+    },
+    "test": {
+      "type": "motoko",
+      "main": "src/example/upload-and-run.test.mo",
+      "dependencies": ["counter", "RepositoryIndex", "package_manager"]
+    },
     "icp_summer_frontend": {
       "dependencies": [
         "package_manager"

@@ -3,6 +3,7 @@ import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
+import Array "mo:base/Array";
 import Buffer "mo:stablebuffer/StableBuffer";
 import Admin "mo:candb/CanDBAdmin";
 import CA "mo:candb/CanisterActions";
@@ -44,6 +45,11 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
   /// Get all canisters for an specific PK
   public shared query func getCanistersByPK(pk: Text): async [Text] {
     getCanisterIdsIfExists(pk);
+  };
+  
+  public shared query func getLastCanistersByPK(pk: Text): async Text {
+    let all = getCanisterIdsIfExists(pk);
+    all[Array.size(all) - 1];
   };
   
   /// Helper function that creates a user canister for a given PK

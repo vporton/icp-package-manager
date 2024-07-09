@@ -143,7 +143,7 @@ shared({caller}) actor class PackageManager() = this {
             let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
                 actor(Principal.toText(wasmModuleLocation.0));
             let ?(#blob wasm_module) =
-                await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "p")
+                await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
             else {
                 Debug.trap("package WASM code is not available");
             };
@@ -233,4 +233,15 @@ shared({caller}) actor class PackageManager() = this {
         // halfInstalledPackages := TODO;
         _halfInstalledPackagesSave := []; // Free memory.
     };
+
+    // Accessor method //
+
+    query func getInstalledPackage(id: Common.InstallationId): async Common.InstalledPackageInfo {
+        let ?result = installedPackages.get(id) else {
+            Debug.trap("no such package");
+        };
+        result;
+    };
+
+    // TODO: More
 }
