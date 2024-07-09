@@ -2,8 +2,6 @@ import Principal "mo:base/Principal";
 import Buffer "mo:base/Buffer";
 
 module {
-    // TODO: updating the packages.
-
     public let NamespacePrefix = "b44c4a9beec74e1c8a7acbe46256f92f_";
 
     public type PackageName = Text;
@@ -38,7 +36,6 @@ module {
         permissions: [(Text, [(Principal, MethodName)])];
     };
 
-    /// TODO: How to pass its canister principals to packages that sse it?
     public type VirtualPackageInfo = {
         /// Empty versions list means any version.
         choice: [(PackageName, [VersionRange])];
