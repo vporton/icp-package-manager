@@ -1,4 +1,5 @@
 import Principal "mo:base/Principal";
+import Buffer "mo:base/Buffer";
 
 module {
     // TODO: updating the packages.
@@ -72,5 +73,20 @@ module {
         getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: Text, version: Version) -> async PackageInfo;
         packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
+    };
+
+    public type InstalledPackageInfo = {
+        id: InstallationId;
+        name: PackageName;
+        version: Version;
+        modules: [Principal];
+    };
+
+    public type HalfInstalledPackageInfo = {
+        shouldHaveModules: Nat;
+        name: PackageName;
+        version: Version;
+        modules: Buffer.Buffer<Principal>;
+        package: PackageInfo;
     };
 }

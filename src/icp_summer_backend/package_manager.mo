@@ -20,31 +20,13 @@ shared({caller}) actor class PackageManager() = this {
 
     stable var nextInstallationId: Nat = 0;
 
-    /// TODO: Move to `common.mo`.
-    type InstalledPackageInfo = {
-        id: Common.InstallationId;
-        name: Common.PackageName;
-        version: Common.Version;
-        modules: [Principal];
-    };
-
-    stable var _installedPackagesSave: [(Common.InstallationId, InstalledPackageInfo)] = [];
-    var installedPackages: HashMap.HashMap<Common.InstallationId, InstalledPackageInfo> =
+    stable var _installedPackagesSave: [(Common.InstallationId, Common.InstalledPackageInfo)] = [];
+    var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     stable var _installedPackagesByNameSave: [(Common.PackageName, [Common.InstallationId])] = [];
     var installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
         HashMap.fromIter([].vals(), 0, Text.equal, Text.hash);
-
-    /// TODO: Move to `common.mo`.
-    type HalfInstalledPackageInfo = {
-        shouldHaveModules: Nat;
-        name: Common.PackageName;
-        version: Common.Version;
-        modules: Buffer.Buffer<Principal>;
-        package: Common.PackageInfo;
-        // packageDescriptionIn: Common.RepositoryPartitionRO;
-    };
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         shouldHaveModules: Nat;
@@ -52,7 +34,7 @@ shared({caller}) actor class PackageManager() = this {
         version: Common.Version;
         modules: [Principal];
     })] = [];
-    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
+    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     func onlyOwner(caller: Principal) {
@@ -102,7 +84,7 @@ shared({caller}) actor class PackageManager() = this {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        let ourHalfInstalled: HalfInstalledPackageInfo = {
+        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             shouldHaveModules = numPackages;
             // id = installationId;
             name = package.base.name;
@@ -141,7 +123,7 @@ shared({caller}) actor class PackageManager() = this {
 
     private func _finishInstallPackage({
         installationId: Nat;
-        ourHalfInstalled: HalfInstalledPackageInfo;
+        ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
     }): async* () {
         let IC: CanisterCreator = actor("aaaaa-aa");
