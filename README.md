@@ -28,6 +28,7 @@ dfx canister --help
 To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py). Run it in a virtual environment:
 
 ```bash
+dfx start --background
 virtualenv -p python3 venv
 source venv/bin/activate
 pip install ic-py
