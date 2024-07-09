@@ -42,6 +42,8 @@ shared({caller}) actor class PackageManager() = this {
         name: Common.PackageName;
         version: Common.Version;
         modules: Buffer.Buffer<Principal>;
+        package: Common.PackageInfo;
+        // packageDescriptionIn: Common.RepositoryPartitionRO;
     };
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
@@ -106,29 +108,39 @@ shared({caller}) actor class PackageManager() = this {
             name = package.base.name;
             version = package.base.version;
             modules = Buffer.Buffer<Principal>(numPackages);
+            // packageDescriptionIn = part;
+            package;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         await* _finishInstallPackage({
-            // part;
-            // packageName;
-            // version;
             installationId;
             ourHalfInstalled;
-            package;
             realPackage;
         });
 
         installationId;
     };
 
+    public shared({caller}) func finishInstallPackage({installationId: Nat}): async () {
+        onlyOwner(caller);
+        
+        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+            Debug.trap("package installation has not been started");
+        };
+        let #real realPackage = ourHalfInstalled.package.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        await* _finishInstallPackage({
+            installationId;
+            ourHalfInstalled;
+            realPackage;
+        });
+    };
+
     private func _finishInstallPackage({
-        // part: Common.RepositoryPartitionRO;
-        // packageName: Common.PackageName;
-        // version: Common.Version;
         installationId: Nat;
         ourHalfInstalled: HalfInstalledPackageInfo;
-        package: Common.PackageInfo;
         realPackage: Common.RealPackageInfo;
     }): async* () {
         let IC: CanisterCreator = actor("aaaaa-aa");
@@ -185,8 +197,8 @@ shared({caller}) actor class PackageManager() = this {
 
         installedPackages.put(installationId, {
             id = installationId;
-            name = package.base.name;
-            version = package.base.version;
+            name = ourHalfInstalled.package.base.name;
+            version = ourHalfInstalled.package.base.version;
             modules = Buffer.toArray(ourHalfInstalled.modules);
         });
         halfInstalledPackages.delete(installationId);
