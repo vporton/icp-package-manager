@@ -27,6 +27,8 @@ dfx canister --help
 
 To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py).
 
+The test currently does not work because of a too long command line argument, what is a limitation of Linux.
+
 ## Running the project locally
 
 If you want to test your project locally, you can use the following commands:
