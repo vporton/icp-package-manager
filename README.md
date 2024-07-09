@@ -23,6 +23,10 @@ dfx help
 dfx canister --help
 ```
 
+## Testing
+
+To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py).
+
 ## Running the project locally
 
 If you want to test your project locally, you can use the following commands:

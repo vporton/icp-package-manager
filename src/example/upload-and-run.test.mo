@@ -7,11 +7,11 @@ import Principal "mo:base/Principal";
 
 actor {
     public shared func main(wasm: Blob) {
-        let index = await RepositoryIndex.RepositoryIndex();
+        let index = RepositoryIndex;
 
         let part0 = await index.getLastCanistersByPK("wasms");
         let part: RepositoryPartition.RepositoryPartition = actor(part0);
-        part.putAttribute("wasms", "0", "w", #blob wasm); // FIXME: not 0 in general
+        await part.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
 
         let info: Common.PackageInfo = {
             base = {
@@ -21,7 +21,7 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                wasms = [wasmLocation];
+                wasms = [(Principal.fromActor(part), "0")]; // FIXME: not 0 in general
                 dependencies = [];
                 functions = [];
                 permissions = [];
@@ -42,7 +42,7 @@ actor {
         });
 
         let installed = await pm.getInstalledPackage(id);
-        let counter: Counter = actor(Principal.toText(installed.modules[0]));
+        let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
         await counter.increase();
     };
 }

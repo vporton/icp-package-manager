@@ -236,7 +236,7 @@ shared({caller}) actor class PackageManager() = this {
 
     // Accessor method //
 
-    query func getInstalledPackage(id: Common.InstallationId): async Common.InstalledPackageInfo {
+    public query func getInstalledPackage(id: Common.InstallationId): async Common.InstalledPackageInfo {
         let ?result = installedPackages.get(id) else {
             Debug.trap("no such package");
         };
