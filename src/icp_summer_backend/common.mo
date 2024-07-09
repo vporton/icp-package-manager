@@ -79,6 +79,12 @@ module {
         modules: [Principal];
     };
 
+    // Remark: There can be same named real package and a virtual package (of different versions).
+    public type FullPackageInfo = {
+        packages: [(Version, PackageInfo)];
+        versionsMap: [(Version, Version)];
+    };
+
     public type HalfInstalledPackageInfo = {
         shouldHaveModules: Nat;
         name: PackageName;

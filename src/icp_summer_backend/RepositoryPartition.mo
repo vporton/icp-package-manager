@@ -79,18 +79,12 @@ shared ({ caller = owner }) actor class RepositoryPartition({
 
   // Repository data methods //
 
-  // Remark: There can be same named real package and a virtual package (of different versions).
-  type FullPackageInfo = {
-    packages: [(Common.Version, Common.PackageInfo)];
-    versionsMap: [(Common.Version, Common.Version)];
-  };
-
-  private func _getFullPackageInfo(name: Common.PackageName): FullPackageInfo {
+  private func _getFullPackageInfo(name: Common.PackageName): Common.FullPackageInfo {
     switch (_getAttribute(name, "v")) { // version
       case (?#int 0) {
         switch (_getAttribute(name, "p")) {
           case (?#blob blob) {
-            let ?result = from_candid(blob): ?FullPackageInfo else {
+            let ?result = from_candid(blob): ?Common.FullPackageInfo else {
               Debug.trap("programming error");
             };
             result;
@@ -105,18 +99,18 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     };
   };
 
-  public query func getFullPackageInfo(name: Common.PackageName): async FullPackageInfo {
+  public query func getFullPackageInfo(name: Common.PackageName): async Common.FullPackageInfo {
     _getFullPackageInfo(name);
   };
 
-  private func _setFullPackageInfo(name: Common.PackageName, info: FullPackageInfo) {
+  private func _setFullPackageInfo(name: Common.PackageName, info: Common.FullPackageInfo) {
     let b = to_candid(info);
     _putAttribute(name, "v", #int 0); // version info
     _putAttribute(name, "p", #blob b);
   };
 
   /// TODO: Put a barrier to make the update atomic.
-  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: FullPackageInfo): async () {
+  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.FullPackageInfo): async () {
     onlyOwner(caller);
     _setFullPackageInfo(name, info);
   };
@@ -131,6 +125,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     Debug.trap("no such package");
   };
 
+  public shared({caller}) func setPackage()
   // query func packagesByFunction(function: Common.PackageName): async [(Common.PackageName, Common.Version)] {
 
   // };
