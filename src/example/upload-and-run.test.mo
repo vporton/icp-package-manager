@@ -4,9 +4,11 @@ import Common "../icp_summer_backend/common";
 import PackageManager "../icp_summer_backend/package_manager";
 import Counter "../example/counter";
 import Principal "mo:base/Principal";
+import Blob "mo:base/Blob";
 
 actor {
-    public shared func main(wasm: Blob) {
+    public shared func main(wasm2: [Nat8]) {
+        let wasm = Blob.fromArray(wasm2);
         let index = RepositoryIndex;
 
         let part0 = await index.getLastCanistersByPK("wasms");

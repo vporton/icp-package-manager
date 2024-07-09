@@ -25,9 +25,14 @@ dfx canister --help
 
 ## Testing
 
-To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py).
+To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py). Run it in a virtual environment:
 
-The test currently does not work because of a too long command line argument, what is a limitation of Linux.
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install ic-py
+./test.py
+```
 
 ## Running the project locally
 
