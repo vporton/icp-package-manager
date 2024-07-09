@@ -122,6 +122,7 @@ shared({caller}) actor class PackageManager() = this {
         installationId;
     };
 
+    /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({installationId: Nat}): async () {
         onlyOwner(caller);
         
