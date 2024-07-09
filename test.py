@@ -17,9 +17,6 @@ with open('.dfx/local/canister_ids.json') as ids:
     j = json.load(ids)
     principal = j['test']['local']
 
-# os.system(f"echo dfx canister call test main '({blob})")
-# subprocess.run(["dfx", "canister", "call", "test", "main", blob])
-
 client = Client(url = "http://localhost:4943")
 iden = Identity()
 agent = Agent(iden, client)
