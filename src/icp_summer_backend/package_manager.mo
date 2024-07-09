@@ -89,6 +89,8 @@ shared({caller}) actor class PackageManager() = this {
     })
         : async Common.InstallationId
     {
+        onlyOwner(caller);
+
         let package = await part.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
