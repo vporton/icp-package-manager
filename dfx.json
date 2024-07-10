@@ -7,7 +7,7 @@
     "package_manager": {
       "type": "motoko",
       "main": "src/icp_summer_backend/package_manager.mo",
-      "dependencies": ["indirect_caller"]
+      "dependencies": ["indirect_caller", "internet_identity"]
     },
     "RepositoryIndex": {
       "type": "motoko",
