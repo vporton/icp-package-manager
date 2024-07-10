@@ -67,7 +67,11 @@ function App2() {
                   : ""}
                 </div>}/>
               <Route path="/installed" element={
-                <ul><code>photoedit</code> 3.5.6 <button>uninstall  </button></ul>
+                <ul>
+                  <li><input type='checkbox'/> All <button>uninstall</button></li>
+                  <li><input type='checkbox'/> <code>photoedit</code> 3.5.6 <button>uninstall</button></li>
+                  <li><input type='checkbox'/> <code>altcoin</code> 4.1.6 <button>uninstall</button></li>
+                </ul>
               }/>
             </Routes>
         </Container>
