@@ -14,5 +14,9 @@
   "type": "module",
   "workspaces": [
     "src/icp_summer_frontend"
-  ]
+  ],
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "react-bootstrap": "^2.10.4"
+  }
 }
