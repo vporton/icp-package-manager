@@ -122,7 +122,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
         return info;
       };
     };
-    Debug.trap("no such package");
+    Debug.trap("no such package version");
   };
 
   // query func packagesByFunction(function: Common.PackageName): async [(Common.PackageName, Common.Version)] {

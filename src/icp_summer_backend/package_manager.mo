@@ -240,7 +240,7 @@ shared({caller}) actor class PackageManager() = this {
 
     public query func getInstalledPackage(id: Common.InstallationId): async Common.InstalledPackageInfo {
         let ?result = installedPackages.get(id) else {
-            Debug.trap("no such package");
+            Debug.trap("no such installed package");
         };
         result;
     };

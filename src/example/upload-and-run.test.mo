@@ -12,13 +12,15 @@ import Cycles "mo:base/ExperimentalCycles";
 actor {
     public shared func main(wasm2: [Nat8]): async Nat {
         let wasm = Blob.fromArray(wasm2);
-        Cycles.add<system>(10_000_000_000_000);
+        Cycles.add<system>(1000_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
         await index.init();
 
-        let part0 = await index.getLastCanistersByPK("wasms");
-        let part: RepositoryPartition.RepositoryPartition = actor(part0);
-        await part.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
+        let wasmPart0 = await index.getLastCanistersByPK("wasms");
+        let wasmPart: RepositoryPartition.RepositoryPartition = actor(wasmPart0);
+        await wasmPart.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
+        let pPart0 = await index.getLastCanistersByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
+        let pPart: RepositoryPartition.RepositoryPartition = actor(pPart0); // TODO: Rename.
 
         let info: Common.PackageInfo = {
             base = {
@@ -28,7 +30,7 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                wasms = [(Principal.fromActor(part), "0")]; // FIXME: not 0 in general
+                wasms = [(Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
                 dependencies = [];
                 functions = [];
                 permissions = [];
@@ -38,14 +40,14 @@ actor {
             packages = [("stable", info)];
             versionsMap = [];
         };
-        await part.setFullPackageInfo("counter", fullInfo);
+        await pPart.setFullPackageInfo("counter", fullInfo);
 
-        Cycles.add<system>(10_000_000_000_000);
+        Cycles.add<system>(1000_000_000_000_000);
         let pm = await PackageManager.PackageManager();
         let id = await pm.installPackage({
-            part;
+            part = pPart;
             packageName = "counter";
-            version = "1.0.0";
+            version = "stable";
         });
 
         let installed = await pm.getInstalledPackage(id);

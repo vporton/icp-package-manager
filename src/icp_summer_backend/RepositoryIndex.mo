@@ -56,14 +56,14 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
   /// Helper function that creates a user canister for a given PK
   func createUserCanister(pk: Text, controllers: ?[Principal]): async Text {
     Debug.print("creating new user canister with pk=" # pk);
-    Cycles.add<system>(300_000_000_000);
+    Cycles.add<system>(100_000_000_000_000);
     let newUserCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleUserCanister;
         sizeLimit = maxSize;
       };
-      owners = [owner, Principal.fromActor(this)];
+      owners = [owner, Principal.fromActor(this)]; // FIXME
     });
     let newUserCanisterPrincipal = Principal.fromActor(newUserCanister);
     await CA.updateCanisterSettings({
@@ -143,14 +143,14 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
     // Pre-load 300 billion cycles for the creation of a new storage canister
     // Note that canister creation costs 100 billion cycles, meaning there are 200 billion
     // left over for the new canister when it is created
-    Cycles.add<system>(300_000_000_000);
+    Cycles.add<system>(100_000_000_000_000);
     let newStorageCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleCanister;
         sizeLimit = maxSize;
       };
-      owners = controllers;
+      owners = controllers; // FIXME
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
     // Battery.addRepositoryPartition(newStorageCanisterPrincipal); // FIXME

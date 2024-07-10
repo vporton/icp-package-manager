@@ -26,4 +26,4 @@ agent = Agent(iden, client)
 params = [{'type': Types.Vec(Types.Nat8), 'value': blob}]
 params2 = encode(params)
 result = agent.update_raw(principal, "main", params2)
-print("COUNTER: " + decode(result, retTypes=[Types.Nat8]))
+# print("COUNTER: " + decode(result), retTypes=[Types.Nat])
