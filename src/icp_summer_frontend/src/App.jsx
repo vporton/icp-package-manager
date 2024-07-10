@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { icp_summer_backend } from 'declarations/icp_summer_backend';
+import { package_manager } from '../../declarations/package_manager';
 
 function App() {
   const [greeting, setGreeting] = useState('');
@@ -7,7 +7,7 @@ function App() {
   function handleSubmit(event) {
     event.preventDefault();
     const name = event.target.elements.name.value;
-    icp_summer_backend.greet(name).then((greeting) => {
+    package_manager.greet(name).then((greeting) => {
       setGreeting(greeting);
     });
     return false;
