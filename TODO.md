@@ -19,4 +19,6 @@ Remaining things to do:
 - Specify if package has a frontend canister (or several ones?) to show them
   in the package manager.
 
+- "Add distro" at distro's site.
+
 - `FIXME`/`TODO` in the sources.
