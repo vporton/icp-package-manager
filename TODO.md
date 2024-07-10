@@ -23,4 +23,6 @@ Remaining things to do:
 
 - Autocomplete package name for installation.
 
+- Events (similar to permissions?)
+
 - `FIXME`/`TODO` in the sources.

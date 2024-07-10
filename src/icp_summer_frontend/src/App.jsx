@@ -3,13 +3,21 @@ import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { package_manager } from '../../declarations/package_manager';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import LoginButton from './LoginButton';
+import { InternetIdentityProvider } from "ic-use-internet-identity";
 
 const packagesToRepair = [ // TODO
   {installationId: 3, name: "fineedit", version: "2.3.5"}
 ]
 
 function App() {
-  return <BrowserRouter><App2/></BrowserRouter>;
+  return (
+    <BrowserRouter>
+      <InternetIdentityProvider>
+        <App2/>
+      </InternetIdentityProvider>
+    </BrowserRouter>
+  );
 }
 
 function App2() {
@@ -44,7 +52,7 @@ function App2() {
                 <Nav.Link onClick={() => navigate("/installed")}>Installed packages</Nav.Link>{" "}
               </Nav>
               <Nav>
-                <Button>Connect to IC</Button>
+                <LoginButton/>
               </Nav>
             </Navbar>
           </nav>

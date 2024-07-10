@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "bootstrap": "^5.3.3",
+    "ic-use-internet-identity": "^0.0.10",
     "react-bootstrap": "^2.10.4",
     "react-router-dom": "^6.24.1"
   }
