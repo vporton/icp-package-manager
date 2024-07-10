@@ -45,7 +45,7 @@ function App2() {
           </nav>
           <Routes> {/* TODO: Refactor into sub-components. */}
             <Route path="/" element={
-              <div>
+              <>
                 <form action="#" onSubmit={handleSubmit}>
                   <label htmlFor="name">Enter package name to install:</label>{" "}
                   <input id="name" alt="Name" type="text" />
@@ -54,7 +54,7 @@ function App2() {
                 {packagesToRepair.length !== 0 ?
                   <>
                     <h2>Partially Installed</h2>
-                    <ul>
+                    <ul className='checklist'>
                       {packagesToRepair.map(p =>
                         <li key={p.installationId}>
                           <input type='checkbox'/>{" "}
@@ -65,13 +65,16 @@ function App2() {
                     <p><button>Install checked</button> <button>Delete checked</button></p>
                   </>
                   : ""}
-                </div>}/>
+                </>}/>
               <Route path="/installed" element={
-                <ul>
-                  <li><input type='checkbox'/> All <button>uninstall</button></li>
-                  <li><input type='checkbox'/> <code>photoedit</code> 3.5.6 <button>uninstall</button></li>
-                  <li><input type='checkbox'/> <code>altcoin</code> 4.1.6 <button>uninstall</button></li>
-                </ul>
+                <>
+                  <h2>Installed packages</h2>
+                  <ul className='checklist'>
+                    <li><input type='checkbox'/> All <button>uninstall</button></li>
+                    <li><input type='checkbox'/> <code>photoedit</code> 3.5.6 <button>uninstall</button></li>
+                    <li><input type='checkbox'/> <code>altcoin</code> 4.1.6 <button>uninstall</button></li>
+                  </ul>
+                </>
               }/>
             </Routes>
         </Container>
