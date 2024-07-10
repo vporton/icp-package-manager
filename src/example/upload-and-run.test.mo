@@ -32,7 +32,6 @@ actor {
                 dependencies = [];
                 functions = [];
                 permissions = [];
-
             };
         };
         let fullInfo: Common.FullPackageInfo = {
