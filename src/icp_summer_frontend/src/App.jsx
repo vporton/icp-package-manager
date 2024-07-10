@@ -73,8 +73,10 @@ function App2() {
                   <h2>Installed packages</h2>
                   <ul className='checklist'>
                     <li><input type='checkbox'/> All <button>uninstall</button></li>
-                    <li><input type='checkbox'/> <code>photoedit</code> 3.5.6 <button>uninstall</button></li>
-                    <li><input type='checkbox'/> <code>altcoin</code> 4.1.6 <button>uninstall</button></li>
+                    <li><input type='checkbox'/> <code>photoedit</code> <input type='checkbox'/> 3.5.6{" "}
+                      (<input type='checkbox'/> <a href='#'>1</a>, <input type='checkbox'/> <a href='#'>2</a>),
+                      {" "}<input type='checkbox'/> <a href='#'>3.5.7</a></li>
+                    <li><input type='checkbox'/> <code>altcoin</code> 4.1.6</li>
                   </ul>
                 </>
               }/>

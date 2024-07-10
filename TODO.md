@@ -16,4 +16,7 @@ Remaining things to do:
 
 - Package's and/or user's option to stop all canisters of a package before upgrading.
 
+- Specify if package has a frontend canister (or several ones?) to show them
+  in the package manager.
+
 - `FIXME`/`TODO` in the sources.
