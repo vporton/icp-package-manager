@@ -65,7 +65,7 @@ function App2() {
                 <h2>Install</h2>
                 <form action="#" onSubmit={handleSubmit}>
                   <label htmlFor="name">Enter package name to install:</label>{" "}
-                  <input id="name" alt="Name" type="text" />
+                  <input id="name" alt="Name" type="text" />{" "}
                   <Button type="submit">Start installation</Button>
                 </form>
                 {packagesToRepair.length !== 0 ?
