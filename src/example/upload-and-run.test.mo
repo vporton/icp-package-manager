@@ -11,11 +11,13 @@ import Cycles "mo:base/ExperimentalCycles";
 
 actor {
     public shared func main(wasm2: [Nat8]): async Nat {
+        Debug.print("Creating a distro repository...");
         let wasm = Blob.fromArray(wasm2);
         Cycles.add<system>(1000_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
         await index.init();
 
+        Debug.print("Uploading WASM code...");
         let wasmPart0 = await index.getLastCanistersByPK("wasms");
         let wasmPart: RepositoryPartition.RepositoryPartition = actor(wasmPart0);
         await wasmPart.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
@@ -40,20 +42,26 @@ actor {
             packages = [("stable", info)];
             versionsMap = [];
         };
+        Debug.print("Uploading package and versions description...");
         await pPart.setFullPackageInfo("counter", fullInfo);
 
         Cycles.add<system>(1000_000_000_000_000);
+        Debug.print("Installing the ICP Package manager...");
         let pm = await PackageManager.PackageManager();
+        Debug.print("Using the PM to install 'counter' package");
         let id = await pm.installPackage({
             part = pPart;
             packageName = "counter";
             version = "stable";
         });
 
+        Debug.print("Getting package info...");
         let installed = await pm.getInstalledPackage(id);
         let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
+        Debug.print("Running the 'counter' software...");
         await counter.increase();
         let testValue = await counter.get();
+        Debug.print("Counter is equal to 1...");
         Debug.print("COUNTER: " # debug_show(testValue));
         testValue;
     };
