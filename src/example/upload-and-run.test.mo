@@ -8,9 +8,10 @@ import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 
 actor {
-    public shared func main(wasm2: [Nat8]) {
+    public shared func main(wasm2: [Nat8]): async Nat {
         let wasm = Blob.fromArray(wasm2);
         let index = RepositoryIndex;
+        await index.init();
 
         let part0 = await index.getLastCanistersByPK("wasms");
         let part: RepositoryPartition.RepositoryPartition = actor(part0);
@@ -47,6 +48,8 @@ actor {
         let installed = await pm.getInstalledPackage(id);
         let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
         await counter.increase();
-        Debug.print("COUNTER: " # counter.get());  
+        let testValue = await counter.get();
+        Debug.print("COUNTER: " # debug_show(testValue));
+        testValue;  
     };
 }
