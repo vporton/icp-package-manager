@@ -1,5 +1,7 @@
 # ICP Package Manager
 
+_This software is not yet released._
+
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
 For more information on this project [see here](https://taikai.network/icp-portugal/hackathons/build-on-icp/projects/clxvpfjmb00h8w201vz8opp0j/idea).
