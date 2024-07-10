@@ -4,6 +4,8 @@ ICP Package Manager is an analogue of Linux package managers, but for ICP. It al
 
 For more information on this project [see here](https://taikai.network/icp-portugal/hackathons/build-on-icp/projects/clxvpfjmb00h8w201vz8opp0j/idea).
 
+See [`TODO.md`](TODO.md) about yet unimplemented features.
+
 ## Howto guides to running it
 
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
