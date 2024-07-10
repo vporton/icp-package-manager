@@ -45,10 +45,10 @@ function App2() {
           <nav>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
-                <Nav.Link onClick={() => navigate("/")}>Main page</Nav.Link>{" "}
+                <Nav.Link onClick={() => navigate("/")}>Main page</Nav.Link>
               </Nav>
               <Nav>
-                <Nav.Link onClick={() => navigate("/installed")}>Installed packages</Nav.Link>{" "}
+                <Nav.Link onClick={() => navigate("/installed")}>Installed packages</Nav.Link>
               </Nav>
               <Nav>
                 <AuthButton/>
