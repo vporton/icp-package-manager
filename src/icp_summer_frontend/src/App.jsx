@@ -28,9 +28,11 @@ function App2() {
 
   return (
     <main id="main">
-      <p style={{textAlign: 'center'}}>
+      <h1 style={{textAlign: 'center'}}>
         <img src="/internet-computer-icp-logo.png" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
-      </p>
+        {" "}
+        Package Manager
+      </h1>
       <div>
         <Container>
           <nav>
