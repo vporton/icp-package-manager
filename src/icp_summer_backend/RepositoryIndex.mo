@@ -33,6 +33,7 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
       Debug.trap("already initialized");
     };
 
+    ignore Cycles.accept<system>(800_000_000_000);
     // TODO: Need to be a self-controller?
     ignore await* createStorageCanister("main", [owner]);
     ignore await* createStorageCanister("wasms", [owner]);
@@ -62,7 +63,7 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
         autoScalingHook = autoScaleUserCanister;
         sizeLimit = maxSize;
       };
-      owners = [owner, Principal.fromActor(this)]; // TODO: need to be our own owner?
+      owners = [owner, Principal.fromActor(this)];
     });
     let newUserCanisterPrincipal = Principal.fromActor(newUserCanister);
     await CA.updateCanisterSettings({

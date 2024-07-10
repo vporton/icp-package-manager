@@ -8,6 +8,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
+import Cycles "mo:base/ExperimentalCycles";
 import Common "common";
 import RepositoryPartition "RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
@@ -132,6 +133,7 @@ shared({caller}) actor class PackageManager() = this {
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModuleLocation in realPackage.wasms.vals()) {
             // TODO: cycles (and monetization)
+            Cycles.add<system>(10_000_000_000_000);
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.

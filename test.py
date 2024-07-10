@@ -8,6 +8,8 @@ from ic.agent import Agent
 from ic.candid import encode, decode, Types
 
 os.system("dfx deploy test --identity anonymous")  # TODO: Anonymous identity is a hack.
+os.system("dfx ledger fabricate-cycles --amount 100000000 --canister test")
+os.system("dfx ledger fabricate-cycles --amount 100000000 --canister package_manager")  # FIXME: hack
 
 with open(".dfx/local/canisters/counter/counter.wasm", "rb") as wasm:
     wasm = wasm.read()

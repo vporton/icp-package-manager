@@ -1,4 +1,5 @@
-import RepositoryIndex "canister:RepositoryIndex";
+// import RepositoryIndex "canister:RepositoryIndex";
+import RepositoryIndex "../icp_summer_backend/RepositoryIndex";
 import RepositoryPartition "../icp_summer_backend/RepositoryPartition";
 import Common "../icp_summer_backend/common";
 import PackageManager "../icp_summer_backend/package_manager";
@@ -6,11 +7,13 @@ import Counter "../example/counter";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
+import Cycles "mo:base/ExperimentalCycles";
 
 actor {
     public shared func main(wasm2: [Nat8]): async Nat {
         let wasm = Blob.fromArray(wasm2);
-        let index = RepositoryIndex;
+        Cycles.add<system>(10_000_000_000_000);
+        let index = await RepositoryIndex.RepositoryIndex();
         await index.init();
 
         let part0 = await index.getLastCanistersByPK("wasms");
@@ -38,6 +41,7 @@ actor {
         };
         await part.setFullPackageInfo("counter", fullInfo);
 
+        Cycles.add<system>(10_000_000_000_000);
         let pm = await PackageManager.PackageManager();
         let id = await pm.installPackage({
             part;
@@ -50,6 +54,6 @@ actor {
         await counter.increase();
         let testValue = await counter.get();
         Debug.print("COUNTER: " # debug_show(testValue));
-        testValue;  
+        testValue;
     };
 }
