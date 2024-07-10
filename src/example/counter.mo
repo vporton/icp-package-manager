@@ -4,4 +4,8 @@ actor class Counter() {
     public shared func increase(): async ()  {
         counter += 1;
     };
+
+    public shared func get(): Nat {
+        counter;
+    };
 }

@@ -21,4 +21,6 @@ Remaining things to do:
 
 - "Add distro" at distro's site.
 
+- Autocomplete package name for installation.
+
 - `FIXME`/`TODO` in the sources.

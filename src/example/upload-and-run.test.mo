@@ -5,6 +5,7 @@ import PackageManager "../icp_summer_backend/package_manager";
 import Counter "../example/counter";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
+import Debug "mo:base/Debug";
 
 actor {
     public shared func main(wasm2: [Nat8]) {
@@ -46,5 +47,6 @@ actor {
         let installed = await pm.getInstalledPackage(id);
         let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
         await counter.increase();
+        Debug.print("COUNTER: " # counter.get());  
     };
 }
