@@ -48,7 +48,7 @@ actor {
         Cycles.add<system>(1000_000_000_000_000);
         Debug.print("Installing the ICP Package manager...");
         let pm = await PackageManager.PackageManager();
-        Debug.print("Using the PM to install 'counter' package");
+        Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
             part = pPart;
             packageName = "counter";
