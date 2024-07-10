@@ -43,15 +43,30 @@ function App2() {
               <Nav>
                 <Nav.Link onClick={() => navigate("/installed")}>Installed packages</Nav.Link>{" "}
               </Nav>
+              <Nav>
+                <Button>Connect to IC</Button>
+              </Nav>
             </Navbar>
           </nav>
           <Routes> {/* TODO: Refactor into sub-components. */}
             <Route path="/" element={
               <>
+                <h2>Distribution</h2>
+                <p>
+                  Distro:{" "}
+                  <select>
+                    <option>RedSocks</option>
+                    <option>Batuto</option>
+                    <option>Bedian</option>
+                  </select>{" "}
+                  <Button>Remove from the list</Button> (doesn't remove installed packages)
+                </p>
+                <p><Button>Add distro</Button></p>
+                <h2>Install</h2>
                 <form action="#" onSubmit={handleSubmit}>
                   <label htmlFor="name">Enter package name to install:</label>{" "}
                   <input id="name" alt="Name" type="text" />
-                  <button type="submit">Start installation</button>
+                  <Button type="submit">Start installation</Button>
                 </form>
                 {packagesToRepair.length !== 0 ?
                   <>
@@ -64,7 +79,7 @@ function App2() {
                         </li>
                       )}
                     </ul>
-                    <p><button>Install checked</button> <button>Delete checked</button></p>
+                    <p><Button>Install checked</Button> <Button>Delete checked</Button></p>
                   </>
                   : ""}
                 </>}/>
@@ -72,7 +87,7 @@ function App2() {
                 <>
                   <h2>Installed packages</h2>
                   <ul className='checklist'>
-                    <li><input type='checkbox'/> All <button>uninstall</button></li>
+                    <li><input type='checkbox'/> All <Button>uninstall</Button></li>
                     <li><input type='checkbox'/> <code>photoedit</code> <input type='checkbox'/> 3.5.6{" "}
                       (<input type='checkbox'/> <a href='#'>1</a>, <input type='checkbox'/> <a href='#'>2</a>),
                       {" "}<input type='checkbox'/> <a href='#'>3.5.7</a></li>
