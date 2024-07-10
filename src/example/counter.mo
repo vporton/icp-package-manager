@@ -5,7 +5,7 @@ actor class Counter() {
         counter += 1;
     };
 
-    public shared func get(): Nat {
+    public shared func get(): async Nat {
         counter;
     };
 }
