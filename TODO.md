@@ -14,4 +14,6 @@ Remaining things to do:
 
 - Every package should have owner(s) to specify who is able to change it.
 
+- Package's and/or user's option to stop all canisters of a package before upgrading.
+
 - `FIXME`/`TODO` in the sources.
