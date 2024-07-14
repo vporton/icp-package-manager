@@ -1,8 +1,8 @@
 // import RepositoryIndex "canister:RepositoryIndex";
-import RepositoryIndex "../icp_summer_backend/RepositoryIndex";
-import RepositoryPartition "../icp_summer_backend/RepositoryPartition";
-import Common "../icp_summer_backend/common";
-import PackageManager "../icp_summer_backend/package_manager";
+import RepositoryIndex "../package_manager_backend/RepositoryIndex";
+import RepositoryPartition "../package_manager_backend/RepositoryPartition";
+import Common "../package_manager_backend/common";
+import PackageManager "../package_manager_backend/package_manager";
 import Counter "../example/counter";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";

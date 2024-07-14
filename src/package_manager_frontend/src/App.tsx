@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@identity-labs/react-ic-ii-auth';
-
+import { Link } from 'react-router-dom';
 
 const packagesToRepair = [ // TODO
   {installationId: 3, name: "fineedit", version: "2.3.5"}
@@ -45,10 +45,10 @@ function App2() {
           <nav>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
-                <Nav.Link onClick={() => navigate("/")}>Main page</Nav.Link>
+                <Link className="nav-link" to="/">Main page</Link>
               </Nav>
               <Nav>
-                <Nav.Link onClick={() => navigate("/installed")}>Installed packages</Nav.Link>
+                <Link className="nav-link" to="/installed">Installed packages</Link>
               </Nav>
               <Nav>
                 <AuthButton/>

@@ -1,10 +1,10 @@
 {
-  "name": "icp_summer_frontend",
+  "name": "package_manager_frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "setup": "npm i && dfx canister create icp_summer_backend && dfx generate icp_summer_backend && dfx deploy",
+    "setup": "npm i && dfx canister create package_manager_backend && dfx generate package_manager_backend && dfx deploy",
     "start": "vite --port 3000",
     "prebuild": "dfx generate",
     "build": "tsc && vite build",

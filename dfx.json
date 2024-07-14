@@ -2,16 +2,16 @@
   "canisters": {
     "indirect_caller": {
       "type": "motoko",
-      "main": "src/icp_summer_backend/indirect_caller.mo"
+      "main": "src/package_manager_backend/indirect_caller.mo"
     },
     "package_manager": {
       "type": "motoko",
-      "main": "src/icp_summer_backend/package_manager.mo",
+      "main": "src/package_manager_backend/package_manager.mo",
       "dependencies": ["indirect_caller", "internet_identity"]
     },
     "RepositoryIndex": {
       "type": "motoko",
-      "main": "src/icp_summer_backend/RepositoryIndex.mo"
+      "main": "src/package_manager_backend/RepositoryIndex.mo"
     },
     "counter": {
       "type": "motoko",
@@ -22,15 +22,15 @@
       "main": "src/example/upload-and-run.test.mo",
       "dependencies": ["counter", "RepositoryIndex", "package_manager"]
     },
-    "icp_summer_frontend": {
+    "package_manager_frontend": {
       "dependencies": [
         "package_manager"
       ],
       "source": [
-        "src/icp_summer_frontend/dist"
+        "src/package_manager_frontend/dist"
       ],
       "type": "assets",
-      "workspace": "icp_summer_frontend"
+      "workspace": "package_manager_frontend"
     },
     "internet_identity": {
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
