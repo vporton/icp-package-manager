@@ -38,6 +38,8 @@ shared({caller}) actor class PackageManager() = this {
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
+    stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
+
     func onlyOwner(caller: Principal) {
         if (owners.get(caller) == null) {
             Debug.trap("not the owner");
@@ -244,6 +246,12 @@ shared({caller}) actor class PackageManager() = this {
         };
         result;
     };
+
+    // Convenience methods //
+
+    public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
+        repositories := Array.append(repositories, [{canister; name}]);
+    }
 
     // TODO: More
 }
