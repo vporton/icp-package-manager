@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
-import { package_manager } from '../../declarations/package_manager';
+import { canisterId, package_manager } from '../../declarations/package_manager';
 import { Principal } from "@dfinity/principal";
 
-function DistroAdd(props: {show: boolean, handleClose: () => void}) {
+function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
     const [principal, setPrincipal] = useState(""); // TODO: validate
     const handleSave = async () => {
+        // TODO: Don't allow to add the same repo twice.
         props.handleClose();
         await package_manager.addRepository(Principal.fromText(principal), name);
+        props.handleReload();
     };
     return (
         <Modal show={props.show} onHide={props.handleClose}>
@@ -36,18 +38,23 @@ export default function MainPage() {
     ];
 
     const [distroAddShow, setDistroAddShow] = useState(false);
+    const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
     const handleClose = () => setDistroAddShow(false);
+    const reloadDistros = () => {
+        package_manager.getRepositories().then((r) => setDistros(r));
+    };
+    useEffect(reloadDistros, []);
 
     return (
         <>
             <h2>Distribution</h2>
-            <DistroAdd show={distroAddShow} handleClose={handleClose}/>
+            <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
             Distro:{" "}
             <select>
-                <option>RedSocks</option>
-                <option>Batuto</option>
-                <option>Bedian</option>
+                {distros.map((entry: {canister: Principal, name: string}) =>
+                    <option value={entry.canister.toString()}>{entry.name}</option>
+                )}
             </select>{" "}
             <Button>Remove from the list</Button> (doesn't remove installed packages)
             </p>

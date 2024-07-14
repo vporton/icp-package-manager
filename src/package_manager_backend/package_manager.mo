@@ -250,8 +250,13 @@ shared({caller}) actor class PackageManager() = this {
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
+        // FIXME: Check caller.
         repositories := Array.append(repositories, [{canister; name}]);
-    }
+    };
+
+    public query func getRepositories(): async [{canister: Principal; name: Text}] {
+        repositories;
+    };
 
     // TODO: More
 }
