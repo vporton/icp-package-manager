@@ -1,7 +1,7 @@
 // import RepositoryIndex "canister:RepositoryIndex";
-import RepositoryIndex "../package_manager_backend/RepositoryIndex";
-import RepositoryPartition "../package_manager_backend/RepositoryPartition";
-import Common "../package_manager_backend/common";
+import RepositoryIndex "../repository_backend/RepositoryIndex";
+import RepositoryPartition "../repository_backend/RepositoryPartition";
+import Common "../common";
 import PackageManager "../package_manager_backend/package_manager";
 import Counter "../example/counter";
 import Principal "mo:base/Principal";

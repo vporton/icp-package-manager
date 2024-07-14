@@ -10,7 +10,7 @@ import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
-import RepositoryPartition "RepositoryPartition";
+import RepositoryPartition "../repository_backend/RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
 
 /// TODO: Methods to query for all installed packages.

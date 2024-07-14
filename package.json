@@ -11,17 +11,22 @@
     "start": "npm start --workspaces --if-present",
     "test": "npm test --workspaces --if-present"
   },
-  "type": "module",
   "workspaces": [
     "src/package_manager_frontend",
     "src/repository_frontend"
   ],
   "dependencies": {
+    "@dfinity/identity-secp256k1": "^1.4.0",
     "@identity-labs/react-ic-ii-auth": "^0.0.18",
     "@types/react": "^18.3.3",
     "bootstrap": "^5.3.3",
+    "pem-file": "^1.0.1",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
-    "react-router-dom": "^6.24.1"
+    "react-router-dom": "^6.24.1",
+    "typescript": "^5.5.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }

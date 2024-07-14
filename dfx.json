@@ -13,6 +13,11 @@
       "type": "motoko",
       "main": "src/repository_backend/RepositoryIndex.mo"
     },
+    "RepositoryPartition": {
+      "type": "motoko",
+      "main": "src/repository_backend/RepositoryPartition.mo",
+      "deploy": false
+    },
     "counter": {
       "type": "motoko",
       "main": "src/example/counter.mo"
