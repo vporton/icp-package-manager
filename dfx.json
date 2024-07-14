@@ -11,7 +11,7 @@
     },
     "RepositoryIndex": {
       "type": "motoko",
-      "main": "src/package_manager_backend/RepositoryIndex.mo"
+      "main": "src/repository_backend/RepositoryIndex.mo"
     },
     "counter": {
       "type": "motoko",

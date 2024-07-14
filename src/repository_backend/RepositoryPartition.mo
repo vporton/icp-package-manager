@@ -7,7 +7,7 @@ import CanDB "mo:candb/CanDB";
 import Entity "mo:candb/Entity";
 import RBT "mo:stable-rbtree/StableRBTree";
 import Itertools "mo:itertools/Iter";
-import Common "common";
+import Common "../common";
 
 shared ({ caller = owner }) actor class RepositoryPartition({
   partitionKey: Text;

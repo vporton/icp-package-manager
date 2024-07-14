@@ -9,7 +9,7 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
-import Common "common";
+import Common "../common";
 import RepositoryPartition "RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
 
