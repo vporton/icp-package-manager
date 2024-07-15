@@ -7,11 +7,25 @@ import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@identity-labs/react-ic-ii-auth';
 import { Link } from 'react-router-dom';
 import MainPage from './MainPage';
+import ChooseVersion from './ChooseVersion';
+import { AuthProvider } from './auth/use-auth-client';
 
 function App() {
+  const identityProvider = true ? `http://${import.meta.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
-      <InternetIdentityProvider
+      <AuthProvider options={{loginOptions: {
+          identityProvider,
+          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+          onSuccess: () => {
+              console.log('Login Successful!');
+          },
+          onError: (error) => {
+              console.error('Login Failed: ', error);
+          },
+      }}}>
+      {/* <InternetIdentityProvider
         authClientOptions={{
           onSuccess: (identity) => console.log(
             ">> initialize your actors with", {identity}
@@ -20,9 +34,9 @@ function App() {
           // defaults to "https://identity.ic0.app/#authorize"
           identityProvider: `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`
         }}
-      >
+      > */}
         <App2/>
-      </InternetIdentityProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
@@ -52,6 +66,7 @@ function App2() {
           </nav>
           <Routes> {/* TODO: Refactor into sub-components. */}
             <Route path="/" element={<MainPage/>}/>
+            <Route path="/choose-version/:packageName" element={<ChooseVersion/>}/>
             <Route path="/installed" element={
               <>
                 <h2>Installed packages</h2>

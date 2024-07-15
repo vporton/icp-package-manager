@@ -3,6 +3,7 @@ import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
 import { Principal } from "@dfinity/principal";
+import { useNavigate } from "react-router-dom";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -37,8 +38,10 @@ export default function MainPage() {
         {installationId: 3, name: "fineedit", version: "2.3.5"}
     ];
 
+    const navigate = useNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
     const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
+    const [packageName, setPackageName] = useState("");
     const handleClose = () => setDistroAddShow(false);
     const reloadDistros = () => {
         package_manager.getRepositories().then((r) => setDistros(r));
@@ -60,11 +63,9 @@ export default function MainPage() {
             </p>
             <p><Button onClick={() => setDistroAddShow(true)}>Add distro</Button></p>
             <h2>Install</h2>
-            <form action="#" onSubmit={() => {}}>
             <label htmlFor="name">Enter package name to install:</label>{" "}
-            <input id="name" alt="Name" type="text" />{" "}
-            <Button type="submit">Start installation</Button>
-            </form>
+            <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
+            <Button onClick={() => navigate(`/choose-version/`+packageName)}>Start installation</Button>
             {packagesToRepair.length !== 0 ?
             <>
                 <h2>Partially Installed</h2>
