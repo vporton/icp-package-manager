@@ -36,6 +36,7 @@ export default function ChooseVersion(props: {}) {
                 if (fullInfo === undefined) {
                     continue;
                 }
+                // FIXME: Take into account `.versions` map from `FullPackageInfo`.
                 setVersions(fullInfo.packages.map(pkg => pkg[0]));
             }
         });
