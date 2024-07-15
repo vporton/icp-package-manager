@@ -52,8 +52,8 @@ export default function InstalledPackages(props: {}) {
     return (
         <>
             <h2>Installed packages</h2>
-            <ul className='checklist'>
-                <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li>
+            <ul>
+                {/* <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li> */}
                 {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
                     <InstalledPackageLine packageName={name} key={name} allInstalled={installedVersions!}/>
                 )}
