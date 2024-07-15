@@ -2,7 +2,6 @@ import Button from "react-bootstrap/esm/Button";
 import { package_manager } from "../../declarations/package_manager";
 import { useEffect, useState } from "react";
 import { InstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
-import { AlertLink } from "react-bootstrap";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, InstalledPackageInfo][]>}) {
     const packages = props.allInstalled.get(props.packageName);
@@ -13,7 +12,7 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
         return p;
     }));
     return (
-        <li>
+        <>
             <input type='checkbox'/> <code>{props.packageName}</code>{" "}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
@@ -29,7 +28,7 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
                     </>
                 );
             })}
-        </li>
+        </>
     )
 }
 
@@ -54,12 +53,10 @@ export default function InstalledPackages(props: {}) {
             <h2>Installed packages</h2>
             <ul className='checklist'>
                 <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li>
-                {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) => <InstalledPackageLine packageName={name} allInstalled={installedVersions!}/>)}
-                <li>The following are examples for the demo, not real packages:</li>
-                <li><input type='checkbox'/> <code>photoedit</code> <input type='checkbox'/> 3.5.6{" "}
-                    (<input type='checkbox'/> <a href='#'>1</a>, <input type='checkbox'/> <a href='#'>2</a>),
-                    {" "}<input type='checkbox'/> <a href='#'>3.5.7</a></li>
-                <li><input type='checkbox'/> <code>altcoin</code> 4.1.6</li>
+                {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
+                <li key={name}>
+                    <InstalledPackageLine packageName={name} allInstalled={installedVersions!}/>)
+                </li>)}
             </ul>
         </>
     );
