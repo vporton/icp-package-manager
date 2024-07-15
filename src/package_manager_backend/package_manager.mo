@@ -9,9 +9,11 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
+import CanisterActions "mo:candb/CanisterActions";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
+import RepositoryIndex "../repository_backend/RepositoryIndex";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller}) actor class PackageManager() = this {
@@ -30,6 +32,7 @@ shared({caller}) actor class PackageManager() = this {
         HashMap.fromIter([].vals(), 0, Text.equal, Text.hash);
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
+        /// The number of modules in fully installed state.
         shouldHaveModules: Nat;
         name: Common.PackageName;
         version: Common.Version;
@@ -96,6 +99,7 @@ shared({caller}) actor class PackageManager() = this {
             modules = Buffer.Buffer<Principal>(numPackages);
             // packageDescriptionIn = part;
             package;
+            packageCanister = canister;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
@@ -186,6 +190,7 @@ shared({caller}) actor class PackageManager() = this {
             name = ourHalfInstalled.package.base.name;
             version = ourHalfInstalled.package.base.version;
             modules = Buffer.toArray(ourHalfInstalled.modules);
+            packageCanister = ourHalfInstalled.packageCanister;
         });
         halfInstalledPackages.delete(installationId);
         switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
@@ -198,7 +203,91 @@ shared({caller}) actor class PackageManager() = this {
         };
     };
 
-    system func preupgrade() {
+    public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
+        : async ()
+    {
+        // onlyOwner(caller); // FIXME
+
+        let ?package = installedPackages.get(installationId) else {
+            Debug.trap("no such installed package");
+        };
+        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(package.packageCanister));
+        let packageInfo = await part.getPackage(package.name, package.version);
+
+        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+            shouldHaveModules = Array.size(package.modules);
+            name = package.name;
+            version = package.version;
+            modules = Buffer.fromArray(package.modules);
+            package = packageInfo;
+            packageCanister = package.packageCanister;
+        };
+        halfInstalledPackages.put(installationId, ourHalfInstalled);
+
+        // TODO:
+        // let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+        // let package = await part.getPackage(packageName, version);
+        let #real realPackage = packageInfo.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+
+        await* _finishUninstallPackage({
+            installationId;
+            ourHalfInstalled;
+            realPackage;
+        });
+    };
+
+    type CanisterDeletor = actor {
+        stop_canister : shared { canister_id : canister_id } -> async ();
+        delete_canister : shared { canister_id : canister_id } -> async ();
+    };
+
+    private func _finishUninstallPackage({
+        installationId: Nat;
+        ourHalfInstalled: Common.HalfInstalledPackageInfo;
+        realPackage: Common.RealPackageInfo;
+    }): async* () {
+        let IC: CanisterDeletor = actor("aaaaa-aa");
+        while (ourHalfInstalled.modules.size() != 0) {
+            let canister = ourHalfInstalled.modules.get(ourHalfInstalled.modules.size() - 1);
+            await IC.stop_canister({canister_id = canister}); // FIXME: can hang?
+            await IC.delete_canister({canister_id = canister});
+            ignore ourHalfInstalled.modules.removeLast();
+        };
+        installedPackages.delete(installationId);
+        let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
+            Debug.trap("programming error");
+        };
+        // TODO: The below is inefficient and silly, need to change data structure?
+        if (Array.size(byName) == 1) {
+            installedPackagesByName.delete(ourHalfInstalled.name);
+        } else {
+            let new = Iter.filter(byName.vals(), func (e: Common.InstallationId): Bool {
+                e != installationId;
+            });
+            installedPackagesByName.put(ourHalfInstalled.name, Iter.toArray(new));
+        };
+    };
+
+     /// Finish installation of a half-installed package.
+    public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
+        onlyOwner(caller);
+        
+        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+            Debug.trap("package uninstallation has not been started");
+        };
+        let #real realPackage = ourHalfInstalled.package.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        await* _finishUninstallPackage({
+            installationId;
+            ourHalfInstalled;
+            realPackage;
+        });
+    };
+
+   system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
 
         _installedPackagesSave := Iter.toArray(installedPackages.entries());

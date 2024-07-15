@@ -2,6 +2,7 @@ import Button from "react-bootstrap/esm/Button";
 import { package_manager } from "../../declarations/package_manager";
 import { useEffect, useState } from "react";
 import { InstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
+import { Link } from "react-router-dom";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, InstalledPackageInfo][]>}) {
     const packages = props.allInstalled.get(props.packageName);
@@ -13,17 +14,15 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
     }));
     return (
         <li>
-            <input type='checkbox'/> <code>{props.packageName}</code>{" "}
+            <code>{props.packageName}</code>{" "}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
                     <span key={version}>
-                        {byVersion.size > 1 && <input type='checkbox'/>}
                         {packages.length === 1 ?
-                            <a href="#">{version}</a> :
+                            <Link to={'/installed/show/'+packages[0][0].toString()}>{version}</Link> :
                             <span>{version} ({packages.map(([k, _]) =>
                                 <span key={k}>
-                                    <input type='checkbox'/>
-                                    <a href="#">{k.toString()}</a>
+                                    <Link to={'/installed/show/'+k.toString()}>{k.toString()}</Link>{" "}
                                 </span>
                             )})</span>
                         }

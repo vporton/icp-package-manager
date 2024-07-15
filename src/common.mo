@@ -76,6 +76,7 @@ module {
     public type InstalledPackageInfo = {
         id: InstallationId;
         name: PackageName;
+        packageCanister: Principal;
         version: Version;
         modules: [Principal];
     };
@@ -88,6 +89,7 @@ module {
 
     public type HalfInstalledPackageInfo = {
         shouldHaveModules: Nat;
+        packageCanister: Principal;
         name: PackageName;
         version: Version;
         modules: Buffer.Buffer<Principal>;

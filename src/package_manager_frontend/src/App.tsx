@@ -10,6 +10,7 @@ import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider } from './auth/use-auth-client';
 import InstalledPackages from './InstalledPackages';
+import Installation from './Installation';
 
 function App() {
   const identityProvider = true ? `http://${import.meta.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000` : `https://identity.ic0.app`; // FIXME
@@ -26,16 +27,6 @@ function App() {
               console.error('Login Failed: ', error);
           },
       }}}>
-      {/* <InternetIdentityProvider
-        authClientOptions={{
-          onSuccess: (identity) => console.log(
-            ">> initialize your actors with", {identity}
-          ),
-          // FIXME
-          // defaults to "https://identity.ic0.app/#authorize"
-          identityProvider: `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`
-        }}
-      > */}
         <App2/>
       </AuthProvider>
     </BrowserRouter>
@@ -65,10 +56,11 @@ function App2() {
               </Nav>
             </Navbar>
           </nav>
-          <Routes> {/* TODO: Refactor into sub-components. */}
+          <Routes>
             <Route path="/" element={<MainPage/>}/>
             <Route path="/choose-version/:packageName" element={<ChooseVersion/>}/>
             <Route path="/installed" element={<InstalledPackages/>}/>
+            <Route path="/installed/show/:installationId" element={<Installation/>}/>
           </Routes>
         </Container>
       </div>
