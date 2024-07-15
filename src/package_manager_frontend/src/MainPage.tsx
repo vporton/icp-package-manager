@@ -54,10 +54,7 @@ export default function MainPage() {
     const reloadDistros = () => {
         package_manager.getRepositories().then((r) => {
             setDistros(r);
-            const v = (distroSel.current as HTMLSelectElement).value;
-            console.log('v', v)
-            setCurDistro(v === "" ? undefined : Principal.fromText(v));
-            console.log('curDistro', curDistro)
+            setCurDistro(r[0].canister);
         });
     };
     useEffect(reloadDistros, []);
