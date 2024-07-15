@@ -268,6 +268,7 @@ shared({caller}) actor class PackageManager() = this {
             });
             installedPackagesByName.put(ourHalfInstalled.name, Iter.toArray(new));
         };
+        halfInstalledPackages.delete(installationId);
     };
 
      /// Finish installation of a half-installed package.
