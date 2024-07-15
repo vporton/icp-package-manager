@@ -12,7 +12,7 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
         return p;
     }));
     return (
-        <li key={props.packageName}>
+        <li>
             <input type='checkbox'/> <code>{props.packageName}</code>{" "}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
