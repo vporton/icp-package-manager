@@ -15,16 +15,16 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
     return (
         <li>
             <input type='checkbox'/> <code>{props.packageName}</code>{" "}
-            {packages?.map(([id, pkg]) => {
-                console.log(byVersion, pkg.version);
-                const thisByVersion = byVersion.get(pkg.version)!;
+            {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
                     <>
-                        {packages.length > 1 ? <input type='checkbox'/> : ""}{" "}
-                        {thisByVersion.length > 1 && <input type='checkbox'/>}
-                        {thisByVersion.length === 1 ?
-                            <a href="#">{pkg.version}</a> :
-                            <>{pkg.version} ({thisByVersion.map(([k, _]) => <a href="#" key={k.toString()}>{k.toString()}</a>,)})</>
+                        {byVersion.size > 1 && <input type='checkbox'/>}
+                        {packages.length === 1 ?
+                            <a href="#">{version}</a> :
+                            <>{version} ({packages.map(([k, _]) => <>
+                                <input type='checkbox'/>
+                                <a href="#" key={k.toString()}>{k.toString()}</a>
+                            </>)})</>
                         }
                     </>
                 );
