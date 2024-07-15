@@ -51,7 +51,7 @@ export default function ChooseVersion(props: {}) {
         alert("Installation finished, installation ID "+id);
     }
     useEffect(() => {
-        setChosenVersion(versions[0]); // FIXME: if there is zero versions? 
+        setChosenVersion(versions[0]); // FIXME: if there are zero versions?
     }, [versions]);
     return (
         <>

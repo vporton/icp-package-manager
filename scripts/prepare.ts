@@ -68,7 +68,7 @@ async function main() {
         } },
     };
     const fullInfo: FullPackageInfo = {
-        packages: [["stable", info]],
+        packages: [["1.0.0", info]],
         versionsMap: [],
     };
     await pPart.setFullPackageInfo("counter", fullInfo);
