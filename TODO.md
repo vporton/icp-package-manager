@@ -25,4 +25,6 @@ Remaining things to do:
 
 - Events (similar to permissions?)
 
+- Should we automatically uninstall "orphaned" packages (installed only to support another package)?
+
 - `FIXME`/`TODO` in the sources.
