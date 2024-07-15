@@ -32,7 +32,6 @@ export default function ChooseVersion(props: {}) {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent}); // FIXME: convert pk to Principal?
                 return await part.getFullPackageInfo(packageName);
             })) as any;
-            let versions = [];
             for (const fullInfo of res) {
                 if (fullInfo === undefined) {
                     continue;
