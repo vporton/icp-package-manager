@@ -26,7 +26,6 @@ export default function ChooseVersion(props: {}) {
                 return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
             })) as any;
             for (const [pk, fullInfo] of res) {
-                console.log("PK", pk)
                 if (fullInfo === undefined) {
                     continue;
                 }
