@@ -27,4 +27,6 @@ Remaining things to do:
 
 - Should we automatically uninstall "orphaned" packages (installed only to support another package)?
 
+- Store in installed package info also its `RepositoryIndex`?
+
 - `FIXME`/`TODO` in the sources.
