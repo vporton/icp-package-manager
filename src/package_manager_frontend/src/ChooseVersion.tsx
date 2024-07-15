@@ -5,24 +5,25 @@ import { useParams } from "react-router-dom";
 // import { ActorClient } from "candb-client-typescript/dist/ActorClient";
 import { /*RepositoryIndex,*/ idlFactory as repositoryIndexIDL } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { FullPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
-import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 import { Actor } from "@dfinity/agent";
 import { useAuth } from "./auth/use-auth-client";
 import { package_manager } from "../../declarations/package_manager";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
+import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
+import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
 
 export default function ChooseVersion(props: {}) {
-    const { packageName } = useParams();
+    const { packageName, repo } = useParams();
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     const [packagePk, setPackagePk] = useState<Principal | undefined>();
     useEffect(() => {
-        // FIXME: Use the currently choosen repo, not `RepositoryIndex`.
-        RepositoryIndex.getCanistersByPK("main").then(async pks => {
+        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent}); // FIXME: convert pk to Principal?
+        index.getCanistersByPK("main").then(async pks => {
             const res: [string, FullPackageInfo][] = await Promise.all(pks.map(async pk => {
-                const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent}); // FIXME: convert pk to Principal?
+                const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
                 return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
             })) as any;
             for (const [pk, fullInfo] of res) {

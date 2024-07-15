@@ -58,7 +58,7 @@ function App2() {
           </nav>
           <Routes>
             <Route path="/" element={<MainPage/>}/>
-            <Route path="/choose-version/:packageName" element={<ChooseVersion/>}/>
+            <Route path="/choose-version/:repo/:packageName" element={<ChooseVersion/>}/>
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<Installation/>}/>
           </Routes>

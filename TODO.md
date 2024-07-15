@@ -29,4 +29,6 @@ Remaining things to do:
 
 - Store in installed package info also its `RepositoryIndex`?
 
+- `!` is TypeScript.
+
 - `FIXME`/`TODO` in the sources.

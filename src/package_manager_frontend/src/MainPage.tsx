@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createRef, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
@@ -41,6 +41,7 @@ export default function MainPage() {
     const navigate = useNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
     const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
+    const [curDistro, setCurDistro] = useState<Principal | undefined>();
     const [packageName, setPackageName] = useState("");
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageCanister: Principal}[]>();
     useEffect(() => {
@@ -49,8 +50,15 @@ export default function MainPage() {
         });
     });
     const handleClose = () => setDistroAddShow(false);
+    const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        package_manager.getRepositories().then((r) => setDistros(r));
+        package_manager.getRepositories().then((r) => {
+            setDistros(r);
+            const v = (distroSel.current as HTMLSelectElement).value;
+            console.log('v', v)
+            setCurDistro(v === "" ? undefined : Principal.fromText(v));
+            console.log('curDistro', curDistro)
+        });
     };
     useEffect(reloadDistros, []);
 
@@ -80,9 +88,9 @@ export default function MainPage() {
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
             Distro:{" "}
-            <select>
+            <select ref={distroSel} onChange={(event: Event) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
                 {distros.map((entry: {canister: Principal, name: string}) =>
-                    <option value={entry.canister.toString()}>{entry.name}</option>
+                    <option value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
                 )}
             </select>{" "}
             <Button>Remove from the list</Button> (doesn't remove installed packages)
@@ -91,7 +99,7 @@ export default function MainPage() {
             <h2>Install</h2>
             <label htmlFor="name">Enter package name to install:</label>{" "}
             <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
-            <Button onClick={() => navigate(`/choose-version/`+packageName)}>Start installation</Button>
+            <Button disabled={!curDistro || packageName === ''} onClick={() => navigate(`/choose-version/${curDistro!.toString()}/${packageName}`)}>Start installation</Button>
             {packagesToRepair !== undefined && packagesToRepair.length !== 0 ?
             <>
                 <h2>Partially Installed</h2>
