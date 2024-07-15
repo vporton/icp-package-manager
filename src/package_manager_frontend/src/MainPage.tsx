@@ -1,4 +1,4 @@
-import { createRef, useEffect, useState } from "react";
+import { ChangeEvent, createRef, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
@@ -88,7 +88,7 @@ export default function MainPage() {
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
             Distro:{" "}
-            <select ref={distroSel} onChange={(event: Event) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
+            <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
                 {distros.map((entry: {canister: Principal, name: string}) =>
                     <option value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
                 )}
