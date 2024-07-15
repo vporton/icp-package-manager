@@ -13,19 +13,21 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
     }));
     return (
         <>
-            <input type='checkbox'/> <code>{props.packageName}</code>{" "}
+            <input type='checkbox' key={'pcb-'+props.packageName}/> <code>{props.packageName}</code>{" "}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
-                    <>
-                        {byVersion.size > 1 && <input type='checkbox'/>}
+                    <span key={version}>
+                        {byVersion.size > 1 && <input type='checkbox' key={'pcb2-'+version}/>}
                         {packages.length === 1 ?
                             <a href="#">{version}</a> :
-                            <>{version} ({packages.map(([k, _]) => <>
-                                <input type='checkbox'/>
-                                <a href="#" key={k.toString()}>{k.toString()}</a>
-                            </>)})</>
+                            <span>{version} ({packages.map(([k, _]) =>
+                                <span key={k}>
+                                    <input type='checkbox'/>
+                                    <a href="#">{k.toString()}</a>
+                                </span>
+                            )})</span>
                         }
-                    </>
+                    </span>
                 );
             })}
         </>
@@ -55,7 +57,7 @@ export default function InstalledPackages(props: {}) {
                 <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li>
                 {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
                 <li key={name}>
-                    <InstalledPackageLine packageName={name} allInstalled={installedVersions!}/>)
+                    <InstalledPackageLine packageName={name} key={'n2-'+name} allInstalled={installedVersions!}/>
                 </li>)}
             </ul>
         </>
