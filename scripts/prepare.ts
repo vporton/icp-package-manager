@@ -7,7 +7,7 @@ import { _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryP
 import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
 import { _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
-import { PackageInfo } from '../src/declarations/package_manager/package_manager.did';
+import { PackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { FullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { config as dotenv_config } from 'dotenv';
 
@@ -34,15 +34,15 @@ async function main() {
     agent.fetchRootKey(); // TODO: should not be used in production.
 
     const repositoryIndex: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
-    console.log("Repository init...")
-    try {
-        await repositoryIndex.init();
-    }
-    catch (e) {
-        if (!/already initialized/.test((e as any).toString())) {
-            throw e;
-        }
-    }
+    // console.log("Repository init...")
+    // try {
+    //     await repositoryIndex.init();
+    // }
+    // catch (e) {
+    //     if (!/already initialized/.test((e as any).toString())) {
+    //         throw e;
+    //     }
+    // }
     console.log("Setting repository name...")
     await repositoryIndex.setRepositoryName("RedSocks");
 

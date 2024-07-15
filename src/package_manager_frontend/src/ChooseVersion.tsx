@@ -10,44 +10,49 @@ import { Actor } from "@dfinity/agent";
 import { useAuth } from "./auth/use-auth-client";
 import { package_manager } from "../../declarations/package_manager";
 import Button from "react-bootstrap/Button";
+import { Principal } from "@dfinity/principal";
 
 export default function ChooseVersion(props: {}) {
     const { packageName } = useParams();
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
+    const [packagePk, setPackagePk] = useState<Principal | undefined>();
     useEffect(() => {
-        // const index = new IndexClient<RepositoryIndex>({
-        //     IDL: RepositoryIndexIDL,
-        //     canisterId: import.meta.env.CANISTER_ID_REPOSITORYINDEX!,
-        //     agentOptions: {/*source:*/},
-        // });
-        // const repositoryPartition = new ActorClient<RepositoryIndex, RepositoryPartition>({
-        //     actorOptions: {
-        //       IDL: RepositoryPartitionIDL,
-        //       agentOptions: {/*source:*/},
-        //     },
-        //     indexClient: index, 
-        // });
         // FIXME: Use the currently choosen repo, not `RepositoryIndex`.
         RepositoryIndex.getCanistersByPK("main").then(async pks => {
-            const res: FullPackageInfo[] = await Promise.all(pks.map(async pk => {
+            const res: [string, FullPackageInfo][] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent}); // FIXME: convert pk to Principal?
-                return await part.getFullPackageInfo(packageName);
+                return [pk, await part.getFullPackageInfo(packageName)];
             })) as any;
-            for (const fullInfo of res) {
+            for (const [pk, fullInfo] of res) {
+                console.log("PK", pk)
                 if (fullInfo === undefined) {
                     continue;
                 }
                 // FIXME: Take into account `.versions` map from `FullPackageInfo`.
                 setVersions(fullInfo.packages.map(pkg => pkg[0]));
+                setPackagePk(Principal.fromText(pk));
+                break;
             }
         });
         package_manager.getInstalledPackagesInfoByName(packageName!).then(installed => {
             setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
         });
-    });
+    }, []);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
+    async function install() {
+        let id = await package_manager.installPackage({
+            canister: packagePk!,
+            packageName: packageName!,
+            version: chosenVersion!,
+        });
+        // TODO:
+        alert("Installation finished, installation ID "+id);
+    }
+    useEffect(() => {
+        setChosenVersion(versions[0]); // FIXME: if there is zero versions? 
+    }, [versions]);
     return (
         <>
             <h2>Choose package version for installation</h2>
@@ -58,7 +63,7 @@ export default function ChooseVersion(props: {}) {
                 </select>
             </p>
             <p>
-                <Button>
+                <Button onClick={install}>
                 {installedVersions.size == 0
                     ? "Install new package"
                     : installedVersions.has(chosenVersion ?? "")

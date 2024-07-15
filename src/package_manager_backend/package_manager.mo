@@ -70,14 +70,15 @@ shared({caller}) actor class PackageManager() = this {
 
     /// We don't install dependencies here (see `specs.odt`).
     public shared({caller}) func installPackage({
-        part: Common.RepositoryPartitionRO;
+        canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
     })
         : async Common.InstallationId
     {
-        onlyOwner(caller);
+        // onlyOwner(caller); // FIXME
 
+        let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
         let package = await part.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
