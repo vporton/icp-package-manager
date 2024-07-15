@@ -363,6 +363,33 @@ shared({caller}) actor class PackageManager() = this {
         Iter.toArray(installedPackages.entries());
     };
 
+    /// TODO: very unstable API.
+    public query func getHalfInstalledPackages(): async [{
+        installationId: Common.InstallationId;
+        packageCanister: Principal;
+        name: Common.PackageName;
+        version: Common.Version;
+    }] {
+        Iter.toArray(Iter.map<(Common.InstallationId, Common.HalfInstalledPackageInfo), {
+            installationId: Common.InstallationId;
+            packageCanister: Principal;
+            name: Common.PackageName;
+            version: Common.Version;
+        }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, Common.HalfInstalledPackageInfo)): {
+            installationId: Common.InstallationId;
+            packageCanister: Principal;
+            name: Common.PackageName;
+            version: Common.Version;
+        } =
+            {
+                installationId = x.0;
+                packageCanister = x.1.packageCanister;
+                name = x.1.name;
+                version = x.1.version;
+            },
+        ));
+    };
+
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {

@@ -4,6 +4,8 @@ import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./auth/use-auth-client";
+import { InstallationId } from "../../declarations/package_manager/package_manager.did";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -34,19 +36,43 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const packagesToRepair = [ // TODO
-        {installationId: 3, name: "fineedit", version: "2.3.5"}
-    ];
+    const { defaultAgent } = useAuth();
 
     const navigate = useNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
     const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
     const [packageName, setPackageName] = useState("");
+    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageCanister: Principal}[]>();
+    useEffect(() => {
+        package_manager.getHalfInstalledPackages().then(h => {
+            setPackagesToRepair(h);
+        });
+    });
     const handleClose = () => setDistroAddShow(false);
     const reloadDistros = () => {
         package_manager.getRepositories().then((r) => setDistros(r));
     };
     useEffect(reloadDistros, []);
+
+    const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
+    async function installChecked() {
+        for (const p of packagesToRepair!) {
+            if (checkedHalfInstalled?.has(p.installationId)) {
+                await package_manager.installPackage({
+                    packageName: p.name,
+                    version: p.version,
+                    canister: p.packageCanister,
+                });
+            }
+        }
+    }
+    async function deleteChecked() {
+        for (const p of packagesToRepair!) {
+            if (checkedHalfInstalled?.has(p.installationId)) {
+                await package_manager.uninstallPackage(BigInt(p.installationId));
+            }
+        }
+    }
 
     return (
         <>
@@ -66,18 +92,23 @@ export default function MainPage() {
             <label htmlFor="name">Enter package name to install:</label>{" "}
             <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
             <Button onClick={() => navigate(`/choose-version/`+packageName)}>Start installation</Button>
-            {packagesToRepair.length !== 0 ?
+            {packagesToRepair !== undefined && packagesToRepair.length !== 0 ?
             <>
                 <h2>Partially Installed</h2>
                 <ul className='checklist'>
                 {packagesToRepair.map(p =>
                     <li key={p.installationId}>
-                    <input type='checkbox'/>{" "}
+                    <input
+                        type='checkbox'
+                        onClick={event => {
+                            (event.target as HTMLInputElement).checked ? checkedHalfInstalled!.add(p.installationId) : checkedHalfInstalled!.delete(p.installationId);
+                            setCheckedHalfInstalled(checkedHalfInstalled);
+                        } }/>{" "}
                     <code>{p.name}</code> {p.version}
                     </li>
                 )}
                 </ul>
-                <p><Button>Install checked</Button> <Button>Delete checked</Button></p>
+                <p><Button onClick={installChecked}>Install checked</Button> <Button onClick={deleteChecked}>Delete checked</Button></p>
             </>
             : ""}
         </>
