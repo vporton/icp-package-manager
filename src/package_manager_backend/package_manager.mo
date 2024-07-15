@@ -268,6 +268,11 @@ shared({caller}) actor class PackageManager() = this {
         }));
     };
 
+    /// TODO: very unstable API.
+    public query func getAllInstalledPackages(): async [(Common.InstallationId, Common.InstalledPackageInfo)] {
+        Iter.toArray(installedPackages.entries());
+    };
+
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {

@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider } from './auth/use-auth-client';
+import InstalledPackages from './InstalledPackages';
 
 function App() {
   const identityProvider = true ? `http://${import.meta.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000` : `https://identity.ic0.app`; // FIXME
@@ -67,18 +68,7 @@ function App2() {
           <Routes> {/* TODO: Refactor into sub-components. */}
             <Route path="/" element={<MainPage/>}/>
             <Route path="/choose-version/:packageName" element={<ChooseVersion/>}/>
-            <Route path="/installed" element={
-              <>
-                <h2>Installed packages</h2>
-                <ul className='checklist'>
-                  <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li>
-                  <li><input type='checkbox'/> <code>photoedit</code> <input type='checkbox'/> 3.5.6{" "}
-                    (<input type='checkbox'/> <a href='#'>1</a>, <input type='checkbox'/> <a href='#'>2</a>),
-                    {" "}<input type='checkbox'/> <a href='#'>3.5.7</a></li>
-                  <li><input type='checkbox'/> <code>altcoin</code> 4.1.6</li>
-                </ul>
-              </>
-            }/>
+            <Route path="/installed" element={<InstalledPackages/>}/>
           </Routes>
         </Container>
       </div>
