@@ -63,13 +63,14 @@ export default function ChooseVersion(props: {}) {
                 </select>
             </p>
             <p>
-                <Button onClick={install}>
+                
+                {/* TODO: Disable the button when executing it. */}
                 {installedVersions.size == 0
-                    ? "Install new package"
+                    ? <Button onClick={install}>Install new package</Button>
                     : installedVersions.has(chosenVersion ?? "")
-                    ? "Install an additional copy of this version " + chosenVersion
-                    : `Install '${chosenVersion}' in addition to other versions of this package`}
-                </Button>
+                    ? <>Already installed. <Button onClick={install}>Install an additional copy of this version</Button></>
+                    : <>Already installed. <Button onClick={install}>Install it in addition to other versions of this package</Button></>
+                }
             </p>
         </>
     );
