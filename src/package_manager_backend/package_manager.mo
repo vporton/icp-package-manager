@@ -187,7 +187,14 @@ shared({caller}) actor class PackageManager() = this {
             modules = Buffer.toArray(ourHalfInstalled.modules);
         });
         halfInstalledPackages.delete(installationId);
-        // TODO: Modify `installedPackagesByName`.
+        switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
+            case (?ids) {
+                installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
+            };
+            case null {
+                installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
+            };
+        };
     };
 
     system func preupgrade() {
@@ -245,6 +252,19 @@ shared({caller}) actor class PackageManager() = this {
             Debug.trap("no such installed package");
         };
         result;
+    };
+
+    /// TODO: very unstable API.
+    public query func getInstalledPackagesInfoByName(name: Text): async [Common.InstalledPackageInfo] {
+        let ?ids = installedPackagesByName.get(name) else {
+            return [];
+        };
+        Iter.toArray(Iter.map(ids.vals(), func (id: Common.InstallationId): Common.InstalledPackageInfo {
+            let ?info = installedPackages.get(id) else {
+                Debug.trap("programming error");
+            };
+            info;
+        }));
     };
 
     // Convenience methods //
