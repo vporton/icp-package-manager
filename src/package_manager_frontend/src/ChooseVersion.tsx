@@ -23,7 +23,7 @@ export default function ChooseVersion(props: {}) {
         RepositoryIndex.getCanistersByPK("main").then(async pks => {
             const res: [string, FullPackageInfo][] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent}); // FIXME: convert pk to Principal?
-                return [pk, await part.getFullPackageInfo(packageName)];
+                return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
             })) as any;
             for (const [pk, fullInfo] of res) {
                 console.log("PK", pk)
