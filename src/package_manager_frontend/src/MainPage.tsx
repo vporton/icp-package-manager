@@ -54,7 +54,9 @@ export default function MainPage() {
     const reloadDistros = () => {
         package_manager.getRepositories().then((r) => {
             setDistros(r);
-            setCurDistro(r[0].canister);
+            if (r.length !== 0) {
+                setCurDistro(r[0].canister);
+            }
         });
     };
     useEffect(reloadDistros, []);
@@ -87,7 +89,7 @@ export default function MainPage() {
             Distro:{" "}
             <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
                 {distros.map((entry: {canister: Principal, name: string}) =>
-                    <option value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
+                    <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
                 )}
             </select>{" "}
             <Button>Remove from the list</Button> (doesn't remove installed packages)

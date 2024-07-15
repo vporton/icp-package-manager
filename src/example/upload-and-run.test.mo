@@ -50,7 +50,7 @@ actor {
         let pm = await PackageManager.PackageManager();
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
-            canister = Principal.toText(pPart); // FIXME
+            canister = Principal.fromActor(pPart); // FIXME
             packageName = "counter";
             version = "stable";
         });

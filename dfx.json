@@ -15,8 +15,7 @@
     },
     "RepositoryPartition": {
       "type": "motoko",
-      "main": "src/repository_backend/RepositoryPartition.mo",
-      "deploy": false
+      "main": "src/repository_backend/RepositoryPartition.mo"
     },
     "counter": {
       "type": "motoko",
