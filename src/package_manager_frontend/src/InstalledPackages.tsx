@@ -12,12 +12,12 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
         return p;
     }));
     return (
-        <>
-            <input type='checkbox' key={'pcb-'+props.packageName}/> <code>{props.packageName}</code>{" "}
+        <li key={props.packageName}>
+            <input type='checkbox'/> <code>{props.packageName}</code>{" "}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
                     <span key={version}>
-                        {byVersion.size > 1 && <input type='checkbox' key={'pcb2-'+version}/>}
+                        {byVersion.size > 1 && <input type='checkbox'/>}
                         {packages.length === 1 ?
                             <a href="#">{version}</a> :
                             <span>{version} ({packages.map(([k, _]) =>
@@ -30,7 +30,7 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
                     </span>
                 );
             })}
-        </>
+        </li>
     )
 }
 
@@ -56,9 +56,8 @@ export default function InstalledPackages(props: {}) {
             <ul className='checklist'>
                 <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li>
                 {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
-                <li key={name}>
-                    <InstalledPackageLine packageName={name} key={'n2-'+name} allInstalled={installedVersions!}/>
-                </li>)}
+                    <InstalledPackageLine packageName={name} key={name} allInstalled={installedVersions!}/>
+                )}
             </ul>
         </>
     );
