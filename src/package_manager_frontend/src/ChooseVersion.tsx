@@ -26,6 +26,7 @@ export default function ChooseVersion(props: {}) {
         //     },
         //     indexClient: index, 
         // });
+        // FIXME: Use the currently choosen repo, not `RepositoryIndex`.
         RepositoryIndex.getCanistersByPK("main").then(async pks => {
             const res: FullPackageInfo[] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent}); // FIXME: convert pk to Principal?
