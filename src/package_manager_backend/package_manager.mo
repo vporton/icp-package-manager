@@ -9,17 +9,41 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
-import CanisterActions "mo:candb/CanisterActions";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import indirect_caller "canister:indirect_caller";
-import RepositoryIndex "../repository_backend/RepositoryIndex";
 
 /// TODO: Methods to query for all installed packages.
-shared({caller}) actor class PackageManager() = this {
+shared({caller = initialOwner}) actor class PackageManager() = this {
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter([(caller, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+
+    public shared({caller}) func init(user: Principal, packageCanister: Principal, version: Common.Version, wasms: [Principal])
+        : async ()
+    {
+        onlyOwner(caller);
+
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+
+        let part: Common.RepositoryPartitionRO = actor (Principal.toText(packageCanister));
+        let package = await part.getPackage("package-manager", version);
+        let numPackages = Array.size(wasms);
+        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+            shouldHaveModules = numPackages;
+            name = "package-manager";
+            version = version;
+            modules = Buffer.fromArray(wasms); // Pretend that our package's modules are already installed.
+            package;
+            packageCanister;
+        };
+        halfInstalledPackages.put(installationId, ourHalfInstalled);
+
+        _updateAfterInstall({installationId});
+
+        owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
+    };
 
     stable var nextInstallationId: Nat = 0;
 
@@ -107,6 +131,7 @@ shared({caller}) actor class PackageManager() = this {
             installationId;
             ourHalfInstalled;
             realPackage;
+            caller;
         });
 
         installationId;
@@ -126,6 +151,7 @@ shared({caller}) actor class PackageManager() = this {
             installationId;
             ourHalfInstalled;
             realPackage;
+            caller;
         });
     };
 
@@ -133,6 +159,7 @@ shared({caller}) actor class PackageManager() = this {
         installationId: Nat;
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
+        caller: Principal;
     }): async* () {
         let IC: CanisterCreator = actor("aaaaa-aa");
 
@@ -167,7 +194,7 @@ shared({caller}) actor class PackageManager() = this {
                 mode = #install;
                 canister_id;
             });
-            // canisters.add(canister_id);
+            // canisters.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
         };
         indirect_caller.callIgnoringMissing(
@@ -185,6 +212,13 @@ shared({caller}) actor class PackageManager() = this {
             )),
         );
 
+        _updateAfterInstall({installationId});
+    };
+
+    private func _updateAfterInstall({installationId: Common.InstallationId}) {
+        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+            Debug.trap("package installation has not been started");
+        };
         installedPackages.put(installationId, {
             id = installationId;
             name = ourHalfInstalled.package.base.name;

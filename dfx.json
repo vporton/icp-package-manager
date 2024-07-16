@@ -46,6 +46,15 @@
       },
       "type": "custom",
       "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    },
+    "cycles_ledger": {
+      "main": "src/MockCreateCanister.mo",
+      "type": "motoko",
+      "remote": {
+        "id": {
+          "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
+        }
+      }
     }
   },
   "defaults": {

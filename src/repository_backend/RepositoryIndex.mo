@@ -28,9 +28,13 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     }
   };
 
-  public shared({caller}) func setOwner(): async () {
+  public query func getOwner(): async Principal {
+    owner;
+  };
+
+  public shared({caller}) func setOwner(newOwner: Principal): async () {
     onlyOwner(caller);
-    owner := caller;
+    owner := newOwner;
   };
 
   public shared({caller}) func init(): async () {
