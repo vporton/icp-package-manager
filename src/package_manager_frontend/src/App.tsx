@@ -13,7 +13,7 @@ import InstalledPackages from './InstalledPackages';
 import Installation from './Installation';
 
 function App() {
-  const identityProvider = true ? `http://${import.meta.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000` : `https://identity.ic0.app`; // FIXME
+  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
       <AuthProvider options={{loginOptions: {
@@ -42,8 +42,8 @@ function App2() {
         Package Manager
       </h1>
       <div>
-        <Container>
-          <nav>
+      <Container>
+        <nav>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
                 <Link className="nav-link" to="/">Main page</Link>

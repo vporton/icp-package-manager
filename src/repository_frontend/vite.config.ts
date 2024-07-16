@@ -27,8 +27,8 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    environment("all", { prefix: "CANISTER_" , defineOn: 'import.meta.env' }),
-    environment("all", { prefix: "DFX_" , defineOn: 'import.meta.env' }),
+    environment("all", { prefix: "CANISTER_" , defineOn: 'process.env' }),
+    environment("all", { prefix: "DFX_" , defineOn: 'process.env' }),
   ],
   resolve: {
     alias: [

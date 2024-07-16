@@ -37,9 +37,9 @@ const defaultOptions: UseAuthClientOptions = {
   },
   loginOptions: {
     identityProvider:
-      process.env.DFX_NETWORK === "ic" // FIXME
+    process.env.DFX_NETWORK === "ic" // FIXME
         ? `https://identity.ic0.app`
-        : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000`,
+        : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000`,
   },
 };
 
@@ -48,11 +48,6 @@ const defaultOptions: UseAuthClientOptions = {
  */
 export function AuthProvider(props: { children: any, options?: UseAuthClientOptions }) {
   const [auth, setAuth] = useState<any>({options: props.options});
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // const [authClient, setAuthClient] = useState<AuthClient | undefined>();
-  // const [identity, setIdentity] = useState<Identity | undefined>(undefined);
-  // const [principal, setPrincipal] = useState<Principal | undefined>(undefined);
-  // const [options, setOptions] = useState<UseAuthClientOptions>(props.options ?? defaultOptions);
 
   const login = async () => {
     auth.authClient!.login({

@@ -6,7 +6,6 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
 import { Link } from 'react-router-dom';
-import process from 'process';
 
 const packagesToRepair = [ // TODO
   {installationId: 3, name: "fineedit", version: "2.3.5"}
@@ -48,7 +47,7 @@ function App2() {
               <>
                 <h2>Install</h2>
                 <p>Copy the repository ID:{" "}
-                {import.meta.env.CANISTER_ID_REPOSITORYINDEX}
+                {process.env.CANISTER_ID_REPOSITORYINDEX}
                 </p>
               </>}/>
             </Routes>
