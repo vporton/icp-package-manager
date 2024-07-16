@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 // TODO; Delete "candb-client-typescript/dist/IndexClient"
 // import { IndexClient } from "candb-client-typescript/dist/IndexClient";
 // import { ActorClient } from "candb-client-typescript/dist/ActorClient";
@@ -15,6 +15,7 @@ import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryI
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
+    const navigate = useNavigate();
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
@@ -41,14 +42,15 @@ export default function ChooseVersion(props: {}) {
         });
     }, []);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
+    const [installing, setInstalling] = useState(false);
     async function install() {
+        setInstalling(true);
         let id = await package_manager.installPackage({
             canister: packagePk!,
             packageName: packageName!,
             version: chosenVersion!,
         });
-        // TODO:
-        alert("Installation finished, installation ID "+id);
+        navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
         setChosenVersion(versions[0]); // FIXME: if there are zero versions?
@@ -66,10 +68,10 @@ export default function ChooseVersion(props: {}) {
                 
                 {/* TODO: Disable the button when executing it. */}
                 {installedVersions.size == 0
-                    ? <Button onClick={install}>Install new package</Button>
+                    ? <Button onClick={install} disabled={installing}>Install new package</Button>
                     : installedVersions.has(chosenVersion ?? "")
-                    ? <>Already installed. <Button onClick={install}>Install an additional copy of this version</Button></>
-                    : <>Already installed. <Button onClick={install}>Install it in addition to other versions of this package</Button></>
+                    ? <>Already installed. <Button onClick={install} disabled={installing}>Install an additional copy of this version</Button></>
+                    : <>Already installed. <Button onClick={install} disabled={installing}>Install it in addition to other versions of this package</Button></>
                 }
             </p>
         </>

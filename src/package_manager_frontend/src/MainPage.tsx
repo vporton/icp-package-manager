@@ -81,6 +81,13 @@ export default function MainPage() {
         }
     }
 
+    async function removeRepository() {
+        if (confirm("Remove installation media?")) {
+            await package_manager.removeRepository(curDistro!);
+            reloadDistros();
+        }
+    }
+
     return (
         <>
             <h2>Distribution</h2>
@@ -92,7 +99,7 @@ export default function MainPage() {
                     <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
                 )}
             </select>{" "}
-            <Button>Remove from the list</Button> (doesn't remove installed packages)
+            <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
             </p>
             <p><Button onClick={() => setDistroAddShow(true)}>Add distro</Button></p>
             <h2>Install</h2>

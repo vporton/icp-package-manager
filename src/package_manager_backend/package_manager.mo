@@ -397,9 +397,14 @@ shared({caller}) actor class PackageManager() = this {
         repositories := Array.append(repositories, [{canister; name}]);
     };
 
+    public shared({caller}) func removeRepository(canister: Principal): async () {
+        // FIXME: Check caller.
+        repositories := Iter.toArray(Iter.filter(
+            repositories.vals(),
+            func (x: {canister: Principal; name: Text}): Bool = x.canister != canister));
+    };
+
     public query func getRepositories(): async [{canister: Principal; name: Text}] {
         repositories;
     };
-
-    // TODO: More
 }
