@@ -20,7 +20,7 @@ export default function Installation(props: {}) {
             setPkg(pkg);
             const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageCanister!, agent: defaultAgent});
             part.getFullPackageInfo(pkg.name).then(fullInfo => {
-                const pi = fullInfo.packages.filter(([version, _]) => version == pkg.version).map(([version, pkg]) => pkg)[0]; // TODO: undefined
+                const pi = fullInfo.packages.filter(([version, _]) => version == pkg.version).map(([_, pkg]) => pkg)[0]; // TODO: undefined
                 setPkg2(pi);
             });
 
@@ -42,7 +42,7 @@ export default function Installation(props: {}) {
             <p><strong>Package version:</strong> {pkg?.version}</p>
             <p><strong>Short description:</strong> {pkg2?.base.shortDescription}</p>
             <p><strong>Long description:</strong> {pkg2?.base.longDescription}</p>
-            { (pkg2?.specific as { real: RealPackageInfo }).real && 
+            { pkg2 && (pkg2.specific as { real: RealPackageInfo }).real && 
                 <p><strong>Dependencies:</strong> {(pkg2?.specific as { real: RealPackageInfo }).real.dependencies.join(", ")}</p>
             }
             {/* TODO: description is missing in `pkg`, why? */}
