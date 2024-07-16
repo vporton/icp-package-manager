@@ -21,7 +21,7 @@ function App() {
           ),
           // FIXME
           // defaults to "https://identity.ic0.app/#authorize"
-          identityProvider: `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/#authorize`
+          identityProvider: `http://localhost:4943/?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
         }}
       >
         <App2/>

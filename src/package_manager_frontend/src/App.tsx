@@ -13,7 +13,7 @@ import InstalledPackages from './InstalledPackages';
 import Installation from './Installation';
 
 function App() {
-  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000` : `https://identity.ic0.app`; // FIXME
+  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
       <AuthProvider options={{loginOptions: {

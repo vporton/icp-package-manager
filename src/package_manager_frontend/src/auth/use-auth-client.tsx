@@ -39,7 +39,7 @@ const defaultOptions: UseAuthClientOptions = {
     identityProvider:
     process.env.DFX_NETWORK === "ic" // FIXME
         ? `https://identity.ic0.app`
-        : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000`,
+        : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`,
   },
 };
 
