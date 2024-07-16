@@ -1,6 +1,6 @@
 import Button from 'react-bootstrap/Button';
 
-import { useInternetIdentity } from '@identity-labs/react-ic-ii-auth';
+import { useInternetIdentity } from '@internet-identity-labs/react-ic-ii-auth';
 import DisplayPrincipal from './DisplayPrincipal';
 
 export const AuthButton = () => {

@@ -16,8 +16,11 @@
     "src/repository_frontend"
   ],
   "dependencies": {
+    "@dfinity/agent": "^1.4.0",
+    "@dfinity/candid": "^1.4.0",
     "@dfinity/identity-secp256k1": "^1.4.0",
-    "@identity-labs/react-ic-ii-auth": "^0.0.18",
+    "@dfinity/principal": "^1.4.0",
+    "@internet-identity-labs/react-ic-ii-auth": "^0.0.18",
     "@types/react": "^18.3.3",
     "bootstrap": "^5.3.3",
     "pem-file": "^1.0.1",

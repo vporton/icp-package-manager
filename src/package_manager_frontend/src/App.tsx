@@ -4,7 +4,7 @@ import { package_manager } from '../../declarations/package_manager';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
-import { InternetIdentityProvider } from '@identity-labs/react-ic-ii-auth';
+import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
 import { Link } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
