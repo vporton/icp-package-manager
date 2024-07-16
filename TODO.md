@@ -29,6 +29,8 @@ Remaining things to do:
 
 - Store in installed package info also its `RepositoryIndex`?
 
+_ Package manager (and probably some other packages) should be non-removable.
+
 - `!` is TypeScript.
 
 - `FIXME`/`TODO` in the sources.
