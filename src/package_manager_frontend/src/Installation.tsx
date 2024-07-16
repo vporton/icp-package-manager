@@ -45,7 +45,6 @@ export default function Installation(props: {}) {
             { pkg2 && (pkg2.specific as { real: RealPackageInfo }).real && 
                 <p><strong>Dependencies:</strong> {(pkg2?.specific as { real: RealPackageInfo }).real.dependencies.join(", ")}</p>
             }
-            {/* TODO: description is missing in `pkg`, why? */}
             <p><Button onClick={uninstall}>Uninstall</Button></p>
         </>
     )
