@@ -6,26 +6,29 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
 import { Link } from 'react-router-dom';
+import { AuthProvider } from './auth/use-auth-client';
 
 const packagesToRepair = [ // TODO
   {installationId: 3, name: "fineedit", version: "2.3.5"}
 ]
 
 function App() {
+  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
-      <InternetIdentityProvider
-        authClientOptions={{
-          onSuccess: (identity) => console.log(
-            ">> initialize your actors with", {identity}
-          ),
-          // FIXME
-          // defaults to "https://identity.ic0.app/#authorize"
-          identityProvider: `http://localhost:4943/?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
-        }}
-      >
+      <AuthProvider options={{loginOptions: {
+          identityProvider,
+          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+          onSuccess: () => {
+              console.log('Login Successful!');
+          },
+          onError: (error) => {
+              console.error('Login Failed: ', error);
+          },
+      }}}>
         <App2/>
-      </InternetIdentityProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
@@ -42,6 +45,7 @@ function App2() {
       </h1>
       <div>
         <Container>
+          <p><AuthButton/></p>
           <Routes> {/* TODO: Refactor into sub-components. */}
             <Route path="/" element={
               <>
