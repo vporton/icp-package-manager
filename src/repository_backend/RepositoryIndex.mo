@@ -11,7 +11,9 @@ import CanisterMap "mo:candb/CanisterMap";
 import RepositoryPartition "RepositoryPartition";
 import Utils "mo:candb/Utils";
 
-shared ({caller = owner}) actor class RepositoryIndex() = this {
+shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
+  var owner = initialOwner;
+  
   // CanDB index methods //
 
   let maxSize = #heapSize(500_000_000);
@@ -24,6 +26,11 @@ shared ({caller = owner}) actor class RepositoryIndex() = this {
     if (caller != owner) {
       Debug.trap("not an owner");
     }
+  };
+
+  public shared({caller}) func setOwner(): async () {
+    onlyOwner(caller);
+    owner := caller;
   };
 
   public shared({caller}) func init(): async () {
