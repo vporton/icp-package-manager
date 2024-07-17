@@ -19,7 +19,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
-    public shared({caller}) func init(user: Principal, packageCanister: Principal, version: Common.Version, wasms: [Principal])
+    public shared({caller}) func init(packageCanister: Principal, version: Common.Version, wasms: [Principal])
         : async ()
     {
         onlyOwner(caller);
@@ -42,7 +42,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         _updateAfterInstall({installationId});
 
-        owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
+        // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 
     stable var nextInstallationId: Nat = 0;

@@ -63,7 +63,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
     await updateClient(auth.authClient);
   }
 
-  async function updateClient(client) {
+  async function updateClient(client: any) { // TODO: `any`
     const isAuthenticated = await client.isAuthenticated();
     const identity = client.getIdentity();
     const principal = identity.getPrincipal();
@@ -85,7 +85,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
 
   useEffect(() => {
     // Initialize AuthClient
-    const baseOptions = props.options.createOptions ?? defaultOptions.createOptions;
+    const baseOptions = props.options?.createOptions ?? defaultOptions.createOptions;
     AuthClient.create({...baseOptions, idleOptions: {
         // Prevent page reload on timeout, not to lose form data:
         disableIdle: false,

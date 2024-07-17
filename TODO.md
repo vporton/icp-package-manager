@@ -2,6 +2,8 @@ Remaining things to do:
 
 - Use https://github.com/dfinity/cycles-ledger instead of `IC.create_canister`.
 
+- Installation of frontend canisters with assets.
+
 - Managing package repositories.
 
 - Deinstallation, upgrading.
