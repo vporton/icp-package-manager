@@ -1,6 +1,6 @@
 Remaining things to do:
 
-- Use https://github.com/dfinity/cycles-ledger instead of `IC.create_canister`.
+- Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
 
 - Installation of frontend canisters with assets.
   - Specify if package has a frontend canister (or several ones?) to show them
