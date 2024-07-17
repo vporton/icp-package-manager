@@ -1,5 +1,7 @@
 Remaining things to do:
 
+- Bootstrapping package manager partly done (depends on installing frontend canisters).
+
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
 
 - Installation of frontend canisters with assets.
