@@ -8,6 +8,8 @@ For more information on this project [see here](https://taikai.network/icp-portu
 
 See [`TODO.md`](TODO.md) about yet unimplemented features.
 
+[`BOOTSTRAP.md`](BOOTSTRAP.md) describes the proposed algorithm for package manager bootstrapping.
+
 ## Howto guides to running it
 
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
