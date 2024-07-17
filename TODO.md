@@ -2,6 +2,8 @@ Remaining things to do:
 
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
 
+- It's unclear how to do upgrading: The number of modules in a package may change.
+
 - Installation of frontend canisters with assets.
   - Specify if package has a frontend canister (or several ones?) to show them
     in the package manager.
