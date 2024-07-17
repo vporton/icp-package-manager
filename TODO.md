@@ -8,6 +8,9 @@ Remaining things to do:
 
 - Managing package repositories.
 
+- FIXME: The current implementation of uninstallation will bug, if the package description
+  moves to a different CanDB partition.
+
 - Upgrading.
   - It's unclear how to do upgrading: The number of modules in a package may change.
 
