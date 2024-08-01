@@ -1,5 +1,9 @@
 Remaining things to do:
 
+- FIXME: future compaitibility in package format.
+
+- Gzip modules.
+
 - Bootstrapping package manager partly done (depends on installing frontend canisters).
 
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
