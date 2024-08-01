@@ -4,6 +4,8 @@ Remaining things to do:
 
 - use the CMC’s `notify_create_canister`.
 
+- https://www.npmjs.com/package/@dfinity/assets to upload assets.
+
 - Gzip modules.
 
 - Bootstrapping package manager partly done (depends on installing frontend canisters).
