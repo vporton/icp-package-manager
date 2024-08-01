@@ -2,6 +2,8 @@ Remaining things to do:
 
 - FIXME: future compaitibility in package format.
 
+- use the CMC’s `notify_create_canister`.
+
 - Gzip modules.
 
 - Bootstrapping package manager partly done (depends on installing frontend canisters).
