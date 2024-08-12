@@ -5,8 +5,9 @@ deploy: repository pm
 
 .PHONY: repository
 repository:
-	dfx deploy RepositoryIndex
 	dfx generate RepositoryPartition
+	dfx generate RepositoryIndex  # for prepare.ts
+	dfx deploy RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	-dfx canister call RepositoryIndex init "()"
 	dfx deploy counter
