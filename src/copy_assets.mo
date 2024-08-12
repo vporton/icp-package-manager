@@ -87,7 +87,7 @@ module {
                         key = fromAsset.key;
                         content_encoding = encoding.content_encoding;
                         index = i;
-                        sha256 = null; // FIXME // sha256 of entire fromAsset encoding, calculated by dfx and passed in SetAssetContentArguments
+                        sha256 = encoding.sha256; // sha256 of entire fromAsset encoding, calculated by dfx and passed in SetAssetContentArguments
                     });
                     let chunk_info = await to.create_chunk({batch_id; content});
                     chunkIds.add(chunk_info.chunk_id);
