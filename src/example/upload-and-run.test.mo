@@ -32,7 +32,7 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                wasms = [(Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
+                modules = [(Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
                 dependencies = [];
                 functions = [];
                 permissions = [];

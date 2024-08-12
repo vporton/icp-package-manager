@@ -26,7 +26,7 @@ module {
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        wasms: [Location];
+        modules: [Location];
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.

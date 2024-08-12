@@ -23,25 +23,25 @@ shared({caller = originalOwner}) actor class Bootstrap() {
         owner := caller;
     };
 
-    stable var wasms: [Blob] = [];
+    stable var modules: [Blob] = [];
 
     public query func getWasmsCount(): async Nat {
-        Array.size(wasms);
+        Array.size(modules);
     };
 
     public query func getWasm(index: Nat): async Blob {
-        wasms[index];
+        modules[index];
     };
 
     /// The last should be the frontend WASM.
     public shared({caller}) func setWasms(newWasms: [Blob]): async () {
         onlyOwner(caller);
-        wasms := newWasms;
+        modules := newWasms;
     };
 
     public shared({caller}) func bootstrap(repo: Principal) {
-        let canisters = Array.tabulate(Array.size(wasms), func (i: Nat): Principal = Principal.fromText("aaaaa-aa"));
-        for (wasmModuleLocation in wasms.vals()) {
+        let canisters = Array.tabulate(Array.size(modules), func (i: Nat): Principal = Principal.fromText("aaaaa-aa"));
+        for (wasmModuleLocation in modules.vals()) {
             // TODO: cycles (and monetization)
             Cycles.add<system>(10_000_000_000_000);
             let {canister_id} = await IC.create_canister({
@@ -73,5 +73,5 @@ shared({caller = originalOwner}) actor class Bootstrap() {
     let pm: package_manager.package_manager = actor(canisters[0]);
     let repoObj: RepositoryIndex.RepositoryIndex = actor(Principal.toText(repo)); // TODO: Can we instead pass `repoObj` directly?
     let mains = await repoObj.getCanistersByPK("main");
-    pm.init(mains[0], "0.0.1", wasms); // FIXME: `mains[0]` may be wrong // TODO: other versions
+    pm.init(mains[0], "0.0.1", modules); // FIXME: `mains[0]` may be wrong // TODO: other versions
 }

@@ -19,7 +19,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
-    public shared({caller}) func init(packageCanister: Principal, version: Common.Version, wasms: [Principal])
+    public shared({caller}) func init(packageCanister: Principal, version: Common.Version, modules: [Principal])
         : async ()
     {
         onlyOwner(caller);
@@ -29,12 +29,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         let part: Common.RepositoryPartitionRO = actor (Principal.toText(packageCanister));
         let package = await part.getPackage("package-manager", version);
-        let numPackages = Array.size(wasms);
+        let numPackages = Array.size(modules);
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             shouldHaveModules = numPackages;
             name = "package-manager";
             version = version;
-            modules = Buffer.fromArray(wasms); // Pretend that our package's modules are already installed.
+            modules = Buffer.fromArray(modules); // Pretend that our package's modules are already installed.
             package;
             packageCanister;
         };
@@ -110,7 +110,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        let numPackages = Array.size(realPackage.wasms);
+        let numPackages = Array.size(realPackage.modules);
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
@@ -165,7 +165,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
-        for (wasmModuleLocation in realPackage.wasms.vals()) {
+        for (wasmModuleLocation in realPackage.modules.vals()) {
             // TODO: cycles (and monetization)
             Cycles.add<system>(10_000_000_000_000);
             let {canister_id} = await IC.create_canister({

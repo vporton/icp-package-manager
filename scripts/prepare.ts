@@ -80,7 +80,7 @@ async function main() {
     //         longDescription: "Package manager to install/remove software in a user's subnet",
     //     },
     //     specific: { real: {
-    //         wasms: [[Principal.fromText(wasmPart0X), "0"], [Principal.fromText(wasmPart0Y), "0"]], // FIXME: not 0 in general
+    //         modules: [[Principal.fromText(wasmPart0X), "0"], [Principal.fromText(wasmPart0Y), "0"]], // FIXME: not 0 in general
     //         dependencies: [],
     //         functions: [],
     //         permissions: [],
@@ -100,7 +100,7 @@ async function main() {
             longDescription: "Counter variable controlled by a shared method",
         },
         specific: { real: {
-            wasms: [[Principal.fromText(wasmPart0), "0"]], // FIXME: not 0 in general
+            modules: [[Principal.fromText(wasmPart0), "0"]], // FIXME: not 0 in general
             dependencies: [],
             functions: [],
             permissions: [],
