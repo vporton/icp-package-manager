@@ -100,7 +100,7 @@ async function main() {
             longDescription: "Counter variable controlled by a shared method",
         },
         specific: { real: {
-            modules: [[Principal.fromText(wasmPart0), "0"]], // FIXME: not 0 in general
+            modules: [{Wasm: [Principal.fromText(wasmPart0), "0"]}], // FIXME: not 0 in general
             dependencies: [],
             functions: [],
             permissions: [],

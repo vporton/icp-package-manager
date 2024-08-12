@@ -1,5 +1,6 @@
 import Principal "mo:base/Principal";
 import Buffer "mo:base/Buffer";
+import Asset "mo:assets-api";
 
 module {
     public let NamespacePrefix = "b44c4a9beec74e1c8a7acbe46256f92f_";
@@ -21,12 +22,20 @@ module {
 
     public type Location = (canister: Principal, id: Text);
 
+    public type Module = {
+        #Wasm : Location;
+        #Assets : {
+            wasm: Location;
+            assets: Asset.AssetCanister;
+        }
+    };
+
     /// Shared/query method name.
     public type MethodName = Text;
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [Location];
+        modules: [Module];
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.

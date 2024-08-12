@@ -9,8 +9,10 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
+import Asset "mo:assets-api";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
+import CopyAssets "../copy_assets";
 import indirect_caller "canister:indirect_caller";
 
 /// TODO: Methods to query for all installed packages.
@@ -165,17 +167,25 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
-        for (wasmModuleLocation in realPackage.modules.vals()) {
+        for (wasmModule in realPackage.modules.vals()) {
             // TODO: cycles (and monetization)
             Cycles.add<system>(10_000_000_000_000);
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                    controllers = null; // We are the controller.
+                    controllers = ?[Principal.fromActor(this), Principal.fromActor(indirect_caller)];
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 }
             });
+            let wasmModuleLocation = switch (wasmModule) {
+                case (#Wasm wasmModuleLocation) {
+                    wasmModuleLocation;
+                };
+                case (#Assets {wasm}) {
+                    wasm;
+                };
+            };
             let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
                 actor(Principal.toText(wasmModuleLocation.0));
             let ?(#blob wasm_module) =
@@ -188,12 +198,43 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules);
                 packageManager = this;
             });
-            await IC.install_code({
-                arg = Blob.toArray(installArg);
-                wasm_module;
-                mode = #install;
-                canister_id;
-            });
+            switch (wasmModule) {
+                case (#Assets {assets}) {
+                    indirect_caller.callAll([
+                        {
+                            canister = Principal.fromActor(IC);
+                            name = "install_code";
+                            data = to_candid({
+                                arg = Blob.toArray(installArg);
+                                wasm_module;
+                                mode = #install;
+                                canister_id;
+                            });
+                        },
+                        {
+                            canister = Principal.fromActor(indirect_caller);
+                            name = "copyAssetsCallback";
+                            data = to_candid({
+                                from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                            });
+                        }
+                    ]);
+                };
+                case _ {
+                    indirect_caller.callAll([
+                        {
+                            canister = Principal.fromActor(IC);
+                            name = "install_code";
+                            data = to_candid({
+                                arg = Blob.toArray(installArg);
+                                wasm_module;
+                                mode = #install;
+                                canister_id;
+                            });
+                        },
+                    ]);
+                };
+            };
             // canisters.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
         };
@@ -441,4 +482,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public query func getRepositories(): async [{canister: Principal; name: Text}] {
         repositories;
     };
+
+    // Callbacks //
+
+    public shared({caller}) func copyAssetsCallback({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
+        if (caller != Principal.fromActor(indirect_caller)) {
+            Debug.trap("only by indirect_caller");
+        };
+
+        await* CopyAssets.copyAll({from; to});
+    }
 }

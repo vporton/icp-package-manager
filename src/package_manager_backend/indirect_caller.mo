@@ -1,11 +1,22 @@
 import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
+import Debug "mo:base/Debug";
+import Principal "mo:base/Principal";
 
-actor {
+shared({owner}) actor class {
+    /// We check owner, for only owner to be able to control Asset canisters
+    private onlyOwner(caller: Principal) {
+        if (caller != owner) {
+            Debug.trap("only owner");
+        };
+    };
+
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
-    public shared func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        onlyOwner(caller);
+
         for (method in methods.vals()) {
             ignore await IC.call(method.canister, method.name, method.data); 
         };
@@ -14,7 +25,9 @@ actor {
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, keep calling other methods.
-    public shared func callIgnoringMissing(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    public shared({caller}) func callIgnoringMissing(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        onlyOwner(caller);
+
         for (method in methods.vals()) {
             try {
                 ignore await IC.call(method.canister, method.name, method.data); 

@@ -7,7 +7,7 @@ import Time "mo:base/Time";
 import Asset "mo:assets-api";
 
 module {
-    public func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
+    public func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async* () {
         let fromAssets = await from.list({});
         let toAssets = await to.list({});
         let fromAssetsSet = HashMap.HashMap<Asset.Key, ()>(fromAssets.size(), Text.equal, Text.hash);
