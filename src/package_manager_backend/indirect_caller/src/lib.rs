@@ -40,11 +40,11 @@ struct Call {
 // #[update(guard = onlyOwner)] // FIXME
 #[update]
 fn callAll(methods: Vec<Call>) {
-    let mut fut = &ready(()) as &dyn Future<Output = ()>;
-    for method in methods {
-        fut = Box::new(fut).then(|_| call_raw(method.canister, &method.name, &method.data, 0)).map(|_| ());
-    }
-    spawn(fut);
+    spawn(async {
+        for method in methods {
+            call_raw(method.canister, &method.name, &method.data, 0).await;
+        }
+    });
 }
 
 /// Call methods in the given order and don't return.
