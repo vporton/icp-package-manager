@@ -42,7 +42,9 @@ struct Call {
 fn callAll(methods: Vec<Call>) {
     spawn(async {
         for method in methods {
-            call_raw(method.canister, &method.name, &method.data, 0).await;
+            if let Err(_) = call_raw(method.canister, &method.name, &method.data, 0).await {
+                return;
+            }
         }
     });
 }
