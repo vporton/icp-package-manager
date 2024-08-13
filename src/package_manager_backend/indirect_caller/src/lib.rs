@@ -14,17 +14,17 @@ struct State {
 static STATE: OnceLock<State> = OnceLock::new();
 
 #[init]
-fn init(owner: Principal) {
+fn canister_init(owner: Principal) {
     STATE.set(State {owner});
 }
 
 /// We check owner, for only owner to be able to control Asset canisters
-fn onlyOwner() -> bool {
-    if let Some(state) = STATE.get() {
-        ic_cdk::api::caller() == state.owner
-    } else {
-        false
+fn onlyOwner() -> Result<(), String> {
+    let state = STATE.get().unwrap();
+    if ic_cdk::api::caller() != state.owner {
+        return Err("not the owner".to_string());
     }
+    Ok(())
 }
 
 #[derive(CandidType, Deserialize)]
@@ -37,8 +37,7 @@ struct Call {
 /// Call methods in the given order and don't return.
 ///
 /// If a method is missing, stop.
-// #[update(guard = onlyOwner)] // FIXME
-#[update]
+#[update(guard = onlyOwner)]
 fn callAll(methods: Vec<Call>) {
     spawn(async {
         for method in methods {
