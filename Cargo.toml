@@ -1,0 +1,4 @@
+[workspace]
+members = [
+    "src/package_manager_backend/indirect_caller",
+]
