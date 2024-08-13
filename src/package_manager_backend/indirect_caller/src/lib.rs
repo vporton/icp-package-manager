@@ -1,10 +1,8 @@
 extern crate ic_cdk;
 extern crate ic_cdk_macros;
-use std::{future::{ready, Future}, sync::OnceLock};
-use futures::future::FutureExt;
+use std::sync::OnceLock;
 use ic_cdk_macros::{init, update};
-use ic_cdk::{api::call::call_raw, export::candid::{CandidType, Deserialize, Principal}, spawn};
-use serde::Serialize;
+use ic_cdk::{api::call::{call_raw, RejectionCode}, export::candid::{CandidType, Deserialize, Principal}, spawn};
 
 #[derive(CandidType, Deserialize)]
 struct State {
@@ -15,11 +13,11 @@ static STATE: OnceLock<State> = OnceLock::new();
 
 #[init]
 fn canister_init(owner: Principal) {
-    STATE.set(State {owner});
+    let _ = STATE.set(State {owner});
 }
 
 /// We check owner, for only owner to be able to control Asset canisters
-fn onlyOwner() -> Result<(), String> {
+fn only_owner() -> Result<(), String> {
     let state = STATE.get().unwrap();
     if ic_cdk::api::caller() != state.owner {
         return Err("not the owner".to_string());
@@ -37,7 +35,7 @@ struct Call {
 /// Call methods in the given order and don't return.
 ///
 /// If a method is missing, stop.
-#[update(guard = onlyOwner)]
+#[update(guard = only_owner)]
 fn callAll(methods: Vec<Call>) {
     spawn(async {
         for method in methods {
@@ -51,16 +49,15 @@ fn callAll(methods: Vec<Call>) {
 /// Call methods in the given order and don't return.
 ///
 /// If a method is missing, keep calling other methods.
-#[update(guard = onlyOwner)]
-fn callIgnoringMissing(methods: [Call]): () {
-    for (method in methods.vals()) {
-        try {
-            ignore IC::call(method.canister, method.name, method.data).await;
-        }
-        catch (e) {
-            if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
-                throw e; // Other error cause interruption.
+#[update(guard = only_owner)]
+fn callIgnoringMissing(methods: Vec<Call>) {
+    spawn(async {
+        for method in methods {
+            if let Err((code, _string)) = call_raw(method.canister, &method.name, &method.data, 0).await {
+                if code != RejectionCode::DestinationInvalid { // CanisterMethodNotFound // FIXME: Is it correct error? It seems in Rust compared to Motoko error code is missing.
+                    return;
+                }
             }
         }
-    };
-};
+    });
+}
