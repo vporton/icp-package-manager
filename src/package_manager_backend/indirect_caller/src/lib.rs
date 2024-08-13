@@ -54,7 +54,7 @@ fn callIgnoringMissing(methods: Vec<Call>) {
     spawn(async {
         for method in methods {
             if let Err((code, _string)) = call_raw(method.canister, &method.name, &method.data, 0).await {
-                if code != RejectionCode::DestinationInvalid { // CanisterMethodNotFound // FIXME: Is it correct error? It seems in Rust compared to Motoko error code is missing.
+                if code != RejectionCode::DestinationInvalid { // CanisterMethodNotFound // FIXME: Is it correct error? https://github.com/dfinity/cdk-rs/issues/506
                     return;
                 }
             }
