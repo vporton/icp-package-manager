@@ -31,7 +31,7 @@ fn onlyOwner() -> bool {
 struct Call {
     canister: Principal,
     name: String,
-    data: Vec<u8>, // TODO: Optimize.
+    data: Vec<u8>,
 }
 
 /// Call methods in the given order and don't return.
