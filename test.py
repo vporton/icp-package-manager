@@ -3,6 +3,7 @@
 import json
 import os
 import time
+from ic import Canister
 from ic.client import Client
 from ic.identity import Identity
 from ic.agent import Agent
@@ -34,19 +35,26 @@ pm_principal, installation_id = result[0]['value'], result[1]['value']
 print(f"Installation ID: {installation_id}")
 
 print("Getting package info...");
-result = agent.query_raw(pm_principal, "getInstalledPackage", encode([{'type': Types.Nat, 'value': installation_id}]))
-print("BBB: ", result)
-installed = result[0]['value']
-counter = installed.modules[0]
-print("Running the 'counter' software...");
-for _ in range(20):
-    try:
-        agent.update_raw(counter, "increase", encode([]))
-    except e:
-        print(e)
-    time.sleep(1)  # Wait till Counter installation finishes
+# pm_did = open(".dfx/local/canisters/package_manager/package_manager.did").read()
+pm_did = open(".dfx/local/canisters/package_manager/service.did").read()
+pm = Canister(agent=agent, canister_id=str(pm_principal), candid=pm_did)
+# result = agent.query_raw(str(pm_principal), "getInstalledPackage", encode([{'type': Types.Nat, 'value': installation_id}]))
+result = pm.getInstalledPackage(installation_id)
+counter = str(result[0]['modules'][0])
+time.sleep(30)
+print(f"Running the 'counter' ({counter}) software...");
+agent.update_raw(counter, "increase", encode([]))
+# for i in range(20):
+#     print(f"... attempt {i}")
+#     try:
+#         agent.update_raw(counter, "increase", encode([]))  # stalls on canister without WASM
+#         time.sleep(1)  # Wait till Counter installation finishes
+#     except Exception as e:
+#         print(e)
+#         continue
+#     break
 result = agent.query_raw(counter, "get", encode([]))
-test_value = decode(result)
-print("COUNTER: " + test_value);
+test_value = result[0]['value']
+print(f"COUNTER: {test_value}");
 assert test_value == 1
 print("Counter is equal to 1...");
