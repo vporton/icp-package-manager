@@ -13,8 +13,13 @@ actor {
     public shared func main(wasm2: [Nat8]): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         let wasm = Blob.fromArray(wasm2);
-        Cycles.add<system>(1000_000_000_000_000);
+        Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
+        Cycles.add<system>(300_000_000_000_000);
+        let IC = actor ("aaaaa-aa") : actor {
+            deposit_cycles : shared { canister_id : Principal } -> async ();
+        };
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(index) });
         await index.init();
 
         Debug.print("Uploading WASM code...");
@@ -45,9 +50,12 @@ actor {
         Debug.print("Uploading package and versions description...");
         await pPart.setFullPackageInfo("counter", fullInfo);
 
-        Cycles.add<system>(1000_000_000_000_000);
         Debug.print("Installing the ICP Package manager...");
+        Cycles.add<system>(100_000_000_000_000);
         let pm = await PackageManager.PackageManager();
+        Cycles.add<system>(100_000_000_000_000);
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(pm) });
+        await pm.init(Principal.fromActor(pPart), "0.0.1", [Principal.fromActor(wasmPart)]);
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
             canister = Principal.fromActor(pPart); // FIXME

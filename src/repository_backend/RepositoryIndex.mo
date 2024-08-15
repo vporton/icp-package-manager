@@ -38,13 +38,13 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   };
 
   public shared({caller}) func init(): async () {
+    ignore Cycles.accept<system>(300_000_000_000_000); // FIXME
     onlyOwner(caller);
     
     if (initialized) {
       Debug.trap("already initialized");
     };
 
-    ignore Cycles.accept<system>(800_000_000_000);
     // TODO: Need to be a self-controller?
     ignore await* createStorageCanister("main", [owner]);
     ignore await* createStorageCanister("wasms", [owner]);
@@ -67,7 +67,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   /// Helper function that creates a user canister for a given PK
   func createUserCanister(pk: Text, controllers: ?[Principal]): async Text {
     Debug.print("creating new user canister with pk=" # pk);
-    Cycles.add<system>(100_000_000_000_000);
+    Cycles.add<system>(100_000_000_000_000); // FIXME
     let newUserCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {

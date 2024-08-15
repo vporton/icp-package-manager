@@ -3,6 +3,7 @@
 /// It's useful for testing code using `CyclesLedger.create_canister` on local net.
 ///
 /// TODO: Extract this to a separate MOPS package
+import Cycles "mo:base/ExperimentalCycles";
 
 actor {
     // Cycles Ledger API
@@ -79,7 +80,9 @@ actor {
     };
 
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
+        ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
         let sub = do ? { args.creation_args!.settings! };
+        Cycles.add<system>(10_000_000_000_000); // FIXME
         let { canister_id } = await IC.create_canister({
             settings = sub;
         });

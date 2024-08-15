@@ -27,7 +27,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         onlyOwner(caller);
 
-        indirect_caller := ?(await IndirectCaller.IndirectCaller());
+        let indirect_caller_v = await IndirectCaller.IndirectCaller();
+        indirect_caller := ?indirect_caller_v;
+        Cycles.add<system>(5_000_000_000_000); // FIXME
+        let IC = actor ("aaaaa-aa") : actor {
+            deposit_cycles : shared { canister_id : canister_id } -> async ();
+        };
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller_v) });
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
