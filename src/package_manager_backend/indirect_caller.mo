@@ -3,9 +3,9 @@ import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 
-shared({owner}) actor class {
+shared({caller = owner}) actor class IndirectCaller() {
     /// We check owner, for only owner to be able to control Asset canisters
-    private onlyOwner(caller: Principal) {
+    private func onlyOwner(caller: Principal) {
         if (caller != owner) {
             Debug.trap("only owner");
         };
