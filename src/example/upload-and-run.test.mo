@@ -32,7 +32,7 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                modules = [(Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
+                modules = [#Wasm (Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
                 dependencies = [];
                 functions = [];
                 permissions = [];
@@ -59,6 +59,7 @@ actor {
         let installed = await pm.getInstalledPackage(id);
         let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
         Debug.print("Running the 'counter' software...");
+        // FIXME: The below may happen before Counter WASM is fully installed.
         await counter.increase();
         let testValue = await counter.get();
         Debug.print("Counter is equal to 1...");
