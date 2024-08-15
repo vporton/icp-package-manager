@@ -7,7 +7,7 @@
     "package_manager": {
       "type": "motoko",
       "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": ["indirect_caller", "internet_identity"]
+      "dependencies": []
     },
     "RepositoryIndex": {
       "type": "motoko",
@@ -28,7 +28,8 @@
     },
     "package_manager_frontend": {
       "dependencies": [
-        "package_manager"
+        "package_manager",
+        "internet_identity"
       ],
       "source": [
         "src/package_manager_frontend/dist"

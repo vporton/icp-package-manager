@@ -13,7 +13,7 @@ import Asset "mo:assets-api";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import CopyAssets "../copy_assets";
-import indirect_caller "canister:indirect_caller";
+import IndirectCaller "indirect_caller";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller = initialOwner}) actor class PackageManager() = this {
@@ -21,10 +21,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
+    // FIXME: UUID prefix to init and conform to API.
     public shared({caller}) func init(packageCanister: Principal, version: Common.Version, modules: [Principal])
         : async ()
     {
         onlyOwner(caller);
+
+        indirect_caller := ?(await IndirectCaller.IndirectCaller());
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
@@ -45,6 +48,15 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         _updateAfterInstall({installationId});
 
         // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
+    };
+
+    stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
+
+    private func getIndirectCaller(): IndirectCaller.IndirectCaller {
+        let ?indirect_caller2 = indirect_caller else {
+            Debug.trap("indirect_caller not initialized");
+        };
+        indirect_caller2;
     };
 
     stable var nextInstallationId: Nat = 0;
@@ -173,7 +185,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), Principal.fromActor(indirect_caller)];
+                    controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 }
@@ -200,7 +212,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             });
             switch (wasmModule) {
                 case (#Assets {assets}) {
-                    indirect_caller.callAll([
+                    getIndirectCaller().callAll([
                         {
                             canister = Principal.fromActor(IC);
                             name = "install_code";
@@ -212,7 +224,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                             });
                         },
                         {
-                            canister = Principal.fromActor(indirect_caller);
+                            canister = Principal.fromActor(getIndirectCaller());
                             name = "copyAssetsCallback";
                             data = to_candid({
                                 from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
@@ -228,7 +240,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     //     mode = #install;
                     //     canister_id;
                     // });
-                    indirect_caller.callAll([
+                    getIndirectCaller().callAll([
                         {
                             canister = Principal.fromActor(IC);
                             name = "install_code";
@@ -245,7 +257,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // canisters.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
         };
-        indirect_caller.callIgnoringMissing(
+        getIndirectCaller().callIgnoringMissing(
             Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
                 Buffer.toArray(ourHalfInstalled.modules).keys(), // TODO: inefficient?
                 func (i: Nat) = {
@@ -493,7 +505,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     // Callbacks //
 
     public shared({caller}) func copyAssetsCallback({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
-        if (caller != Principal.fromActor(indirect_caller)) {
+        if (caller != Principal.fromActor(getIndirectCaller())) {
             Debug.trap("only by indirect_caller");
         };
 
