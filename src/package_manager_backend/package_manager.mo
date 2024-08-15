@@ -25,14 +25,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func init(packageCanister: Principal, version: Common.Version, modules: [Principal])
         : async ()
     {
+        ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
         onlyOwner(caller);
 
+        Cycles.add<system>(1_000_000_000_000); // FIXME
         let indirect_caller_v = await IndirectCaller.IndirectCaller();
         indirect_caller := ?indirect_caller_v;
-        Cycles.add<system>(5_000_000_000_000); // FIXME
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : canister_id } -> async ();
         };
+        Cycles.add<system>(5_000_000_000_000); // FIXME
         await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller_v) });
 
         let installationId = nextInstallationId;
@@ -186,8 +188,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModule in realPackage.modules.vals()) {
-            // TODO: cycles (and monetization)
-            Cycles.add<system>(10_000_000_000_000);
+            Debug.print("BEFORE create_canister: " # debug_show(Cycles.balance()));
+            Cycles.add<system>(10_000_000_000_000); // FIXME
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.

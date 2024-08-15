@@ -55,6 +55,8 @@ actor {
         let pm = await PackageManager.PackageManager();
         Cycles.add<system>(100_000_000_000_000);
         await IC.deposit_cycles({ canister_id = Principal.fromActor(pm) });
+        Debug.print("Bootstrapping the ICP Package manager...");
+        Cycles.add<system>(100_000_000_000_000);
         await pm.init(Principal.fromActor(pPart), "0.0.1", [Principal.fromActor(wasmPart)]);
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
