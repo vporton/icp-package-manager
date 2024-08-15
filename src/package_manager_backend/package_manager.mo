@@ -221,6 +221,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     ]);
                 };
                 case _ {
+                    // TODO: Remove this code after debugging the below.
+                    // await IC.install_code({
+                    //     arg = Blob.toArray(installArg);
+                    //     wasm_module;
+                    //     mode = #install;
+                    //     canister_id;
+                    // });
                     indirect_caller.callAll([
                         {
                             canister = Principal.fromActor(IC);
