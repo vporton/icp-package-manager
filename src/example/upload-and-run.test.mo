@@ -10,7 +10,7 @@ import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
 
 actor {
-    public shared func main(wasm2: [Nat8]): async Nat {
+    public shared func main(wasm2: [Nat8]): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         let wasm = Blob.fromArray(wasm2);
         Cycles.add<system>(1000_000_000_000_000);
@@ -54,16 +54,6 @@ actor {
             packageName = "counter";
             version = "stable";
         });
-
-        Debug.print("Getting package info...");
-        let installed = await pm.getInstalledPackage(id);
-        let counter: Counter.Counter = actor(Principal.toText(installed.modules[0]));
-        Debug.print("Running the 'counter' software...");
-        // FIXME: The below may happen before Counter WASM is fully installed.
-        await counter.increase();
-        let testValue = await counter.get();
-        Debug.print("Counter is equal to 1...");
-        Debug.print("COUNTER: " # debug_show(testValue));
-        testValue;
+        (Principal.fromActor(pm), id);
     };
 }
