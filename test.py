@@ -7,8 +7,12 @@ from ic.identity import Identity
 from ic.agent import Agent
 from ic.candid import encode, decode, Types
 
-os.system("dfx deploy test --identity anonymous")  # TODO: Anonymous identity is a hack.
-os.system("dfx ledger fabricate-cycles --amount 100000000 --canister test")
+def my_run(cmd):
+    if os.system(cmd) != 0:
+        raise f"Can't run: {cmd}"
+
+my_run("dfx deploy test --identity anonymous") # TODO: Anonymous identity is a hack.
+my_run("dfx ledger fabricate-cycles --amount 100000000 --canister test")
 
 with open(".dfx/local/canisters/counter/counter.wasm", "rb") as wasm:
     wasm = wasm.read()
@@ -22,7 +26,6 @@ client = Client(url = "http://localhost:4943")
 iden = Identity(anonymous=True)
 agent = Agent(iden, client)
 
-params = [{'type': Types.Vec(Types.Nat8), 'value': blob}]
-params2 = encode(params)
-result = agent.update_raw(principal, "main", params2)
+params = encode([{'type': Types.Vec(Types.Nat8), 'value': blob}])
+result = agent.update_raw(principal, "main", params)
 # print("COUNTER: " + decode(result), retTypes=[Types.Nat])
