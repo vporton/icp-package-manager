@@ -2,6 +2,8 @@ Remaining things to do:
 
 - FIXME: future compaitibility in package format.
 
+- FIXME: Deploy not only WASM but also metadata.
+
 - use the CMC’s `notify_create_canister`.
 
 - https://www.npmjs.com/package/@dfinity/assets to upload assets.
