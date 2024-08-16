@@ -10,6 +10,7 @@ import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
 
 actor {
+    // TODO: It seems that below `deposit_cycles` are superfluous.
     public shared func main(wasm2: [Nat8]): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         let wasm = Blob.fromArray(wasm2);
