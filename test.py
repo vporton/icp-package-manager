@@ -16,9 +16,7 @@ def my_run(cmd):
 my_run("dfx deploy test --identity anonymous") # TODO: Anonymous identity is a hack.
 my_run("dfx ledger fabricate-cycles --amount 100000000 --canister test")
 
-with open(".dfx/local/canisters/counter/counter.wasm", "rb") as wasm:
-    wasm = wasm.read()
-    blob = [c for c in wasm]
+blob = open(".dfx/local/canisters/counter/counter.wasm", "rb").read()
 
 with open('.dfx/local/canister_ids.json') as ids:
     j = json.load(ids)
