@@ -23,7 +23,6 @@ actor {
         await index.init();
 
         Debug.print("Uploading WASM code...");
-        // let wasm = Blob.fromArray(wasm2);
         let wasmPart0 = await index.getLastCanistersByPK("wasms");
         let wasmPart: RepositoryPartition.RepositoryPartition = actor(wasmPart0);
         await wasmPart.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
