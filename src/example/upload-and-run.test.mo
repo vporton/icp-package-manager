@@ -11,7 +11,7 @@ import Cycles "mo:base/ExperimentalCycles";
 
 actor {
     // TODO: It seems that below `deposit_cycles` are superfluous.
-    public shared func main(wasm/*2*/: Blob/*[Nat8]*/): async (Principal, Common.InstallationId) {
+    public shared func main(wasm: Blob): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
