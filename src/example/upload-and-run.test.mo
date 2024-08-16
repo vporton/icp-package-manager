@@ -22,6 +22,7 @@ actor {
         await IC.deposit_cycles({ canister_id = Principal.fromActor(index) });
         await index.init();
 
+        // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
         let wasmPart0 = await index.getLastCanistersByPK("wasms");
         let wasmPart: RepositoryPartition.RepositoryPartition = actor(wasmPart0);
