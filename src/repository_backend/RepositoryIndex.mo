@@ -237,7 +237,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
 
   // Not exactly very efficient, but optimizing this is hard.
   private func encodeId(id: Nat): Text {
-    let idAsBytes = Buffer.Buffer<Nat8>(0); // FIXME: mo:base.StableBuffer vs mo:stablebuffer
+    let idAsBytes = Buffer.Buffer<Nat8>(0); // TODO: mo:base.StableBuffer vs mo:stablebuffer
     var idBuf = id;
     while (idBuf != 0) {
       idAsBytes.add(Nat8.fromNat(idBuf % 256));
