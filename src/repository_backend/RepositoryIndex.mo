@@ -4,16 +4,22 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
-import Buffer "mo:stablebuffer/StableBuffer";
+import Buffer "mo:base/Buffer";
+import Nat8 "mo:base/Nat8";
+import Blob "mo:base/Blob";
+import StableBuffer "mo:stablebuffer/StableBuffer";
 import Admin "mo:candb/CanDBAdmin";
 import CA "mo:candb/CanisterActions";
 import CanisterMap "mo:candb/CanisterMap";
 import RepositoryPartition "RepositoryPartition";
 import Utils "mo:candb/Utils";
+import Base32 "mo:encoding.mo/Base32";
 
 shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   var owner = initialOwner;
   
+  var nextWasmId = 0;
+
   // CanDB index methods //
 
   let maxSize = #heapSize(500_000_000);
@@ -59,9 +65,13 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     getCanisterIdsIfExists(pk);
   };
   
-  public shared query func getLastCanistersByPK(pk: Text): async Text {
+  private func getLastCanistersByPKInternal(pk: Text): Text {
     let all = getCanisterIdsIfExists(pk);
     all[Array.size(all) - 1];
+  };
+  
+  public shared query func getLastCanistersByPK(pk: Text): async Text {
+    getLastCanistersByPKInternal(pk);
   };
   
   /// Helper function that creates a user canister for a given PK
@@ -112,7 +122,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   func getCanisterIdsIfExists(pk: Text): [Text] {
     switch(CanisterMap.get(pkToCanisterMap, pk)) {
       case null { [] };
-      case (?canisterIdsBuffer) { Buffer.toArray(canisterIdsBuffer) } 
+      case (?canisterIdsBuffer) { StableBuffer.toArray(canisterIdsBuffer) } 
     }
   };
 
@@ -223,5 +233,32 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   public shared({caller}) func setReleases(value: [(Text, ?Text)]): async () {
     onlyOwner(caller);
     releases := value;
+  };
+
+  // Not exactly very efficient, but optimizing this is hard.
+  private func encodeId(id: Nat): Text {
+    let idAsBytes = Buffer.Buffer<Nat8>(0); // FIXME: mo:base.StableBuffer vs mo:stablebuffer
+    var idBuf = id;
+    while (idBuf != 0) {
+      idAsBytes.add(Nat8.fromNat(idBuf % 256));
+      idBuf /= 256;
+    };
+    let idEncoded = Base32.encode(Buffer.toArray(idAsBytes));
+    let ?text = Text.decodeUtf8(Blob.fromArray(idEncoded)) else {
+      Debug.trap("programming error");
+    };
+    text;
+  };
+
+  public shared({caller}) func uploadWasm(wasm: Blob): async () {
+    onlyOwner(caller);
+    let id = nextWasmId;
+    nextWasmId += 1;
+    let idText = encodeId(id);
+
+    let part0 = getLastCanistersByPKInternal("wasms");
+    let part: RepositoryPartition.RepositoryPartition = actor(part0);
+    await part.putAttribute(idText, "w", #blob wasm);
+    // TODO
   };
 }
