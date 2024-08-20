@@ -171,7 +171,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
         autoScalingHook = autoScaleCanister;
         sizeLimit = maxSize;
       };
-      owners = controllers; // FIXME
+      owners = [Principal.fromActor(this), owner]; // FIXME: Do we need `owner` here?
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
     // Battery.addRepositoryPartition(newStorageCanisterPrincipal); // FIXME

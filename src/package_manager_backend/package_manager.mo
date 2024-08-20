@@ -37,24 +37,26 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         Cycles.add<system>(5_000_000_000_000); // FIXME
         await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller_v) });
 
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
+        // TODO
+        // let installationId = nextInstallationId;
+        // nextInstallationId += 1;
 
-        let part: Common.RepositoryPartitionRO = actor (Principal.toText(packageCanister));
-        let package = await part.getPackage("package-manager", version);
-        let numPackages = Array.size(modules);
-        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = numPackages;
-            name = "package-manager";
-            version = version;
-            modules = Buffer.fromArray(modules); // Pretend that our package's modules are already installed.
-            package;
-            packageCanister;
-        };
-        halfInstalledPackages.put(installationId, ourHalfInstalled);
+        // let part: Common.RepositoryPartitionRO = actor (Principal.toText(packageCanister));
+        // let package = await part.getPackage("package-manager", version);
+        // let numPackages = Array.size(modules);
+        // let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+        //     shouldHaveModules = numPackages;
+        //     name = "package-manager";
+        //     version = version;
+        //     modules = Buffer.fromArray(modules); // Pretend that our package's modules are already installed.
+        //     package;
+        //     packageCanister;
+        // };
+        // halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        _updateAfterInstall({installationId});
+        // _updateAfterInstall({installationId});
 
+        // TODO
         // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 

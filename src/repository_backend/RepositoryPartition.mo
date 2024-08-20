@@ -18,6 +18,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
 
   private func onlyOwner(caller: Principal) {
     if (Itertools.find(owners.vals(), func (cur: Principal): Bool { caller == cur }) == null) {
+      Debug.print("FAILED caller: " # debug_show(caller)); // FIXME: Remove.
       Debug.trap("not an owner");
     };
   };
