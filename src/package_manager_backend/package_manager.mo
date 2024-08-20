@@ -190,7 +190,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // let canisters = Buffer.Buffer<Principal>(numPackages);
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModule in realPackage.modules.vals()) {
-            Debug.print("BEFORE create_canister: " # debug_show(Cycles.balance()));
             Cycles.add<system>(10_000_000_000_000); // FIXME
             let {canister_id} = await IC.create_canister({
                 settings = ?{
