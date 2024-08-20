@@ -47,7 +47,7 @@ actor {
         let pm = await PackageManager.PackageManager();
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
-        await pm.init(packagePart/*FIXME*/, "0.0.1", [wasmPart]);
+        await pm.init(/*packagePart, "0.0.1", [wasmPart]*/);
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
             canister = packagePart;

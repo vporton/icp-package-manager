@@ -22,7 +22,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
     // FIXME: UUID prefix to init and conform to API.
-    public shared({caller}) func init(packageCanister: Principal, version: Common.Version, modules: [Principal])
+    public shared({caller}) func init(/*packageCanister: Principal, version: Common.Version, modules: [Principal]*/)
         : async ()
     {
         ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
