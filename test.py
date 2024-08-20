@@ -39,8 +39,8 @@ pm = Canister(agent=agent, canister_id=str(pm_principal), candid=pm_did)
 # result = agent.query_raw(str(pm_principal), "getInstalledPackage", encode([{'type': Types.Nat, 'value': installation_id}]))
 result = pm.getInstalledPackage(installation_id)
 counter = str(result[0]['modules'][0])
-# FIXME: It seems to wait is unnecessary for `ic-py`.
-wait = 20 # secs
+# `ic-py` hangs if called on a canister without WASM code, so make enough pause.
+wait = 5 # secs
 print(f"Waiting {wait} sec")
 time.sleep(wait)
 print(f"Running the 'counter' ({counter}) software...");
