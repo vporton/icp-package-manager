@@ -40,19 +40,17 @@ actor {
             versionsMap = [];
         };
         Debug.print("Uploading package and versions description...");
-        let pPart0 = await index.getLastCanisterByPK("main"); // FIXME!!!
-        let pPart: RepositoryPartition.RepositoryPartition = actor(pPart0);
-        await pPart.setFullPackageInfo("counter", fullInfo);
+        let {canister = packagePart} = await index.createPackage("counter", fullInfo);
 
         Debug.print("Installing the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
         let pm = await PackageManager.PackageManager();
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
-        await pm.init(Principal.fromActor(pPart), "0.0.1", [wasmPart]);
+        await pm.init(packagePart/*FIXME*/, "0.0.1", [wasmPart]);
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
-            canister = Principal.fromActor(pPart); // FIXME
+            canister = packagePart;
             packageName = "counter";
             version = "stable";
         });

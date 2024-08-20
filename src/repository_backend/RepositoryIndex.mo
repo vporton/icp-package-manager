@@ -14,11 +14,13 @@ import CanisterMap "mo:candb/CanisterMap";
 import RepositoryPartition "RepositoryPartition";
 import Utils "mo:candb/Utils";
 import Base32 "mo:encoding.mo/Base32";
+import Common "../common";
 
 shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   var owner = initialOwner;
   
   var nextWasmId = 0;
+  var nextPackageId = 0;
 
   // CanDB index methods //
 
@@ -261,5 +263,13 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     await part.putAttribute(idText, "w", #blob wasm);
 
     {canister = Principal.fromActor(part); id = idText};
+  };
+
+  public shared({caller}) func createPackage(name: Common.PackageName, info: Common.FullPackageInfo): async {canister: Principal} {
+    onlyOwner(caller);
+    let part0 = getLastCanisterByPKInternal("main");
+    let part: RepositoryPartition.RepositoryPartition = actor(part0);
+    await part.setFullPackageInfo(name, info); // FIXME: Prevent duplicates.
+    {canister = Principal.fromActor(part)};
   };
 }
