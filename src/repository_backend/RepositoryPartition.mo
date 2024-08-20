@@ -19,7 +19,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
   private func onlyOwner(caller: Principal) {
     if (Itertools.find(owners.vals(), func (cur: Principal): Bool { caller == cur }) == null) {
       Debug.trap("not an owner");
-    }
+    };
   };
 
   /// @required (may wrap, but must be present in some form in the canister)
