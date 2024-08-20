@@ -24,11 +24,7 @@ actor {
 
         // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
-        let wasmPart0 = await index.getLastCanistersByPK("wasms");
-        let wasmPart: RepositoryPartition.RepositoryPartition = actor(wasmPart0);
-        await wasmPart.putAttribute("0", "w", #blob wasm); // FIXME: not 0 in general
-        let pPart0 = await index.getLastCanistersByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
-        let pPart: RepositoryPartition.RepositoryPartition = actor(pPart0); // TODO: Rename.
+        let {canister = wasmPart; id = wasmId} = await index.uploadWasm(wasm);
 
         let info: Common.PackageInfo = {
             base = {
@@ -38,7 +34,7 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                modules = [#Wasm (Principal.fromActor(wasmPart), "0")]; // FIXME: not 0 in general
+                modules = [#Wasm (wasmPart, wasmId)];
                 dependencies = [];
                 functions = [];
                 permissions = [];
@@ -49,6 +45,8 @@ actor {
             versionsMap = [];
         };
         Debug.print("Uploading package and versions description...");
+        let pPart0 = await index.getLastCanisterByPK("main"); // FIXME!!!
+        let pPart: RepositoryPartition.RepositoryPartition = actor(pPart0);
         await pPart.setFullPackageInfo("counter", fullInfo);
 
         Debug.print("Installing the ICP Package manager...");
@@ -58,7 +56,7 @@ actor {
         await IC.deposit_cycles({ canister_id = Principal.fromActor(pm) });
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
-        await pm.init(Principal.fromActor(pPart), "0.0.1", [Principal.fromActor(wasmPart)]);
+        await pm.init(Principal.fromActor(pPart), "0.0.1", [wasmPart]);
         Debug.print("Using the PM to install 'counter' package...");
         let id = await pm.installPackage({
             canister = Principal.fromActor(pPart); // FIXME

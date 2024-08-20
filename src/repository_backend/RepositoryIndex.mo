@@ -65,13 +65,13 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     getCanisterIdsIfExists(pk);
   };
   
-  private func getLastCanistersByPKInternal(pk: Text): Text {
+  private func getLastCanisterByPKInternal(pk: Text): Text {
     let all = getCanisterIdsIfExists(pk);
     all[Array.size(all) - 1];
   };
   
-  public shared query func getLastCanistersByPK(pk: Text): async Text {
-    getLastCanistersByPKInternal(pk);
+  public shared query func getLastCanisterByPK(pk: Text): async Text {
+    getLastCanisterByPKInternal(pk);
   };
   
   /// Helper function that creates a user canister for a given PK
@@ -250,15 +250,16 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     text;
   };
 
-  public shared({caller}) func uploadWasm(wasm: Blob): async () {
+  public shared({caller}) func uploadWasm(wasm: Blob): async {canister: Principal; id: Text} {
     onlyOwner(caller);
     let id = nextWasmId;
     nextWasmId += 1;
     let idText = encodeId(id);
 
-    let part0 = getLastCanistersByPKInternal("wasms");
+    let part0 = getLastCanisterByPKInternal("wasms");
     let part: RepositoryPartition.RepositoryPartition = actor(part0);
     await part.putAttribute(idText, "w", #blob wasm);
-    // TODO
+
+    {canister = Principal.fromActor(part); id = idText};
   };
 }
