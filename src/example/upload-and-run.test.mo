@@ -10,16 +10,11 @@ import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
 
 actor {
-    // TODO: It seems that below `deposit_cycles` are superfluous.
     public shared func main(wasm: Blob): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
         Cycles.add<system>(300_000_000_000_000);
-        let IC = actor ("aaaaa-aa") : actor {
-            deposit_cycles : shared { canister_id : Principal } -> async ();
-        };
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(index) });
         await index.init();
 
         // TODO: Install to correct subnet.
@@ -52,8 +47,6 @@ actor {
         Debug.print("Installing the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
         let pm = await PackageManager.PackageManager();
-        Cycles.add<system>(100_000_000_000_000);
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(pm) });
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
         await pm.init(Principal.fromActor(pPart), "0.0.1", [wasmPart]);
