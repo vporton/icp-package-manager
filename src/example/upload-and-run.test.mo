@@ -10,7 +10,7 @@ import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
 
 actor {
-    public shared func main(wasm: Blob): async (Principal, Common.InstallationId) {
+    public shared func main(testWasm: Blob): async (Principal, Common.InstallationId) {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
@@ -19,7 +19,7 @@ actor {
 
         // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
-        let {canister = wasmPart; id = wasmId} = await index.uploadWasm(wasm);
+        let {canister = wasmPart; id = wasmId} = await index.uploadWasm(testWasm);
 
         let info: Common.PackageInfo = {
             base = {
