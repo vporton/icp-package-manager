@@ -14,7 +14,6 @@ actor {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
-        Cycles.add<system>(300_000_000_000_000);
         await index.init();
 
         // TODO: Install to correct subnet.
