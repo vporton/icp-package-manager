@@ -22,7 +22,7 @@ actor {
         Cycles.add<system>(100_000_000_000_000);
         let pm = await PackageManager.PackageManager();
         Debug.print("Bootstrapping the ICP Package manager...");
-        Cycles.add<system>(100_000_000_000_000);
+        Cycles.add<system>(100_000_000_000_000); // TODO: remove?
         await pm.init();
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
         for (p in packages.vals()) {
