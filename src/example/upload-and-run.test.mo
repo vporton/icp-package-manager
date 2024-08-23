@@ -26,7 +26,7 @@ actor {
         await pm.init();
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
         for (p in packages.vals()) {
-            Debug.print("Using the PM to install packages...");
+            Debug.print("Using the PM to install package...");
             let id = await pm.installPackage({
                 canister = p.0;
                 packageName = p.1;
@@ -37,7 +37,6 @@ actor {
         Buffer.toArray(b);
     };
 
-    // FIXME: Also upload package manager.
     public shared func main(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
@@ -49,7 +48,7 @@ actor {
         // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
         let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
-        let {canister = pmFrontendPart; id = pmFrontendId} = await index.uploadWasm(pmFrontend);
+        let {canister = pmFrontendPart; id = pmFrontendId} = await index.uploadWasm(pmFrontendWasm);
         let {canister = counterWasmPart; id = counterWasmId} = await index.uploadWasm(testWasm);
 
         Debug.print("Uploading package and versions description...");
@@ -61,7 +60,7 @@ actor {
                 longDescription = "Manager for installing ICP app to user's subnet";
             };
             specific = #real {
-                modules = [#Wasm (pmWasmPart, pmWasmId), #Assets {wasm = (pmFrontendPart, pmFrontendId); assets = pmFrontend}];
+                modules = [#Wasm (pmWasmPart, pmWasmId), #Assets {wasm = (pmFrontendPart, pmFrontendId); assets = actor(Principal.toText(pmFrontend))}];
                 dependencies = [];
                 functions = [];
                 permissions = [];
