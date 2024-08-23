@@ -27,7 +27,7 @@ actor {
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
         for (p in packages.vals()) {
             Debug.print("Using the PM to install package...");
-            let id = await pm.installPackage({
+            let id = await pm.installPackage({ // FIXME: PM can't install itself.
                 canister = p.0;
                 packageName = p.1;
                 version = version;
