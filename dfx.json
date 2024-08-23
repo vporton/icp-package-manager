@@ -24,7 +24,7 @@
     "test": {
       "type": "motoko",
       "main": "src/example/upload-and-run.test.mo",
-      "dependencies": ["counter", "RepositoryIndex", "package_manager"]
+      "dependencies": ["counter", "package_manager_frontend", "RepositoryIndex", "package_manager"]
     },
     "package_manager_frontend": {
       "dependencies": [

@@ -16,18 +16,23 @@ def my_run(cmd):
 my_run("dfx deploy test --identity anonymous") # TODO: Anonymous identity is a hack.
 my_run("dfx ledger fabricate-cycles --amount 100000000 --canister test")
 
-blob = open(".dfx/local/canisters/counter/counter.wasm", "rb").read()
+counter_blob = open(".dfx/local/canisters/counter/counter.wasm", "rb").read()
+pm_blob = open(".dfx/local/canisters/package_manager/package_manager.wasm", "rb").read()
 
 with open('.dfx/local/canister_ids.json') as ids:
     j = json.load(ids)
     test_principal = j['test']['local']
-    # pm_principal = j['package_manager']['local']
+    pm_principal = j['package_manager']['local']
 
 client = Client(url = "http://localhost:4943")
 iden = Identity(anonymous=True)
 agent = Agent(iden, client)
 
-params = encode([{'type': Types.Vec(Types.Nat8), 'value': blob}])
+params = encode([
+    {'type': Types.Vec(Types.Nat8), 'value': counter_blob},
+    {'type': Types.Vec(Types.Nat8), 'value': pm_blob},
+    {'type': Types.Principal, 'value': pm_principal},
+])
 result = agent.update_raw(test_principal, "main", params)
 pm_principal, installation_id = result[0]['value'], result[1]['value']
 print(f"Installation ID: {installation_id}")
