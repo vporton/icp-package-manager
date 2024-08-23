@@ -8,9 +8,39 @@ import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
+import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
 
 actor {
-    public shared func main(testWasm: Blob, assetsWasm: Blob, assets: Principal): async (Principal, Common.InstallationId) {
+    /// FIXME: Move to production from testing.
+    ///
+    /// `version` is expected to be something like `"stable"`.
+    private func bootstrapPackageManager(packages: [Common.Location], version: Text)
+        : async* [{installationId: Common.InstallationId; canisterIds: [Principal]}]
+    {
+        Debug.print("Installing the ICP Package manager...");
+        Cycles.add<system>(100_000_000_000_000);
+        let pm = await PackageManager.PackageManager();
+        Debug.print("Bootstrapping the ICP Package manager...");
+        Cycles.add<system>(100_000_000_000_000);
+        await pm.init();
+        let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
+        for (p in packages.vals()) {
+            Debug.print("Using the PM to install packages...");
+            let id = await pm.installPackage({
+                canister = p.0;
+                packageName = p.1;
+                version = version;
+            });
+            b.add(id);
+        };
+        Buffer.toArray(b);
+    };
+
+    // FIXME: Also upload package manager.
+    public shared func main(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
+        : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
+    {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
@@ -18,9 +48,30 @@ actor {
 
         // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
-        let {canister = wasmPart; id = wasmId} = await index.uploadWasm(testWasm);
+        let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
+        let {canister = pmFrontendPart; id = pmFrontendId} = await index.uploadWasm(pmFrontend);
+        let {canister = counterWasmPart; id = counterWasmId} = await index.uploadWasm(testWasm);
 
-        let info: Common.PackageInfo = {
+        Debug.print("Uploading package and versions description...");
+        let pmInfo: Common.PackageInfo = {
+            base = {
+                name = "icpack";
+                version = "0.0.1";
+                shortDescription = "Package manager";
+                longDescription = "Manager for installing ICP app to user's subnet";
+            };
+            specific = #real {
+                modules = [#Wasm (pmWasmPart, pmWasmId), #Assets {wasm = (pmFrontendPart, pmFrontendId); assets = pmFrontend}];
+                dependencies = [];
+                functions = [];
+                permissions = [];
+            };
+        };
+        let pmFullInfo: Common.FullPackageInfo = {
+            packages = [("stable", pmInfo)];
+            versionsMap = [];
+        };
+        let counterInfo: Common.PackageInfo = {
             base = {
                 name = "counter";
                 version = "1.0.0";
@@ -28,31 +79,20 @@ actor {
                 longDescription = "Counter variable controlled by a shared method";
             };
             specific = #real {
-                modules = [#Wasm (wasmPart, wasmId)];
+                modules = [#Wasm (counterWasmPart, counterWasmId)];
                 dependencies = [];
                 functions = [];
                 permissions = [];
             };
         };
-        let fullInfo: Common.FullPackageInfo = {
-            packages = [("stable", info)];
+        let counterFullInfo: Common.FullPackageInfo = {
+            packages = [("stable", counterInfo)];
             versionsMap = [];
         };
-        Debug.print("Uploading package and versions description...");
-        let {canister = packagePart} = await index.createPackage("counter", fullInfo);
+        let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
+        let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
 
-        Debug.print("Installing the ICP Package manager...");
-        Cycles.add<system>(100_000_000_000_000);
-        let pm = await PackageManager.PackageManager();
-        Debug.print("Bootstrapping the ICP Package manager...");
-        Cycles.add<system>(100_000_000_000_000);
-        await pm.init();
-        Debug.print("Using the PM to install 'counter' package...");
-        let id = await pm.installPackage({
-            canister = packagePart;
-            packageName = "counter";
-            version = "stable";
-        });
-        (Principal.fromActor(pm), id);
+        // TODO: Use a correct subnet.
+        await* bootstrapPackageManager([(pmPart, "icpack"), (counterPart, "counter")], "stable");
     };
 }

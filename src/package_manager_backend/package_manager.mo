@@ -125,7 +125,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
     })
-        : async Common.InstallationId
+        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
         // onlyOwner(caller); // FIXME
 
@@ -151,18 +151,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        await* _finishInstallPackage({
+        let {canisterIds} = await* _finishInstallPackage({
             installationId;
             ourHalfInstalled;
             realPackage;
             caller;
         });
 
-        installationId;
+        {installationId; canisterIds};
     };
 
     /// Finish installation of a half-installed package.
-    public shared({caller}) func finishInstallPackage({installationId: Nat}): async () {
+    public shared({caller}) func finishInstallPackage({installationId: Nat}): async {canisterIds: [Principal]} {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -184,10 +184,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
-    }): async* () {
+    }): async* {canisterIds: [Principal]} {
         let IC: CanisterCreator = actor("aaaaa-aa");
 
-        // let canisters = Buffer.Buffer<Principal>(numPackages);
+        let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (wasmModule in realPackage.modules.vals()) {
             Cycles.add<system>(10_000_000_000_000); // FIXME
@@ -263,7 +263,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     ]);
                 };
             };
-            // canisters.add(canister_id); // do it later.
+            // TODO: Are two lines below duplicates of each other?
+            canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
         };
         getIndirectCaller().callIgnoringMissing(
@@ -282,6 +283,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         );
 
         _updateAfterInstall({installationId});
+
+        {canisterIds = Buffer.toArray(canisterIds)};
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
