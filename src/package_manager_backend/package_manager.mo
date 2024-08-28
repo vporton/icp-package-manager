@@ -9,6 +9,7 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
+import Bool "mo:base/Bool";
 import Asset "mo:assets-api";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
@@ -352,6 +353,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
     };
 
+    /// TODO: Option to allow to run it only once.
     public shared({caller}) func installNamedModules(installationId: Common.InstallationId, name: ?Text, installArg: Blob): async () {
         onlyOwner(caller);
 
@@ -359,9 +361,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Debug.trap("no such package");
         };
         let package = installation.package;
-        let wasmModules = Iter.filter(package.??);
-        for (wasmModule in wasmModules.vals()) {
-            installModule(wasmModule, installArg);
+        let wasmModules0 = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name).next();
+        let ?wasmModules = wasmModules0 else {
+            Debug.trap("no such named modules");
+        };
+        for (wasmModule in wasmModules.1.vals()) {
+            await* installModule(wasmModule, installArg);
         };
     };
 

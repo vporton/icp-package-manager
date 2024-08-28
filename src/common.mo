@@ -86,7 +86,7 @@ module {
     public type InstalledPackageInfo = {
         id: InstallationId;
         name: PackageName;
-        package: PackageInfo; // FIXME: or `RealPackageInfo`?
+        package: RealPackageInfo; // TODO: also for virtual packages
         packageCanister: Principal;
         version: Version;
         modules: [Principal];
