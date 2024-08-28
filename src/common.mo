@@ -89,6 +89,7 @@ module {
         packageCanister: Principal;
         version: Version;
         modules: [Principal];
+        var extraModules: [(?Text, [Principal])]; // TODO: `HashMap`?
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).

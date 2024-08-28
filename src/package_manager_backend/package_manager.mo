@@ -86,6 +86,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         modules: [Principal];
     })] = [];
+    // TODO: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
@@ -216,7 +217,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             };
             let installArg = to_candid({
                 user = caller;
-                previousCanisters = Buffer.toArray(ourHalfInstalled.modules);
+                previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
                 packageManager = this;
             });
             await* installModule(wasmModule, installArg);
@@ -255,6 +256,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             version = ourHalfInstalled.package.base.version;
             modules = Buffer.toArray(ourHalfInstalled.modules);
             packageCanister = ourHalfInstalled.packageCanister;
+            var extraModules = [];
         });
         halfInstalledPackages.delete(installationId);
         switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
@@ -269,6 +271,32 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     /// TODO: Save module info for such things as uninstallation and cycles management.
     private func installModule(wasmModule: Common.Module, installArg: Blob): async* () {
+        let IC: CanisterCreator = actor("aaaaa-aa");
+
+        Cycles.add<system>(10_000_000_000_000); // FIXME
+        let {canister_id} = await IC.create_canister({
+            settings = ?{
+                freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
+                compute_allocation = null; // TODO
+                memory_allocation = null; // TODO (a low priority task)
+            }
+        });
+        let wasmModuleLocation = switch (wasmModule) {
+            case (#Wasm wasmModuleLocation) {
+                wasmModuleLocation;
+            };
+            case (#Assets {wasm}) {
+                wasm;
+            };
+        };
+        let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
+            actor(Principal.toText(wasmModuleLocation.0));
+        let ?(#blob wasm_module) =
+            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
+        else {
+            Debug.trap("package WASM code is not available");
+        };
         switch (wasmModule) {
             case (#Assets {assets}) {
                 getIndirectCaller().callAll([
@@ -450,7 +478,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // Accessor method //
 
-    public query func getInstalledPackage(id: Common.InstallationId): async Common.InstalledPackageInfo {
+    public query func getInstalledPackage(id: Common.InstallationId): async {
+        id: Common.InstallationId;
+        name: Common.PackageName;
+        packageCanister: Principal;
+        version: Common.Version;
+        modules: [Principal];
+    } {
         let ?result = installedPackages.get(id) else {
             Debug.trap("no such installed package");
         };
@@ -458,7 +492,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     /// TODO: very unstable API.
-    public query func getInstalledPackagesInfoByName(name: Text): async [Common.InstalledPackageInfo] {
+    public query func getInstalledPackagesInfoByName(name: Text): async [{
+        id: Common.InstallationId;
+        name: Common.PackageName;
+        packageCanister: Principal;
+        version: Common.Version;
+        modules: [Principal];
+    }] {
         let ?ids = installedPackagesByName.get(name) else {
             return [];
         };
@@ -471,7 +511,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     /// TODO: very unstable API.
-    public query func getAllInstalledPackages(): async [(Common.InstallationId, Common.InstalledPackageInfo)] {
+    public query func getAllInstalledPackages(): async [(Common.InstallationId, {
+        id: Common.InstallationId;
+        name: Common.PackageName;
+        packageCanister: Principal;
+        version: Common.Version;
+        modules: [Principal];
+    })] {
         Iter.toArray(installedPackages.entries());
     };
 
@@ -504,11 +550,29 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
-    public shared({caller}) func installExtraModules(extraModules: [(?Text, [Common.Module])]): async () {
+    public shared({caller}) func installExtraModules(extraModules: [Common.Module]): async () {
         onlyOwner(caller);
 
+        let IC: CanisterCreator = actor("aaaaa-aa");
 
-        // TODO
+        // FIXME
+        for (wasmModule in extraModules.vals()) {
+            Cycles.add<system>(10_000_000_000_000); // FIXME
+            let {canister_id} = await IC.create_canister({
+                settings = ?{
+                    freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                    controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
+                    compute_allocation = null; // TODO
+                    memory_allocation = null; // TODO (a low priority task)
+                }
+            });
+            let installArg = to_candid({
+                user = caller;
+                // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO
+                packageManager = this;
+            });
+            await* installModule(wasmModule, installArg);
+        };
     };
 
     // Convenience methods //
