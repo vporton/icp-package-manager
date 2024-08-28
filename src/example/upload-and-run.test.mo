@@ -61,7 +61,8 @@ actor {
                 longDescription = "Manager for installing ICP app to user's subnet";
             };
             specific = #real {
-                modules = [#Wasm (pmWasmPart, pmWasmId), #Assets {wasm = (pmFrontendPart, pmFrontendId); assets = actor(Principal.toText(pmFrontend))}];
+                modules = [#Assets {wasm = (pmFrontendPart, pmFrontendId); assets = actor(Principal.toText(pmFrontend))}];
+                extraModules = [(null, [#Wasm (pmWasmPart, pmWasmId)])];
                 dependencies = [];
                 functions = [];
                 permissions = [];
@@ -80,6 +81,7 @@ actor {
             };
             specific = #real {
                 modules = [#Wasm (counterWasmPart, counterWasmId)];
+                extraModules = [];
                 dependencies = [];
                 functions = [];
                 permissions = [];

@@ -36,6 +36,7 @@ module {
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
         modules: [Module];
+        extraModules: [(?Text, [Module])];
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
