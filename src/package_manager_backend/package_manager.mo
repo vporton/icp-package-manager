@@ -352,14 +352,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
     };
 
-    // FIXME: First copy package data to installed.
-    // public shared({caller}) func installNamedModules(name: Text, installArg: Blob): async () {
-    //     onlyOwner(caller);
+    public shared({caller}) func installNamedModules(installationId: Common.InstallationId, name: ?Text, installArg: Blob): async () {
+        onlyOwner(caller);
 
-    //     for (wasmModule in wasmModules.vals()) {
-    //         installModule(wasmModule, installArg);
-    //     };
-    // };
+        let ?installation = installedPackages.get(installationId) else {
+            Debug.trap("no such package");
+        };
+        let package = installation.package;
+        let wasmModules = Iter.filter(package.??);
+        for (wasmModule in wasmModules.vals()) {
+            installModule(wasmModule, installArg);
+        };
+    };
 
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
         : async ()
