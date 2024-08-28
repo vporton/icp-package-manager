@@ -86,6 +86,7 @@ module {
     public type InstalledPackageInfo = {
         id: InstallationId;
         name: PackageName;
+        package: PackageInfo;
         packageCanister: Principal;
         version: Version;
         modules: [Principal];

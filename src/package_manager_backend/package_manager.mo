@@ -252,7 +252,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         Debug.print("Add installationId: " # debug_show(installationId));
         installedPackages.put(installationId, {
             id = installationId;
-            name = ourHalfInstalled.package.base.name;
+            name = ourHalfInstalled.name;
+            package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version;
             modules = Buffer.toArray(ourHalfInstalled.modules);
             packageCanister = ourHalfInstalled.packageCanister;
