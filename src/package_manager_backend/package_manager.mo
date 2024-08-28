@@ -219,50 +219,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules);
                 packageManager = this;
             });
-            switch (wasmModule) {
-                case (#Assets {assets}) {
-                    getIndirectCaller().callAll([
-                        {
-                            canister = Principal.fromActor(IC);
-                            name = "install_code";
-                            data = to_candid({
-                                arg = Blob.toArray(installArg);
-                                wasm_module;
-                                mode = #install;
-                                canister_id;
-                            });
-                        },
-                        {
-                            canister = Principal.fromActor(getIndirectCaller());
-                            name = "copyAssetsCallback";
-                            data = to_candid({
-                                from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                            });
-                        }
-                    ]);
-                };
-                case _ {
-                    // TODO: Remove this code after debugging the below.
-                    // await IC.install_code({
-                    //     arg = Blob.toArray(installArg);
-                    //     wasm_module;
-                    //     mode = #install;
-                    //     canister_id;
-                    // });
-                    getIndirectCaller().callAll([
-                        {
-                            canister = Principal.fromActor(IC);
-                            name = "install_code";
-                            data = to_candid({
-                                arg = Blob.toArray(installArg);
-                                wasm_module;
-                                mode = #install;
-                                canister_id;
-                            });
-                        },
-                    ]);
-                };
-            };
+            await* installModule(wasmModule, installArg);
             // TODO: Are two lines below duplicates of each other?
             canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
@@ -308,6 +265,54 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
             };
         };
+    };
+
+    /// TODO: Save module info for such things as uninstallation and cycles management.
+    private func installModule(wasmModule: Common.Module, installArg: Blob): async* () {
+            switch (wasmModule) {
+                case (#Assets {assets}) {
+                    getIndirectCaller().callAll([
+                        {
+                            canister = Principal.fromActor(IC);
+                            name = "install_code";
+                            data = to_candid({
+                                arg = Blob.toArray(installArg);
+                                wasm_module;
+                                mode = #install;
+                                canister_id;
+                            });
+                        },
+                        {
+                            canister = Principal.fromActor(getIndirectCaller());
+                            name = "copyAssetsCallback";
+                            data = to_candid({
+                                from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                            });
+                        }
+                    ]);
+                };
+                case _ {
+                    // TODO: Remove this code after debugging the below.
+                    // await IC.install_code({
+                    //     arg = Blob.toArray(installArg);
+                    //     wasm_module;
+                    //     mode = #install;
+                    //     canister_id;
+                    // });
+                    getIndirectCaller().callAll([
+                        {
+                            canister = Principal.fromActor(IC);
+                            name = "install_code";
+                            data = to_candid({
+                                arg = Blob.toArray(installArg);
+                                wasm_module;
+                                mode = #install;
+                                canister_id;
+                            });
+                        },
+                    ]);
+                };
+            };
     };
 
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
@@ -495,6 +500,15 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 version = x.1.version;
             },
         ));
+    };
+
+    // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
+
+    public shared({caller}) func installExtraModules(extraModules: [(?Text, [Common.Module])]): async () {
+        onlyOwner(caller);
+
+
+        // TODO
     };
 
     // Convenience methods //
