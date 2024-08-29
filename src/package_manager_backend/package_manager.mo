@@ -255,7 +255,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             id = installationId;
             name = ourHalfInstalled.name;
             package = ourHalfInstalled.package;
-            version = ourHalfInstalled.package.base.version;
+            version = ourHalfInstalled.package.base.version; // TODO: needed?
             modules = Buffer.toArray(ourHalfInstalled.modules);
             packageCanister = ourHalfInstalled.packageCanister;
             var extraModules = [];
@@ -361,12 +361,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Debug.trap("no such package");
         };
         let package = installation.package;
-        let wasmModules0 = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name).next();
-        let ?wasmModules = wasmModules0 else {
-            Debug.trap("no such named modules");
-        };
-        for (wasmModule in wasmModules.1.vals()) {
-            await* installModule(wasmModule, installArg);
+       
+        switch (package.specific) {
+            case (#real package) {
+                let wasmModules0 = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name).next();
+                let ?wasmModules = wasmModules0 else {
+                    Debug.trap("no such named modules");
+                };
+                for (wasmModule in wasmModules.1.vals()) {
+                    await* installModule(wasmModule, installArg);
+                };
+            };
+            case (#virtual _) {}; // TODO: What to do for virtual packages?
         };
     };
 
