@@ -353,8 +353,15 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
     };
 
-    /// TODO: Option to allow to run it only once.
-    public shared({caller}) func installNamedModules(installationId: Common.InstallationId, name: ?Text, installArg: Blob): async () {
+    /// It can be used directly from frontend.
+    ///
+    /// `avoidRepeated` forbids to install them same named modules more than once.
+    public shared({caller}) func installNamedModules(
+        installationId: Common.InstallationId,
+        name: ?Text,
+        installArg: Blob,
+        avoidRepeated: Bool,
+    ): async () {
         onlyOwner(caller);
 
         let ?installation = installedPackages.get(installationId) else {
@@ -364,7 +371,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
        
         switch (package.specific) {
             case (#real package) {
-                let wasmModules0 = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name).next();
+                let iter = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name);
+                let wasmModules0 = iter.next();
+                if (avoidRepeated) {
+                    if (iter.next() != null) {
+                        Debug.trap("repeated install");
+                    };
+                };
                 let ?wasmModules = wasmModules0 else {
                     Debug.trap("no such named modules");
                 };
