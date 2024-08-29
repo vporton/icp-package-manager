@@ -372,7 +372,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     await* installModule(wasmModule, installArg);
                 };
             };
-            case (#virtual _) {}; // TODO: What to do for virtual packages?
+            case (#virtual _) {
+                Debug.trap("cannot install modules on a virtual package");
+            };
         };
     };
 
