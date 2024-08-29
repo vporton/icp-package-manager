@@ -356,6 +356,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// It can be used directly from frontend.
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
+    /// TODO: What if, due actor model's non-reability, it installed partially.
     public shared({caller}) func installNamedModules(
         installationId: Common.InstallationId,
         name: ?Text,
