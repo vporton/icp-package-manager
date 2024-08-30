@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "./auth/use-auth-client";
 import { useEffect, useState } from "react";
 import { package_manager } from "../../declarations/package_manager";
-import { InstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
+import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/esm/Button";
 import { FullPackageInfo, PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
@@ -10,7 +10,7 @@ import { Actor } from "@dfinity/agent";
 export default function Installation(props: {}) {
     const { installationId } = useParams();
     const {defaultAgent} = useAuth();
-    const [pkg, setPkg] = useState<InstalledPackageInfo | undefined>();
+    const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [pkg2, setPkg2] = useState<PackageInfo | undefined>();
     useEffect(() => {
         if (defaultAgent === undefined) {
