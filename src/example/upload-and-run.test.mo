@@ -11,7 +11,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 
-actor {
+actor TestWorker {
     /// FIXME: Move to production from testing.
     ///
     /// `version` is expected to be something like `"stable"`.
@@ -38,7 +38,7 @@ actor {
         Buffer.toArray(b);
     };
 
-    public shared func main(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
+    public shared({caller}) func main(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
         Debug.print("Creating a distro repository...");
@@ -95,6 +95,8 @@ actor {
         let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
 
         // TODO: Use a correct subnet.
-        await* bootstrapPackageManager([(pmPart, "icpack"), (counterPart, "counter")], "stable");
+        let result = await* bootstrapPackageManager([(pmPart, "icpack"), (counterPart, "counter")], "stable");
+        await index.setOwner(caller);
+        result;
     };
 }

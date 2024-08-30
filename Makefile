@@ -7,13 +7,13 @@ deploy: repository pm
 repository:
 	dfx generate RepositoryPartition
 	dfx generate RepositoryIndex  # for prepare.ts
-	dfx generate package_manager
+	dfx generate package_manager  # TODO: needed?
 	dfx deploy RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	-dfx canister call RepositoryIndex init "()"
 	dfx deploy counter
-	npx ts-node scripts/prepare.ts
-	dfx canister call RepositoryIndex setRepositoryName "RedSocks"
+#	npx ts-node scripts/prepare.ts
+#	dfx canister call RepositoryIndex setRepositoryName "RedSocks"
 
 .PHONY: pm
 pm:

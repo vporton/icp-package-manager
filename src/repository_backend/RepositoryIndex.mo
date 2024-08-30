@@ -20,7 +20,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   var owner = initialOwner;
   
   var nextWasmId = 0;
-  var nextPackageId = 0;
+  var nextPackageId = 0; // TODO: unused
 
   // CanDB index methods //
 
