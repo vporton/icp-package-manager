@@ -93,6 +93,15 @@ module {
         var extraModules: [(?Text, [Principal])]; // TODO: `HashMap`?
     };
 
+    public type SharedInstalledPackageInfo = {
+        id: InstallationId;
+        name: PackageName;
+        package: PackageInfo;
+        packageCanister: Principal;
+        version: Version;
+        modules: [Principal];
+    };
+
     // Remark: There can be same named real package and a virtual package (of different versions).
     public type FullPackageInfo = {
         packages: [(Version, PackageInfo)];

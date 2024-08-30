@@ -13,7 +13,8 @@ def my_run(cmd):
     if os.system(cmd) != 0:
         raise f"Can't run: {cmd}"
 
-my_run("dfx deploy test --identity anonymous") # TODO: Anonymous identity is a hack.
+my_run("dfx identity use default")
+my_run("dfx deploy test")
 my_run("dfx ledger fabricate-cycles --amount 100000000 --canister test")
 
 counter_blob = open(".dfx/local/canisters/counter/counter.wasm", "rb").read()

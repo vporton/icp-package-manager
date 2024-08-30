@@ -527,13 +527,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // Accessor method //
 
-    public query func getInstalledPackage(id: Common.InstallationId): async {
-        id: Common.InstallationId;
-        name: Common.PackageName;
-        packageCanister: Principal;
-        version: Common.Version;
-        modules: [Principal];
-    } {
+    public query func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
         let ?result = installedPackages.get(id) else {
             Debug.trap("no such installed package");
         };
@@ -541,13 +535,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     /// TODO: very unstable API.
-    public query func getInstalledPackagesInfoByName(name: Text): async [{
-        id: Common.InstallationId;
-        name: Common.PackageName;
-        packageCanister: Principal;
-        version: Common.Version;
-        modules: [Principal];
-    }] {
+    public query func getInstalledPackagesInfoByName(name: Text): async [Common.SharedInstalledPackageInfo] {
         let ?ids = installedPackagesByName.get(name) else {
             return [];
         };
@@ -560,13 +548,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     /// TODO: very unstable API.
-    public query func getAllInstalledPackages(): async [(Common.InstallationId, {
-        id: Common.InstallationId;
-        name: Common.PackageName;
-        packageCanister: Principal;
-        version: Common.Version;
-        modules: [Principal];
-    })] {
+    public query func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
         Iter.toArray(installedPackages.entries());
     };
 

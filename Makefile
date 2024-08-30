@@ -7,6 +7,7 @@ deploy: repository pm
 repository:
 	dfx generate RepositoryPartition
 	dfx generate RepositoryIndex  # for prepare.ts
+	dfx generate package_manager
 	dfx deploy RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	-dfx canister call RepositoryIndex init "()"
