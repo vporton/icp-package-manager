@@ -20,7 +20,7 @@ actor TestWorker {
     {
         Debug.print("Installing the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000);
-        let pm = await PackageManager.PackageManager();
+        let pm = await PackageManager.PackageManager(); // TODO: subnet
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000); // TODO: remove?
         await pm.init();
