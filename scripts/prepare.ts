@@ -54,22 +54,22 @@ async function main() {
     await repositoryIndex.setRepositoryName("RedSocks");
 
     console.log("Uploading WASM code...");
-    // let wasmPart0X: string = await repositoryIndex.getLastCanistersByPK("wasms");
+    // let wasmPart0X: string = await repositoryIndex.getLastCanisterByPK("wasms");
     // let wasmPartX = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0X});
     // await wasmPartX.putAttribute("0", "w", {blob: blobX}); // FIXME: not 0 in general
-    // let pPart0X = await repositoryIndex.getLastCanistersByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
+    // let pPart0X = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
     // let pPartX = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0X});
 
-    // let wasmPart0Y: string = await repositoryIndex.getLastCanistersByPK("wasms");
+    // let wasmPart0Y: string = await repositoryIndex.getLastCanisterByPK("wasms");
     // let wasmPartY = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0Y});
     // await wasmPartY.putAttribute("0", "w", {blob: blobY}); // FIXME: not 0 in general
-    // let pPart0Y = await repositoryIndex.getLastCanistersByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
+    // let pPart0Y = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
     // let pPartY = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0Y});
 
-    let wasmPart0: string = await repositoryIndex.getLastCanistersByPK("wasms");
+    let wasmPart0: string = await repositoryIndex.getLastCanisterByPK("wasms");
     let wasmPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0});
     await wasmPart.putAttribute("0", "w", {blob: blob}); // FIXME: not 0 in general
-    let pPart0 = await repositoryIndex.getLastCanistersByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
+    let pPart0 = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
     let pPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0});
 
     // const infoX: PackageInfo = {
@@ -104,6 +104,7 @@ async function main() {
             dependencies: [],
             functions: [],
             permissions: [],
+            extraModules: [],
         } },
     };
     const fullInfo: FullPackageInfo = {
