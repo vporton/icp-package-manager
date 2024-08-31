@@ -27,7 +27,7 @@ shared({caller = owner}) actor class IndirectCaller() {
         }
         catch (e) {
             Debug.trap("Indirect caller: " # Error.message(e));
-        }
+        };
     };
 
     /// Call methods in the given order and don't return.
@@ -45,7 +45,7 @@ shared({caller = owner}) actor class IndirectCaller() {
                 if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
                     throw e; // Other error cause interruption.
                 }
-            }
+            };
         };
     };
 }
