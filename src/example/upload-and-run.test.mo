@@ -26,9 +26,10 @@ actor TestWorker {
         await pm.init();
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
         for (p in packages.vals()) {
-            // FIXME: After bootstrapping, frontend does not refer to our instance of the PM (need a new asset with canisters).
             Debug.print("Using the PM to install package...");
-            let id = await pm.installPackage({ // FIXME: PM can't install itself.
+            // FIXME: PM can't install itself.
+            // FIXME: It modifies the parent PM instead of ours!
+            let id = await pm.installPackage({
                 canister = p.0;
                 packageName = p.1;
                 version = version;

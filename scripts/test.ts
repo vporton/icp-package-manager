@@ -27,7 +27,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function doIt() {
     myExecSync("dfx identity use Zon")
-    // myExecSync("dfx deploy test") // FIXME: uncomment
+    myExecSync("dfx deploy test")
     myExecSync("dfx ledger fabricate-cycles --amount 100000000 --canister test")
 
     const counter_blob = readFileSync(".dfx/local/canisters/counter/counter.wasm");

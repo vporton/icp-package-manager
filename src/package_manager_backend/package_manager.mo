@@ -121,13 +121,29 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         } -> async ();
     };
 
-    /// We don't install dependencies here (see `specs.odt`).
     public shared({caller}) func installPackage({
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
     })
         : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+    {
+        await* _installPackage({
+            canister;
+            packageName;
+            version;
+            caller;
+        });
+    };
+        
+    /// We don't install dependencies here (see `specs.odt`).
+    private func _installPackage({
+        canister: Principal;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        caller: Principal;
+    })
+        : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
         // onlyOwner(caller); // FIXME
 

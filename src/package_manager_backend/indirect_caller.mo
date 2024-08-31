@@ -20,9 +20,14 @@ shared({caller = owner}) actor class IndirectCaller() {
     public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): () {
         onlyOwner(caller);
 
-        for (method in methods.vals()) {
-            ignore await IC.call(method.canister, method.name, method.data); 
-        };
+        try {
+            for (method in methods.vals()) {
+                ignore await IC.call(method.canister, method.name, method.data); 
+            };
+        }
+        catch (e) {
+            Debug.trap("Indirect caller: " # Error.message(e));
+        }
     };
 
     /// Call methods in the given order and don't return.
@@ -36,6 +41,7 @@ shared({caller = owner}) actor class IndirectCaller() {
                 ignore await IC.call(method.canister, method.name, method.data); 
             }
             catch (e) {
+                Debug.trap("Indirect caller: " # Error.message(e));
                 if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
                     throw e; // Other error cause interruption.
                 }
