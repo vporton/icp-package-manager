@@ -237,7 +237,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
                 packageManager = this;
             });
-            await* installModule(wasmModule, installArg);
+            await* _installModule(wasmModule, installArg);
             // TODO: Are two lines below duplicates of each other?
             canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
@@ -287,8 +287,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
     };
 
+    /// Intended to use only in bootstrapping.
+    ///
+    /// TODO: Should we disable calling this after bootstrapping finished?
+    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob): async () {
+        onlyOwner(caller);
+
+        await* _installModule(wasmModule, installArg);
+    };
+
     /// TODO: Save module info for such things as uninstallation and cycles management.
-    private func installModule(wasmModule: Common.Module, installArg: Blob): async* () {
+    /// FIXME: But it should not saved on bootstrapping.
+    private func _installModule(wasmModule: Common.Module, installArg: Blob): async* () {
         let IC: CanisterCreator = actor("aaaaa-aa");
 
         Cycles.add<system>(10_000_000_000_000); // FIXME
@@ -361,11 +371,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
     };
 
-    public shared({caller}) func installModules(wasmModules: [Common.Module], installArg: Blob): async () {
+    public shared({caller}) func _installModules(wasmModules: [Common.Module], installArg: Blob): async () {
         onlyOwner(caller);
 
         for (wasmModule in wasmModules.vals()) {
-            await* installModule(wasmModule, installArg);
+            await* _installModule(wasmModule, installArg);
         };
     };
 
@@ -399,7 +409,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     Debug.trap("no such named modules");
                 };
                 for (wasmModule in wasmModules.1.vals()) {
-                    await* installModule(wasmModule, installArg);
+                    await* _installModule(wasmModule, installArg);
                 };
             };
             case (#virtual _) {
@@ -618,7 +628,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO
                 packageManager = this;
             });
-            await* installModule(wasmModule, installArg);
+            await* _installModule(wasmModule, installArg);
         };
     };
 

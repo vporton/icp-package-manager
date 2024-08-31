@@ -15,7 +15,7 @@ actor TestWorker {
     /// FIXME: Move to production from testing.
     ///
     /// `version` is expected to be something like `"stable"`.
-    private func bootstrapPackageManager(packages: [Common.Location], version: Text)
+    private func bootstrapPackageManager(modules: [Common.Module], version: Text)
         : async* [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
         Debug.print("Installing the ICP Package manager...");
@@ -24,19 +24,23 @@ actor TestWorker {
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000); // TODO: remove?
         await pm.init();
+
+        await pm.installModule(modules[0], installArg: Blob);
+        await pm.installModule(modules[1], to_candid(()));
+
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
-        for (p in packages.vals()) {
-            Debug.print("Using the PM to install package...");
-            // FIXME: PM can't install itself.
-            // FIXME: It modifies the parent PM instead of ours!
-            let id = await pm.installPackage({
-                canister = p.0;
-                packageName = p.1;
-                version = version;
-            });
-            b.add(id);
-        };
-        Buffer.toArray(b);
+        // for (p in modules.vals()) {
+        //     Debug.print("Using the PM to install package...");
+        //     // FIXME: PM can't install itself.
+        //     // FIXME: It modifies the parent PM instead of ours!
+        //     let id = await pm.installPackage({
+        //         canister = p.0;
+        //         packageName = p.1;
+        //         version = version;
+        //     });
+        //     b.add(id);
+        // };
+        Buffer.toArray(b); // FIXME: It's empty buffer.
     };
 
     public shared({caller}) func main(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
