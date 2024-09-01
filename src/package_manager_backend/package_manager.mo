@@ -109,41 +109,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     type canister_id = Principal;
     type wasm_module = Blob;
 
-    type CanisterCreator = actor {
-        create_canister : shared { settings : ?canister_settings } -> async {
-            canister_id : canister_id;
-        };
-        install_code : shared {
-            arg : [Nat8];
-            wasm_module : wasm_module;
-            mode : { #reinstall; #upgrade; #install };
-            canister_id : canister_id;
-        } -> async ();
-    };
-
+    /// We don't install dependencies here (see `specs.odt`).
     public shared({caller}) func installPackage({
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
     })
         : async {installationId: Common.InstallationId; canisterIds: [Principal]}
-    {
-        await* _installPackage({
-            canister;
-            packageName;
-            version;
-            caller;
-        });
-    };
-        
-    /// We don't install dependencies here (see `specs.odt`).
-    private func _installPackage({
-        canister: Principal;
-        packageName: Common.PackageName;
-        version: Common.Version;
-        caller: Principal;
-    })
-        : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
         // onlyOwner(caller); // FIXME
 
@@ -174,13 +146,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             ourHalfInstalled;
             realPackage;
             caller;
+            preinstalledModules;
         });
 
         {installationId; canisterIds};
     };
 
     /// Finish installation of a half-installed package.
-    public shared({caller}) func finishInstallPackage({installationId: Nat}): async {canisterIds: [Principal]} {
+    public shared({caller}) func finishInstallPackage({
+        installationId: Nat;
+        preinstalledModules: ?[Common.Location];
+    }): async {canisterIds: [Principal]} {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -194,6 +170,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             ourHalfInstalled;
             realPackage;
             caller;
+            preinstalledModules;
         });
     };
 
@@ -202,21 +179,32 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
+        preinstalledModules: ?[Common.Location];
     }): async* {canisterIds: [Principal]} {
-        let IC: CanisterCreator = actor("aaaaa-aa");
+        let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
-        for (wasmModule in realPackage.modules.vals()) {
+        for (i in Iter.range(0, realPackage.modules.size() - 1)) {
+            let wasmModule = realPackage.modules[i];
             Cycles.add<system>(10_000_000_000_000); // FIXME
-            let {canister_id} = await IC.create_canister({
-                settings = ?{
-                    freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
-                    compute_allocation = null; // TODO
-                    memory_allocation = null; // TODO (a low priority task)
-                }
-            });
+            let canister_id = switch (preinstalledModules) {
+                case (?preinstalledModules) {
+                    assert preinstalledModules.size() == realPackage.modules.size();
+                    preinstalledModules[i].0;
+                };
+                case null {
+                    let {canister_id} = await IC.create_canister({
+                        settings = ?{
+                            freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                            controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
+                            compute_allocation = null; // TODO
+                            memory_allocation = null; // TODO (a low priority task)
+                        }
+                    });
+                    canister_id;
+                };
+            };
             let wasmModuleLocation = switch (wasmModule) {
                 case (#Wasm wasmModuleLocation) {
                     wasmModuleLocation;
@@ -237,7 +225,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
                 packageManager = this;
             });
-            await* _installModule(wasmModule, installArg);
+            if (preinstalledModules == null) {
+                await* Common._installModule(wasmModule, installArg);
+            }/* else {
+                // We don't need to initialize installed module, because it can be only
+                // PM's frontend.
+            }*/;
             // TODO: Are two lines below duplicates of each other?
             canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
@@ -290,92 +283,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Intended to use only in bootstrapping.
     ///
     /// TODO: Should we disable calling this after bootstrapping finished?
-    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob): async () {
+    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob): async Principal {
         onlyOwner(caller);
 
-        await* _installModule(wasmModule, installArg);
+        await* Common._installModule(wasmModule, installArg);
     };
 
-    /// TODO: Save module info for such things as uninstallation and cycles management.
-    /// FIXME: But it should not saved on bootstrapping.
-    private func _installModule(wasmModule: Common.Module, installArg: Blob): async* () {
-        let IC: CanisterCreator = actor("aaaaa-aa");
-
-        Cycles.add<system>(10_000_000_000_000); // FIXME
-        let {canister_id} = await IC.create_canister({
-            settings = ?{
-                freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
-                compute_allocation = null; // TODO
-                memory_allocation = null; // TODO (a low priority task)
-            }
-        });
-        let wasmModuleLocation = switch (wasmModule) {
-            case (#Wasm wasmModuleLocation) {
-                wasmModuleLocation;
-            };
-            case (#Assets {wasm}) {
-                wasm;
-            };
-        };
-        let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
-            actor(Principal.toText(wasmModuleLocation.0));
-        let ?(#blob wasm_module) =
-            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
-        else {
-            Debug.trap("package WASM code is not available");
-        };
-        switch (wasmModule) {
-            case (#Assets {assets}) {
-                getIndirectCaller().callAll([
-                    {
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            arg = Blob.toArray(installArg);
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                        });
-                    },
-                    {
-                        canister = Principal.fromActor(getIndirectCaller());
-                        name = "copyAssetsCallback";
-                        data = to_candid({
-                            from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                        });
-                    }
-                ]);
-            };
-            case _ {
-                // TODO: Remove this code after debugging the below.
-                // await IC.install_code({
-                //     arg = Blob.toArray(installArg);
-                //     wasm_module;
-                //     mode = #install;
-                //     canister_id;
-                // });
-                getIndirectCaller().callAll([
-                    {
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            arg = Blob.toArray(installArg);
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                        });
-                    },
-                ]);
-            };
-        };
-    };
-
-    public shared({caller}) func _installModules(wasmModules: [Common.Module], installArg: Blob): async () {
+    public shared({caller}) func Common._installModules(wasmModules: [Common.Module], installArg: Blob): async () {
         onlyOwner(caller);
 
         for (wasmModule in wasmModules.vals()) {
-            await* _installModule(wasmModule, installArg);
+            await* Common._installModule(wasmModule, installArg);
         };
     };
 
@@ -409,7 +327,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     Debug.trap("no such named modules");
                 };
                 for (wasmModule in wasmModules.1.vals()) {
-                    await* _installModule(wasmModule, installArg);
+                    await* Common._installModule(wasmModule, installArg);
                 };
             };
             case (#virtual _) {
@@ -610,7 +528,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installExtraModules(extraModules: [Common.Module]): async () {
         onlyOwner(caller);
 
-        let IC: CanisterCreator = actor("aaaaa-aa");
+        let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         // FIXME
         for (wasmModule in extraModules.vals()) {
@@ -628,7 +546,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO
                 packageManager = this;
             });
-            await* _installModule(wasmModule, installArg);
+            await* Common._installModule(wasmModule, installArg);
         };
     };
 

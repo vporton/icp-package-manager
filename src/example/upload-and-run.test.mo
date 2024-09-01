@@ -25,8 +25,7 @@ actor TestWorker {
         Cycles.add<system>(100_000_000_000_000); // TODO: remove?
         await pm.init();
 
-        await pm.installModule(modules[0], installArg: Blob);
-        await pm.installModule(modules[1], to_candid(()));
+        await pm.installModule(modules[0], to_candid(())); // PM frontend
 
         let b = Buffer.Buffer<{installationId: Common.InstallationId; canisterIds: [Principal]}>(Array.size(packages));
         // for (p in modules.vals()) {
@@ -40,6 +39,12 @@ actor TestWorker {
         //     });
         //     b.add(id);
         // };
+        await pm.bootstrapPackageManager({
+            canister: Principal;
+            packageName: Common.PackageName;
+            version: Common.Version;
+            preinstalledModules: [Common.Location];
+        });
         Buffer.toArray(b); // FIXME: It's empty buffer.
     };
 
@@ -77,27 +82,27 @@ actor TestWorker {
             packages = [("stable", pmInfo)];
             versionsMap = [];
         };
-        let counterInfo: Common.PackageInfo = {
-            base = {
-                name = "counter";
-                version = "1.0.0";
-                shortDescription = "Counter variable";
-                longDescription = "Counter variable controlled by a shared method";
-            };
-            specific = #real {
-                modules = [#Wasm (counterWasmPart, counterWasmId)];
-                extraModules = [];
-                dependencies = [];
-                functions = [];
-                permissions = [];
-            };
-        };
-        let counterFullInfo: Common.FullPackageInfo = {
-            packages = [("stable", counterInfo)];
-            versionsMap = [];
-        };
+        // let counterInfo: Common.PackageInfo = {
+        //     base = {
+        //         name = "counter";
+        //         version = "1.0.0";
+        //         shortDescription = "Counter variable";
+        //         longDescription = "Counter variable controlled by a shared method";
+        //     };
+        //     specific = #real {
+        //         modules = [#Wasm (counterWasmPart, counterWasmId)];
+        //         extraModules = [];
+        //         dependencies = [];
+        //         functions = [];
+        //         permissions = [];
+        //     };
+        // };
+        // let counterFullInfo: Common.FullPackageInfo = {
+        //     packages = [("stable", counterInfo)];
+        //     versionsMap = [];
+        // };
         let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
-        let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
+        // let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
 
         // TODO: Use a correct subnet.
         let result = await* bootstrapPackageManager([(pmPart, "icpack"), (counterPart, "counter")], "stable");

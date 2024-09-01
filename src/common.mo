@@ -116,4 +116,94 @@ module {
         modules: Buffer.Buffer<Principal>;
         package: PackageInfo;
     };
+
+    public type CanisterCreator = actor {
+        create_canister : shared { settings : ?canister_settings } -> async {
+            canister_id : canister_id;
+        };
+        install_code : shared {
+            arg : [Nat8];
+            wasm_module : wasm_module;
+            mode : { #reinstall; #upgrade; #install };
+            canister_id : canister_id;
+        } -> async ();
+    };
+
+    /// TODO: Save module info for such things as uninstallation and cycles management.
+    /// FIXME: But it should not saved on bootstrapping.
+    ///
+    /// Returns canister ID of installed module.
+    private func _installModule(wasmModule: Module, installArg: Blob): async* Principal {
+        let IC: CanisterCreator = actor("aaaaa-aa");
+
+        Cycles.add<system>(10_000_000_000_000); // FIXME
+        let {canister_id} = await IC.create_canister({
+            settings = ?{
+                freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
+                compute_allocation = null; // TODO
+                memory_allocation = null; // TODO (a low priority task)
+            }
+        });
+        let wasmModuleLocation = switch (wasmModule) {
+            case (#Wasm wasmModuleLocation) {
+                wasmModuleLocation;
+            };
+            case (#Assets {wasm}) {
+                wasm;
+            };
+        };
+        let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
+            actor(Principal.toText(wasmModuleLocation.0));
+        let ?(#blob wasm_module) =
+            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
+        else {
+            Debug.trap("package WASM code is not available");
+        };
+        switch (wasmModule) {
+            case (#Assets {assets}) {
+                getIndirectCaller().callAll([
+                    {
+                        canister = Principal.fromActor(IC);
+                        name = "install_code";
+                        data = to_candid({
+                            arg = Blob.toArray(installArg);
+                            wasm_module;
+                            mode = #install;
+                            canister_id;
+                        });
+                    },
+                    {
+                        canister = Principal.fromActor(getIndirectCaller());
+                        name = "copyAssetsCallback";
+                        data = to_candid({
+                            from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                        });
+                    }
+                ]);
+            };
+            case _ {
+                // TODO: Remove this code after debugging the below.
+                // await IC.install_code({
+                //     arg = Blob.toArray(installArg);
+                //     wasm_module;
+                //     mode = #install;
+                //     canister_id;
+                // });
+                getIndirectCaller().callAll([
+                    {
+                        canister = Principal.fromActor(IC);
+                        name = "install_code";
+                        data = to_candid({
+                            arg = Blob.toArray(installArg);
+                            wasm_module;
+                            mode = #install;
+                            canister_id;
+                        });
+                    },
+                ]);
+            };
+        };
+        canister_id;
+    };
 }
