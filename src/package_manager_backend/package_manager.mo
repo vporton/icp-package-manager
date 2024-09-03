@@ -109,7 +109,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     type canister_id = Principal;
     type wasm_module = Blob;
 
-    /// We don't install dependencies here (see `specs.odt`).
     public shared({caller}) func installPackage({
         canister: Principal;
         packageName: Common.PackageName;
@@ -119,6 +118,31 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         // onlyOwner(caller); // FIXME
 
+        _installPackage({canister; packageName; version; preinstalledModules = null});
+    };
+
+    public shared({caller}) func installPackageWithPreinstalledModules({
+        canister: Principal;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        preinstalledModules: [Common.Location];
+    })
+        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+    {
+        // onlyOwner(caller); // FIXME
+
+        _installPackage({canister; packageName; version; preinstalledModules = ?preinstalledModules});
+    };
+
+    /// We don't install dependencies here (see `specs.odt`).
+    private func _installPackage({
+        canister: Principal;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        preinstalledModules: ?[Common.Location];
+    })
+        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+    {
         let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
         let package = await part.getPackage(packageName, version);
         let #real realPackage = package.specific else {
@@ -155,8 +179,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({
         installationId: Nat;
-        preinstalledModules: ?[Common.Location];
-    }): async {canisterIds: [Principal]} {
+Z    }): async {canisterIds: [Principal]} {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {

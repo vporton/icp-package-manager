@@ -12,7 +12,7 @@ import Buffer "mo:base/Buffer";
 
 actor Bootstrap {
     public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
-        : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
+        : async {canisterIds: [Principal]}
     {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
@@ -66,6 +66,8 @@ actor Bootstrap {
         };
         let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
         let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
+
+        {canisterIds = [pmPart, counterPart]};
     };
 
     public shared({caller}) func bootstrapFrontend(module_: Common.Module, version: Text)
@@ -86,11 +88,11 @@ actor Bootstrap {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(can);
-        await pm.installPackage({
+        await pm.installPackageWithPreinstalledModules({
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
-            preinstalledModules = ?[can];
+            preinstalledModules = [can];
         });
     };
 }
