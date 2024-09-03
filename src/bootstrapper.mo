@@ -80,9 +80,13 @@ actor Bootstrap {
     public shared({caller}) func bootstrapBackend(module_: Common.Module, version: Text)
         : async* [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
+        Cycles.add<system>(1_000_000_000_000); // FIXME
+        let indirect_caller_v = await IndirectCaller.IndirectCaller();
+
         // FIXME: Give cycles to it.
         // FIXME: Allow to install only once.
-        let can = await Install._installModule(module_, to_candid(())); // PM backend
+        // FIXME: Check `to_candid` API matches in here and backend; standardize it
+        let can = await Install._installModule(module_, to_candid({indirect_caller_v})); // PM backend
 
         let #Wasm loc = module_ else {
             Debug.trap("missing PM backend");

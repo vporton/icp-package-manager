@@ -18,20 +18,19 @@ import IndirectCaller "indirect_caller";
 import Install "../install";
 
 /// TODO: Methods to query for all installed packages.
-shared({caller = initialOwner}) actor class PackageManager() = this {
+shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: IndirectCaller.IndirectCaller) = this {
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
     // FIXME: UUID prefix to init and conform to API.
-    public shared({caller}) func init(/*packageCanister: Principal, version: Common.Version, modules: [Principal]*/)
+    // FIXME: Check function signature:
+    public shared({caller}) func init({indirect_caller_v: IndirectCaller.IndirectCaller}/*packageCanister: Principal, version: Common.Version, modules: [Principal]*/)
         : async ()
     {
         ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
         onlyOwner(caller);
 
-        Cycles.add<system>(1_000_000_000_000); // FIXME
-        let indirect_caller_v = await IndirectCaller.IndirectCaller();
         indirect_caller := ?indirect_caller_v;
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
