@@ -74,7 +74,7 @@ actor Bootstrap {
         : async* [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
         // FIXME: Give cycles to it.
-        await Common._installModule(module_, to_candid(())); // PM frontend
+        await Install._installModule(module_, to_candid(())); // PM frontend
     };
 
     public shared({caller}) func bootstrapBackend(module_: Common.Module, version: Text)
@@ -82,7 +82,7 @@ actor Bootstrap {
     {
         // FIXME: Give cycles to it.
         // FIXME: Allow to install only once.
-        let can = await Common._installModule(module_, to_candid(())); // PM backend
+        let can = await Install._installModule(module_, to_candid(())); // PM backend
 
         let #Wasm loc = module_ else {
             Debug.trap("missing PM backend");

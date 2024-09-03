@@ -15,6 +15,7 @@ import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import CopyAssets "../copy_assets";
 import IndirectCaller "indirect_caller";
+import Install "../install";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller = initialOwner}) actor class PackageManager() = this {
@@ -33,7 +34,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let indirect_caller_v = await IndirectCaller.IndirectCaller();
         indirect_caller := ?indirect_caller_v;
         let IC = actor ("aaaaa-aa") : actor {
-            deposit_cycles : shared { canister_id : canister_id } -> async ();
+            deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
         Cycles.add<system>(5_000_000_000_000); // FIXME
         await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller_v) });
@@ -99,16 +100,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         }
     };
 
-    type canister_settings = {
-        freezing_threshold : ?Nat;
-        controllers : ?[Principal];
-        memory_allocation : ?Nat;
-        compute_allocation : ?Nat;
-    };
-
-    type canister_id = Principal;
-    type wasm_module = Blob;
-
     public shared({caller}) func installPackage({
         canister: Principal;
         packageName: Common.PackageName;
@@ -118,7 +109,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         // onlyOwner(caller); // FIXME
 
-        _installPackage({canister; packageName; version; preinstalledModules = null});
+        await* _installPackage({canister; packageName; version; preinstalledModules = null});
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
@@ -131,17 +122,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         // onlyOwner(caller); // FIXME
 
-        _installPackage({canister; packageName; version; preinstalledModules = ?preinstalledModules});
+        await* _installPackage({caller; canister; packageName; version; preinstalledModules = ?preinstalledModules});
     };
 
     /// We don't install dependencies here (see `specs.odt`).
     private func _installPackage({
+        caller: Principal;
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[Common.Location];
     })
-        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+        : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
         let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
         let package = await part.getPackage(packageName, version);
@@ -179,7 +171,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({
         installationId: Nat;
-Z    }): async {canisterIds: [Principal]} {
+    }): async {canisterIds: [Principal]} {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -193,7 +185,7 @@ Z    }): async {canisterIds: [Principal]} {
             ourHalfInstalled;
             realPackage;
             caller;
-            preinstalledModules;
+            preinstalledModules; //     FIXME
         });
     };
 
@@ -249,7 +241,7 @@ Z    }): async {canisterIds: [Principal]} {
                 packageManager = this;
             });
             if (preinstalledModules == null) {
-                await* Common._installModule(wasmModule, installArg);
+                await* Install._installModule(wasmModule, installArg);
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -312,7 +304,7 @@ Z    }): async {canisterIds: [Principal]} {
         await* Common._installModule(wasmModule, installArg);
     };
 
-    public shared({caller}) func Common._installModules(wasmModules: [Common.Module], installArg: Blob): async () {
+    public shared({caller}) func _installModules(wasmModules: [Common.Module], installArg: Blob): async () {
         onlyOwner(caller);
 
         for (wasmModule in wasmModules.vals()) {
@@ -395,8 +387,8 @@ Z    }): async {canisterIds: [Principal]} {
     };
 
     type CanisterDeletor = actor {
-        stop_canister : shared { canister_id : canister_id } -> async ();
-        delete_canister : shared { canister_id : canister_id } -> async ();
+        stop_canister : shared { canister_id : Common.canister_id } -> async ();
+        delete_canister : shared { canister_id : Common.canister_id } -> async ();
     };
 
     private func _finishUninstallPackage({
