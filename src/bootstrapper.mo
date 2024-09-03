@@ -11,7 +11,7 @@ import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 
 actor Bootstrap {
-    public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal, testWasm: Blob)
+    public shared({caller}) func bootstrapIndex(/*pmWasm: Blob,*/ pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
         : async {canisterIds: [Principal]}
     {
         Debug.print("Creating a distro repository...");
@@ -21,9 +21,9 @@ actor Bootstrap {
 
         // TODO: Install to correct subnet.
         Debug.print("Uploading WASM code...");
-        let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
+        // let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
         let {canister = pmFrontendPart; id = pmFrontendId} = await index.uploadWasm(pmFrontendWasm);
-        let {canister = counterWasmPart; id = counterWasmId} = await index.uploadWasm(testWasm);
+        // let {canister = counterWasmPart; id = counterWasmId} = await index.uploadWasm(testWasm);
 
         Debug.print("Uploading package and versions description...");
         let pmInfo: Common.PackageInfo = {
@@ -45,29 +45,30 @@ actor Bootstrap {
             packages = [("stable", pmInfo)];
             versionsMap = [];
         };
-        let counterInfo: Common.PackageInfo = {
-            base = {
-                name = "counter";
-                version = "1.0.0";
-                shortDescription = "Counter variable";
-                longDescription = "Counter variable controlled by a shared method";
-            };
-            specific = #real {
-                modules = [#Wasm (counterWasmPart, counterWasmId)];
-                extraModules = [];
-                dependencies = [];
-                functions = [];
-                permissions = [];
-            };
-        };
-        let counterFullInfo: Common.FullPackageInfo = {
-            packages = [("stable", counterInfo)];
-            versionsMap = [];
-        };
+        // FIXME: Move and uncomment.
+        // let counterInfo: Common.PackageInfo = {
+        //     base = {
+        //         name = "counter";
+        //         version = "1.0.0";
+        //         shortDescription = "Counter variable";
+        //         longDescription = "Counter variable controlled by a shared method";
+        //     };
+        //     specific = #real {
+        //         modules = [#Wasm (counterWasmPart, counterWasmId)];
+        //         extraModules = [];
+        //         dependencies = [];
+        //         functions = [];
+        //         permissions = [];
+        //     };
+        // };
+        // let counterFullInfo: Common.FullPackageInfo = {
+        //     packages = [("stable", counterInfo)];
+        //     versionsMap = [];
+        // };
         let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
-        let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
+        // let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
 
-        {canisterIds = [pmPart, counterPart]};
+        {canisterIds = [pmPart/*, counterPart*/]};
     };
 
     public shared({caller}) func bootstrapFrontend(module_: Common.Module, version: Text)

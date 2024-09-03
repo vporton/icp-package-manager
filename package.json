@@ -12,6 +12,7 @@
     "test": "npm test --workspaces --if-present"
   },
   "workspaces": [
+    "src/bootstrapper_frontend",
     "src/package_manager_frontend",
     "src/repository_frontend"
   ],

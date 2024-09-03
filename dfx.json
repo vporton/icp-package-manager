@@ -37,6 +37,17 @@
       "type": "assets",
       "workspace": "package_manager_frontend"
     },
+    "bootstrapper_frontend": {
+      "dependencies": [
+        "bootstrapper",
+        "internet_identity"
+      ],
+      "source": [
+        "src/bootstrapper_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "bootstrapper_frontend"
+    },
     "internet_identity": {
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
       "frontend": {},
