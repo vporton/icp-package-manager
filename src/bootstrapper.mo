@@ -89,8 +89,7 @@ actor Bootstrap {
         {canisterIds = [pmPart/*, counterPart*/]};
     };
 
-    public shared({caller}) func bootstrapFrontend(module_: Common.Module, version: Text) : async Principal
-    {
+    public shared({caller}) func bootstrapFrontend(module_: Common.Module, version: Text) : async Principal {
         Cycles.add<system>(1_000_000_000_000); // FIXME
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
@@ -108,7 +107,8 @@ actor Bootstrap {
         // FIXME: Give cycles to it.
         // FIXME: Allow to install only once.
         // FIXME: Check `to_candid` API matches in here and backend; standardize it
-        let can = await* Install._installModule(module_, to_candid({indirect_caller_v}), indirect_caller_v); // PM backend
+        // PM backend
+        let can = await* Install._installModule(module_, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);
 
         let #Wasm loc = module_ else {
             Debug.trap("missing PM backend");

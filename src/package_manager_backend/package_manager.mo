@@ -25,18 +25,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // FIXME: UUID prefix to init and conform to API.
     // FIXME: Check function signature:
-    public shared({caller}) func init({indirect_caller_v: IndirectCaller.IndirectCaller}/*packageCanister: Principal, version: Common.Version, modules: [Principal]*/)
-        : async ()
-    {
+    public shared({caller}) func init({indirect_caller: IndirectCaller.IndirectCaller}) : async () {
         ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
         onlyOwner(caller);
 
-        indirect_caller := ?indirect_caller_v;
+        indirect_caller_ := ?indirect_caller;
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
         Cycles.add<system>(5_000_000_000_000); // FIXME
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller_v) });
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller__v) });
 
         // TODO
         // let installationId = nextInstallationId;
@@ -61,13 +59,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 
-    stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
+    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
-        let ?indirect_caller2 = indirect_caller else {
-            Debug.trap("indirect_caller not initialized");
+        let ?indirect_caller_2 = indirect_caller_ else {
+            Debug.trap("indirect_caller_ not initialized");
         };
-        indirect_caller2;
+        indirect_caller_2;
     };
 
     stable var nextInstallationId: Nat = 0;
@@ -588,7 +586,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     public shared({caller}) func copyAssetsCallback({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
         if (caller != Principal.fromActor(getIndirectCaller())) {
-            Debug.trap("only by indirect_caller");
+            Debug.trap("only by indirect_caller_");
         };
 
         await* CopyAssets.copyAll({from; to});
