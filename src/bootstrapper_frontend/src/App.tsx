@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
 import { AuthContext, AuthProvider } from './auth/use-auth-client';
+import { Principal } from '@dfinity/principal';
+import { Agent } from '@dfinity/agent';
 // TODO: Remove react-router from this app
 
 function App() {
@@ -26,6 +28,25 @@ function App() {
 
 function App2() {
   return (
+    <AuthContext.Consumer>{
+      ({isAuthenticated, principal, agent}) =>
+        <App3 isAuthenticated={isAuthenticated} principal={principal} agent={agent}/>
+    }
+    </AuthContext.Consumer>
+  );
+}
+
+function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
+  const [installations, setInstallations] = useState<{pmFrontend: Principal; pmBackend: Principal}[]>([]);
+  useEffect(() => {
+    if (!props.isAuthenticated) {
+      setInstallations([]);
+      return;
+    }
+    // props.agent!.
+    // TODO
+  }, [props.isAuthenticated, props.principal]);
+  return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
         <img src="/internet-computer-icp-logo.png" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
@@ -40,11 +61,8 @@ function App2() {
             </Nav>
           </Navbar>
         </nav>
-        <AuthContext.Consumer>
-          {({isAuthenticated}) =>
-          <p><Button disabled={!isAuthenticated}>Install Package Manager IC Pack</Button></p>
-        }
-        </AuthContext.Consumer>
+        <p><Button disabled={!props.isAuthenticated}>Install Package Manager IC Pack</Button></p>
+        <h2>Installed Package Manager</h2>
       </Container>
     </main>
  );

@@ -18,7 +18,7 @@ import IndirectCaller "indirect_caller";
 import Install "../install";
 
 /// TODO: Methods to query for all installed packages.
-shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: IndirectCaller.IndirectCaller) = this {
+shared({caller = initialOwner}) actor class PackageManager() = this {
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
@@ -108,7 +108,7 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
     {
         // onlyOwner(caller); // FIXME
 
-        await* _installPackage({canister; packageName; version; preinstalledModules = null});
+        await* _installPackage({caller; canister; packageName; version; preinstalledModules = null});
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
@@ -184,7 +184,7 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
             ourHalfInstalled;
             realPackage;
             caller;
-            preinstalledModules; //     FIXME
+            preinstalledModules = null; // FIXME
         });
     };
 
@@ -240,7 +240,8 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
                 packageManager = this;
             });
             if (preinstalledModules == null) {
-                await* Install._installModule(wasmModule, installArg);
+                // TODO: ignore?
+                ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller());
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -300,14 +301,15 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
     public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob): async Principal {
         onlyOwner(caller);
 
-        await* Common._installModule(wasmModule, installArg);
+        await* Install._installModule(wasmModule, installArg, getIndirectCaller());
     };
 
     public shared({caller}) func _installModules(wasmModules: [Common.Module], installArg: Blob): async () {
         onlyOwner(caller);
 
         for (wasmModule in wasmModules.vals()) {
-            await* Common._installModule(wasmModule, installArg);
+            // TODO: ignore?
+            ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller());
         };
     };
 
@@ -341,7 +343,7 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
                     Debug.trap("no such named modules");
                 };
                 for (wasmModule in wasmModules.1.vals()) {
-                    await* Common._installModule(wasmModule, installArg);
+                    ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller()); // TODO: ignore?
                 };
             };
             case (#virtual _) {
@@ -560,7 +562,7 @@ shared({caller = initialOwner; }) actor class PackageManager(indirect_caller: In
                 // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO
                 packageManager = this;
             });
-            await* Common._installModule(wasmModule, installArg);
+            ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller()); // TODO: ignore?
         };
     };
 

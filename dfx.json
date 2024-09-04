@@ -9,6 +9,11 @@
       "main": "src/package_manager_backend/package_manager.mo",
       "dependencies": []
     },
+    "bootstrapper": {
+      "type": "motoko",
+      "main": "src/bootstrapper.mo",
+      "dependencies": []
+    },
     "RepositoryIndex": {
       "type": "motoko",
       "main": "src/repository_backend/RepositoryIndex.mo"
