@@ -5,7 +5,7 @@ import { AuthButton }  from './AuthButton';
 import { AuthContext, AuthProvider } from './auth/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { Agent } from '@dfinity/agent';
-// TODO: Remove react-router from this app
+// TODO: Remove react-router dependency from this app
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
