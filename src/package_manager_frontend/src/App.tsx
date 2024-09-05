@@ -42,8 +42,8 @@ function App2() {
         Package Manager
       </h1>
       <div>
-      <Container>
-        <nav>
+        <Container>
+          <nav>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
                 <Link className="nav-link" to="/">Main page</Link>

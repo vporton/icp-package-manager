@@ -38,7 +38,7 @@ function App2() {
 }
 
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
-  const [installations, setInstallations] = useState<{pmFrontend: Principal; pmBackend: Principal}[]>([]);
+  const [installations, setInstallations] = useState<[Principal, Principal][]>([]);
   useEffect(() => {
     if (!props.isAuthenticated || props.agent === undefined) {
       setInstallations([]);
@@ -50,7 +50,9 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
     });
   }, [props.isAuthenticated, props.principal]);
   function bootstrap() {
-
+    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+    bootstrapper.bootstrapFrontend();
+    // TODO: Wait till frontend is bootstrapped and go to it.
   }
   return (
     <main id="main">
