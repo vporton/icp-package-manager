@@ -3,7 +3,7 @@ import { useAuth } from "./auth/use-auth-client";
 import { useEffect, useState } from "react";
 import { package_manager } from "../../declarations/package_manager";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
-import Button from "react-bootstrap/esm/Button";
+import Button from "react-bootstrap/esm/Button"; // FIXME
 import { FullPackageInfo, PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 

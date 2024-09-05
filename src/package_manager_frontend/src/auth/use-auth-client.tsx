@@ -6,7 +6,8 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 // import sha256 from 'crypto-js/sha256';
 // import * as base64 from 'base64-js';
 
-function getIsLocal() {
+// TODO: Move
+export function getIsLocal(): boolean {
     return true; // FIXME
 }
 

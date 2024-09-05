@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
-import { package_manager } from '../../declarations/package_manager';
+import { bootstrapper } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
@@ -8,39 +8,66 @@ import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-au
 import { Link } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
-import { AuthProvider } from './auth/use-auth-client';
+import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
 import InstalledPackages from './InstalledPackages';
 import Installation from './Installation';
+import { GlobalContext, GlobalContextProvider } from './state';
+import { Principal } from '@dfinity/principal';
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
-      <AuthProvider options={{loginOptions: {
-          identityProvider,
-          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-          onSuccess: () => {
-              console.log('Login Successful!');
-          },
-          onError: (error) => {
-              console.error('Login Failed: ', error);
-          },
-      }}}>
-        <App2/>
-      </AuthProvider>
+      <GlobalContextProvider>
+        <AuthProvider options={{loginOptions: {
+            identityProvider,
+            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+            onSuccess: () => {
+                console.log('Login Successful!');
+            },
+            onError: (error) => {
+                console.error('Login Failed: ', error);
+            },
+        }}}>
+          <h1 style={{textAlign: 'center'}}>
+            <img src="/internet-computer-icp-logo.jpg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
+            {" "}
+            Package Manager
+          </h1>
+          <GlobalUI/>
+        </AuthProvider>
+      </GlobalContextProvider>
     </BrowserRouter>
   );
+}
+
+function GlobalUI() {
+  const glob = useContext(GlobalContext);
+  const {isAuthenticated} = useAuth();
+  if (glob.backend === undefined) {
+    async function installBackend() {
+      const result = await bootstrapper.bootstrapBackend(glob.frontend!); // FIXME: `!`
+      const backend_str = result[0].canisterIds[0].toString();
+      const base = getIsLocal() ? `http://localhost:3000?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
+      open(`${base}backend=${backend_str}`); // FIXME: First check that backend canister has been created.
+    }
+    return (
+      <Container>
+        <p>You first need to install the backend for this software.</p>
+        <ol>
+          <li><AuthButton/></li>
+          <li><Button disabled={!isAuthenticated} onClick={installBackend}>Install</Button></li>
+        </ol>
+      </Container>
+    );
+  }
+  return <App2/>;
 }
 
 function App2() {
   return (
     <main id="main">
-      <h1 style={{textAlign: 'center'}}>
-        <img src="/internet-computer-icp-logo.jpg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
-        {" "}
-        Package Manager
-      </h1>
       <div>
         <Container>
           <nav>
