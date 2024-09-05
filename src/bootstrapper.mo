@@ -22,13 +22,33 @@ actor Bootstrap {
     // TODO: Store in stable memory.
     let userToPM = HashMap.HashMap<Principal, [PMInfo]>(1, Principal.equal, Principal.hash);
 
-    public shared({caller}) func getUserPMInfo(): async [PMInfo] {
+    public query({caller}) func getUserPMInfo(): async [PMInfo] {
         switch (userToPM.get(caller)) {
             case (?a) a;
             case null [];
         };
     };
 
+    type OurModules = {
+        pmFrontendPartition: Common.Module;
+        pmBackendPartition: Common.Module;
+    };
+
+    var ourModules: ?OurModules = null;
+
+    public shared({caller}) func setOurModules(m: OurModules) {
+        // FIXME: only by an authorized user
+        ourModules := ?m;
+    };
+
+    private func getOurModules(): OurModules {
+        let ?m = ourModules else {
+            Debug.trap("modules not initialized");
+        };
+        m;
+    };
+
+    /// FIXME: Allow calling it once // FIXME: Should be here at all?
     public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
         : async {canisterIds: [Principal]}
     {
@@ -89,16 +109,16 @@ actor Bootstrap {
         {canisterIds = [pmPart/*, counterPart*/]};
     };
 
-    public shared({caller}) func bootstrapFrontend(module_: Common.Module, version: Text) : async Principal {
+    public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000); // FIXME
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
         // FIXME: Give cycles to it.
-        await* Install._installModule(module_, to_candid(()), getIndirectCaller()); // PM frontend
+        await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), getIndirectCaller()); // PM frontend
     };
 
-    public shared({caller}) func bootstrapBackend(module_: Common.Module, version: Text)
+    public shared({caller}) func bootstrapBackend(module_: Common.Module)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
         Cycles.add<system>(1_000_000_000_000); // FIXME
@@ -108,9 +128,9 @@ actor Bootstrap {
         // FIXME: Allow to install only once.
         // FIXME: Check `to_candid` API matches in here and backend; standardize it
         // PM backend
-        let can = await* Install._installModule(module_, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);
+        let can = await* Install._installModule(getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);
 
-        let #Wasm loc = module_ else {
+        let #Wasm loc = getOurModules().pmBackendPartition else {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));

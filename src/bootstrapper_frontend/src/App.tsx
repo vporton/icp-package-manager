@@ -5,6 +5,7 @@ import { AuthButton }  from './AuthButton';
 import { AuthContext, AuthProvider } from './auth/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { Agent } from '@dfinity/agent';
+import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 // TODO: Remove react-router dependency from this app
 
 function App() {
@@ -31,7 +32,7 @@ function App2() {
     <AuthContext.Consumer>{
       ({isAuthenticated, principal, agent}) =>
         <App3 isAuthenticated={isAuthenticated} principal={principal} agent={agent}/>
-    }
+      }
     </AuthContext.Consumer>
   );
 }
@@ -39,13 +40,18 @@ function App2() {
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
   const [installations, setInstallations] = useState<{pmFrontend: Principal; pmBackend: Principal}[]>([]);
   useEffect(() => {
-    if (!props.isAuthenticated) {
+    if (!props.isAuthenticated || props.agent === undefined) {
       setInstallations([]);
       return;
     }
-    // props.agent!.
-    // TODO
+    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+    bootstrapper.getUserPMInfo().then(list => {
+      setInstallations(list);
+    });
   }, [props.isAuthenticated, props.principal]);
+  function bootstrap() {
+    
+  }
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
@@ -61,8 +67,10 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
             </Nav>
           </Navbar>
         </nav>
-        <p><Button disabled={!props.isAuthenticated}>Install Package Manager IC Pack</Button></p>
+        <p><Button disabled={!props.isAuthenticated} action={bootstrap}>Install Package Manager IC Pack</Button></p>
         <h2>Installed Package Manager</h2>
+        {installations.length === 0 && <i>None</i>}
+        {installations.map(inst => `https://${inst.pmFrontend}.icp0.io?backend=${inst.pmBackend}`)}
       </Container>
     </main>
  );
