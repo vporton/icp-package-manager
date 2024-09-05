@@ -50,7 +50,7 @@ function GlobalUI() {
       const result = await bootstrapper.bootstrapBackend(glob.frontend!); // FIXME: `!`
       const backend_str = result[0].canisterIds[0].toString();
       const base = getIsLocal() ? `http://localhost:3000?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
-      open(`${base}backend=${backend_str}`); // FIXME: First check that backend canister has been created.
+      open(`${base}backend=${backend_str}&bookmarkMsg=1`); // FIXME: First check that backend canister has been created.
     }
     return (
       <Container>
