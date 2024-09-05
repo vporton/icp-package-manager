@@ -133,6 +133,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
         let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+        // FIXME: Here an in other places, a hacker may make PM non-upgradeable.
+        //        So, let we call IndirectCaller that first calls distro, then makes a call back to us to modify the data.
         let package = await part.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
