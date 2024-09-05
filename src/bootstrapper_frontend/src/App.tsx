@@ -50,7 +50,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
     });
   }, [props.isAuthenticated, props.principal]);
   function bootstrap() {
-    
+
   }
   return (
     <main id="main">
@@ -70,7 +70,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
         <p><Button disabled={!props.isAuthenticated} action={bootstrap}>Install Package Manager IC Pack</Button></p>
         <h2>Installed Package Manager</h2>
         {installations.length === 0 && <i>None</i>}
-        {installations.map(inst => `https://${inst.pmFrontend}.icp0.io?backend=${inst.pmBackend}`)}
+        {installations.map(inst => `https://${inst[0]}.icp0.io?backend=${inst[1]}`)}
       </Container>
     </main>
  );

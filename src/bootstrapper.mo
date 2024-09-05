@@ -12,19 +12,16 @@ import Cycles "mo:base/ExperimentalCycles";
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
+import Iter "mo:base/Iter";
+import Option "mo:base/Option";
 
 actor Bootstrap {
-    type PMInfo = {
-        pmFrontend: Principal;
-        pmBackend: Principal;
-    };
+    /// user -> (frontend -> backend)
+    let userToPM = HashMap.HashMap<Principal, HashMap.HashMap<Principal, Principal>>(1, Principal.equal, Principal.hash);
 
-    // TODO: Store in stable memory.
-    let userToPM = HashMap.HashMap<Principal, [PMInfo]>(1, Principal.equal, Principal.hash);
-
-    public query({caller}) func getUserPMInfo(): async [PMInfo] {
+    public query({caller}) func getUserPMInfo(): async [(Principal, Principal)] {
         switch (userToPM.get(caller)) {
-            case (?a) a;
+            case (?a) Iter.toArray(a.entries());
             case null [];
         };
     };
@@ -115,10 +112,14 @@ actor Bootstrap {
         indirect_caller := ?indirect_caller_v;
 
         // FIXME: Give cycles to it.
-        await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), getIndirectCaller()); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), getIndirectCaller()); // PM frontend
+        assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
+        let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
+        userToPM.put(caller, subMap);
+        can;
     };
 
-    public shared({caller}) func bootstrapBackend(module_: Common.Module)
+    public shared({caller}) func bootstrapBackend(frontend: Principal)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
         Cycles.add<system>(1_000_000_000_000); // FIXME
@@ -134,12 +135,19 @@ actor Bootstrap {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
-        [await pm.installPackageWithPreinstalledModules({
+        let inst = await pm.installPackageWithPreinstalledModules({
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [(can, "icpack")];
-        })];
+        });
+        switch (userToPM.get(caller)) {
+            case (?subMap) {
+                subMap.put(frontend, inst.canisterIds[0]);
+            };
+            case null { Debug.trap("TODO") };
+        };
+        [inst];
     };
 
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
