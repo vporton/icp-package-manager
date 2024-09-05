@@ -34,7 +34,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
         Cycles.add<system>(5_000_000_000_000); // FIXME
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller__v) });
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller) });
 
         // TODO
         // let installationId = nextInstallationId;
