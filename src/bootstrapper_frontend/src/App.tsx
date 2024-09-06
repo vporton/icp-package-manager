@@ -69,7 +69,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
             </Nav>
           </Navbar>
         </nav>
-        <p><Button disabled={!props.isAuthenticated} action={bootstrap}>Install Package Manager IC Pack</Button></p>
+        <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install Package Manager IC Pack</Button></p>
         <h2>Installed Package Manager</h2>
         {installations.length === 0 && <i>None</i>}
         {installations.map(inst => `https://${inst[0]}.icp0.io?backend=${inst[1]}`)}
