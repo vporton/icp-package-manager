@@ -123,11 +123,10 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     // };
 
     public shared({caller}) func bootstrapFrontend() : async Principal {
-        Cycles.add<system>(1_000_000_000_000); // FIXME
+        Cycles.add<system>(1_000_000_000_000); // TODO
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
-        // FIXME: Give cycles to it.
         let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), getIndirectCaller()); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
@@ -138,11 +137,10 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     public shared({caller}) func bootstrapBackend(frontend: Principal)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
-        Cycles.add<system>(1_000_000_000_000); // FIXME
+        Cycles.add<system>(1_000_000_000_000); // TODO
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
 
-        // FIXME: Give cycles to it.
-        // FIXME: Allow to install only once.
+        // TODO: Allow to install only once.
         // FIXME: Check `to_candid` API matches in here and backend; standardize it
         // PM backend
         let can = await* Install._installModule(getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);

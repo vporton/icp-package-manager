@@ -26,7 +26,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     // FIXME: UUID prefix to init and conform to API.
     // FIXME: Check function signature:
     public shared({caller}) func init({indirect_caller: IndirectCaller.IndirectCaller}) : async () {
-        ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
+        ignore Cycles.accept<system>(10_000_000_000_000); // TODO
         onlyOwner(caller);
 
         indirect_caller_ := ?indirect_caller;
@@ -201,7 +201,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (i in Iter.range(0, realPackage.modules.size() - 1)) {
             let wasmModule = realPackage.modules[i];
-            Cycles.add<system>(10_000_000_000_000); // FIXME
+            Cycles.add<system>(10_000_000_000_000); // TODO
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     assert preinstalledModules.size() == realPackage.modules.size();
@@ -548,7 +548,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         // FIXME
         for (wasmModule in extraModules.vals()) {
-            Cycles.add<system>(10_000_000_000_000); // FIXME
+            Cycles.add<system>(10_000_000_000_000); // TODO
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.

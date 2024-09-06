@@ -94,7 +94,7 @@ export default function MainPage() {
     return (
         <>
             {glob.bookmarkMsg &&
-                <>
+                <> {/* TODO: It bookmarks page with the message, but should not. */}
                     <Alert variant="warning">Bookmark this page</Alert>
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
                 </>

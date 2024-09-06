@@ -20,7 +20,7 @@ module {
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
-        Cycles.add<system>(10_000_000_000_000); // FIXME
+        Cycles.add<system>(10_000_000_000_000); // TODO
         let {canister_id} = await IC.create_canister({
             settings = ?{
                 freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.

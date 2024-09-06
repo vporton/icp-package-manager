@@ -80,9 +80,9 @@ actor {
     };
 
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
-        ignore Cycles.accept<system>(10_000_000_000_000); // FIXME
+        ignore Cycles.accept<system>(10_000_000_000_000); // TODO
         let sub = do ? { args.creation_args!.settings! };
-        Cycles.add<system>(10_000_000_000_000); // FIXME
+        Cycles.add<system>(10_000_000_000_000); // TODO
         let { canister_id } = await IC.create_canister({
             settings = sub;
         });
