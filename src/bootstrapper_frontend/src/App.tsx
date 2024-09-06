@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
-import { AuthContext, AuthProvider } from './auth/use-auth-client';
+import { AuthContext, AuthProvider, getIsLocal } from './auth/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 // TODO: Remove react-router dependency from this app
 
 function App() {
-  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
+  const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000` : `https://identity.ic0.app`;
   return (
     <AuthProvider options={{loginOptions: {
         identityProvider,
