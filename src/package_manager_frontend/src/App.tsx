@@ -3,7 +3,6 @@ import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { bootstrapper } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
 import { Link } from 'react-router-dom';
 import MainPage from './MainPage';
@@ -12,7 +11,8 @@ import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
 import InstalledPackages from './InstalledPackages';
 import Installation from './Installation';
 import { GlobalContext, GlobalContextProvider } from './state';
-import { Principal } from '@dfinity/principal';
+import { createActor as pmCreateActor } from '../../declarations/package_manager';
+import { AuthButton } from './AuthButton';
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
@@ -44,12 +44,24 @@ function App() {
 
 function GlobalUI() {
   const glob = useContext(GlobalContext);
-  const {isAuthenticated} = useAuth();
+  const {isAuthenticated, defaultAgent} = useAuth();
   if (glob.backend === undefined) {
     async function installBackend() {
-      const result = await bootstrapper.bootstrapBackend(glob.frontend!); // FIXME: `!`
-      const backend_str = result[0].canisterIds[0].toString();
+      const result = await bootstrapper.bootstrapBackend(glob.frontend!); // TODO: `!`
+      const backend_princ = result[0].canisterIds[0];
+      const backend_str = backend_princ.toString();
+      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent});
       const base = getIsLocal() ? `http://localhost:3000?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
+      for (let i = 0;; ++i) { // TODO: Choose the value.
+        if (i == 20) {
+          alert("Module failed to initialize"); // TODO: better dialog
+          return;
+        }
+        const initialized = await backendRO.isInitialized();
+        if (initialized) {
+          break;
+        }
+      }
       open(`${base}backend=${backend_str}&bookmarkMsg=1`); // FIXME: First check that backend canister has been created.
     }
     return (

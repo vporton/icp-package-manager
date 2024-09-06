@@ -23,6 +23,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
+    var initialized: Bool = false; // intentionally non-stable
+
     // FIXME: UUID prefix to init and conform to API.
     // FIXME: Check function signature:
     public shared({caller}) func init({indirect_caller: IndirectCaller.IndirectCaller}) : async () {
@@ -57,6 +59,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         // TODO
         // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
+
+        initialized := true;
+    };
+
+    // FIXME: UUID prefix to init and conform to API.
+    public shared func isInitialized(): async Bool {
+        initialized;
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;

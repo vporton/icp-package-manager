@@ -24,7 +24,7 @@ module {
         let {canister_id} = await IC.create_canister({
             settings = ?{
                 freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(indirectCaller)]; // FIXME: Add package manager as a controller
+                controllers = ?[Principal.fromActor(indirectCaller)]; // FIXME: Add package manager as a controller // FIXME: better to direct through IndirectCaller, instead?
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)
             }
@@ -79,7 +79,7 @@ module {
                         canister = Principal.fromActor(IC);
                         name = "install_code";
                         data = to_candid({
-                            arg = Blob.toArray(installArg);
+                            arg = Blob.toArray(installArg); // FIXME: here and in other places: must install() be no-arguments?
                             wasm_module;
                             mode = #install;
                             canister_id;

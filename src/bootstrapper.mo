@@ -141,7 +141,6 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.
-        // FIXME: Check `to_candid` API matches in here and backend; standardize it
         // PM backend
         let can = await* Install._installModule(getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);
 
