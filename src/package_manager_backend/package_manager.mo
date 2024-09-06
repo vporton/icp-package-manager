@@ -597,7 +597,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     public shared({caller}) func copyAssetsCallback({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
         if (caller != Principal.fromActor(getIndirectCaller())) {
-            Debug.trap("only by indirect_caller_");
+            Debug.trap("only by indirect_caller");
         };
 
         await* CopyAssets.copyAll({from; to});
