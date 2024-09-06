@@ -57,7 +57,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
-        <img src="/internet-computer-icp-logo.png" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
+        <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
         {" "}
         Bootstrapper (Installer) of Package Manager
       </h1>

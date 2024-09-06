@@ -31,7 +31,7 @@ function App() {
             },
         }}}>
           <h1 style={{textAlign: 'center'}}>
-            <img src="/internet-computer-icp-logo.jpg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
+            <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
             {" "}
             Package Manager
           </h1>
