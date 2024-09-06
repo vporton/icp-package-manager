@@ -600,6 +600,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Debug.trap("only by indirect_caller");
         };
 
-        await* CopyAssets.copyAll({from; to});
+        await* CopyAssets.copyAll({from; to}); // FIXME: It may freeze!
     }
 }
