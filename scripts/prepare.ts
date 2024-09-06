@@ -29,10 +29,6 @@ async function main() {
 
     const wasm = readFileSync(".dfx/local/canisters/counter/counter.wasm");
     const blob = Uint8Array.from(wasm);
-    // const wasmX = readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm");
-    // const blobX = Uint8Array.from(wasmX);
-    // const wasmY = readFileSync(".dfx/local/canisters/package_manager_frontend/package_manager_frontend.wasm");
-    // const blobY = Uint8Array.from(wasmY);
 
     // const ids = readFileSync('.dfx/local/canister_ids.json', {encoding: 'utf-8'});
     // const ids_j = JSON.parse(ids);
@@ -42,7 +38,7 @@ async function main() {
     agent.fetchRootKey(); // TODO: should not be used in production.
 
     const repositoryIndex: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
-    // console.log("Repository init...")
+    // console.log("Repository init...") // TODO
     // try {
     //     await repositoryIndex.init();
     // }
@@ -55,43 +51,12 @@ async function main() {
     await repositoryIndex.setRepositoryName("RedSocks");
 
     console.log("Uploading WASM code...");
-    // let wasmPart0X: string = await repositoryIndex.getLastCanisterByPK("wasms");
-    // let wasmPartX = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0X});
-    // await wasmPartX.putAttribute("0", "w", {blob: blobX}); // FIXME: not 0 in general
-    // let pPart0X = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
-    // let pPartX = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0X});
-
-    // let wasmPart0Y: string = await repositoryIndex.getLastCanisterByPK("wasms");
-    // let wasmPartY = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0Y});
-    // await wasmPartY.putAttribute("0", "w", {blob: blobY}); // FIXME: not 0 in general
-    // let pPart0Y = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
-    // let pPartY = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0Y});
 
     let wasmPart0: string = await repositoryIndex.getLastCanisterByPK("wasms");
     let wasmPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0});
     await wasmPart.putAttribute("0", "w", {blob: blob}); // FIXME: not 0 in general
     let pPart0 = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
     let pPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0});
-
-    // const infoX: PackageInfo = {
-    //     base: {
-    //         name: "package-manager",
-    //         version: "0.0.1",
-    //         shortDescription: "Package manager",
-    //         longDescription: "Package manager to install/remove software in a user's subnet",
-    //     },
-    //     specific: { real: {
-    //         modules: [[Principal.fromText(wasmPart0X), "0"], [Principal.fromText(wasmPart0Y), "0"]], // FIXME: not 0 in general
-    //         dependencies: [],
-    //         functions: [],
-    //         permissions: [],
-    //     } },
-    // };
-    // const fullInfoX: FullPackageInfo = {
-    //     packages: [["0.0.1", infoX]],
-    //     versionsMap: [],
-    // };
-    // await pPart.setFullPackageInfo("package-manager", fullInfoX);
 
     const info: PackageInfo = {
         base: {

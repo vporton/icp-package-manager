@@ -1,4 +1,4 @@
-import { ChangeEvent, createRef, useEffect, useState } from "react";
+import { ChangeEvent, createRef, useContext, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
@@ -6,6 +6,8 @@ import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/use-auth-client";
 import { InstallationId } from "../../declarations/package_manager/package_manager.did";
+import { GlobalContext } from "./state";
+import Alert from "react-bootstrap/esm/Alert";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -37,6 +39,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 
 export default function MainPage() {
     const { defaultAgent } = useAuth();
+    const glob = useContext(GlobalContext);
 
     const navigate = useNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
@@ -90,6 +93,12 @@ export default function MainPage() {
 
     return (
         <>
+            {glob.bookmarkMsg &&
+                <>
+                    <Alert variant="warning">Bookmark this page</Alert>
+                    <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
+                </>
+            }
             <h2>Distribution</h2>
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
