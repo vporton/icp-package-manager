@@ -23,7 +23,7 @@ actor TestWorker {
         let pm = await PackageManager.PackageManager(); // TODO: subnet
         Debug.print("Bootstrapping the ICP Package manager...");
         Cycles.add<system>(100_000_000_000_000); // TODO: remove?
-        await pm.init();
+        await pm.init(); // FIXME: prefix
 
         await pm.installModule(modules[0], to_candid(())); // PM frontend
 

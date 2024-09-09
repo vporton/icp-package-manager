@@ -6,8 +6,9 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 // import sha256 from 'crypto-js/sha256';
 // import * as base64 from 'base64-js';
 
+// TODO: Move this function to GlobalState
 function getIsLocal() {
-    return true; // FIXME
+    return process.env.DFX_NETWORK !== "ic";
 }
 
 export const AuthContext = createContext<{
@@ -37,9 +38,9 @@ const defaultOptions: UseAuthClientOptions = {
   },
   loginOptions: {
     identityProvider:
-    process.env.DFX_NETWORK === "ic" // FIXME
-        ? `https://identity.ic0.app`
-        : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`,
+    getIsLocal()
+        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        : `https://identity.ic0.app`,
   },
 };
 
