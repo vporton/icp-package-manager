@@ -52,11 +52,10 @@ async function main() {
 
     console.log("Uploading WASM code...");
 
-    let wasmPart0: string = await repositoryIndex.getLastCanisterByPK("wasms");
-    let wasmPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0});
-    await wasmPart.putAttribute("0", "w", {blob: blob}); // FIXME: not 0 in general
-    let pPart0 = await repositoryIndex.getLastCanisterByPK("main"); // FIXME: Receive it from `setFullPackageInfo`.
-    let pPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pPart0});
+    const {canister: wasmPart0} = await repositoryIndex.uploadWasm(blob);
+    let pPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0});
+
+    // FIXME: Also initialize package manager.
 
     const info: PackageInfo = {
         base: {
@@ -66,7 +65,7 @@ async function main() {
             longDescription: "Counter variable controlled by a shared method",
         },
         specific: { real: {
-            modules: [{Wasm: [Principal.fromText(wasmPart0), "0"]}], // FIXME: not 0 in general
+            modules: [{Wasm: [wasmPart0, "0"]}], // FIXME: not 0 in general
             dependencies: [],
             functions: [],
             permissions: [],
