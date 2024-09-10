@@ -27,8 +27,9 @@ async function main() {
     const key = await commandOutput("dfx identity export Zon");
     const identity = decodeFile(key);
 
-    const counterBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/counter/counter.wasm"));
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
+    const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
+    const counterBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/counter/counter.wasm"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     agent.fetchRootKey(); // TODO: should not be used in production.
@@ -50,6 +51,8 @@ async function main() {
 
     const {canister: frontendWasmPart, id: frontendWasmId} = await repositoryIndex.uploadWasm(frontendBlob);
     let frontendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: frontendWasmPart});
+    const {canister: pmBackendWasmPart, id: pmBackendWasmId} = await repositoryIndex.uploadWasm(pmBackendBlob);
+    let pmBackendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pmBackendWasmPart});
     const {canister: counterWasmPart} = await repositoryIndex.uploadWasm(counterBlob);
     let counterPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: counterWasmPart});
 
@@ -62,18 +65,18 @@ async function main() {
         },
         specific: {real: {
             modules: [{Assets: {wasm: [frontendWasmPart, frontendWasmId], assets: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!)}}],
-            extraModules: [[undefined, [{Wasm: [pmWasmPart, pmWasmId]}]]],
+            extraModules: [[[], [{Wasm: [pmBackendWasmPart, pmBackendWasmId]}]]],
             dependencies: [],
             functions: [],
             permissions: [],
         } },
     };
-    const pmFullInfo: FullPackageInfo: {
-        packages: [["stable", pmInfo]],
+    const pmFullInfo: FullPackageInfo = {
+        packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
         versionsMap: [],
     };
 
-    const info: PackageInfo = {
+    const counterInfo: PackageInfo = {
         base: {
             name: "counter",
             version: "1.0.0",
@@ -82,14 +85,14 @@ async function main() {
         },
         specific: { real: {
             modules: [{Wasm: [counterWasmPart, "0"]}], // FIXME: not 0 in general
+            extraModules: [],
             dependencies: [],
             functions: [],
             permissions: [],
-            extraModules: [],
         } },
     };
     const fullInfo: FullPackageInfo = {
-        packages: [["1.0.0", info]],
+        packages: [["1.0.0", counterInfo]],
         versionsMap: [],
     };
     await counterPart.setFullPackageInfo("counter", fullInfo);

@@ -72,6 +72,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
         // await index.init();
+        {canisterIds = [Principal.fromActor(index)]};
     };
 
     //     // TODO: Install to correct subnet.
