@@ -1,7 +1,7 @@
 /// TODO: unused code?
 import { readFileSync } from 'fs';
 import { exec, execSync } from "child_process";
-import { Actor, HttpAgent } from "@dfinity/agent";
+import { Actor, createAssetCanisterActor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
 import { _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
@@ -27,35 +27,51 @@ async function main() {
     const key = await commandOutput("dfx identity export Zon");
     const identity = decodeFile(key);
 
-    const wasm = readFileSync(".dfx/local/canisters/counter/counter.wasm");
-    const blob = Uint8Array.from(wasm);
-
-    // const ids = readFileSync('.dfx/local/canister_ids.json', {encoding: 'utf-8'});
-    // const ids_j = JSON.parse(ids);
-    // const repositoryIndex = ids_j['RepositoryIndex']['local']
+    const counterBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/counter/counter.wasm"));
+    const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     agent.fetchRootKey(); // TODO: should not be used in production.
 
     const repositoryIndex: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
-    // console.log("Repository init...") // TODO
-    // try {
-    //     await repositoryIndex.init();
-    // }
-    // catch (e) {
-    //     if (!/already initialized/.test((e as any).toString())) {
-    //         throw e;
-    //     }
-    // }
+    console.log("Repository init...");
+    try {
+        await repositoryIndex.init();
+    }
+    catch (e) {
+        if (!/already initialized/.test((e as any).toString())) {
+            throw e;
+        }
+    }
     console.log("Setting repository name...")
     await repositoryIndex.setRepositoryName("RedSocks");
 
     console.log("Uploading WASM code...");
 
-    const {canister: wasmPart0} = await repositoryIndex.uploadWasm(blob);
-    let pPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: wasmPart0});
+    const {canister: frontendWasmPart, id: frontendWasmId} = await repositoryIndex.uploadWasm(frontendBlob);
+    let frontendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: frontendWasmPart});
+    const {canister: counterWasmPart} = await repositoryIndex.uploadWasm(counterBlob);
+    let counterPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: counterWasmPart});
 
-    // FIXME: Also initialize package manager.
+    const pmInfo: PackageInfo = {
+        base: {
+            name: "icpack",
+            version: "0.0.1",
+            shortDescription: "Package manager",
+            longDescription: "Manager for installing ICP app to user's subnet",
+        },
+        specific: {real: {
+            modules: [{Assets: {wasm: [frontendWasmPart, frontendWasmId], assets: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!)}}],
+            extraModules: [[undefined, [{Wasm: [pmWasmPart, pmWasmId]}]]],
+            dependencies: [],
+            functions: [],
+            permissions: [],
+        } },
+    };
+    const pmFullInfo: FullPackageInfo: {
+        packages: [["stable", pmInfo]],
+        versionsMap: [],
+    };
 
     const info: PackageInfo = {
         base: {
@@ -65,7 +81,7 @@ async function main() {
             longDescription: "Counter variable controlled by a shared method",
         },
         specific: { real: {
-            modules: [{Wasm: [wasmPart0, "0"]}], // FIXME: not 0 in general
+            modules: [{Wasm: [counterWasmPart, "0"]}], // FIXME: not 0 in general
             dependencies: [],
             functions: [],
             permissions: [],
@@ -76,7 +92,7 @@ async function main() {
         packages: [["1.0.0", info]],
         versionsMap: [],
     };
-    await pPart.setFullPackageInfo("counter", fullInfo);
+    await counterPart.setFullPackageInfo("counter", fullInfo);
 }
 
 main()

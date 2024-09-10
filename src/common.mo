@@ -26,7 +26,7 @@ module {
         #Wasm : Location;
         #Assets : {
             wasm: Location;
-            assets: Asset.AssetCanister;
+            assets: Principal;
         }
     };
 

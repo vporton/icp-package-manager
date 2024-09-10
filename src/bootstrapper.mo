@@ -30,7 +30,9 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         owner := newOwner;
     };
 
-    public query func getOwner() = owner;
+    public query func getOwner(): async Principal {
+        owner;
+    };
 
     /// user -> (frontend -> backend)
     let userToPM = HashMap.HashMap<Principal, HashMap.HashMap<Principal, Principal>>(1, Principal.equal, Principal.hash);
@@ -62,14 +64,15 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         m;
     };
 
-    // TODO: Do it with client-side TypeScript, instead:
-    // public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
-    //     : async {canisterIds: [Principal]}
-    // {
-    //     Debug.print("Creating a distro repository...");
-    //     Cycles.add<system>(300_000_000_000_000);
-    //     let index = await RepositoryIndex.RepositoryIndex();
-    //     await index.init();
+    /// TODO: Move to another canister?
+    public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
+        : async {canisterIds: [Principal]}
+    {
+        Debug.print("Creating a distro repository...");
+        Cycles.add<system>(300_000_000_000_000);
+        let index = await RepositoryIndex.RepositoryIndex();
+        // await index.init();
+    };
 
     //     // TODO: Install to correct subnet.
     //     Debug.print("Uploading WASM code...");
