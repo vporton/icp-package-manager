@@ -62,7 +62,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         m;
     };
 
-    // TODO: Should be here at all?
+    // TODO: Do it with client-side TypeScript, instead:
     // public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
     //     : async {canisterIds: [Principal]}
     // {
