@@ -229,14 +229,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     canister_id;
                 };
             };
-            let wasmModuleLocation = switch (wasmModule) {
-                case (#Wasm wasmModuleLocation) {
-                    wasmModuleLocation;
-                };
-                case (#Assets {wasm}) {
-                    wasm;
-                };
-            };
             let installArg = to_candid({
                 user = caller;
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
