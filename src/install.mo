@@ -23,7 +23,7 @@ module {
         Cycles.add<system>(10_000_000_000_000); // TODO
         let {canister_id} = await IC.create_canister({
             settings = ?{
-                freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                 controllers = ?[Principal.fromActor(indirectCaller)]; // FIXME: Add package manager as a controller // FIXME: better to direct through IndirectCaller, instead?
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)

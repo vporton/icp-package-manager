@@ -1,5 +1,7 @@
 Remaining things to do:
 
+- FIXME: If a package manager is updated, it should remain to be a controller.
+
 - FIXME: How to decide which modules to install/remove, if the module list in package description changes?
 
 - FIXME: future compaitibility in package format.
