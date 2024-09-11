@@ -553,8 +553,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installExtraModules(extraModules: [Common.Module]): async () {
         onlyOwner(caller);
 
-        let IC: Common.CanisterCreator = actor("aaaaa-aa");
-
         // FIXME
         for (wasmModule in extraModules.vals()) {
             Cycles.add<system>(10_000_000_000_000); // FIXME // TODO
