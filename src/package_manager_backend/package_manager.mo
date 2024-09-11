@@ -220,7 +220,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 case null {
                     let {canister_id} = await IC.create_canister({
                         settings = ?{
-                            freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
+                            freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                             controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
                             compute_allocation = null; // TODO
                             memory_allocation = null; // TODO (a low priority task)
