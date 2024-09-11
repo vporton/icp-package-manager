@@ -10,6 +10,7 @@ import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
+import Option "mo:base/Option";
 import Asset "mo:assets-api";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
@@ -209,7 +210,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (i in Iter.range(0, realPackage.modules.size() - 1)) {
-            let wasmModule = realPackage.modules[i];
+            let (_, wasmModule) = realPackage.modules[i];
             Cycles.add<system>(10_000_000_000_000); // TODO
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
@@ -235,13 +236,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 case (#Assets {wasm}) {
                     wasm;
                 };
-            };
-            let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
-                actor(Principal.toText(wasmModuleLocation.0));
-            let ?(#blob wasm_module) =
-                await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
-            else {
-                Debug.trap("package WASM code is not available");
             };
             let installArg = to_candid({
                 user = caller;
@@ -328,7 +322,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// TODO: What if, due actor model's non-reability, it installed partially.
     public shared({caller}) func installNamedModules(
         installationId: Common.InstallationId,
-        name: ?Text,
+        names: [Text],
         installArg: Blob,
         avoidRepeated: Bool,
     ): async () {
@@ -338,20 +332,25 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Debug.trap("no such package");
         };
         let package = installation.package;
-       
+
+        let names0 = Iter.map<Text, (Text, ())>(names.vals(), func(x: Text): (Text, ()) = (x, ()));
+        let names2 = HashMap.fromIter<Text, ()>(names0, Array.size(names), Text.equal, Text.hash);
         switch (package.specific) {
             case (#real package) {
-                let iter = Iter.filter(package.extraModules.vals(), func((t, _): (?Text, [Common.Module])): Bool = t==name);
-                let wasmModules0 = iter.next();
+                // TODO: error on attempt to install a non-existing module name
+                let iter = Iter.filter<(Text, Common.Module)>(
+                    package.extraModules.vals(),
+                    func((t, _): (Text, Common.Module)): Bool = Option.isSome(names2.get(t)));
+                let iter2 = Iter.map<(Text, Common.Module), Common.Module>(
+                    iter,
+                    func(x: (Text, Common.Module)): Common.Module = x.1);
                 if (avoidRepeated) {
-                    if (iter.next() != null) {
-                        Debug.trap("repeated install");
-                    };
+                    // FIXME: wrong condition
+                    // if (iter.next() != null) {
+                    //     Debug.trap("repeated install");
+                    // };
                 };
-                let ?wasmModules = wasmModules0 else {
-                    Debug.trap("no such named modules");
-                };
-                for (wasmModule in wasmModules.1.vals()) {
+                for (wasmModule in iter2) {
                     ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller()); // TODO: ignore?
                 };
             };

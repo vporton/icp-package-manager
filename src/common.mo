@@ -35,8 +35,8 @@ module {
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [Module];
-        extraModules: [(?Text, [Module])];
+        modules: [(Text, Module)]; // Modules are named for correct upgrades.
+        extraModules: [(Text, Module)]; // to be installed on-demand
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
