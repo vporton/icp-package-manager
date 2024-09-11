@@ -220,7 +220,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let {canister_id} = await IC.create_canister({
                         settings = ?{
                             freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                            controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
+                            controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
                             compute_allocation = null; // TODO
                             memory_allocation = null; // TODO (a low priority task)
                         }
@@ -557,15 +557,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         // FIXME
         for (wasmModule in extraModules.vals()) {
-            Cycles.add<system>(10_000_000_000_000); // TODO
-            let {canister_id} = await IC.create_canister({
-                settings = ?{
-                    freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), Principal.fromActor(getIndirectCaller())];
-                    compute_allocation = null; // TODO
-                    memory_allocation = null; // TODO (a low priority task)
-                }
-            });
+            Cycles.add<system>(10_000_000_000_000); // FIXME // TODO
             let installArg = to_candid({
                 user = caller;
                 // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO

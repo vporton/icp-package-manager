@@ -48,7 +48,7 @@ shared({caller = originalOwner}) actor class Bootstrap() {
             let {canister_id} = await IC.create_canister({
                 settings = ?{
                     freezing_threshold = null; // FIXME: 30 days may be not enough, make configurable.
-                    controllers = null; // We are the controller.
+                    controllers = ?[Principal.fromActor(indirectCaller)]; // No package manager as a controller, because the PM may be upgraded.
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 }
@@ -60,13 +60,19 @@ shared({caller = originalOwner}) actor class Bootstrap() {
             else {
                 Debug.trap("package WASM code is not available");
             };
-            let installArg = to_candid({});
-            await IC.install_code({
-                arg = Blob.toArray(installArg);
-                wasm_module;
-                mode = #install;
-                canister_id;
-            });
+            let installArg = to_candid({}); // FIXME
+            indirectCaller.callAllOneWay([
+                {
+                    canister = Principal.fromActor(IC);
+                    name = "install_code";
+                    data = to_candid({
+                        arg = Blob.toArray(installArg); // FIXME: here and in other places: must install() be no-arguments?
+                        wasm_module;
+                        mode = #install;
+                        canister_id;
+                    });
+                },
+            ]);
             canisters.add(canister_id);
         };
     };

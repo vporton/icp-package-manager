@@ -21,10 +21,10 @@ module {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         Cycles.add<system>(10_000_000_000_000); // TODO
-        let {canister_id} = await IC.create_canister({ // FIXME: Here an in other places, move to IndirectCaller.
+        let {canister_id} = await IC.create_canister({
             settings = ?{
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(indirectCaller)]; // NO package manager as a controller, because it may be upgraded
+                controllers = ?[Principal.fromActor(indirectCaller)]; // No package manager as a controller, because the PM may be upgraded.
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)
             }
@@ -67,13 +67,6 @@ module {
                 ]);
             };
             case _ {
-                // TODO: Remove this code after debugging the below.
-                // await IC.install_code({
-                //     arg = Blob.toArray(installArg);
-                //     wasm_module;
-                //     mode = #install;
-                //     canister_id;
-                // });
                 indirectCaller.callAllOneWay([
                     {
                         canister = Principal.fromActor(IC);
