@@ -63,7 +63,7 @@ module {
                         data = to_candid({
                             from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                         });
-                    }
+                    },
                 ]);
             };
             case _ {
