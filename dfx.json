@@ -26,11 +26,6 @@
       "type": "motoko",
       "main": "src/example/counter.mo"
     },
-    "test": {
-      "type": "motoko",
-      "main": "src/example/upload-and-run.test.mo",
-      "dependencies": ["counter", "package_manager_frontend", "RepositoryIndex", "package_manager"]
-    },
     "package_manager_frontend": {
       "dependencies": [
         "package_manager",
