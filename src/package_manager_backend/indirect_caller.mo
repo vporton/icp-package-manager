@@ -15,7 +15,7 @@ shared({caller = owner}) actor class IndirectCaller() {
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
-    public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         onlyOwner(caller);
 
         try {
@@ -31,7 +31,7 @@ shared({caller = owner}) actor class IndirectCaller() {
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, keep calling other methods.
-    public shared({caller}) func callIgnoringMissing(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    private func callIgnoringMissingOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         onlyOwner(caller);
 
         for (method in methods.vals()) {
@@ -45,5 +45,21 @@ shared({caller = owner}) actor class IndirectCaller() {
                 }
             };
         };
+    };
+
+    public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        await* callIgnoringMissingOneWayImpl(caller, methods)
+    };
+
+    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        await* callAllOneWayImpl(caller, methods);
+    };
+
+    public shared({caller}) func callIgnoringMissing(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
+        await* callIgnoringMissingOneWayImpl(caller, methods)
+    };
+
+    public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
+        await* callAllOneWayImpl(caller, methods);
     };
 }

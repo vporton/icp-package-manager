@@ -21,10 +21,10 @@ module {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         Cycles.add<system>(10_000_000_000_000); // TODO
-        let {canister_id} = await IC.create_canister({
+        let {canister_id} = await IC.create_canister({ // FIXME: Here an in other places, move to IndirectCaller.
             settings = ?{
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(indirectCaller)]; // FIXME: Add package manager as a controller // FIXME: better to direct through IndirectCaller, instead?
+                controllers = ?[Principal.fromActor(indirectCaller)]; // NO package manager as a controller, because it may be upgraded
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)
             }
@@ -46,7 +46,7 @@ module {
         };
         switch (wasmModule) {
             case (#Assets {assets}) {
-                indirectCaller.callAll([
+                indirectCaller.callAllOneWay([
                     {
                         canister = Principal.fromActor(IC);
                         name = "install_code";
@@ -74,7 +74,7 @@ module {
                 //     mode = #install;
                 //     canister_id;
                 // });
-                indirectCaller.callAll([
+                indirectCaller.callAllOneWay([
                     {
                         canister = Principal.fromActor(IC);
                         name = "install_code";

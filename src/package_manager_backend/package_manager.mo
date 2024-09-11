@@ -259,7 +259,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.add(canister_id);
         };
-        getIndirectCaller().callIgnoringMissing(
+        getIndirectCaller().callIgnoringMissingOneWay(
             Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
                 Buffer.toArray(ourHalfInstalled.modules).keys(), // TODO: inefficient?
                 func (i: Nat) = {
