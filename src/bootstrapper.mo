@@ -131,7 +131,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), getIndirectCaller()); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller()); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -146,7 +146,8 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
 
         // TODO: Allow to install only once.
         // PM backend
-        let can = await* Install._installModule(getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), indirect_caller_v);
+        let can = await* Install._installModule(
+            getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), null, indirect_caller_v);
 
         let #Wasm loc = getOurModules().pmBackendPartition else {
             Debug.trap("missing PM backend");

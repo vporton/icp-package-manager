@@ -229,14 +229,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     canister_id;
                 };
             };
-            let installArg = to_candid({
+            let installArg = to_candid({ // FIXME: In different places different args.
                 user = caller;
                 previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
                 packageManager = this;
             });
             if (preinstalledModules == null) {
                 // TODO: ignore?
-                ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller());
+                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller());
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -293,19 +293,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Intended to use only in bootstrapping.
     ///
     /// TODO: Should we disable calling this after bootstrapping finished?
-    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob): async Principal {
+    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
         onlyOwner(caller);
 
-        await* Install._installModule(wasmModule, installArg, getIndirectCaller());
-    };
-
-    public shared({caller}) func _installModules(wasmModules: [Common.Module], installArg: Blob): async () {
-        onlyOwner(caller);
-
-        for (wasmModule in wasmModules.vals()) {
-            // TODO: ignore?
-            ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller());
-        };
+        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller());
     };
 
     /// It can be used directly from frontend.
@@ -314,8 +305,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// TODO: What if, due actor model's non-reability, it installed partially.
     public shared({caller}) func installNamedModules(
         installationId: Common.InstallationId,
-        names: [Text],
-        installArg: Blob,
+        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
         avoidRepeated: Bool,
     ): async () {
         onlyOwner(caller);
@@ -325,25 +315,28 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         let package = installation.package;
 
-        let names0 = Iter.map<Text, (Text, ())>(names.vals(), func(x: Text): (Text, ()) = (x, ()));
-        let names2 = HashMap.fromIter<Text, ()>(names0, Array.size(names), Text.equal, Text.hash);
+        // FIXME: The below iterator and HashMap don't compile.
+        let modules0 = Iter.map<(Text, Blob, ?Blob), (Text, (Blob, ?Blob))>(
+            modules.vals(),
+            func(x: (Text, Blob, ?Blob)): (Text, (Blob, ?Blob)) = (x.0, (x.1, x.2)));
+        let modules2 = HashMap.fromIter<Text, (Blob, ?Blob)>(modules0, Array.size(modules), Text.equal, Text.hash);
         switch (package.specific) {
             case (#real package) {
-                // TODO: error on attempt to install a non-existing module name
-                let iter = Iter.filter<(Text, Common.Module)>(
-                    package.extraModules.vals(),
-                    func((t, _): (Text, Common.Module)): Bool = Option.isSome(names2.get(t)));
-                let iter2 = Iter.map<(Text, Common.Module), Common.Module>(
-                    iter,
-                    func(x: (Text, Common.Module)): Common.Module = x.1);
+                let extraModules2 = HashMap.fromIter<Text, Common.Module>(package.extraModules.vals(), Array.size(modules), Text.equal, Text.hash);
+                for (m in modules0) {
+                    let ?wasmModule = extraModules2.get(m.0) else {
+                        Debug.trap("no extra module '" # m.0 # "'");
+                    };
+                    let ?(installArg, initArg) = modules2.get(m.0) else {
+                        Debug.trap("programming error");
+                    };
+                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller()); // TODO: ignore?
+                };
                 if (avoidRepeated) {
                     // FIXME: wrong condition
                     // if (iter.next() != null) {
                     //     Debug.trap("repeated install");
                     // };
-                };
-                for (wasmModule in iter2) {
-                    ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller()); // TODO: ignore?
                 };
             };
             case (#virtual _) {
@@ -540,21 +533,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
-
-    public shared({caller}) func installExtraModules(extraModules: [Common.Module]): async () {
-        onlyOwner(caller);
-
-        // FIXME
-        for (wasmModule in extraModules.vals()) {
-            Cycles.add<system>(10_000_000_000_000); // FIXME // TODO
-            let installArg = to_candid({
-                user = caller;
-                // previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO
-                packageManager = this;
-            });
-            ignore await* Install._installModule(wasmModule, installArg, getIndirectCaller()); // TODO: ignore?
-        };
-    };
 
     // Convenience methods //
 

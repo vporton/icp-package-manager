@@ -36,7 +36,7 @@ shared({caller = owner}) actor class IndirectCaller() {
 
         for (method in methods.vals()) {
             try {
-                ignore await IC.call(method.canister, method.name, method.data); 
+                ignore await IC.call(method.canister, method.name, method.data);
             }
             catch (e) {
                 Debug.trap("Indirect caller: " # Error.message(e));
@@ -55,11 +55,20 @@ shared({caller = owner}) actor class IndirectCaller() {
         await* callAllOneWayImpl(caller, methods);
     };
 
-    public shared({caller}) func callIgnoringMissing(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
-        await* callIgnoringMissingOneWayImpl(caller, methods)
+    public shared({caller}) func callIgnoringMissing(method: {canister: Principal; name: Text; data: Blob}): async Blob {
+        onlyOwner(caller);
+
+        try {
+            return await IC.call(method.canister, method.name, method.data); 
+        }
+        catch (e) {
+            Debug.trap("Indirect caller: " # Error.message(e));
+        };
     };
 
-    public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
-        await* callAllOneWayImpl(caller, methods);
+    public shared({caller}) func call(method: {canister: Principal; name: Text; data: Blob}): async Blob {
+        onlyOwner(caller);
+
+        await IC.call(method.canister, method.name, method.data);
     };
 }

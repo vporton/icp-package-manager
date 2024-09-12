@@ -16,6 +16,7 @@ module {
     public func _installModule(
         wasmModule: Common.Module,
         installArg: Blob,
+        initArg: ?Blob, // init is optional
         indirectCaller: IndirectCaller.IndirectCaller,
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
@@ -64,21 +65,33 @@ module {
                             from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                         });
                     },
+                    // TODO: Should here also call `init()` like below?
                 ]);
             };
             case _ {
-                indirectCaller.callAllOneWay([
-                    {
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            arg = Blob.toArray(installArg); // FIXME: here and in other places: must install() be no-arguments?
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                        });
-                    },
-                ]);
+                let installCode = {
+                    canister = Principal.fromActor(IC);
+                    name = "install_code";
+                    data = to_candid({
+                        arg = Blob.toArray(installArg); // FIXME: here and in other places: must install() be no-arguments?
+                        wasm_module;
+                        mode = #install;
+                        canister_id;
+                    });
+                };
+                ignore await indirectCaller.call(installCode);
+                switch (initArg) {
+                    case (?initArg) {
+                        indirectCaller.callIgnoringMissingOneWay([
+                            {
+                                canister = canister_id;
+                                name = "init"; // FIXME: prefix? other method name?
+                                data = to_candid({indirect_caller = indirectCaller});
+                            }
+                        ]);
+                    };
+                    case null {};
+                };
             };
         };
         canister_id;
