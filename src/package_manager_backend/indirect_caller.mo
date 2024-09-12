@@ -4,12 +4,20 @@ import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 
-shared({caller = owner}) actor class IndirectCaller() {
+shared({caller = initialOwner}) actor class IndirectCaller() {
+    var owner = initialOwner;
+
     /// We check owner, for only owner to be able to control Asset canisters
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
             Debug.trap("only owner");
         };
+    };
+
+    public shared({caller}) func changeOwner(newOwner: Principal) {
+        onlyOwner(caller);
+
+        owner := newOwner;
     };
 
     /// Call methods in the given order and don't return.
