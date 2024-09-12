@@ -3,7 +3,6 @@ import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
-import Cycles "mo:base/ExperimentalCycles";
 
 shared({caller = owner}) actor class IndirectCaller() {
     /// We check owner, for only owner to be able to control Asset canisters
