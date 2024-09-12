@@ -60,7 +60,7 @@ module {
                     },
                     {
                         canister = Principal.fromActor(indirectCaller);
-                        name = "copyAssetsCallback";
+                        name = "copyAssetsCallback"; // FIXME: no such func
                         data = to_candid({
                             from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                         });
