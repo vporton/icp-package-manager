@@ -1,3 +1,4 @@
+/// Canister that takes on itself potentially non-returning calls.
 import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
