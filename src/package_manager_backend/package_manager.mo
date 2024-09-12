@@ -64,8 +64,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         initialized := true;
     };
 
-    // FIXME: UUID prefix to init and conform to API.
-    public shared func isInitialized(): async Bool {
+    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
         initialized;
     };
 
@@ -551,14 +550,4 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public query func getRepositories(): async [{canister: Principal; name: Text}] {
         repositories;
     };
-
-    // Callbacks //
-
-    public shared({caller}) func copyAssetsCallback({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
-        if (caller != Principal.fromActor(getIndirectCaller())) {
-            Debug.trap("only by indirect_caller");
-        };
-
-        await* CopyAssets.copyAll({from; to}); // FIXME: It may freeze!
-    }
 }
