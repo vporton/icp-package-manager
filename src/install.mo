@@ -73,7 +73,7 @@ module {
                     canister = Principal.fromActor(IC);
                     name = "install_code";
                     data = to_candid({
-                        arg = Blob.toArray(installArg); // FIXME: here and in other places: must install() be no-arguments?
+                        arg = Blob.toArray(installArg);
                         wasm_module;
                         mode = #install;
                         canister_id;
