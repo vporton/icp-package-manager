@@ -53,7 +53,7 @@ async function main() {
     let frontendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: frontendWasmPart});
     const {canister: pmBackendWasmPart, id: pmBackendWasmId} = await repositoryIndex.uploadWasm(pmBackendBlob);
     let pmBackendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pmBackendWasmPart});
-    const {canister: counterWasmPart} = await repositoryIndex.uploadWasm(counterBlob);
+    const {canister: counterWasmPart, id: counterWasmId} = await repositoryIndex.uploadWasm(counterBlob);
     let counterPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: counterWasmPart});
 
     const pmInfo: PackageInfo = {
@@ -84,7 +84,7 @@ async function main() {
             longDescription: "Counter variable controlled by a shared method",
         },
         specific: { real: {
-            modules: [{Wasm: [counterWasmPart, "0"]}], // FIXME: not 0 in general
+            modules: [{Wasm: [counterWasmPart, counterWasmId]}],
             extraModules: [],
             dependencies: [],
             functions: [],
