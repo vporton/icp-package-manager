@@ -333,7 +333,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller()); // TODO: ignore?
                 };
                 if (avoidRepeated) {
-                    // FIXME: wrong condition
+                    // TODO: wrong condition
                     // if (iter.next() != null) {
                     //     Debug.trap("repeated install");
                     // };
