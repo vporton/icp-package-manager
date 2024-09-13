@@ -81,11 +81,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.InstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
+        HashMap.HashMap(0, Nat.equal, Int.hash);
 
     stable var _installedPackagesByNameSave: [(Common.PackageName, [Common.InstallationId])] = [];
     var installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
-        HashMap.fromIter([].vals(), 0, Text.equal, Text.hash);
+        HashMap.HashMap(0, Text.equal, Text.hash);
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         /// The number of modules in fully installed state.
