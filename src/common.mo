@@ -89,7 +89,8 @@ module {
         package: PackageInfo;
         packageCanister: Principal;
         version: Version;
-        modules: [Principal];
+        // modules: [(Text, Principal)]; // FIXME: Use this instead.
+        modules: [Principal]; // TODO: `HashMap`?
         var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
     };
 
