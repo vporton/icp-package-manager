@@ -89,8 +89,8 @@ module {
         package: PackageInfo;
         packageCanister: Principal;
         version: Version;
-        // modules: [(Text, Principal)]; // FIXME: Use this instead.
-        modules: [Principal]; // TODO: `HashMap`?
+        modules: [(Text, Principal)]; // FIXME: Use this instead. // TODO: HashMap
+        // modules: [Principal]; // TODO: `HashMap`?
         var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
     };
 
@@ -101,7 +101,7 @@ module {
         package: PackageInfo;
         packageCanister: Principal;
         version: Version;
-        modules: [Principal];
+        modules: [(Text, Principal)];
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
@@ -115,7 +115,7 @@ module {
         packageCanister: Principal;
         name: PackageName;
         version: Version;
-        modules: Buffer.Buffer<Principal>;
+        modules: Buffer.Buffer<(Text, Principal)>;
         package: PackageInfo;
     };
 

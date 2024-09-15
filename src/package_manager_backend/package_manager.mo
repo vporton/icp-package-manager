@@ -122,7 +122,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: [Common.Location];
+        preinstalledModules: [(Text, Common.Location)];
     })
         : async {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
@@ -137,7 +137,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: ?[Common.Location];
+        preinstalledModules: ?[(Text, Common.Location)];
     })
         : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
@@ -158,7 +158,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // id = installationId;
             name = package.base.name;
             version = package.base.version;
-            modules = Buffer.Buffer<Principal>(numPackages);
+            modules = Buffer.Buffer<(Text, Principal)>(numPackages);
             // packageDescriptionIn = part;
             package;
             packageCanister = canister;
@@ -202,19 +202,19 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
-        preinstalledModules: ?[Common.Location];
+        preinstalledModules: ?[(Text, Common.Location)];
     }): async* {canisterIds: [Principal]} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
         for (i in Iter.range(0, realPackage.modules.size() - 1)) {
-            let (_, wasmModule) = realPackage.modules[i];
+            let (moduleName, wasmModule) = realPackage.modules[i];
             Cycles.add<system>(10_000_000_000_000); // TODO
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     assert preinstalledModules.size() == realPackage.modules.size();
-                    preinstalledModules[i].0;
+                    preinstalledModules[i].1.0;
                 };
                 case null {
                     let {canister_id} = await IC.create_canister({
@@ -242,17 +242,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             }*/;
             // TODO: Are two lines below duplicates of each other?
             canisterIds.add(canister_id); // do it later.
-            ourHalfInstalled.modules.add(canister_id);
+            ourHalfInstalled.modules.add((moduleName, canister_id));
         };
         getIndirectCaller().callIgnoringMissingOneWay(
             Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
                 Buffer.toArray(ourHalfInstalled.modules).keys(), // TODO: inefficient?
                 func (i: Nat) = {
-                    canister = ourHalfInstalled.modules.get(i);
+                    canister = ourHalfInstalled.modules.get(i).1;
                     name = Common.NamespacePrefix # "init";
                     data = to_candid({
                         user = caller;
-                        previousCanisters = Array.subArray<Principal>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
+                        previousCanisters = Array.subArray<(Text, Principal)>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
                         packageManager = this;
                     });
                 },
@@ -392,7 +392,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     }): async* () {
         let IC: CanisterDeletor = actor("aaaaa-aa");
         while (ourHalfInstalled.modules.size() != 0) {
-            let canister = ourHalfInstalled.modules.get(ourHalfInstalled.modules.size() - 1);
+            let canister = ourHalfInstalled.modules.get(ourHalfInstalled.modules.size() - 1).1;
             await IC.stop_canister({canister_id = canister}); // FIXME: can hang?
             await IC.delete_canister({canister_id = canister});
             ignore ourHalfInstalled.modules.removeLast();
