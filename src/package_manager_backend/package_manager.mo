@@ -314,6 +314,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         let package = installation.package;
 
+        // TODO: Don't install already installed.
         let modules0 = Iter.map<(Text, Blob, ?Blob), (Text, (Blob, ?Blob))>(
             modules.vals(),
             func(x: (Text, Blob, ?Blob)): (Text, (Blob, ?Blob)) = (x.0, (x.1, x.2)));
