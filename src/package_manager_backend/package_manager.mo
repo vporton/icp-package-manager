@@ -209,6 +209,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
+        // FIXME: It makes sense to create all the canisters before installing WASM.
         for (i in Iter.range(0, realPackage.modules.size() - 1)) {
             let (moduleName, wasmModule) = realPackage.modules[i];
             Cycles.add<system>(10_000_000_000_000); // TODO
