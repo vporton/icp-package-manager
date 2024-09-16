@@ -116,7 +116,7 @@ module {
         packageCanister: Principal;
         name: PackageName;
         version: Version;
-        modules: Buffer.Buffer<(Text, Principal)>;
+        modules: OrderedHashMap.OrderedHashMap<Text, Principal>;
         package: PackageInfo;
     };
 

@@ -12,6 +12,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Option "mo:base/Option";
 import Asset "mo:assets-api";
+import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import CopyAssets "../copy_assets";
@@ -158,7 +159,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // id = installationId;
             name = package.base.name;
             version = package.base.version;
-            modules = Buffer.Buffer<(Text, Principal)>(numPackages);
+            modules = OrderedHashMap.OrderedHashMap<Text, Principal>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
             package;
             packageCanister = canister;
@@ -230,7 +231,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             };
             let installArg = to_candid({ // FIXME: In different places different args.
                 user = caller;
-                previousCanisters = Buffer.toArray(ourHalfInstalled.modules); // TODO: We can create all canisters first and pass all, not just previous.
+                previousCanisters = Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()); // TODO: We can create all canisters first and pass all, not just previous.
                 packageManager = this;
             });
             if (preinstalledModules == null) {
@@ -242,11 +243,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             }*/;
             // TODO: Are two lines below duplicates of each other?
             canisterIds.add(canister_id); // do it later.
-            ourHalfInstalled.modules.add((moduleName, canister_id));
+            ourHalfInstalled.modules.put(moduleName, canister_id);
         };
         getIndirectCaller().callIgnoringMissingOneWay(
             Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
-                Buffer.toArray(ourHalfInstalled.modules).keys(), // TODO: inefficient?
+                Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()), // TODO: inefficient?
                 func (i: Nat) = {
                     canister = ourHalfInstalled.modules.get(i).1;
                     name = Common.NamespacePrefix # "init";
