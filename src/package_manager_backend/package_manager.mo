@@ -79,7 +79,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     stable var nextInstallationId: Nat = 0;
 
-    stable var _installedPackagesSave: [(Common.InstallationId, Common.InstalledPackageInfo)] = [];
+    stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
         HashMap.HashMap(0, Nat.equal, Int.hash);
 

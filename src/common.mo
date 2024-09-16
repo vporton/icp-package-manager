@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import Buffer "mo:base/Buffer";
 import Asset "mo:assets-api";
+import OrderedHashMap "mo:ordered-map";
 
 module {
     public let NamespacePrefix = "b44c4a9beec74e1c8a7acbe46256f92f_";
@@ -41,6 +42,7 @@ module {
         ///
         /// TODO: Suggests/recommends akin Debian.
         dependencies: [(PackageName, [VersionRange])];
+        // TODO: Introduce dependencies between modules.
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [(Principal, MethodName)])];
@@ -89,8 +91,7 @@ module {
         package: PackageInfo;
         packageCanister: Principal;
         version: Version;
-        modules: [(Text, Principal)]; // FIXME: Use this instead. // TODO: HashMap
-        // modules: [Principal]; // TODO: `HashMap`?
+        modules: OrderedHashMap.OrderedHashMap<Text, Principal>;
         var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
     };
 
