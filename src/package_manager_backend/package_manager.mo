@@ -246,20 +246,21 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             canisterIds.add(canister_id); // do it later.
             ourHalfInstalled.modules.put(moduleName, canister_id);
         };
-        getIndirectCaller().callIgnoringMissingOneWay(
-            Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
-                Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()), // TODO: inefficient?
-                func (i: Nat) = {
-                    canister = ourHalfInstalled.modules.get(i).1;
-                    name = Common.NamespacePrefix # "init";
-                    data = to_candid({
-                        user = caller;
-                        previousCanisters = Array.subArray<(Text, Principal)>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
-                        packageManager = this;
-                    });
-                },
-            )),
-        );
+        // FIXME: Add this back after making creating all canisters before installing WASM.
+        // getIndirectCaller().callIgnoringMissingOneWay(
+        //     Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
+        //         Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()), // TODO: inefficient?
+        //         func (i: Nat) = {
+        //             canister = ourHalfInstalled.modules.get(i).1;
+        //             name = Common.NamespacePrefix # "init";
+        //             data = to_candid({
+        //                 user = caller;
+        //                 previousCanisters = Array.subArray<(Text, Principal)>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
+        //                 packageManager = this;
+        //             });
+        //         },
+        //     )),
+        // );
 
         _updateAfterInstall({installationId});
 
@@ -276,7 +277,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             name = ourHalfInstalled.name;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = Buffer.toArray(ourHalfInstalled.modules);
+            modules = ourHalfInstalled.modules;
             packageCanister = ourHalfInstalled.packageCanister;
             var extraModules = [];
         });
@@ -359,10 +360,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let packageInfo = await part.getPackage(package.name, package.version);
 
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = Array.size(package.modules);
+            shouldHaveModules = package.modules.size(); // FIXME: Is it a nonsense?
             name = package.name;
             version = package.version;
-            modules = Buffer.fromArray(package.modules);
+            modules = package.modules; // FIXME: (here and in other places) create a deep copy.
             package = packageInfo;
             packageCanister = package.packageCanister;
         };
@@ -394,9 +395,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     }): async* () {
         let IC: CanisterDeletor = actor("aaaaa-aa");
         while (ourHalfInstalled.modules.size() != 0) {
-            let canister = ourHalfInstalled.modules.get(ourHalfInstalled.modules.size() - 1).1;
-            await IC.stop_canister({canister_id = canister}); // FIXME: can hang?
-            await IC.delete_canister({canister_id = canister});
+            let vals = Iter.toArray(ourHalfInstalled.modules.vals()); // TODO: slow
+            let canister_id = vals[vals.size() - 1];
+            await IC.stop_canister({canister_id}); // FIXME: can hang?
+            await IC.delete_canister({canister_id});
             ignore ourHalfInstalled.modules.removeLast();
         };
         installedPackages.delete(installationId);
