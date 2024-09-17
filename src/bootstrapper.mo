@@ -14,6 +14,7 @@ import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
+import Copier "package_manager_backend/copier";
 
 shared({caller = intitialOwner}) actor class Bootstrap() {
     var owner = intitialOwner;
