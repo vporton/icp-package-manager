@@ -88,7 +88,7 @@ module {
                         indirectCaller.callIgnoringMissingOneWay([
                             {
                                 canister = canister_id;
-                                name = "init"; // FIXME: prefix?
+                                name = Common.NamespacePrefix # "init";
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
                                     packageManager;

@@ -25,7 +25,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var initialized: Bool = false; // intentionally non-stable
 
     // FIXME: UUID prefix to init and conform to API.
-    public shared({caller}) func init({arg: {indirect_caller: IndirectCaller.IndirectCaller}}) : async () {
+    // TODO: We can get `indirect_caller` from PM.
+    public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({arg: {indirect_caller: IndirectCaller.IndirectCaller}}) : async () {
         ignore Cycles.accept<system>(10_000_000_000_000); // TODO
         onlyOwner(caller);
 
