@@ -359,27 +359,27 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         onlyOwner(caller);
 
-        let ?package = installedPackages.get(installationId) else {
-            Debug.trap("no such installed package");
+        let ?installation = installedPackages.get(installationId) else {
+            Debug.trap("no such installed installation");
         };
-        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(package.packageCanister));
-        let packageInfo = await part.getPackage(package.name, package.version);
+        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(installation.packageCanister));
+        let packageInfo = await part.getPackage(installation.name, installation.version);
 
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = package.modules.size(); // FIXME: Is it a nonsense?
-            name = package.name;
-            version = package.version;
-            modules = package.modules; // FIXME: (here and in other places) create a deep copy.
+            shouldHaveModules = installation.modules.size(); // FIXME: Is it a nonsense?
+            name = installation.name;
+            version = installation.version;
+            modules = installation.modules;
             package = packageInfo;
-            packageCanister = package.packageCanister;
+            packageCanister = installation.packageCanister;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         // TODO:
         // let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-        // let package = await part.getPackage(packageName, version);
+        // let installation = await part.getPackage(packageName, version);
         let #real realPackage = packageInfo.specific else {
-            Debug.trap("trying to directly install a virtual package");
+            Debug.trap("trying to directly install a virtual installation");
         };
 
         await* _finishUninstallPackage({
