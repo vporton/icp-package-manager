@@ -25,8 +25,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     var initialized: Bool = false; // intentionally non-stable
 
-    // FIXME: UUID prefix to init and conform to API.
-    // TODO: We can get `indirect_caller` from PM.
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
         arg: {indirect_caller: IndirectCaller.IndirectCaller; copier: Copier.Copier};
     }) : async () {
@@ -240,10 +238,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     canister_id;
                 };
             };
-            let installArg = to_candid({ // FIXME: In different places different args.
-                user = caller;
-                previousCanisters = Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()); // TODO: We can create all canisters first and pass all, not just previous.
-                packageManager = this;
+            let installArg = to_candid({
+                arg = to_candid({}); // TODO: correct?
             });
             if (preinstalledModules == null) {
                 // TODO: ignore?
