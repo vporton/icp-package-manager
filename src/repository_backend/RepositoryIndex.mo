@@ -46,7 +46,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   };
 
   public shared({caller}) func init(): async () {
-    ignore Cycles.accept<system>(300_000_000_000_000); // FIXME
+    ignore Cycles.accept<system>(300_000_000_000_000);
     onlyOwner(caller);
     
     if (initialized) {

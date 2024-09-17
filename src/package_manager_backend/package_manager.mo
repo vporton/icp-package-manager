@@ -28,7 +28,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
         arg: {indirect_caller: IndirectCaller.IndirectCaller; copier: Copier.Copier; moreArg: {frontend: Principal}};
     }) : async () {
-        ignore Cycles.accept<system>(10_000_000_000_000); // TODO
+        ignore Cycles.accept<system>(10_000_000_000_000);
         onlyOwner(caller);
 
         indirect_caller_ := ?arg.indirect_caller;
