@@ -269,7 +269,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     onlyOwner(caller);
     let part0 = getLastCanisterByPKInternal("main");
     let part: RepositoryPartition.RepositoryPartition = actor(part0);
-    await part.setFullPackageInfo(name, info); // FIXME: Prevent duplicates.
+    await part.setFullPackageInfo(name, info); // TODO: Prevent duplicates.
     {canister = Principal.fromActor(part)};
   };
 }

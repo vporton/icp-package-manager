@@ -1,4 +1,3 @@
-/// FIXME: Remove this in regard of init() function?
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
