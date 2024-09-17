@@ -151,8 +151,8 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
         let can = await* Install._installModule(
             getOurModules().pmBackendPartition,
-            to_candid({moreArg = {frontend}}),
-            null,
+            to_candid(()),
+            ?(to_candid({moreArg = {frontend}})),
             indirect_caller_v,
             getCopier(),
             null,
