@@ -80,5 +80,5 @@ shared({caller = originalOwner}) actor class Bootstrap() {
     let pm: package_manager.package_manager = actor(canisters[0]);
     let repoObj: RepositoryIndex.RepositoryIndex = actor(Principal.toText(repo)); // TODO: Can we instead pass `repoObj` directly?
     let mains = await repoObj.getCanistersByPK("main");
-    pm.init(mains[0], "0.0.1", modules); // FIXME: `mains[0]` may be wrong // TODO: other versions
+    pm.init(mains[0], "0.0.1", modules); // FIXME: `mains[0]` may be wrong // TODO: other versions // FIXME: WRONG
 }

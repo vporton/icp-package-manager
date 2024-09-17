@@ -18,6 +18,7 @@ module {
         installArg: Blob,
         initArg: ?Blob, // init is optional
         indirectCaller: IndirectCaller.IndirectCaller,
+        packageManager: ?Principal, // may be null, if called from bootstrap.
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -52,6 +53,8 @@ module {
                         canister = Principal.fromActor(IC);
                         name = "install_code";
                         data = to_candid({
+                            // user = ; // TODO: Useful? Maybe, just ask PM?
+                            packageManager;
                             arg = Blob.toArray(installArg);
                             wasm_module;
                             mode = #install;
@@ -85,8 +88,12 @@ module {
                         indirectCaller.callIgnoringMissingOneWay([
                             {
                                 canister = canister_id;
-                                name = "init"; // FIXME: prefix? other method name?
-                                data = to_candid({indirect_caller = indirectCaller});
+                                name = "init"; // FIXME: prefix?
+                                data = to_candid({
+                                    // user = ; // TODO: Useful? Maybe, just ask PM?
+                                    packageManager;
+                                    arg = {indirect_caller = indirectCaller};
+                                });
                             }
                         ]);
                     };

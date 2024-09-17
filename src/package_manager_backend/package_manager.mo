@@ -26,16 +26,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // FIXME: UUID prefix to init and conform to API.
     // FIXME: Check function signature:
-    public shared({caller}) func init({indirect_caller: IndirectCaller.IndirectCaller}) : async () {
+    public shared({caller}) func init(arg: {indirect_caller: IndirectCaller.IndirectCaller}) : async () {
         ignore Cycles.accept<system>(10_000_000_000_000); // TODO
         onlyOwner(caller);
 
-        indirect_caller_ := ?indirect_caller;
+        indirect_caller_ := ?arg.indirect_caller;
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
         Cycles.add<system>(5_000_000_000_000); // FIXME
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller) });
+        await IC.deposit_cycles({ canister_id = Principal.fromActor(arg.indirect_caller) });
 
         // TODO
         // let installationId = nextInstallationId;
@@ -234,7 +234,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             });
             if (preinstalledModules == null) {
                 // TODO: ignore?
-                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller());
+                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -295,7 +295,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
         onlyOwner(caller);
 
-        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller());
+        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this)));
     };
 
     /// It can be used directly from frontend.
@@ -330,7 +330,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                         Debug.trap("programming error");
                     };
                     // FIXME: Update installed modules data. It will be used to initialize more modules.
-                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller()); // TODO: ignore?
+                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
