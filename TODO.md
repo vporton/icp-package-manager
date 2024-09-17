@@ -6,6 +6,8 @@ Remaining things to do:
 
 - FIXME: Deploy not only WASM but also metadata.
 
+- `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
+
 - use the CMC’s `notify_create_canister`.
 
 - https://www.npmjs.com/package/@dfinity/assets to upload assets.

@@ -79,7 +79,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
   /// Helper function that creates a user canister for a given PK
   func createUserCanister(pk: Text, controllers: ?[Principal]): async Text {
     Debug.print("creating new user canister with pk=" # pk);
-    Cycles.add<system>(100_000_000_000_000); // FIXME
+    Cycles.add<system>(100_000_000_000_000);
     let newUserCanister = await RepositoryPartition.RepositoryPartition({
       partitionKey = pk;
       scalingOptions = {

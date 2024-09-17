@@ -128,7 +128,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     // };
 
     public shared({caller}) func bootstrapFrontend() : async Principal {
-        Cycles.add<system>(1_000_000_000_000); // TODO
+        Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         let copier_v = await Copier.Copier(); // yes, a separate `Copier` for this PM
         indirect_caller := ?indirect_caller_v;
@@ -144,7 +144,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     public shared({caller}) func bootstrapBackend(frontend: Principal)
         : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
     {
-        Cycles.add<system>(1_000_000_000_000); // TODO
+        Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.

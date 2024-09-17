@@ -36,7 +36,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
-        Cycles.add<system>(5_000_000_000_000); // FIXME
+        Cycles.add<system>(5_000_000_000_000);
         await IC.deposit_cycles({ canister_id = Principal.fromActor(arg.indirect_caller) });
 
         // TODO
@@ -223,7 +223,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // FIXME: It makes sense to create all the canisters before installing WASM.
         for (i in Iter.range(0, realPackage.modules.size() - 1)) {
             let (moduleName, wasmModule) = realPackage.modules[i];
-            Cycles.add<system>(10_000_000_000_000); // TODO
+            Cycles.add<system>(10_000_000_000_000);
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     assert preinstalledModules.size() == realPackage.modules.size();
