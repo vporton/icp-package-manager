@@ -134,7 +134,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         indirect_caller := ?indirect_caller_v;
         copier := ?copier_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), getCopier(), null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), to_candid(()), null, getIndirectCaller(), getCopier(), null); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -148,9 +148,15 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.
-        // PM backend
+        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
         let can = await* Install._installModule(
-            getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), null, indirect_caller_v, getCopier(), null);
+            getOurModules().pmBackendPartition,
+            to_candid({moreArg = {frontend}}),
+            null,
+            indirect_caller_v,
+            getCopier(),
+            null,
+        );
 
         let #Wasm loc = getOurModules().pmBackendPartition else {
             Debug.trap("missing PM backend");
@@ -160,7 +166,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
-            preinstalledModules = [("backend", (can, "icpack"))];
+            preinstalledModules = [("frontend", (frontend, "icpack"))];
         });
         switch (userToPM.get(caller)) {
             case (?subMap) {
