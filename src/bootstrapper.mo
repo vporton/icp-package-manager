@@ -157,7 +157,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
-            preinstalledModules = [(can, "icpack")];
+            preinstalledModules = [("backend", (can, "icpack"))];
         });
         switch (userToPM.get(caller)) {
             case (?subMap) {
