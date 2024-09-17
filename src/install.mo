@@ -17,7 +17,6 @@ module {
         wasmModule: Common.Module,
         installArg: Blob,
         initArg: ?Blob, // init is optional
-        moreArg: Blob;
         indirectCaller: IndirectCaller.IndirectCaller,
         copier: Copier.Copier,
         packageManager: ?Principal, // may be null, if called from bootstrap.
@@ -94,7 +93,7 @@ module {
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
                                     packageManager;
-                                    arg = {indirect_caller = indirectCaller; copier = copier; moreArg = moreArg};
+                                    arg = {indirect_caller = indirectCaller; copier = copier; moreArg = initArg};
                                 });
                             }
                         ]);

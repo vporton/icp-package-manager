@@ -107,7 +107,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         modules: [Principal];
     })] = [];
     // TODO: `var` or `let` here and in other places:
-    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
+    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> = // FIXME: stable
         HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
