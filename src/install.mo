@@ -11,7 +11,7 @@ import Copier "package_manager_backend/copier";
 
 module {
     /// TODO: Save module info for such things as uninstallation and cycles management.
-    /// FIXME: But it should not saved on bootstrapping.
+    /// FIXME: But it should not be saved on bootstrapping.
     ///
     /// Returns canister ID of installed module.
     public func _installModule(
