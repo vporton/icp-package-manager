@@ -10,12 +10,9 @@ import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
-import Option "mo:base/Option";
-import Asset "mo:assets-api";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
-import CopyAssets "../copy_assets";
 import IndirectCaller "indirect_caller";
 import Install "../install";
 
@@ -351,7 +348,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
         : async ()
     {
-        // onlyOwner(caller); // FIXME
+        onlyOwner(caller);
 
         let ?package = installedPackages.get(installationId) else {
             Debug.trap("no such installed package");
@@ -437,7 +434,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
    system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
 
-        _installedPackagesSave := Iter.toArray(installedPackages.entries());
+        _installedPackagesSave := Iter.toArray(
+            Iter.map<(Common.InstallationId, Common.InstalledPackageInfo), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(installedPackages.entries(), func ((id, info): (Common.InstallationId, Common.InstalledPackageInfo)): (Common.InstallationId, Common.SharedInstalledPackageInfo) {
+                (id, Common.installedPackageInfoShare(info));
+            }
+        ));
 
         _installedPackagesByNameSave := Iter.toArray(installedPackagesByName.entries());
 
@@ -462,9 +463,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         );
         _ownersSave := []; // Free memory.
 
-        installedPackages := HashMap.fromIter(
-            _installedPackagesSave.vals(),
-            Array.size(_installedPackagesSave),
+        installedPackages := HashMap.fromIter<Common.InstallationId, Common.InstalledPackageInfo>(
+            Iter.map<(Common.InstallationId, Common.SharedInstalledPackageInfo), (Common.InstallationId, Common.InstalledPackageInfo)>(
+                _installedPackagesSave.vals(),
+                func ((id, info): (Common.InstallationId, Common.SharedInstalledPackageInfo)): (Common.InstallationId, Common.InstalledPackageInfo) {
+                    (id, Common.installedPackageInfoUnshare(info));
+                },
+            ),Array.size(_installedPackagesSave),
             Nat.equal,
             Int.hash,
         );
@@ -488,7 +493,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let ?result = installedPackages.get(id) else {
             Debug.trap("no such installed package");
         };
-        result;
+        Common.installedPackageInfoShare(result);
     };
 
     /// TODO: very unstable API.
@@ -496,17 +501,24 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let ?ids = installedPackagesByName.get(name) else {
             return [];
         };
-        Iter.toArray(Iter.map(ids.vals(), func (id: Common.InstallationId): Common.InstalledPackageInfo {
+        // TODO: Eliminiate duplicate code:
+        Iter.toArray(Iter.map(ids.vals(), func (id: Common.InstallationId): Common.SharedInstalledPackageInfo {
             let ?info = installedPackages.get(id) else {
                 Debug.trap("programming error");
             };
-            info;
+            Common.installedPackageInfoShare(info);
         }));
     };
 
     /// TODO: very unstable API.
     public query func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
-        Iter.toArray(installedPackages.entries());
+        Iter.toArray(
+            Iter.map<(Common.InstallationId, Common.InstalledPackageInfo), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(
+                installedPackages.entries(),
+                func (info: (Common.InstallationId, Common.InstalledPackageInfo)): (Common.InstallationId, Common.SharedInstalledPackageInfo) =
+                    (info.0, Common.installedPackageInfoShare(info.1))
+            )
+        );
     };
 
     /// TODO: very unstable API.
