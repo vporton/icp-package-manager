@@ -96,7 +96,6 @@ module {
         var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
     };
 
-    // FIXME: Make correct use of SharedInstalledPackageInfo vs InstalledPackageInfo.
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         name: PackageName;
