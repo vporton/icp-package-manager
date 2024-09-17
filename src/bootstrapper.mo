@@ -129,9 +129,11 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000); // TODO
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
+        let copier_v = await Copier.Copier(); // yes, a separate `Copier` for this PM
         indirect_caller := ?indirect_caller_v;
+        copier := ?copier_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), getCopier(), null); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -147,7 +149,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         // TODO: Allow to install only once.
         // PM backend
         let can = await* Install._installModule(
-            getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), null, indirect_caller_v, null);
+            getOurModules().pmBackendPartition, to_candid({indirect_caller = indirect_caller_v}), null, indirect_caller_v, getCopier(), null);
 
         let #Wasm loc = getOurModules().pmBackendPartition else {
             Debug.trap("missing PM backend");
@@ -168,12 +170,21 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         [inst];
     };
 
+    // TODO: Join into a single var.
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
+    stable var copier: ?Copier.Copier = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
         let ?indirect_caller2 = indirect_caller else {
             Debug.trap("indirect_caller not initialized");
         };
         indirect_caller2;
+    };
+
+    private func getCopier(): Copier.Copier {
+        let ?copier2 = copier else {
+            Debug.trap("copier not initialized");
+        };
+        copier2;
     };
 }

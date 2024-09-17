@@ -1,6 +1,7 @@
 /// Canister that takes on itself potentially non-returning calls.
-import Copier "../copy_assets";
+import CopyAssets "../copy_assets";
 import Asset "mo:assets-api";
+import Debug "mo:base/Debug";
 
 shared({caller = initialOwner}) actor class Copier() {
     var owner = initialOwner;
@@ -21,6 +22,6 @@ shared({caller = initialOwner}) actor class Copier() {
     public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
         onlyOwner(caller);
 
-        Copier.copyAll({from; to});
+        await* CopyAssets.copyAll({from; to});
     }
 }
