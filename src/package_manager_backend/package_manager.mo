@@ -148,7 +148,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         getIndirectCaller().callAllOneWay([{
             canister = Principal.fromActor(this);
-            name = "installPackageCallback";
+            name = "installPackageWrapper";
             data = to_candid({
                 installationId: Common.InstallationId;
                 canister: Principal;
@@ -168,9 +168,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
+        package: Common.PackageInfo;
     }): async () {
-        let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-        let package = await part.getPackage(packageName, version); // may hang, so in a callback
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };

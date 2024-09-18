@@ -4,6 +4,7 @@ import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Asset "mo:assets-api";
+import Common "../common";
 import CopyAssets "../copy_assets";
 
 shared({caller = initialOwner}) actor class IndirectCaller() {
@@ -86,5 +87,37 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
         onlyOwner(caller);
 
         await* CopyAssets.copyAll({from; to});
-    }
+    };
+
+    public shared({caller}) func installPackageWrapper({
+        installationId: Common.InstallationId;
+        canister: Principal;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        preinstalledModules: ?[(Text, Common.Location)];
+    }) {
+        let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+        let package = await part.getPackage(packageName, version); // may hang, so in a callback
+
+        type o = actor {
+            // TODO: Check it carefully.
+            installPackageCallback: ({
+                installationId: Common.InstallationId;
+                canister: Principal;
+                packageName: Common.PackageName;
+                version: Common.Version;
+                preinstalledModules: ?[(Text, Common.Location)];
+                package: Common.PackageInfo;
+            }) -> async ();
+        };
+        let pm: o = actor(Principal.toText(owner));
+        await pm.installPackageCallback({
+            installationId;
+            canister;
+            packageName;
+            version;
+            preinstalledModules;
+            package;
+        });
+    };
 }
