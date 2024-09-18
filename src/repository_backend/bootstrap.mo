@@ -2,7 +2,7 @@ import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import RepositoryPartition "RepositoryPartition";
-import package_manager "package_manager";
+import package_manager "../package_manager_backend/package_manager";
 import RepositoryIndex "RepositoryIndex";
 
 shared({caller = originalOwner}) actor class Bootstrap() {

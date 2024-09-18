@@ -15,7 +15,6 @@ import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import IndirectCaller "indirect_caller";
 import Install "../install";
-import Copier "copier";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller = initialOwner}) actor class PackageManager() = this {
@@ -26,13 +25,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var initialized: Bool = false; // intentionally non-stable
 
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
-        arg: {indirect_caller: IndirectCaller.IndirectCaller; copier: Copier.Copier; moreArg: {frontend: Principal}};
+        arg: {indirect_caller: IndirectCaller.IndirectCaller; moreArg: {frontend: Principal}};
     }) : async () {
         ignore Cycles.accept<system>(10_000_000_000_000);
         onlyOwner(caller);
 
         indirect_caller_ := ?arg.indirect_caller;
-        copier_ := ?arg.copier;
         let IC = actor ("aaaaa-aa") : actor {
             deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
         };
@@ -73,20 +71,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // TODO: Join into a single var.
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;
-    stable var copier_: ?Copier.Copier = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
         let ?indirect_caller_2 = indirect_caller_ else {
             Debug.trap("indirect_caller_ not initialized");
         };
         indirect_caller_2;
-    };
-
-    private func getCopier(): Copier.Copier {
-        let ?copier_2 = copier_ else {
-            Debug.trap("copier_ not initialized");
-        };
-        copier_2;
     };
 
     stable var nextInstallationId: Nat = 0;
@@ -265,7 +255,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             });
             if (preinstalledModules == null) {
                 // TODO: ignore?
-                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), getCopier(), ?(Principal.fromActor(this)));
+                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -326,7 +316,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
         onlyOwner(caller);
 
-        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), getCopier(), ?(Principal.fromActor(this)));
+        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this)));
     };
 
     /// It can be used directly from frontend.
@@ -361,7 +351,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                         Debug.trap("programming error");
                     };
                     // FIXME: Update installed modules data. It will be used to initialize more modules.
-                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), getCopier(), ?(Principal.fromActor(this))); // TODO: ignore?
+                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition

@@ -3,6 +3,8 @@ import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
+import Asset "mo:assets-api";
+import CopyAssets "../copy_assets";
 
 shared({caller = initialOwner}) actor class IndirectCaller() {
     var owner = initialOwner;
@@ -79,4 +81,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
 
         await IC.call(method.canister, method.name, method.data);
     };
+
+    public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
+        onlyOwner(caller);
+
+        await* CopyAssets.copyAll({from; to});
+    }
 }

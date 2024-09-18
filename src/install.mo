@@ -7,7 +7,6 @@ import Asset "mo:assets-api";
 import Common "common";
 import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
-import Copier "package_manager_backend/copier";
 
 module {
     /// TODO: Save module info for such things as uninstallation and cycles management.
@@ -18,7 +17,6 @@ module {
         installArg: Blob,
         initArg: ?Blob, // init is optional
         indirectCaller: IndirectCaller.IndirectCaller,
-        copier: Copier.Copier,
         packageManager: ?Principal, // may be null, if called from bootstrap.
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
@@ -63,7 +61,7 @@ module {
                         });
                     },
                     {
-                        canister = Principal.fromActor(copier);
+                        canister = Principal.fromActor(indirectCaller);
                         name = "copyAll";
                         data = to_candid({
                             from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
@@ -93,7 +91,7 @@ module {
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
                                     packageManager;
-                                    arg = {indirect_caller = indirectCaller; copier = copier; moreArg = initArg};
+                                    arg = {indirect_caller = indirectCaller; moreArg = initArg};
                                 });
                             }
                         ]);

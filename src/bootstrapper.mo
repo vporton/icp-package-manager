@@ -14,7 +14,6 @@ import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
-import Copier "package_manager_backend/copier";
 
 shared({caller = intitialOwner}) actor class Bootstrap() {
     var owner = intitialOwner;
@@ -130,11 +129,9 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
-        let copier_v = await Copier.Copier(); // yes, a separate `Copier` for this PM
         indirect_caller := ?indirect_caller_v;
-        copier := ?copier_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), getCopier(), null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), null); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -154,7 +151,6 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             to_candid(()),
             ?(to_candid({moreArg = {frontend}})),
             indirect_caller_v,
-            getCopier(),
             null,
         );
 
@@ -178,21 +174,12 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         [inst];
     };
 
-    // TODO: Join into a single var.
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
-    stable var copier: ?Copier.Copier = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
         let ?indirect_caller2 = indirect_caller else {
             Debug.trap("indirect_caller not initialized");
         };
         indirect_caller2;
-    };
-
-    private func getCopier(): Copier.Copier {
-        let ?copier2 = copier else {
-            Debug.trap("copier not initialized");
-        };
-        copier2;
     };
 }
