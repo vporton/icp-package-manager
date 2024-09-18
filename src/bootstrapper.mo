@@ -142,7 +142,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     };
 
     public shared({caller}) func bootstrapBackend(frontend: Principal)
-        : async [{installationId: Common.InstallationId; canisterIds: [Principal]}]
+        : async [{installationId: Common.InstallationId/*; canisterIds: [Principal]*/}] // TODO
     {
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
@@ -168,12 +168,13 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", (frontend, "icpack"))];
         });
-        switch (userToPM.get(caller)) {
-            case (?subMap) {
-                subMap.put(frontend, inst.canisterIds[0]);
-            };
-            case null { Debug.trap("TODO") };
-        };
+        // FIXME: Uncomment.
+        // switch (userToPM.get(caller)) {
+        //     case (?subMap) {
+        //         subMap.put(frontend, inst.canisterIds[0]);
+        //     };
+        //     case null { Debug.trap("TODO") };
+        // };
         [inst];
     };
 

@@ -6,6 +6,8 @@ Remaining things to do:
 
 - FIXME: Deploy not only WASM but also metadata.
 
+- FIXME: Check that `getPackage` and similar methods don't hang us.
+
 - `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
 
 - use the CMC’s `notify_create_canister`.

@@ -123,7 +123,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
     })
-        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+        : async {installationId: Common.InstallationId/*; canisterIds: [Principal]*/}
     {
         onlyOwner(caller);
 
@@ -136,7 +136,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: [(Text, Common.Location)];
     })
-        : async {installationId: Common.InstallationId; canisterIds: [Principal]}
+        : async {installationId: Common.InstallationId/*; canisterIds: [Principal]*/}
     {
         onlyOwner(caller);
 
@@ -151,19 +151,40 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
     })
-        : async* {installationId: Common.InstallationId; canisterIds: [Principal]}
+        : async* {installationId: Common.InstallationId/*; canisterIds: [Principal]*/} // TODO: Precreate and return canister IDs.
     {
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+
+        getIndirectCaller().callAllOneWay([{
+            canister = Principal.fromActor(this);
+            name = "installPackageCallback";
+            data = to_candid({
+                installationId: Common.InstallationId;
+                canister: Principal;
+                packageName: Common.PackageName;
+                version: Common.Version;
+                preinstalledModules: ?[(Text, Common.Location)];
+           });
+        }]);
+
+        {installationId};
+    };
+
+    // FIXME: Move it to an one-way canister that may hang.
+    public shared({caller}) func installPackageCallback({
+        installationId: Common.InstallationId;
+        canister: Principal;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        preinstalledModules: ?[(Text, Common.Location)];
+    }): async () {
         let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-        // FIXME: Here and in other places, a hacker may make PM non-upgradeable.
-        //        So, let we call IndirectCaller that first calls distro, then makes a call back to us to modify the data.
-        let package = await part.getPackage(packageName, version);
+        let package = await part.getPackage(packageName, version); // may hang, so in a callback
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
         let numPackages = Array.size(realPackage.modules);
-
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
 
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             shouldHaveModules = numPackages;
@@ -184,9 +205,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             caller;
             preinstalledModules;
         });
-
-        {installationId; canisterIds};
-    };
+    };  
 
     /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({
