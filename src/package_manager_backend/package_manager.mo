@@ -125,7 +125,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
-        // onlyOwner(caller); // FIXME
+        onlyOwner(caller);
 
         await* _installPackage({caller; canister; packageName; version; preinstalledModules = null});
     };
@@ -138,7 +138,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async {installationId: Common.InstallationId; canisterIds: [Principal]}
     {
-        // onlyOwner(caller); // FIXME
+        onlyOwner(caller);
 
         await* _installPackage({caller; canister; packageName; version; preinstalledModules = ?preinstalledModules});
     };
