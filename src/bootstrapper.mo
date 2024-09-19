@@ -164,7 +164,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", (frontend, "icpack"))];
         });
-        // FIXME: Uncomment.
+        // FIXME: Uncomment. // For this, need to split the previous statement into two: creating canisters first.
         // switch (userToPM.get(caller)) {
         //     case (?subMap) {
         //         subMap.put(frontend, inst.canisterIds[0]);
