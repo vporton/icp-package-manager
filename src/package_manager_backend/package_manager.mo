@@ -150,11 +150,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             canister = Principal.fromActor(this);
             name = "installPackageWrapper";
             data = to_candid({
-                installationId: Common.InstallationId;
-                canister: Principal;
-                packageName: Common.PackageName;
-                version: Common.Version;
-                preinstalledModules: ?[(Text, Common.Location)];
+                installationId;
+                canister;
+                packageName;
+                version;
+                preinstalledModules;
            });
         }]);
 
