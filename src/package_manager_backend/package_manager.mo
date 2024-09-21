@@ -243,7 +243,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
                     let ?can_id = preinstalledModules.get(moduleName) else {
-                        Debug.trap("no such canister '" # moduleName # "'");
+                        Debug.trap("no such module '" # moduleName # "'");
                     };
                     can_id;
                 };
