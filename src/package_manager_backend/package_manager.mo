@@ -167,7 +167,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: ?[(Text, Common.Location)];
+        preinstalledModules: ?[(Text, Principal)];
         package: Common.PackageInfo;
     }): async () {
         let #real realPackage = package.specific else {
@@ -222,7 +222,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
-        preinstalledModules: ?[(Text, Common.Location)];
+        preinstalledModules: ?[(Text, Principal)];
     }): async* {canisterIds: [Principal]} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -235,7 +235,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     assert preinstalledModules.size() == realPackage.modules.size();
-                    preinstalledModules[i].1.0;
+                    preinstalledModules[i].1;
                 };
                 case null {
                     let {canister_id} = await IC.create_canister({
