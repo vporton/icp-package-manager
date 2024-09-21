@@ -137,7 +137,7 @@ module {
         packageCanister: Principal;
         name: PackageName;
         version: Version;
-        modules: OrderedHashMap.OrderedHashMap<Text, Principal>;
+        modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: need ordered?
         package: PackageInfo;
     };
 

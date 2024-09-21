@@ -206,7 +206,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({
         installationId: Nat;
-    }): async {canisterIds: [Principal]} {
+    }): async {canisterIds: [(Text, Principal)]} {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -230,12 +230,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         realPackage: Common.RealPackageInfo;
         caller: Principal;
         preinstalledModules: ?HashMap.HashMap<Text, Principal>;
-    }): async* {canisterIds: [Principal]} {
+    }): async* {canisterIds: [(Text, Principal)]} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
-        let canisterIds = Buffer.Buffer<Principal>(realPackage.modules.size());
+        let canisterIds = Buffer.Buffer<(Text, Principal)>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
-        // FIXME: It makes sense to create all the canisters before installing WASM.
+        // TODO: Don't re-create canisters if this failed with a trap.
         for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             Cycles.add<system>(10_000_000_000_000);
             let canister_id = switch (preinstalledModules) {
@@ -258,6 +258,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     canister_id;
                 };
             };
+            // TODO: Are two lines below duplicates of each other?
+            ourHalfInstalled.modules.put(moduleName, canister_id);
+            canisterIds.add((moduleName, canister_id)); // do it later.
+        };
+        for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let installArg = to_candid({
                 arg = to_candid({}); // TODO: correct?
             });
@@ -268,9 +273,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
             }*/;
-            // TODO: Are two lines below duplicates of each other?
-            canisterIds.add(canister_id); // do it later.
-            ourHalfInstalled.modules.put(moduleName, canister_id);
         };
         // FIXME: Add this back after making creating all canisters before installing WASM.
         // getIndirectCaller().callIgnoringMissingOneWay(
