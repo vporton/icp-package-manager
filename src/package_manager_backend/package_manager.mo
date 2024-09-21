@@ -10,6 +10,7 @@ import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
+import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
@@ -167,8 +168,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: ?[(Text, Principal)];
+        f: ?[(Text, Principal)];
         package: Common.PackageInfo;
+        preinstalledModules: ?[(Text, Principal)];
     }): async () {
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -192,7 +194,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             ourHalfInstalled;
             realPackage;
             caller;
-            preinstalledModules;
+            preinstalledModules = switch(preinstalledModules) {
+                case (?preinstalledModules) {
+                    ?(HashMap.fromIter<Text, Principal>(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash));
+                };
+                case null null;
+            }
         });
     };  
 
@@ -222,7 +229,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
-        preinstalledModules: ?[(Text, Principal)];
+        preinstalledModules: ?HashMap.HashMap<Text, Principal>;
     }): async* {canisterIds: [Principal]} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -234,8 +241,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Cycles.add<system>(10_000_000_000_000);
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
-                    assert preinstalledModules.size() == realPackage.modules.size();
-                    preinstalledModules[i].1;
+                    // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
+                    let ?can_id = preinstalledModules.get(moduleName) else {
+                        Debug.trap("no such canister '" # moduleName # "'");
+                    };
+                    can_id;
                 };
                 case null {
                     let {canister_id} = await IC.create_canister({
@@ -252,7 +262,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let installArg = to_candid({
                 arg = to_candid({}); // TODO: correct?
             });
-            if (preinstalledModules == null) {
+            if (Option.isNull(preinstalledModules)) {
                 // TODO: ignore?
                 ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
             }/* else {
