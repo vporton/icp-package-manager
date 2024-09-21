@@ -237,7 +237,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // TODO: Don't wait for creation of a previous canister to create the next one.
         // TODO: Don't re-create canisters if this failed with a trap.
         for ((moduleName, wasmModule) in realPackage.modules.vals()) {
-            Cycles.add<system>(10_000_000_000_000);
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
@@ -247,6 +246,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     can_id;
                 };
                 case null {
+                    Cycles.add<system>(10_000_000_000_000);
                     let {canister_id} = await IC.create_canister({
                         settings = ?{
                             freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
