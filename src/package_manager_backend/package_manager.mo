@@ -381,7 +381,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    // FIXME: Update installed modules data. It will be used to initialize more modules.
+                    // FIXME: Update installed modules data.
                     ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
                 };
                 if (avoidRepeated) {
