@@ -171,6 +171,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         //     };
         //     case null { Debug.trap("TODO") };
         // };
+        await pm.setOwner(caller);
         [inst];
     };
 

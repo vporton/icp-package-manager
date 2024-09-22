@@ -23,6 +23,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
+    // TODO: more flexible control of owners
+    public shared({caller}) func setOwner(newOwner: Principal): async () {
+        owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+    };
+
     var initialized: Bool = false; // intentionally non-stable
 
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
