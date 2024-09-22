@@ -139,6 +139,7 @@ module {
         version: Version;
         modules: OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>; // TODO: need ordered?
         package: PackageInfo;
+        preinstalledModules: ?[(Text, Principal)];
     };
 
     public type canister_settings = {

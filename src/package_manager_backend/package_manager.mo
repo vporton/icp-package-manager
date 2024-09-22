@@ -130,7 +130,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: [(Text, Common.Location)];
+        preinstalledModules: [(Text, Principal)];
     })
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
@@ -145,7 +145,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: ?[(Text, Common.Location)];
+        preinstalledModules: ?[(Text, Principal)];
     })
         : async* {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]} // TODO: Precreate and return canister IDs.
     {
@@ -159,9 +159,20 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else { // TODO: This code fragment is repeated.
-            Debug.trap("package installation has not been started");
+
+        let numPackages = Array.size(realPackage.modules);
+        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+            shouldHaveModules = numPackages;
+            // id = installationId;
+            name = package.base.name;
+            version = package.base.version;
+            modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
+            // packageDescriptionIn = part;
+            package;
+            packageCanister = canister;
+            preinstalledModules;
         };
+        halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -207,7 +218,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 canister;
                 packageName;
                 version;
-                preinstalledModules;
            });
         }]);
 
@@ -220,31 +230,20 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         package: Common.PackageInfo;
-        preinstalledModules: ?[(Text, Principal)];
     }): async () {
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        let numPackages = Array.size(realPackage.modules);
-
-        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = numPackages;
-            // id = installationId;
-            name = package.base.name;
-            version = package.base.version;
-            modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
-            // packageDescriptionIn = part;
-            package;
-            packageCanister = canister;
+        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such installation");
         };
-        halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         await* _finishInstallPackage({
             installationId;
             ourHalfInstalled;
             realPackage;
             caller;
-            preinstalledModules = switch(preinstalledModules) {
+            preinstalledModules = switch(ourHalfInstalled.preinstalledModules) {
                 case (?preinstalledModules) {
                     ?(HashMap.fromIter<Text, Principal>(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash));
                 };
@@ -270,7 +269,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             ourHalfInstalled;
             realPackage;
             caller;
-            preinstalledModules = null; // FIXME
         });
     };
 
@@ -279,7 +277,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal;
-        preinstalledModules: ?HashMap.HashMap<Text, Principal>;
     }): async* () {
         label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let ?state = ourHalfInstalled.modules.get(moduleName) else {
@@ -291,7 +288,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let installArg = to_candid({
                 arg = to_candid({}); // TODO: correct?
             });
-            if (Option.isNull(preinstalledModules)) {
+            if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
                 // TODO: ignore?
                 ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
             }/* else {
@@ -428,6 +425,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             );
             package = packageInfo;
             packageCanister = installation.packageCanister;
+            preinstalledModules = null; // TODO: Seems right, but check again.
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
