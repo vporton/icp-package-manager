@@ -289,28 +289,26 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                // TODO: ignore?
-                ignore await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
+                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
+                getIndirectCaller().callIgnoringMissingOneWay(
+                    [{
+                        canister;
+                        name = Common.NamespacePrefix # "init";
+                        data = to_candid({
+                            user = caller;
+                            modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
+                                ourHalfInstalled.modules.entries(),
+                                func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
+                            ));
+                            packageManager = this; // TODO: non-standard arguments?
+                        });
+                    }],
+                );
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
             }*/;
         };
-        // FIXME: Add this back after making creating all canisters before installing WASM.
-        // getIndirectCaller().callIgnoringMissingOneWay(
-        //     Iter.toArray(Iter.map<Nat, {canister: Principal; name: Text; data: Blob}>(
-        //         Iter.toArray<(Text, Principal)>(ourHalfInstalled.modules.entries()), // TODO: inefficient?
-        //         func (i: Nat) = {
-        //             canister = ourHalfInstalled.modules.get(i).1;
-        //             name = Common.NamespacePrefix # "init";
-        //             data = to_candid({
-        //                 user = caller;
-        //                 previousCanisters = Array.subArray<(Text, Principal)>(Buffer.toArray(ourHalfInstalled.modules), 0, i);
-        //                 packageManager = this;
-        //             });
-        //         },
-        //     )),
-        // );
 
         _updateAfterInstall({installationId});
     };
