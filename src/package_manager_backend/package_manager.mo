@@ -182,7 +182,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // id = installationId;
             name = package.base.name;
             version = package.base.version;
-            modules = OrderedHashMap.OrderedHashMap<Text, Principal>(numPackages, Text.equal, Text.hash);
+            modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
             package;
             packageCanister = canister;
@@ -235,8 +235,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
         let canisterIds = Buffer.Buffer<(Text, Principal)>(realPackage.modules.size());
         // TODO: Don't wait for creation of a previous canister to create the next one.
-        // TODO: Don't re-create canisters if this failed with a trap.
-        for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+        label create for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+            let created = Option.isSome(ourHalfInstalled.modules.get(moduleName));
+            if (created) {
+                continue create;
+            };
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
@@ -259,10 +262,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 };
             };
             // TODO: Are two lines below duplicates of each other?
-            ourHalfInstalled.modules.put(moduleName, canister_id);
+            ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
             canisterIds.add((moduleName, canister_id)); // do it later.
         };
-        for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+        label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+            let ?state = ourHalfInstalled.modules.get(moduleName) else {
+                Debug.trap("programming error");
+            };
+            if (state.1 == #installed) {
+                continue install;
+            };
             let installArg = to_candid({
                 arg = to_candid({}); // TODO: correct?
             });
@@ -305,7 +314,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             name = ourHalfInstalled.name;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = ourHalfInstalled.modules;
+            modules = OrderedHashMap.fromIter(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
+                ourHalfInstalled.modules.entries(),
+                func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
+            ), ourHalfInstalled.modules.size(), Text.equal, Text.hash);
             packageCanister = ourHalfInstalled.packageCanister;
             var extraModules = [];
         });
@@ -388,10 +400,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let packageInfo = await part.getPackage(installation.name, installation.version);
 
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = installation.modules.size(); // FIXME: Is it a nonsense?
+            shouldHaveModules = installation.modules.size(); // TODO: Is it a nonsense?
             name = installation.name;
             version = installation.version;
-            modules = installation.modules;
+            modules = OrderedHashMap.fromIter( // TODO: can be made simpler?
+                Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
+                    installation.modules.entries(),
+                    func ((x, y): (Text, Principal)) = (x, (y, #installed))
+                ),                
+                installation.modules.size(),
+                Text.equal,
+                Text.hash,
+            );
             package = packageInfo;
             packageCanister = installation.packageCanister;
         };
@@ -424,7 +444,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let IC: CanisterDeletor = actor("aaaaa-aa");
         while (ourHalfInstalled.modules.size() != 0) {
             let vals = Iter.toArray(ourHalfInstalled.modules.vals()); // TODO: slow
-            let canister_id = vals[vals.size() - 1];
+            let canister_id = vals[vals.size() - 1].0;
             await IC.stop_canister({canister_id}); // FIXME: can hang?
             await IC.delete_canister({canister_id});
             ignore ourHalfInstalled.modules.removeLast();

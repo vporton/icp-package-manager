@@ -92,7 +92,7 @@ module {
         package: PackageInfo;
         packageCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
-        modules: OrderedHashMap.OrderedHashMap<Text, Principal>;
+        modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
         var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
     };
 
@@ -137,7 +137,7 @@ module {
         packageCanister: Principal;
         name: PackageName;
         version: Version;
-        modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: need ordered?
+        modules: OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>; // TODO: need ordered?
         package: PackageInfo;
     };
 
