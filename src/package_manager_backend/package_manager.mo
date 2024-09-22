@@ -119,7 +119,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
     })
-        : async {installationId: Common.InstallationId/*; canisterIds: [Principal]*/}
+        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         onlyOwner(caller);
 
@@ -132,7 +132,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: [(Text, Common.Location)];
     })
-        : async {installationId: Common.InstallationId/*; canisterIds: [Principal]*/}
+        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         onlyOwner(caller);
 
@@ -147,10 +147,57 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
     })
-        : async* {installationId: Common.InstallationId/*; canisterIds: [Principal]*/} // TODO: Precreate and return canister IDs.
+        : async* {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]} // TODO: Precreate and return canister IDs.
     {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
+
+        let ?installation = installedPackages.get(installationId) else {
+            Debug.trap("no such package");
+        };
+        let package = installation.package;
+        let #real realPackage = package.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else { // TODO: This code fragment is repeated.
+            Debug.trap("package installation has not been started");
+        };
+
+        let IC: Common.CanisterCreator = actor("aaaaa-aa");
+
+        // TODO: Also correctly create canisters if installation was interrupted.
+        let canisterIds = Buffer.Buffer<(Text, Principal)>(realPackage.modules.size());
+        // TODO: Don't wait for creation of a previous canister to create the next one.
+        label create for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+            let created = Option.isSome(ourHalfInstalled.modules.get(moduleName));
+            if (created) {
+                continue create;
+            };
+            let canister_id = switch (preinstalledModules) {
+                case (?preinstalledModules) {
+                    // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
+                    let ?canister_id = installation.modules.get(moduleName) else {
+                        Debug.trap("programming error");
+                    };
+                    canister_id;
+                };
+                case null {
+                    Cycles.add<system>(10_000_000_000_000);
+                    let {canister_id} = await IC.create_canister({
+                        settings = ?{
+                            freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
+                            controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
+                            compute_allocation = null; // TODO
+                            memory_allocation = null; // TODO (a low priority task)
+                        }
+                    });
+                    canister_id;
+                };
+            };
+            // TODO: Are two lines below duplicates of each other?
+            ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
+            canisterIds.add((moduleName, canister_id)); // do it later.
+        };
 
         getIndirectCaller().callAllOneWay([{
             canister = Principal.fromActor(this);
@@ -164,7 +211,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
            });
         }]);
 
-        {installationId};
+        {installationId; canisterIds = Buffer.toArray(canisterIds)};
     };
 
     // FIXME: Move it to an one-way canister that may hang.
@@ -194,7 +241,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        let {canisterIds} = await* _finishInstallPackage({
+        await* _finishInstallPackage({
             installationId;
             ourHalfInstalled;
             realPackage;
@@ -204,14 +251,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     ?(HashMap.fromIter<Text, Principal>(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash));
                 };
                 case null null;
-            }
+            };
         });
     };  
 
     /// Finish installation of a half-installed package.
     public shared({caller}) func finishInstallPackage({
         installationId: Nat;
-    }): async {canisterIds: [(Text, Principal)]} {
+    }): async () {
         onlyOwner(caller);
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -235,41 +282,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         realPackage: Common.RealPackageInfo;
         caller: Principal;
         preinstalledModules: ?HashMap.HashMap<Text, Principal>;
-    }): async* {canisterIds: [(Text, Principal)]} {
-        let IC: Common.CanisterCreator = actor("aaaaa-aa");
-
-        let canisterIds = Buffer.Buffer<(Text, Principal)>(realPackage.modules.size());
-        // TODO: Don't wait for creation of a previous canister to create the next one.
-        label create for ((moduleName, wasmModule) in realPackage.modules.vals()) {
-            let created = Option.isSome(ourHalfInstalled.modules.get(moduleName));
-            if (created) {
-                continue create;
-            };
-            let canister_id = switch (preinstalledModules) {
-                case (?preinstalledModules) {
-                    // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
-                    let ?can_id = preinstalledModules.get(moduleName) else {
-                        Debug.trap("no such module '" # moduleName # "'");
-                    };
-                    can_id;
-                };
-                case null {
-                    Cycles.add<system>(10_000_000_000_000);
-                    let {canister_id} = await IC.create_canister({
-                        settings = ?{
-                            freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                            controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
-                            compute_allocation = null; // TODO
-                            memory_allocation = null; // TODO (a low priority task)
-                        }
-                    });
-                    canister_id;
-                };
-            };
-            // TODO: Are two lines below duplicates of each other?
-            ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
-            canisterIds.add((moduleName, canister_id)); // do it later.
-        };
+    }): async* () {
         label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let ?state = ourHalfInstalled.modules.get(moduleName) else {
                 Debug.trap("programming error");
@@ -305,8 +318,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         // );
 
         _updateAfterInstall({installationId});
-
-        {canisterIds = Buffer.toArray(canisterIds)};
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
