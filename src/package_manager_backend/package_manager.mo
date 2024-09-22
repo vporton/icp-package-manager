@@ -220,7 +220,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        f: ?[(Text, Principal)];
         package: Common.PackageInfo;
         preinstalledModules: ?[(Text, Principal)];
     }): async () {
