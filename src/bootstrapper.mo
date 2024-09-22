@@ -166,7 +166,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         });
         switch (userToPM.get(caller)) {
             case (?subMap) {
-                subMap.put(frontend, inst.canisterIds[0]);
+                subMap.put(frontend, inst.canisterIds[0].1);
             };
             case null { Debug.trap("TODO") };
         };
