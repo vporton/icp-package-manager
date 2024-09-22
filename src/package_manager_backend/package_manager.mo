@@ -455,7 +455,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         while (ourHalfInstalled.modules.size() != 0) {
             let vals = Iter.toArray(ourHalfInstalled.modules.vals()); // TODO: slow
             let canister_id = vals[vals.size() - 1].0;
-            await IC.stop_canister({canister_id}); // FIXME: can hang?
+            await IC.stop_canister({canister_id}); // FIXME: It may hang.
             await IC.delete_canister({canister_id});
             ignore ourHalfInstalled.modules.removeLast();
         };
