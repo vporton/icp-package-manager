@@ -214,7 +214,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         {installationId; canisterIds = Buffer.toArray(canisterIds)};
     };
 
-    // FIXME: Move it to an one-way canister that may hang.
     public shared({caller}) func installPackageCallback({
         installationId: Common.InstallationId;
         canister: Principal;
