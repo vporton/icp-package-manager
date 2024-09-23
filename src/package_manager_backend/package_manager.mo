@@ -31,7 +31,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var initialized: Bool = false; // intentionally non-stable
 
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
-        arg: {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}};
+        arg: {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}}; // TODO: Twice `arg` is counter-intuitive.
     }) : async () {
         ignore Cycles.accept<system>(10_000_000_000_000);
         onlyOwner(caller);
