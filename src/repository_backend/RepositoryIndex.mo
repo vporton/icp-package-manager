@@ -86,7 +86,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
         autoScalingHook = autoScaleUserCanister;
         sizeLimit = maxSize;
       };
-      owners = [owner, Principal.fromActor(this)]; // FIXME
+      owners = [owner, Principal.fromActor(this)];
     });
     let newUserCanisterPrincipal = Principal.fromActor(newUserCanister);
     await CA.updateCanisterSettings({
@@ -155,7 +155,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     onlyOwner(caller);
 
     if (Utils.callingCanisterOwnsPK(caller, pkToCanisterMap, pk)) {
-      await* createStorageCanister(pk, [owner]); // FIXME: Should include self?
+      await* createStorageCanister(pk, [owner, Principal.fromActor(this)]);
     } else {
       Debug.trap("error, called by non-controller=" # debug_show(caller));
     };
@@ -173,10 +173,10 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
         autoScalingHook = autoScaleCanister;
         sizeLimit = maxSize;
       };
-      owners = [Principal.fromActor(this), owner]; // FIXME: Do we need `owner` here?
+      owners = [Principal.fromActor(this), owner];
     });
     let newStorageCanisterPrincipal = Principal.fromActor(newStorageCanister);
-    // Battery.addRepositoryPartition(newStorageCanisterPrincipal); // FIXME
+    // Battery.addRepositoryPartition(newStorageCanisterPrincipal); // TODO
     await CA.updateCanisterSettings({
       canisterId = newStorageCanisterPrincipal;
       settings = {
