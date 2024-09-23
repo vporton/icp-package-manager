@@ -272,6 +272,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         });
     };
 
+    // TODO: Keep registry of ALL installed modules.
     private func _finishInstallPackage({
         installationId: Nat;
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
