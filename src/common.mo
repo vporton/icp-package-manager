@@ -2,6 +2,7 @@ import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
+import Buffer "mo:base/Buffer";
 import OrderedHashMap "mo:ordered-map";
 
 module {
@@ -93,7 +94,7 @@ module {
         packageCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
-        var extraModules: [(Text, Principal)]; // TODO: `HashMap`?
+        extraModules: Buffer.Buffer<(Text, Principal)>; // TODO: `HashMap`?
     };
 
     public type SharedInstalledPackageInfo = {
@@ -113,7 +114,7 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
-        extraModules = info.extraModules;
+        extraModules = Buffer.toArray(info.extraModules);
     };
 
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
@@ -123,7 +124,7 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
-        var extraModules = info.extraModules;
+        extraModules = Buffer.fromArray(info.extraModules);
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).

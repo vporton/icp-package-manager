@@ -328,7 +328,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
             ), ourHalfInstalled.modules.size(), Text.equal, Text.hash);
             packageCanister = ourHalfInstalled.packageCanister;
-            var extraModules = [];
+            extraModules = Buffer.Buffer(0);
         });
         halfInstalledPackages.delete(installationId);
         switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
@@ -381,8 +381,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    // FIXME: Update installed modules data.
-                    ignore await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
+                    let can = await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
+                    installation.extraModules.add((m.0, can));
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
