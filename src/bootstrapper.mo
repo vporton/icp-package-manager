@@ -149,7 +149,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let can = await* Install._installModule(
             getOurModules().pmBackendPartition,
             to_candid(()),
-            ?(to_candid({moreArg = {frontend}})),
+            ?(to_candid({frontend})),
             indirect_caller_v,
             null,
         );

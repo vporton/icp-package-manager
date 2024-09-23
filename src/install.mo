@@ -91,7 +91,7 @@ module {
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
                                     packageManager;
-                                    arg = {indirect_caller = indirectCaller; moreArg = initArg};
+                                    arg = {indirect_caller = indirectCaller; arg = initArg};
                                 });
                             }
                         ]);
