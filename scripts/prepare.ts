@@ -4,7 +4,7 @@ import { exec, execSync } from "child_process";
 import { Actor, createAssetCanisterActor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { RealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
 import { _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
@@ -49,13 +49,13 @@ async function main() {
 
     console.log("Uploading WASM code...");
 
-    const {canister: frontendWasmPart, id: frontendWasmId} = await repositoryIndex.uploadWasm(frontendBlob);
-    let frontendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: frontendWasmPart});
-    const {canister: pmBackendWasmPart, id: pmBackendWasmId} = await repositoryIndex.uploadWasm(pmBackendBlob);
-    let pmBackendPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: pmBackendWasmPart});
-    const {canister: counterWasmPart, id: counterWasmId} = await repositoryIndex.uploadWasm(counterBlob);
-    let counterPart = Actor.createActor(repositoryPartitionIdl, {agent, canisterId: counterWasmPart});
-
+    const real: RealPackageInfo = await repositoryIndex.uploadRealPackageInfo({
+        modules: [['frontend', {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!)}}]],
+        extraModules: [['backend', {Wasm: pmBackendBlob}]],
+        dependencies: [],
+        functions: [],
+        permissions: [],
+    });
     const pmInfo: PackageInfo = {
         base: {
             name: "icpack",
@@ -63,18 +63,13 @@ async function main() {
             shortDescription: "Package manager",
             longDescription: "Manager for installing ICP app to user's subnet",
         },
-        specific: {real: {
-            modules: [{Assets: {wasm: [frontendWasmPart, frontendWasmId], assets: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!)}}],
-            extraModules: [[[], [{Wasm: [pmBackendWasmPart, pmBackendWasmId]}]]],
-            dependencies: [],
-            functions: [],
-            permissions: [],
-        } },
+        specific: {real},
     };
     const pmFullInfo: FullPackageInfo = {
         packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
         versionsMap: [],
     };
+    await repositoryIndex.createPackage("icpack", pmFullInfo);
 
     const counterInfo: PackageInfo = {
         base: {
@@ -83,19 +78,19 @@ async function main() {
             shortDescription: "Counter variable",
             longDescription: "Counter variable controlled by a shared method",
         },
-        specific: { real: {
-            modules: [{Wasm: [counterWasmPart, counterWasmId]}],
+        specific: { real: await repositoryIndex.uploadRealPackageInfo({
+            modules: [['backend', {Wasm: counterBlob}]],
             extraModules: [],
             dependencies: [],
             functions: [],
             permissions: [],
-        } },
+        }) },
     };
-    const fullInfo: FullPackageInfo = {
+    const counterFullInfo: FullPackageInfo = {
         packages: [["1.0.0", counterInfo]],
         versionsMap: [],
     };
-    await counterPart.setFullPackageInfo("counter", fullInfo);
+    await repositoryIndex.createPackage("counter", counterFullInfo);
 }
 
 main()

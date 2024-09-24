@@ -73,41 +73,6 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         Principal.fromActor(index);
     };
 
-    public shared({caller}) func bootstrapIndexWithPM(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal) {
-        // TODO: Limit to the owner as a protection against cycles drain.
-
-        let index = await bootstrapIndex(); // TODO: Call as `await*`.
-    //     // TODO: Install to correct subnet.
-    //     Debug.print("Uploading WASM code...");
-    //     let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
-    //     let {canister = pmFrontendPart; id = pmFrontendId} = await index.uploadWasm(pmFrontendWasm);
-    //     // let {canister = counterWasmPart; id = counterWasmId} = await index.uploadWasm(testWasm);
-
-    //     Debug.print("Uploading package and versions description...");
-    //     let pmInfo: Common.PackageInfo = {
-    //         base = {
-    //             name = "icpack";
-    //             version = "0.0.1";
-    //             shortDescription = "Package manager";
-    //             longDescription = "Manager for installing ICP app to user's subnet";
-    //         };
-    //         specific = #real {
-    //             modules = [#Assets {wasm = (pmFrontendPart, pmFrontendId); assets = actor(Principal.toText(pmFrontend))}];
-    //             extraModules = [(null, [#Wasm (pmWasmPart, pmWasmId)])];
-    //             dependencies = [];
-    //             functions = [];
-    //             permissions = [];
-    //         };
-    //     };
-    //     let pmFullInfo: Common.FullPackageInfo = {
-    //         packages = [("stable", pmInfo)];
-    //         versionsMap = [];
-    //     };
-    //     let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
-
-    //     {canisterIds = [pmPart/*, counterPart*/]};
-    };
-
     public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
