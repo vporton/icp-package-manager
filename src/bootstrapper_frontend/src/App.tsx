@@ -41,7 +41,7 @@ function bootstrapPM() {
   const frontendPrincipal = bootstrapper.bootstrapFrontend();
   const url = getIsLocal()
     ? `http://${frontendPrincipal}.localhost:4943`
-    : `https://${frontendPrincipal}.icp0.io`;
+    : `https://${frontendPrincipal}.ic0.app`;
   open(url);
 }
 
@@ -80,7 +80,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
         <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install Package Manager IC Pack</Button></p>
         <h2>Installed Package Manager</h2>
         {installations.length === 0 && <i>None</i>}
-        {installations.map(inst => `https://${inst[0]}.icp0.io?backend=${inst[1]}`)}
+        {installations.map(inst => `https://${inst[0]}.ic0.app?backend=${inst[1]}`)}
       </Container>
     </main>
  );
