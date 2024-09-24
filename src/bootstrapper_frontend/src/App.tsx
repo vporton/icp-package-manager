@@ -5,7 +5,7 @@ import { AuthButton }  from './AuthButton';
 import { AuthContext, AuthProvider, getIsLocal } from './auth/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { Agent } from '@dfinity/agent';
-import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
+import { bootstrapper, createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 // TODO: Remove react-router dependency from this app
 
 function App() {
@@ -37,6 +37,14 @@ function App2() {
   );
 }
 
+function bootstrapPM() {
+  const frontendPrincipal = bootstrapper.bootstrapFrontend();
+  const url = getIsLocal()
+    ? `http://${frontendPrincipal}.localhost:4943`
+    : `https://${frontendPrincipal}.icp0.io`;
+  open(url);
+}
+
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
   const [installations, setInstallations] = useState<[Principal, Principal][]>([]);
   useEffect(() => {
@@ -65,7 +73,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
         <nav>
           <Navbar className="bg-body-secondary" style={{width: "auto"}}>
             <Nav>
-              <AuthButton/>
+              <AuthButton onClick={bootstrapPM}/>
             </Nav>
           </Navbar>
         </nav>

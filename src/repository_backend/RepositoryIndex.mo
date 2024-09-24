@@ -273,7 +273,9 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     {canister = Principal.fromActor(part)};
   };
 
-  private func uploadModule(module_: Common.ModuleUpload): async* Common.Module {
+  public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.Module {
+    onlyOwner(caller);
+
     switch (module_) {
       case (#Wasm blob) {
           let {canister; id} = await uploadWasm(blob);
@@ -286,24 +288,25 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     };
   };
 
-  public shared({caller}) func uploadModules(modules: [(Text, Common.ModuleUpload)]): async [(Text, Common.Module)] {
-    onlyOwner(caller);
-    let buf = Buffer.Buffer<(Text, Common.Module)>(Array.size(modules));
-    for (m in modules.vals()) {
-      buf.add(m.0, await* uploadModule(m.1));
-    };
-    Buffer.toArray(buf);
-  };
+  // public shared({caller}) func uploadModules(modules: [(Text, Common.ModuleUpload)]): async [(Text, Common.Module)] {
+  //   onlyOwner(caller);
+  //   let buf = Buffer.Buffer<(Text, Common.Module)>(Array.size(modules));
+  //   for (m in modules.vals()) {
+  //     buf.add(m.0, await* uploadModule(m.1));
+  //   };
+  //   Buffer.toArray(buf);
+  // };
 
+  // TODO: Remove?
   // TODO: two shared calls here
-  public shared({caller}) func uploadRealPackageInfo(info: Common.RealPackageInfoUpload): async Common.RealPackageInfo {
-    onlyOwner(caller);
-    {
-      modules = await uploadModules(info.modules);
-      extraModules = await uploadModules(info.extraModules);
-      dependencies = info.dependencies;
-      functions = info.functions;
-      permissions = info.permissions;
-    };
-  };
+  // public shared({caller}) func uploadRealPackageInfo(info: Common.RealPackageInfoUpload): async Common.RealPackageInfo {
+  //   onlyOwner(caller);
+  //   {
+  //     modules = await uploadModules(info.modules);
+  //     extraModules = await uploadModules(info.extraModules);
+  //     dependencies = info.dependencies;
+  //     functions = info.functions;
+  //     permissions = info.permissions;
+  //   };
+  // };
 }

@@ -7,7 +7,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 // import * as base64 from 'base64-js';
 
 // TODO: Move this function to GlobalState
-function getIsLocal() {
+export function getIsLocal() {
     return process.env.DFX_NETWORK !== "ic";
 }
 

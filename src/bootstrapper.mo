@@ -45,8 +45,8 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     };
 
     type OurModules = {
-        pmFrontendPartition: Common.Module;
-        pmBackendPartition: Common.Module;
+        pmFrontendModule: Common.Module;
+        pmBackendModule: Common.Module;
     };
 
     var ourModules: ?OurModules = null;
@@ -57,6 +57,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         ourModules := ?m;
     };
 
+    // TODO: Support multiple sets of modules per `this`.
     private func getOurModules(): OurModules {
         let ?m = ourModules else {
             Debug.trap("modules not initialized");
@@ -78,7 +79,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendPartition, to_candid(()), null, getIndirectCaller(), null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, getIndirectCaller(), null); // PM frontend
         assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -94,14 +95,14 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
         let can = await* Install._installModule(
-            getOurModules().pmBackendPartition,
+            getOurModules().pmBackendModule,
             to_candid(()),
             ?(to_candid({frontend})),
             indirect_caller_v,
             null,
         );
 
-        let #Wasm loc = getOurModules().pmBackendPartition else {
+        let #Wasm loc = getOurModules().pmBackendModule else {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
