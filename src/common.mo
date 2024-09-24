@@ -30,7 +30,15 @@ module {
         #Assets : {
             wasm: Location;
             assets: Principal;
-        }
+        };
+    };
+
+    public type ModuleUpload = {
+        #Wasm : Blob;
+        #Assets : {
+            wasm: Blob;
+            assets: Principal;
+        };
     };
 
     /// Shared/query method name.
@@ -40,6 +48,20 @@ module {
         /// it's an array, because may contain several canisters.
         modules: [(Text, Module)]; // Modules are named for correct upgrades.
         extraModules: [(Text, Module)]; // to be installed on-demand
+        /// Empty versions list means any version.
+        ///
+        /// TODO: Suggests/recommends akin Debian.
+        dependencies: [(PackageName, [VersionRange])];
+        // TODO: Introduce dependencies between modules.
+        /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
+        functions: [(PackageName, [VersionRange])];
+        permissions: [(Text, [(Principal, MethodName)])];
+    };
+
+    public type RealPackageInfoUpload = {
+        /// it's an array, because may contain several canisters.
+        modules: [(Text, ModuleUpload)]; // Modules are named for correct upgrades.
+        extraModules: [(Text, ModuleUpload)]; // to be installed on-demand
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.

@@ -65,16 +65,18 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     };
 
     /// TODO: Move to another canister?
-    public shared({caller}) func bootstrapIndex(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal/*, testWasm: Blob*/)
-        : async {canisterIds: [Principal]}
-    {
+    public shared({caller}) func bootstrapIndex(): async Principal {
         Debug.print("Creating a distro repository...");
         Cycles.add<system>(300_000_000_000_000);
         let index = await RepositoryIndex.RepositoryIndex();
-        // await index.init();
-        {canisterIds = [Principal.fromActor(index)]};
+        // await index.init(); // TODO
+        Principal.fromActor(index);
     };
 
+    public shared({caller}) func bootstrapIndexWithPM(pmWasm: Blob, pmFrontendWasm: Blob, pmFrontend: Principal) {
+        // TODO: Limit to the owner as a protection against cycles drain.
+
+        let index = await bootstrapIndex(); // TODO: Call as `await*`.
     //     // TODO: Install to correct subnet.
     //     Debug.print("Uploading WASM code...");
     //     let {canister = pmWasmPart; id = pmWasmId} = await index.uploadWasm(pmWasm);
@@ -101,30 +103,10 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     //         packages = [("stable", pmInfo)];
     //         versionsMap = [];
     //     };
-    //     // let counterInfo: Common.PackageInfo = {
-    //     //     base = {
-    //     //         name = "counter";
-    //     //         version = "1.0.0";
-    //     //         shortDescription = "Counter variable";
-    //     //         longDescription = "Counter variable controlled by a shared method";
-    //     //     };
-    //     //     specific = #real {
-    //     //         modules = [#Wasm (counterWasmPart, counterWasmId)];
-    //     //         extraModules = [];
-    //     //         dependencies = [];
-    //     //         functions = [];
-    //     //         permissions = [];
-    //     //     };
-    //     // };
-    //     // let counterFullInfo: Common.FullPackageInfo = {
-    //     //     packages = [("stable", counterInfo)];
-    //     //     versionsMap = [];
-    //     // };
     //     let {canister = pmPart} = await index.createPackage("icpack", pmFullInfo);
-    //     // let {canister = counterPart} = await index.createPackage("counter", counterFullInfo);
 
     //     {canisterIds = [pmPart/*, counterPart*/]};
-    // };
+    };
 
     public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000);
