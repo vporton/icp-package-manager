@@ -603,12 +603,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
-        // FIXME: Check caller.
-        repositories := Array.append(repositories, [{canister; name}]);
+        onlyOwner(caller);
+
+        repositories := Array.append(repositories, [{canister; name}]); // TODO: Use `Buffer` instead.
     };
 
     public shared({caller}) func removeRepository(canister: Principal): async () {
-        // FIXME: Check caller.
+        onlyOwner(caller);
+
         repositories := Iter.toArray(Iter.filter(
             repositories.vals(),
             func (x: {canister: Principal; name: Text}): Bool = x.canister != canister));

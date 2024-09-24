@@ -110,7 +110,7 @@ shared ({ caller = owner }) actor class RepositoryPartition({
   };
 
   /// TODO: Put a barrier to make the update atomic.
-  /// FIXME: Don't call it directly.
+  /// TODO: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.FullPackageInfo): async () {
     onlyOwner(caller);
     _setFullPackageInfo(name, info);
