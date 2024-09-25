@@ -12,6 +12,8 @@ Remaining things to do:
 
 - `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
 
+- Keep a log of **finished** operations. Especially useful to check whether upgrade completed.
+
 - use the CMC’s `notify_create_canister`.
 
 - https://www.npmjs.com/package/@dfinity/assets to upload assets.
