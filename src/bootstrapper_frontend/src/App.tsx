@@ -9,7 +9,7 @@ import { bootstrapper, createActor as createBootstrapperActor } from "../../decl
 // TODO: Remove react-router dependency from this app
 
 function App() {
-  const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:3000` : `https://identity.ic0.app`;
+  const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
   return (
     <AuthProvider options={{loginOptions: {
         identityProvider,
@@ -37,14 +37,6 @@ function App2() {
   );
 }
 
-function bootstrapPM() {
-  const frontendPrincipal = bootstrapper.bootstrapFrontend();
-  const url = getIsLocal()
-    ? `http://${frontendPrincipal}.localhost:4943`
-    : `https://${frontendPrincipal}.ic0.app`;
-  open(url);
-}
-
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
   const [installations, setInstallations] = useState<[Principal, Principal][]>([]);
   useEffect(() => {
@@ -57,10 +49,15 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
       setInstallations(list);
     });
   }, [props.isAuthenticated, props.principal]);
-  function bootstrap() {
+  async function bootstrap() {
     const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-    const frontendPrincipal = bootstrapper.bootstrapFrontend();
+    const frontendPrincipal = await bootstrapper.bootstrapFrontend();
     // TODO: Wait till frontend is bootstrapped and go to it.
+    const url = getIsLocal()
+      ? `http://${frontendPrincipal}.localhost:4943`
+      : `https://${frontendPrincipal}.ic0.app`;
+    alert("You may need press reload (press F5) the page one or more times before it works."); // TODO
+    open(url);
   }
   return (
     <main id="main">

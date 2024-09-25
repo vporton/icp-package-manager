@@ -80,7 +80,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         indirect_caller := ?indirect_caller_v;
 
         let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, getIndirectCaller(), null); // PM frontend
-        assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
+        // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
         can;

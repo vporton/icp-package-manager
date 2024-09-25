@@ -20,6 +20,7 @@ dotenv_config({ path: '.env' });
 global.fetch = node_fetch as any;
 
 execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex")
+execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper")
 
 function commandOutput(command: string): Promise<string> {
     return new Promise((resolve) => exec(command, function(error, stdout, stderr){ resolve(stdout); }));
@@ -98,7 +99,7 @@ async function main() {
     // await repositoryIndex.createPackage("counter", counterFullInfo);
 
     const bootstrapper: Bootstrap = Actor.createActor(bootstrapperIdl, {agent, canisterId: process.env.CANISTER_ID_BOOTSTRAPPER!});
-    bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
+    await bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
 }
 
 // TODO: Remove?

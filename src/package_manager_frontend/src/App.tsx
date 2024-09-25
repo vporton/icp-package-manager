@@ -52,7 +52,7 @@ function GlobalUI() {
       const backend_princ = result.canisterIds[0][1];
       const backend_str = backend_princ.toString();
       const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent}); // FIXME: Wht happens if no WASM yet?
-      const base = getIsLocal() ? `http://localhost:3000?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
+      const base = getIsLocal() ? `http://localhost:4943?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
       // TODO: busy indicator
       for (let i = 0;; ++i) { // TODO: Choose the value.
         if (i == 20) {
