@@ -13,6 +13,7 @@ import Installation from './Installation';
 import { GlobalContext, GlobalContextProvider } from './state';
 import { createActor as pmCreateActor } from '../../declarations/package_manager';
 import { AuthButton } from './AuthButton';
+import { Principal } from '@dfinity/principal';
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
@@ -48,22 +49,29 @@ function GlobalUI() {
   if (glob.backend === undefined) {
     async function installBackend() {
       const result = await bootstrapper.bootstrapBackend(glob.frontend!); // TODO: `!`
-      const backend_princ = result[0].canisterIds[0];
+      const backend_princ = result.canisterIds[0][1];
       const backend_str = backend_princ.toString();
-      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent});
+      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent}); // FIXME: Wht happens if no WASM yet?
       const base = getIsLocal() ? `http://localhost:3000?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
+      // TODO: busy indicator
       for (let i = 0;; ++i) { // TODO: Choose the value.
         if (i == 20) {
           alert("Module failed to initialize"); // TODO: better dialog
           return;
         }
-        const initialized = await backendRO.isInitialized();
-        if (initialized) {
-          break;
+        try {
+          const initialized = await backendRO.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+          if (initialized) {
+            break;
+          }
+        }
+        catch (e) {
+          // TODO: more detailed error check
         }
       }
       open(`${base}backend=${backend_str}&bookmarkMsg=1`); // FIXME: First check that backend canister has been created.
     }
+    // TODO: Start installation automatically, without clicking a button?
     return (
       <Container>
         <p>You first need to install the backend for this software.</p>

@@ -252,6 +252,18 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     text;
   };
 
+  private func _uploadWasm(wasm: Blob): async* {canister: Principal; id: Text} {
+    let id = nextWasmId;
+    nextWasmId += 1;
+    let idText = encodeId(id);
+
+    let part0 = getLastCanisterByPKInternal("wasms");
+    let part: RepositoryPartition.RepositoryPartition = actor(part0);
+    await part.putAttribute(idText, "w", #blob wasm);
+
+    {canister = Principal.fromActor(part); id = idText};
+  };
+
   public shared({caller}) func uploadWasm(wasm: Blob): async {canister: Principal; id: Text} {
     onlyOwner(caller);
     let id = nextWasmId;
@@ -278,11 +290,11 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
 
     switch (module_) {
       case (#Wasm blob) {
-          let {canister; id} = await uploadWasm(blob);
+          let {canister; id} = await* _uploadWasm(blob);
           #Wasm (canister, id);
       };
       case (#Assets {wasm: Blob; assets: Principal}) {
-        let {canister; id} = await uploadWasm(wasm);
+        let {canister; id} = await* _uploadWasm(wasm);
         #Assets {wasm = (canister, id); assets};
       };
     };

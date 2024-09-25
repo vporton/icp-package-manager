@@ -59,7 +59,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
   }, [props.isAuthenticated, props.principal]);
   function bootstrap() {
     const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-    bootstrapper.bootstrapFrontend();
+    const frontendPrincipal = bootstrapper.bootstrapFrontend();
     // TODO: Wait till frontend is bootstrapped and go to it.
   }
   return (
@@ -73,7 +73,7 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
         <nav>
           <Navbar className="bg-body-secondary" style={{width: "auto"}}>
             <Nav>
-              <AuthButton onClick={bootstrapPM}/>
+              <AuthButton/>
             </Nav>
           </Navbar>
         </nav>

@@ -87,7 +87,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
     };
 
     public shared({caller}) func bootstrapBackend(frontend: Principal)
-        : async [{installationId: Common.InstallationId/*; canisterIds: [Principal]*/}] // TODO
+        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
@@ -119,7 +119,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
             case null { Debug.trap("TODO") };
         };
         await pm.setOwner(caller);
-        [inst];
+        inst;
     };
 
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;

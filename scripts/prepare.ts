@@ -6,13 +6,14 @@ import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
 import { RealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
+import { idlFactory as bootstrapperIdl } from '../src/declarations/bootstrapper';
 import { Location, Module, _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
 import { PackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { FullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
-import { bootstrapper } from '../src/declarations/bootstrapper';
+import { Bootstrap } from '../src/declarations/bootstrapper/bootstrapper.did';
 
 dotenv_config({ path: '.env' });
 
@@ -96,6 +97,7 @@ async function main() {
     // };
     // await repositoryIndex.createPackage("counter", counterFullInfo);
 
+    const bootstrapper: Bootstrap = Actor.createActor(bootstrapperIdl, {agent, canisterId: process.env.CANISTER_ID_BOOTSTRAPPER!});
     bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
 }
 

@@ -1,5 +1,7 @@
 Remaining things to do:
 
+- FIXME: ic0.app vs icp0.io
+
 - FIXME: How to decide which modules to install/remove, if the module list in package description changes?
 
 - FIXME: future compaitibility in package format.
