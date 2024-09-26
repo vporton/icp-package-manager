@@ -78,7 +78,7 @@ module {
                         });
                     },
                     {
-                        canister = Principal.fromActor(indirectCaller);
+                        canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
                         name = "copyAll";
                         data = to_candid({
                             from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
