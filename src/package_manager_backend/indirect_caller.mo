@@ -12,7 +12,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     /// We check owner, for only owner to be able to control Asset canisters
     private func onlyOwner(caller: Principal) {
-        Debug.print("indirectCaller " # Principal.toText(Principal.fromActor(this)) # " owned by " # debug_show(owner)); // FIXME: Remove.
         if (caller != owner) {
             Debug.trap("only owner");
         };
