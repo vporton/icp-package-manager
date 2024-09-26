@@ -69,18 +69,19 @@ module {
                         name = "install_code";
                         data = to_candid({
                             // user = ; // TODO: Useful? Maybe, just ask PM?
-                            packageManager;
-                            arg = Blob.toArray(installArg);
+                            // packageManager; // FIXME: uncomment?
+                            arg = installArg;
                             wasm_module;
                             mode = #install;
                             canister_id;
+                            // sender_canister_version = ;
                         });
                     },
                     {
                         canister = Principal.fromActor(indirectCaller);
                         name = "copyAll";
                         data = to_candid({
-                            from = assets; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                            from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                         });
                     },
                     // TODO: Should here also call `init()` like below?

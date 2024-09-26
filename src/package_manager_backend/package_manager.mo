@@ -19,6 +19,8 @@ import Install "../install";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller = initialOwner}) actor class PackageManager() = this {
+    Debug.print("initialOwner = " # Principal.toText(initialOwner));
+
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);

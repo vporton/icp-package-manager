@@ -79,7 +79,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
-        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, getIndirectCaller(), null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, null); // PM frontend
         // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -122,6 +122,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         inst;
     };
 
+    // TODO: Is this used at all?
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
