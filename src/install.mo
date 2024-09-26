@@ -49,23 +49,8 @@ module {
             Debug.trap("package WASM code is not available");
         };
 
-        Debug.print("indirect_caller: " # Principal.toText(Principal.fromActor(indirectCaller))); // TODO: Remove.
-
         switch (wasmModule) {
             case (#Assets {assets}) {
-                // await IC.install_code({ // safe even with untrust WASM
-                //     // user = ; // TODO: Useful? Maybe, just ask PM?
-                //     // packageManager; // FIXME: uncomment?
-                //     arg = Blob.toArray(installArg);
-                //     wasm_module;
-                //     mode = #install;
-                //     canister_id;
-                //     // sender_canister_version = ;
-                // });
-                // await indirectCaller.setOwner(packageManagerOrBootstrapper); // after bootstrapping change to correct
-                // indirectCaller.copyAllOneWay({
-                //     from = actor(Principal.toText(assets)); to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                // });
                 indirectCaller.callAllOneWay([
                     {
                         canister = Principal.fromActor(IC);
@@ -81,7 +66,7 @@ module {
                         });
                     },
                     {
-                        canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
+                        canister = Principal.fromActor(indirectCaller);
                         name = "copyAll";
                         data = to_candid({
                             from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
