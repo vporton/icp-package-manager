@@ -12,12 +12,13 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     /// We check owner, for only owner to be able to control Asset canisters
     private func onlyOwner(caller: Principal) {
-        if (caller != owner) {
+        if (caller != owner and caller != Principal.fromActor(this)) { // TODO: Comparison with this is necessary for call of `copyAssets` from `callAllOneWay`.
+            Debug.print("only owner");
             Debug.trap("only owner");
         };
     };
 
-    public shared({caller}) func changeOwner(newOwner: Principal): async () {
+    public shared({caller}) func setOwner(newOwner: Principal): async () {
         onlyOwner(caller);
 
         owner := newOwner;
@@ -92,7 +93,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
-    public shared({caller}) func copyAllOneWay({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
+    public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
         onlyOwner(caller);
 
         try {

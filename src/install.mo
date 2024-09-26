@@ -53,41 +53,42 @@ module {
 
         switch (wasmModule) {
             case (#Assets {assets}) {
-                await IC.install_code({ // safe even with untrust WASM
-                    // user = ; // TODO: Useful? Maybe, just ask PM?
-                    // packageManager; // FIXME: uncomment?
-                    arg = Blob.toArray(installArg);
-                    wasm_module;
-                    mode = #install;
-                    canister_id;
-                    // sender_canister_version = ;
-                });
-                indirectCaller.copyAllOneWay({
-                    from = actor(Principal.toText(assets)); to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                });
-                // indirectCaller.callAllOneWay([
-                //     {
-                //         canister = Principal.fromActor(IC);
-                //         name = "install_code";
-                //         data = to_candid({
-                //             // user = ; // TODO: Useful? Maybe, just ask PM?
-                //             // packageManager; // FIXME: uncomment?
-                //             arg = installArg;
-                //             wasm_module;
-                //             mode = #install;
-                //             canister_id;
-                //             // sender_canister_version = ;
-                //         });
-                //     },
-                //     {
-                //         canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
-                //         name = "copyAll";
-                //         data = to_candid({
-                //             from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                //         });
-                //     },
-                //     // TODO: Should here also call `init()` like below?
-                // ]);
+                // await IC.install_code({ // safe even with untrust WASM
+                //     // user = ; // TODO: Useful? Maybe, just ask PM?
+                //     // packageManager; // FIXME: uncomment?
+                //     arg = Blob.toArray(installArg);
+                //     wasm_module;
+                //     mode = #install;
+                //     canister_id;
+                //     // sender_canister_version = ;
+                // });
+                // await indirectCaller.setOwner(packageManagerOrBootstrapper); // after bootstrapping change to correct
+                // indirectCaller.copyAllOneWay({
+                //     from = actor(Principal.toText(assets)); to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                // });
+                indirectCaller.callAllOneWay([
+                    {
+                        canister = Principal.fromActor(IC);
+                        name = "install_code";
+                        data = to_candid({
+                            // user = ; // TODO: Useful? Maybe, just ask PM?
+                            // packageManager; // FIXME: uncomment?
+                            arg = installArg;
+                            wasm_module;
+                            mode = #install;
+                            canister_id;
+                            // sender_canister_version = ;
+                        });
+                    },
+                    {
+                        canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
+                        name = "copyAll";
+                        data = to_candid({
+                            from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                        });
+                    },
+                    // TODO: Should here also call `init()` like below?
+                ]);
             };
             case _ {
                 let installCode = {

@@ -76,6 +76,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
 
     public shared({caller}) func bootstrapFrontend() : async Principal {
         Cycles.add<system>(1_000_000_000_000);
+        // FIXME: Both bootstrapFrontend & bootstrapBackend create IndirectCaller, should be just one.
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         // indirect_caller := ?indirect_caller_v;
 
