@@ -18,7 +18,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
-    public shared({caller}) func changeOwner(newOwner: Principal) {
+    public shared({caller}) func changeOwner(newOwner: Principal): async () {
         onlyOwner(caller);
 
         owner := newOwner;
