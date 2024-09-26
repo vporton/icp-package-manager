@@ -92,7 +92,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
-    public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
+    public shared({caller}) func copyAllOneWay({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
         onlyOwner(caller);
 
         try {

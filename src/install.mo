@@ -18,7 +18,7 @@ module {
         installArg: Blob,
         initArg: ?Blob, // init is optional
         indirectCaller: IndirectCaller.IndirectCaller,
-        packageManager: ?Principal, // may be null, if called from bootstrap.
+        packageManagerOrBootstrapper: Principal,
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -27,7 +27,8 @@ module {
         let {canister_id} = await IC.create_canister({
             settings = ?{
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(indirectCaller)]; // No package manager as a controller, because the PM may be upgraded.
+                // TODO: Remove being controlled by `Bootstrapper` (for `install_code`) later in the code.
+                controllers = ?[Principal.fromActor(indirectCaller), packageManagerOrBootstrapper]; // No package manager as a controller, because the PM may be upgraded.
                 compute_allocation = null; // TODO
                 memory_allocation = null; // TODO (a low priority task)
             }
@@ -52,40 +53,41 @@ module {
 
         switch (wasmModule) {
             case (#Assets {assets}) {
-                    // await IC.install_code({
-                    //         // user = ; // TODO: Useful? Maybe, just ask PM?
-                    //         packageManager;
-                    //         arg = Blob.toArray(installArg);
-                    //         wasm_module;
-                    //         mode = #install;
-                    //         canister_id;
-                    //     });
-                    // await* copy_assets.copyAll({
-                    //         from = actor(Principal.toText(assets)); to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                    //     });
-                indirectCaller.callAllOneWay([
-                    {
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            // user = ; // TODO: Useful? Maybe, just ask PM?
-                            // packageManager; // FIXME: uncomment?
-                            arg = installArg;
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                            // sender_canister_version = ;
-                        });
-                    },
-                    {
-                        canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
-                        name = "copyAll";
-                        data = to_candid({
-                            from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                        });
-                    },
-                    // TODO: Should here also call `init()` like below?
-                ]);
+                await IC.install_code({ // safe even with untrust WASM
+                    // user = ; // TODO: Useful? Maybe, just ask PM?
+                    // packageManager; // FIXME: uncomment?
+                    arg = Blob.toArray(installArg);
+                    wasm_module;
+                    mode = #install;
+                    canister_id;
+                    // sender_canister_version = ;
+                });
+                indirectCaller.copyAllOneWay({
+                    from = actor(Principal.toText(assets)); to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                });
+                // indirectCaller.callAllOneWay([
+                //     {
+                //         canister = Principal.fromActor(IC);
+                //         name = "install_code";
+                //         data = to_candid({
+                //             // user = ; // TODO: Useful? Maybe, just ask PM?
+                //             // packageManager; // FIXME: uncomment?
+                //             arg = installArg;
+                //             wasm_module;
+                //             mode = #install;
+                //             canister_id;
+                //             // sender_canister_version = ;
+                //         });
+                //     },
+                //     {
+                //         canister = Principal.fromActor(indirectCaller); // FIXME: This makes indirectCaller call itself (and fail).
+                //         name = "copyAll";
+                //         data = to_candid({
+                //             from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                //         });
+                //     },
+                //     // TODO: Should here also call `init()` like below?
+                // ]);
             };
             case _ {
                 let installCode = {
@@ -107,7 +109,7 @@ module {
                                 name = Common.NamespacePrefix # "init";
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
-                                    packageManager;
+                                    packageManager = packageManagerOrBootstrapper;
                                     arg = {indirect_caller = indirectCaller; arg = initArg};
                                 });
                             }

@@ -80,7 +80,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         // indirect_caller := ?indirect_caller_v;
 
         Debug.print("we: " # Principal.toText(Principal.fromActor(this))); // TODO: Remove.
-        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, null); // PM frontend
+        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
         // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -100,7 +100,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             to_candid(()),
             ?(to_candid({frontend})),
             indirect_caller_v,
-            null,
+            Principal.fromActor(this),
         );
 
         let #Wasm loc = getOurModules().pmBackendModule else {

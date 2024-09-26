@@ -270,7 +270,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), ?(Principal.fromActor(this)));
+                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this));
                 getIndirectCaller().callIgnoringMissingOneWay(
                     [{
                         canister;
@@ -328,7 +328,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
         onlyOwner(caller);
 
-        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this)));
+        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this));
     };
 
     /// It can be used directly from frontend.
@@ -362,7 +362,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    let can = await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), ?(Principal.fromActor(this))); // TODO: ignore?
+                    let can = await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this)); // TODO: ignore?
                     installation.extraModules.add((m.0, can));
                 };
                 if (avoidRepeated) {
