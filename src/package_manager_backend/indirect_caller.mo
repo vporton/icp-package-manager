@@ -61,10 +61,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
     };
 
     public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        onlyOwner(caller);
+
         await* callIgnoringMissingOneWayImpl(caller, methods)
     };
 
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        onlyOwner(caller);
+
         await* callAllOneWayImpl(caller, methods);
     };
 
