@@ -35,6 +35,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
             };
         }
         catch (e) {
+            Debug.print("Indirect caller: " # Error.message(e));
             Debug.trap("Indirect caller: " # Error.message(e));
         };
     };
@@ -50,6 +51,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
                 ignore await IC.call(method.canister, method.name, method.data);
             }
             catch (e) {
+                Debug.print("Indirect caller: " # Error.message(e));
                 Debug.trap("Indirect caller: " # Error.message(e));
                 if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
                     throw e; // Other error cause interruption.
@@ -73,6 +75,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
             return await IC.call(method.canister, method.name, method.data); 
         }
         catch (e) {
+            Debug.print("Indirect caller: " # Error.message(e));
             Debug.trap("Indirect caller: " # Error.message(e));
         };
     };
@@ -80,13 +83,25 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
     public shared({caller}) func call(method: {canister: Principal; name: Text; data: Blob}): async Blob {
         onlyOwner(caller);
 
-        await IC.call(method.canister, method.name, method.data);
+        try {
+            return await IC.call(method.canister, method.name, method.data);
+        }
+        catch (e) {
+            Debug.print("Indirect caller: " # Error.message(e));
+            Debug.trap("Indirect caller: " # Error.message(e));
+        };
     };
 
     public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}) {
         onlyOwner(caller);
 
-        await* CopyAssets.copyAll({from; to});
+        try {
+            return await* CopyAssets.copyAll({from; to});
+        }
+        catch (e) {
+            Debug.print("Indirect caller: " # Error.message(e));
+            Debug.trap("Indirect caller: " # Error.message(e));
+        };
     };
 
     public shared({caller}) func installPackageWrapper({

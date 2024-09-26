@@ -49,7 +49,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         pmBackendModule: Common.Module;
     };
 
-    var ourModules: ?OurModules = null;
+    stable var ourModules: ?OurModules = null;
 
     public shared({caller}) func setOurModules(m: OurModules) {
         onlyOwner(caller);
