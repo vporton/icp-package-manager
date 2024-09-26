@@ -74,7 +74,8 @@ function GlobalUI() {
     // TODO: Start installation automatically, without clicking a button?
     return (
       <Container>
-        <p>You first need to install the backend for this software.</p>
+        <p>You first need to install the missing components (so called <q>backend</q>) for this software.
+          This is just two buttons easy.</p>
         <ol>
           <li><AuthButton/></li>
           <li><Button disabled={!isAuthenticated} onClick={installBackend}>Install</Button></li>
