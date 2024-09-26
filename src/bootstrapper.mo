@@ -98,7 +98,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         let can = await* Install._installModule(
             getOurModules().pmBackendModule,
             to_candid(()),
-            ?(to_candid({frontend})),
+            ?(to_candid({frontend})), // FIXME: traps here!
             indirect_caller_v,
             Principal.fromActor(this),
         );
