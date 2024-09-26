@@ -15,7 +15,7 @@ import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
 
-shared({caller = intitialOwner}) actor class Bootstrap() {
+shared({caller = intitialOwner}) actor class Bootstrap() = this {
     var owner = intitialOwner;
 
     private func onlyOwner(caller: Principal) {
@@ -79,6 +79,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
         indirect_caller := ?indirect_caller_v;
 
+        Debug.print("we: " # Principal.toText(Principal.fromActor(this))); // TODO: Remove.
         let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, null); // PM frontend
         // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);

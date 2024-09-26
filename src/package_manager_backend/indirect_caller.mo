@@ -7,11 +7,12 @@ import Asset "mo:assets-api";
 import Common "../common";
 import CopyAssets "../copy_assets";
 
-shared({caller = initialOwner}) actor class IndirectCaller() {
+shared({caller = initialOwner}) actor class IndirectCaller() = this {
     stable var owner = initialOwner;
 
     /// We check owner, for only owner to be able to control Asset canisters
     private func onlyOwner(caller: Principal) {
+        Debug.print("indirectCaller " # Principal.toText(Principal.fromActor(this)) # " owned by " # debug_show(owner)); // FIXME: Remove.
         if (caller != owner) {
             Debug.trap("only owner");
         };
@@ -27,8 +28,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
     ///
     /// If a method is missing, stop.
     private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        onlyOwner(caller);
-
         try {
             for (method in methods.vals()) {
                 ignore await IC.call(method.canister, method.name, method.data); 
@@ -44,8 +43,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() {
     ///
     /// If a method is missing, keep calling other methods.
     private func callIgnoringMissingOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        onlyOwner(caller);
-
         for (method in methods.vals()) {
             try {
                 ignore await IC.call(method.canister, method.name, method.data);
