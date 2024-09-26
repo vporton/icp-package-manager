@@ -7,7 +7,7 @@
     "setup": "npm i && dfx canister create bootstrapper_backend && dfx generate bootstrapper_backend && dfx deploy",
     "start": "vite --port 3000",
     "prebuild": "dfx generate",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --sourcemap",
     "format": "prettier --write \"src/**/*.{json,js,jsx,ts,tsx,css,scss}\""
   },
   "dependencies": {
