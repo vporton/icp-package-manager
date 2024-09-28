@@ -10,10 +10,10 @@ import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
 
 module {
-    /// TODO: Save module info for such things as uninstallation and cycles management.
+    /// This is an internal function used in bootstrapper.
     ///
     /// Returns canister ID of installed module.
-    public func _installModule(
+    public func _installModuleButDontRegister(
         wasmModule: Common.Module,
         installArg: Blob,
         initArg: ?Blob, // init is optional
@@ -108,5 +108,45 @@ module {
             };
         };
         canister_id;
+    };
+
+    public func _installModule(
+        wasmModule: Common.Module,
+        installArg: Blob,
+        initArg: ?Blob, // init is optional
+        indirectCaller: IndirectCaller.IndirectCaller,
+        packageManager: Principal,
+        installation: Common.InstallationId,
+    ): async* Principal {
+        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
+        await* _registerModule({installation; canister; packageManager});
+        canister;
+    };
+
+    public func _installNamedModule(
+        wasmModule: Common.Module,
+        installArg: Blob,
+        initArg: ?Blob, // init is optional
+        indirectCaller: IndirectCaller.IndirectCaller,
+        packageManager: Principal,
+        installation: Common.InstallationId,
+        moduleName: Text,
+    ): async* Principal {
+        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
+        await* _registerNamedModule({installation; canister; packageManager; moduleName});
+        canister;
+    };
+
+    public func _registerModule({installation: Common.InstallationId; canister: Principal; packageManager: Principal}): async* () {
+        // TODO
+    };
+
+    public func _registerNamedModule({
+        installation: Common.InstallationId;
+        canister: Principal;
+        packageManager: Principal;
+        moduleName: Text;
+    }): async* () {
+        // TODO
     };
 }

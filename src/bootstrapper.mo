@@ -75,12 +75,9 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
     };
 
     public shared({caller}) func bootstrapFrontend() : async Principal {
-        Cycles.add<system>(1_000_000_000_000);
-        // FIXME: Both bootstrapFrontend & bootstrapBackend create IndirectCaller, should be just one.
-        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
-        // indirect_caller := ?indirect_caller_v;
+        let indirect_caller_v = getIndirectCaller();
 
-        let can = await* Install._installModule(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
+        let can = await* Install._installModuleButDontRegister(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
         // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
         let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
         userToPM.put(caller, subMap);
@@ -91,11 +88,11 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         Cycles.add<system>(1_000_000_000_000);
-        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // yes, a separate `IndirectCaller` for this PM
+        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM // FIXME: set PM as the owner
 
         // TODO: Allow to install only once.
-        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
-        let can = await* Install._installModule(
+        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME: Remove *_init()?
+        let can = await* Install._installModuleButDontRegister(
             getOurModules().pmBackendModule,
             to_candid(()),
             ?(to_candid({frontend})), // FIXME: traps here!
@@ -113,6 +110,18 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", frontend)];
         });
+        await* _registerNamedModule({
+            installation = inst;
+            canister = indirect_caller_v;
+            packageManager = can;
+            moduleName = "indirect"; // TODO: a better name?
+        });
+        await* _registerNamedModule({ // PM backend registers itself.
+            installation = inst;
+            canister = can;
+            packageManager = can;
+            moduleName = "backend";
+        });
         switch (userToPM.get(caller)) {
             case (?subMap) {
                 subMap.put(frontend, inst.canisterIds[0].1);
@@ -123,13 +132,12 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         inst;
     };
 
-    // TODO: Is this used at all?
-    // stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
+    stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
 
-    // private func getIndirectCaller(): IndirectCaller.IndirectCaller {
-    //     let ?indirect_caller2 = indirect_caller else {
-    //         Debug.trap("indirect_caller not initialized");
-    //     };
-    //     indirect_caller2;
-    // };
+    private func getIndirectCaller(): IndirectCaller.IndirectCaller {
+        let ?indirect_caller2 = indirect_caller else {
+            Debug.trap("indirect_caller not initialized");
+        };
+        indirect_caller2;
+    };
 }

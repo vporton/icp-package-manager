@@ -32,6 +32,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     var initialized: Bool = false; // intentionally non-stable
 
+    // TODO: needed?
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init(
         {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}} // TODO: Twice `arg` is counter-intuitive.
     ) : async () {
@@ -63,6 +64,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             Debug.trap("indirect_caller_ not initialized");
         };
         indirect_caller_2;
+    };
+
+    public shared func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
+        indirect_caller_ := ?indirect_caller_v;
     };
 
     stable var nextInstallationId: Nat = 0;
@@ -270,7 +275,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this));
+                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId);
                 getIndirectCaller().callIgnoringMissingOneWay(
                     [{
                         canister;
@@ -325,11 +330,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     /// Intended to use only in bootstrapping.
     ///
     /// TODO: Should we disable calling this after bootstrapping finished?
-    public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
-        onlyOwner(caller);
+    // public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
+    //     onlyOwner(caller);
 
-        await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this));
-    };
+    //     await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this));
+    // };
 
     /// It can be used directly from frontend.
     ///
@@ -362,8 +367,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    let can = await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this)); // TODO: ignore?
-                    installation.extraModules.add((m.0, can));
+                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0);
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
