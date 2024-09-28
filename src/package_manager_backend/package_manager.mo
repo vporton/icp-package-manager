@@ -30,28 +30,29 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 
-    var initialized: Bool = false; // intentionally non-stable
+    var initialized: Bool = false; // intentionally non-stable // FIXME: Being non-stable may be an error.
 
     // TODO: needed?
-    public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init(
-        {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}} // TODO: Twice `arg` is counter-intuitive.
-    ) : async () {
-        ignore Cycles.accept<system>(10_000_000_000_000);
-        onlyOwner(caller);
+    // public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init(
+    //     {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}} // TODO: Twice `arg` is counter-intuitive.
+    // ) : async () {
+    //     ignore Cycles.accept<system>(10_000_000_000_000);
+    //     onlyOwner(caller);
 
-        indirect_caller_ := ?indirect_caller;
-        let IC = actor ("aaaaa-aa") : actor {
-            deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
-        };
-        Cycles.add<system>(5_000_000_000_000);
-        await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller) });
+    //     indirect_caller_ := ?indirect_caller;
+    //     let IC = actor ("aaaaa-aa") : actor {
+    //         deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
+    //     };
+    //     Cycles.add<system>(5_000_000_000_000);
+    //     await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller) });
 
-        // TODO: Store among registered modules (not as named modules, because installPackageWithPreinstalledModules already does)
-        //       itself and PM frontend.
+    //     // TODO: Store among registered modules (not as named modules, because installPackageWithPreinstalledModules already does)
+    //     //       itself and PM frontend.
 
-        initialized := true;
-    };
+    //     initialized := true;
+    // };
 
+    // TODO
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
         initialized;
     };
