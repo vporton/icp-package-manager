@@ -116,6 +116,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             packageManager = can;
             moduleName = "indirect"; // TODO: a better name?
         });
+        await indirect_caller_v.setOwner(can);
         await* Install._registerNamedModule({ // PM backend registers itself.
             installation = inst.installationId;
             canister = can;
@@ -123,7 +124,6 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             moduleName = "backend";
         });
         await pm.setOwner(caller);
-        await indirect_caller_v.setOwner(can);
         switch (userToPM.get(caller)) {
             case (?subMap) {
                 subMap.put(frontend, inst.canisterIds[0].1);
