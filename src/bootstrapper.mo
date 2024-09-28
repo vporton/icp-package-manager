@@ -88,7 +88,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         Cycles.add<system>(1_000_000_000_000);
-        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM // FIXME: set PM as the owner
+        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME: Remove *_init()?
