@@ -17,11 +17,11 @@ import Option "mo:base/Option";
 import {ic} "mo:ic"; // TODO: Use this in other places, too.
 
 
-shared({caller = intitialOwner}) actor class Bootstrap() = this {
-    var owner = intitialOwner;
+shared({caller = initialOwner}) actor class Bootstrap() = this {
+    var owner = initialOwner;
 
     private func onlyOwner(caller: Principal) {
-        if (caller != intitialOwner) {
+        if (caller != initialOwner) {
             Debug.trap("not an owner");
         };
     };
