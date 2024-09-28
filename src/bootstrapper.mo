@@ -26,6 +26,15 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
     };
 
+    // TODO: Allow to run it only once.
+    // TODO: Should conform to `*_init()` standard?
+    public shared({caller}) func init(): async () {
+        onlyOwner(caller);
+
+        Cycles.add<system>(1_000_000_000_000);
+        indirect_caller := ?(await IndirectCaller.IndirectCaller());
+    };
+
     public shared({caller}) func setOwner(newOwner: Principal) {
         onlyOwner(caller);
 

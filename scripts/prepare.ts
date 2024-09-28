@@ -99,6 +99,7 @@ async function main() {
     // await repositoryIndex.createPackage("counter", counterFullInfo);
 
     const bootstrapper: Bootstrap = Actor.createActor(bootstrapperIdl, {agent, canisterId: process.env.CANISTER_ID_BOOTSTRAPPER!});
+    await bootstrapper.init();
     await bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
 }
 
