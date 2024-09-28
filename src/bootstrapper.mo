@@ -14,6 +14,8 @@ import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
+import {ic} "mo:ic"; // TODO: Use this in other places, too.
+
 
 shared({caller = intitialOwner}) actor class Bootstrap() = this {
     var owner = intitialOwner;
@@ -104,6 +106,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
+        // TODO: the order of below operations
         let inst = await pm.installPackageWithPreinstalledModules({
             canister = loc.0;
             packageName = "icpack";
@@ -117,13 +120,28 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             moduleName = "indirect"; // TODO: a better name?
         });
         await indirect_caller_v.setOwner(can);
+        await ic.update_settings({canister_id = Principal.fromActor(indirect_caller_v); sender_canister_version = null; settings = {
+            controllers = ?[Principal.fromActor(indirect_caller_v)]; // FIXME: Should it be self-controlled?
+            freezing_threshold = null;
+            memory_allocation = null;
+            compute_allocation = null;
+            reserved_cycles_limit = null;
+        }});
         await* Install._registerNamedModule({ // PM backend registers itself.
             installation = inst.installationId;
             canister = can;
             packageManager = can;
             moduleName = "backend";
         });
+        await ic.update_settings({canister_id = can; sender_canister_version = null; settings = {
+            controllers = ?[can]; // self-controlled // FIXME: Should it also be user-controlled?
+            freezing_threshold = null;
+            memory_allocation = null;
+            compute_allocation = null;
+            reserved_cycles_limit = null;
+        }});
         await pm.setOwner(caller);
+        await indirect_caller_v.setOwner(can);
         switch (userToPM.get(caller)) {
             case (?subMap) {
                 subMap.put(frontend, inst.canisterIds[0].1);
