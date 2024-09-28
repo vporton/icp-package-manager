@@ -111,13 +111,13 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
             preinstalledModules = [("frontend", frontend)];
         });
         await* Install._registerNamedModule({
-            installation = inst;
-            canister = indirect_caller_v;
+            installation = inst.installationId;
+            canister = Principal.fromActor(indirect_caller_v);
             packageManager = can;
             moduleName = "indirect"; // TODO: a better name?
         });
         await* Install._registerNamedModule({ // PM backend registers itself.
-            installation = inst;
+            installation = inst.installationId;
             canister = can;
             packageManager = can;
             moduleName = "backend";
