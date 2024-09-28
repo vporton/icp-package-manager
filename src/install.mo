@@ -53,6 +53,7 @@ module {
             case (#Assets {assets}) {
                 indirectCaller.callAllOneWay([
                     {
+                        // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
                         canister = Principal.fromActor(IC);
                         name = "install_code";
                         data = to_candid({
@@ -95,8 +96,9 @@ module {
                                 name = Common.NamespacePrefix # "init";
                                 data = to_candid({
                                     // user = ; // TODO: Useful? Maybe, just ask PM?
-                                    packageManager = packageManagerOrBootstrapper;
-                                    arg = {indirect_caller = indirectCaller; arg = initArg};
+                                    // packageManager = packageManagerOrBootstrapper; // TODO
+                                    indirect_caller = indirectCaller;
+                                    arg = initArg;
                                 });
                             }
                         ]);
