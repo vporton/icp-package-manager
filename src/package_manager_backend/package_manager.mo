@@ -49,7 +49,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     //     // TODO: Store among registered modules (not as named modules, because installPackageWithPreinstalledModules already does)
     //     //       itself and PM frontend.
 
-    //     initialized := true;
+    //     initialized := true; // TODO: Re-enable this assignment.
     // };
 
     // TODO
