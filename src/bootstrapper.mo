@@ -91,7 +91,7 @@ shared({caller = intitialOwner}) actor class Bootstrap() = this {
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.
-        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME: Remove *_init()?
+        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
         let can = await* Install._installModuleButDontRegister(
             getOurModules().pmBackendModule,
             to_candid(()),
