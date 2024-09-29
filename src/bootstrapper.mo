@@ -98,13 +98,11 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Common.RepositoryPartitionRO)
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
-        Debug.print("A1");
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
 
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
-        Debug.print("A2");
         let can = await* Install._installModuleButDontRegister(
             getOurModules().pmBackendModule,
             to_candid(()),
@@ -112,12 +110,10 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             indirect_caller_v,
             Principal.fromActor(this),
         );
-        Debug.print("A3");
 
         let #Wasm loc = getOurModules().pmBackendModule else {
             Debug.trap("missing PM backend");
         };
-        Debug.print("A4");
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
         ignore await indirect_caller_v.call({
             canister = can;
@@ -126,8 +122,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         });
         await pm.setIndirectCaller(indirect_caller_v);
         // TODO: the order of below operations
-        Debug.print("A5");
-        Debug.print("A6");
         let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: This fails
             canister = loc.0;
             packageName = "icpack";
@@ -135,16 +129,13 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             preinstalledModules = [("frontend", frontend)];
             repo;
         });
-        Debug.print("A7");
         await pm.registerNamedModule({
             installation = inst.installationId;
             canister = Principal.fromActor(indirect_caller_v);
             packageManager = can;
             moduleName = "indirect"; // TODO: a better name?
         });
-        Debug.print("A8");
         await indirect_caller_v.setOwner(can);
-        Debug.print("A9");
         await ic.update_settings({canister_id = Principal.fromActor(indirect_caller_v); sender_canister_version = null; settings = {
             controllers = ?[Principal.fromActor(indirect_caller_v)]; // FIXME: Should it be self-controlled?
             freezing_threshold = null;
@@ -152,14 +143,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             compute_allocation = null;
             reserved_cycles_limit = null;
         }});
-        Debug.print("A10");
         await pm.registerNamedModule({ // PM backend registers itself.
             installation = inst.installationId;
             canister = can;
             packageManager = can;
             moduleName = "backend";
         });
-        Debug.print("A11");
         await ic.update_settings({canister_id = can; sender_canister_version = null; settings = {
             controllers = ?[can]; // self-controlled // FIXME: Should it also be user-controlled?
             freezing_threshold = null;
@@ -167,7 +156,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             compute_allocation = null;
             reserved_cycles_limit = null;
         }});
-        Debug.print("A12");
         await pm.setOwner(caller);
         switch (userToPM.get(caller)) {
             case (?subMap) {
