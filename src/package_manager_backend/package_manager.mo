@@ -138,7 +138,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        let ?installation = installedPackages.get(installationId) else {
+        let ?installation = installedPackages.get(installationId) else { // FIXME: This is a wrong place for this code!
             Debug.trap("no such package");
         };
         let package = installation.package;
