@@ -4,6 +4,8 @@ Remaining things to do:
   Store the URL of the canister itself in bootstrapper. Create it only when more than
   one PM, otherwise, store the URL of the PM.
   Who is responsible for cycles of this canister?
+  ...
+  Better solution: Use remaining dev's cycles to store URLs.
 
 - FIXME: ic0.app vs icp0.io
 
