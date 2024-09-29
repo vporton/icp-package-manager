@@ -95,7 +95,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         can;
     };
 
-    public shared({caller}) func bootstrapBackend(frontend: Principal)
+    public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Common.RepositoryPartitionRO)
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         Debug.print("A1");
@@ -128,6 +128,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", frontend)];
+            repo;
         });
         Debug.print("A7");
         await* Install._registerNamedModule({

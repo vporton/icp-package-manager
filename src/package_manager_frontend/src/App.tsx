@@ -12,8 +12,10 @@ import InstalledPackages from './InstalledPackages';
 import Installation from './Installation';
 import { GlobalContext, GlobalContextProvider } from './state';
 import { createActor as pmCreateActor } from '../../declarations/package_manager';
+import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
+import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
@@ -48,10 +50,26 @@ function GlobalUI() {
   const {isAuthenticated, defaultAgent} = useAuth();
   if (glob.backend === undefined) {
     async function installBackend() {
-      const result = await bootstrapper.bootstrapBackend(glob.frontend!); // TODO: `!`
+      // TODO: hack
+      const parts = (await RepositoryIndex.getCanistersByPK('main'))
+        .map(s => Principal.fromText(s))
+      const foundParts = await Promise.all(parts.map(part => {
+        try {
+          const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
+          part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
+          return part;
+        }
+        catch(_) { // TODO: Check error.
+          return null;
+        }
+      }));
+      const firstPart = foundParts.filter(v => v !== null)[0];
+      console.log("firstPart1", firstPart.toText()); // TODO: Remove.
+
+      const result = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
       const backend_princ = result.canisterIds[0][1];
       const backend_str = backend_princ.toString();
-      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent}); // FIXME: Wht happens if no WASM yet?
+      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent}); // FIXME: Whqt happens if no WASM yet?
       const base = getIsLocal() ? `http://localhost:4943?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
       // TODO: busy indicator
       for (let i = 0;; ++i) { // TODO: Choose the value.

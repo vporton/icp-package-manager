@@ -104,12 +104,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
+        repo: Common.RepositoryPartitionRO;
     })
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; canister; packageName; version; preinstalledModules = null});
+        await* _installPackage({caller; canister; packageName; version; preinstalledModules = null; repo});
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
@@ -117,12 +118,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
+        repo: Common.RepositoryPartitionRO;
     })
         : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; canister; packageName; version; preinstalledModules = ?preinstalledModules});
+        await* _installPackage({caller; canister; packageName; version; preinstalledModules = ?preinstalledModules; repo});
     };
 
     /// We don't install dependencies here (see `specs.odt`).
@@ -132,16 +134,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
+        repo: Common.RepositoryPartitionRO;
     })
         : async* {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]} // TODO: Precreate and return canister IDs.
     {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        let ?installation = installedPackages.get(installationId) else { // FIXME: This is a wrong place for this code!
-            Debug.trap("no such package");
-        };
-        let package = installation.package;
+        // let ?installation = installedPackages.get(installationId) else { // FIXME: This is a wrong place for this code!
+        //     Debug.trap("no such package");
+        // };
+        let package = await repo.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
@@ -160,6 +163,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
+        let installation: Common.InstalledPackageInfo = {
+            id = installationId;
+            name = packageName;
+            package;
+            packageCanister = canister;
+            version;
+            modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
+            extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
+        };
+
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         // TODO: Also correctly create canisters if installation was interrupted.
@@ -173,7 +186,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
-                    let ?canister_id = installation.modules.get(moduleName) else {
+                    let ?canister_id = installation.modules.get(moduleName) else { // FIXME
                         Debug.trap("programming error");
                     };
                     canister_id;
@@ -194,6 +207,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // TODO: Are two lines below duplicates of each other?
             ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
             canisterIds.add((moduleName, canister_id)); // do it later.
+            installedPackages.put(installationId, installation)
         };
 
         getIndirectCaller().callAllOneWay([{

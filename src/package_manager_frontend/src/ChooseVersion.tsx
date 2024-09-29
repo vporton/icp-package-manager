@@ -12,6 +12,7 @@ import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
+import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
@@ -45,10 +46,29 @@ export default function ChooseVersion(props: {}) {
     const [installing, setInstalling] = useState(false);
     async function install() {
         setInstalling(true);
+
+        // TODO: hack
+        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
+        const parts = (await index.getCanistersByPK('main'))
+            .map(s => Principal.fromText(s))
+        const foundParts = await Promise.all(parts.map(part => {
+            try {
+                const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
+                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
+                return part;
+            }
+            catch(_) { // TODO: Check error.
+                return null;
+            }
+        }));
+        const firstPart = foundParts.filter(v => v !== null)[0];
+        console.log("firstPart2", firstPart.toText()); // TODO: Remove.
+    
         let id = await package_manager.installPackage({
             canister: packagePk!,
             packageName: packageName!,
             version: chosenVersion!,
+            repo: firstPart,
         });
         navigate(`/installed/show/${id}`);
     }

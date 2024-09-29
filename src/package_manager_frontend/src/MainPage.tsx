@@ -8,6 +8,8 @@ import { useAuth } from "./auth/use-auth-client";
 import { InstallationId } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
+import { RepositoryIndex } from "../../declarations/RepositoryIndex";
+import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -65,13 +67,30 @@ export default function MainPage() {
     useEffect(reloadDistros, []);
 
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
-    async function installChecked() {
+        async function installChecked() {
+        // TODO: hack
+        const parts = (await RepositoryIndex.getCanistersByPK('main'))
+            .map(s => Principal.fromText(s))
+        const foundParts = await Promise.all(parts.map(part => {
+            try {
+                const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
+                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
+                return part;
+            }
+            catch(_) { // TODO: Check error.
+                return null;
+            }
+        }));
+        const firstPart = foundParts.filter(v => v !== null)[0];
+        console.log("firstPart3", firstPart.toText()); // TODO: Remove.
+
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
                 await package_manager.installPackage({
                     packageName: p.name,
                     version: p.version,
                     canister: p.packageCanister,
+                    repo: firstPart,
                 });
             }
         }
