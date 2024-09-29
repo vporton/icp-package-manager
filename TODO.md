@@ -1,5 +1,10 @@
 Remaining things to do:
 
+- Create a special "singleton" canister that will store URLs of user's package managers.
+  Store the URL of the canister itself in bootstrapper. Create it only when more than
+  one PM, otherwise, store the URL of the PM.
+  Who is responsible for cycles of this canister?
+
 - FIXME: ic0.app vs icp0.io
 
 - FIXME: How to decide which modules to install/remove, if the module list in package description changes?
