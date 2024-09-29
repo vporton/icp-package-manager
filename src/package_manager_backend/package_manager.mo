@@ -27,6 +27,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // TODO: more flexible control of owners
     public shared({caller}) func setOwner(newOwner: Principal): async () {
+        onlyOwner(caller);
+
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 
@@ -67,7 +69,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         indirect_caller_2;
     };
 
-    public shared func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
+    public shared({caller}) func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
+        onlyOwner(caller);
+
         indirect_caller_ := ?indirect_caller_v;
     };
 
@@ -187,9 +191,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
-                    let ?canister_id = installation.modules.get(moduleName) else { // FIXME
-                        Debug.trap("programming error: no such module '" # moduleName # "'");
-                    };
+                    let ?(_, canister_id) = Iter.filter(
+                        preinstalledModules.vals(),
+                        func((n, m): (Text, Principal)): Bool = n == moduleName,
+                    ).next();
                     canister_id;
                 };
                 case null {
@@ -642,4 +647,19 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public query func getRepositories(): async [{canister: Principal; name: Text}] {
         repositories;
     };
+
+    public func registerNamedModule({
+        installation: Common.InstallationId;
+        canister: Principal;
+        packageManager: Principal;
+        moduleName: Text;
+    }): async () {
+        await* Install._registerNamedModule({
+            installation;
+            canister;
+            packageManager;
+            moduleName;
+            installedPackages; // TODO: not here
+        });
+    }
 }

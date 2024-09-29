@@ -119,9 +119,10 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
         Debug.print("A4");
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
+        await pm.setIndirectCaller(indirect_caller_v);
         // TODO: the order of below operations
         Debug.print("A5");
-        await pm.setOwner(Principal.fromActor(this));
+        // await pm.setOwner(Principal.fromActor(this));
         Debug.print("A6");
         let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: This fails
             canister = loc.0;
@@ -131,7 +132,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             repo;
         });
         Debug.print("A7");
-        await* Install._registerNamedModule({
+        await pm.registerNamedModule({
             installation = inst.installationId;
             canister = Principal.fromActor(indirect_caller_v);
             packageManager = can;
@@ -148,7 +149,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         Debug.print("A10");
-        await* Install._registerNamedModule({ // PM backend registers itself.
+        await pm.registerNamedModule({ // PM backend registers itself.
             installation = inst.installationId;
             canister = can;
             packageManager = can;

@@ -14,6 +14,7 @@ module {
     /// This is an internal function used in bootstrapper.
     ///
     /// Returns canister ID of installed module.
+    // FIXME: We, not indirect caller, should be owner of the PM module.
     public func _installModuleButDontRegister(
         wasmModule: Common.Module,
         installArg: Blob,
