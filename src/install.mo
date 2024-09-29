@@ -3,6 +3,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 import Blob "mo:base/Blob";
+import HashMap "mo:base/HashMap";
 import Asset "mo:assets-api";
 import copy_assets "copy_assets";
 import Common "common";
@@ -117,9 +118,10 @@ module {
         indirectCaller: IndirectCaller.IndirectCaller,
         packageManager: Principal,
         installation: Common.InstallationId,
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
     ): async* Principal {
         let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
-        await* _registerModule({installation; canister; packageManager});
+        await* _registerModule({installation; canister; packageManager; installedPackages});
         canister;
     };
 
@@ -131,13 +133,23 @@ module {
         packageManager: Principal,
         installation: Common.InstallationId,
         moduleName: Text,
-    ): async* Principal {
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+   ): async* Principal {
         let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
-        await* _registerNamedModule({installation; canister; packageManager; moduleName});
+        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages});
         canister;
     };
 
-    public func _registerModule({installation: Common.InstallationId; canister: Principal; packageManager: Principal}): async* () {
+    public func _registerModule({
+        installation: Common.InstallationId;
+        canister: Principal;
+        packageManager: Principal;
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // TODO: not here
+    }): async* () {
+        let ?inst = installedPackages.get(installation) else {
+            Debug.trap("no such installationId: " # debug_show(installation));
+        };
+        inst.allModules.add(canister);
         // TODO
     };
 
@@ -146,7 +158,12 @@ module {
         canister: Principal;
         packageManager: Principal;
         moduleName: Text;
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // TODO: not here
     }): async* () {
-        // TODO
+        await* _registerModule({installation; canister; packageManager; installedPackages});
+        let ?inst = installedPackages.get(installation) else {
+            Debug.trap("no such installationId: " # debug_show(installation));
+        };
+        inst.modules.put(moduleName, canister);
     };
 }

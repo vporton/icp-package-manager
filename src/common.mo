@@ -116,7 +116,8 @@ module {
         packageCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
-        extraModules: Buffer.Buffer<(Text, Principal)>; // TODO: `HashMap`?
+        // extraModules: Buffer.Buffer<(Text, Principal)>; // TODO: `HashMap`?
+        allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
     };
 
     public type SharedInstalledPackageInfo = {
@@ -126,7 +127,8 @@ module {
         packageCanister: Principal;
         version: Version;
         modules: [(Text, Principal)];
-        extraModules: [(Text, Principal)];
+        // extraModules: [(Text, Principal)];
+        allModules: [Principal];
     };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
@@ -136,7 +138,8 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
-        extraModules = Buffer.toArray(info.extraModules);
+        // extraModules = Buffer.toArray(info.extraModules);
+        allModules = Buffer.toArray(info.allModules);
     };
 
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
@@ -146,7 +149,8 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
-        extraModules = Buffer.fromArray(info.extraModules);
+        // extraModules = Buffer.fromArray(info.extraModules);
+        allModules = Buffer.fromArray(info.allModules);
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).

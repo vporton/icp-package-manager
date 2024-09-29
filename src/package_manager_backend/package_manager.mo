@@ -170,7 +170,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             packageCanister = canister;
             version;
             modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
-            extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
+            // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
+            allModules = Buffer.Buffer<Principal>(0); // 0?
         };
 
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
@@ -187,7 +188,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
                     let ?canister_id = installation.modules.get(moduleName) else { // FIXME
-                        Debug.trap("programming error");
+                        Debug.trap("programming error: no such module '" # moduleName # "'");
                     };
                     canister_id;
                 };
@@ -290,7 +291,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId);
+                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages);
                 getIndirectCaller().callIgnoringMissingOneWay(
                     [{
                         canister;
@@ -329,7 +330,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
             ), ourHalfInstalled.modules.size(), Text.equal, Text.hash);
             packageCanister = ourHalfInstalled.packageCanister;
-            extraModules = Buffer.Buffer(0);
+            // extraModules = Buffer.Buffer<Principal>(0);
+            allModules = Buffer.Buffer<Principal>(0);
         });
         halfInstalledPackages.delete(installationId);
         switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
@@ -382,7 +384,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0);
+                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages);
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
