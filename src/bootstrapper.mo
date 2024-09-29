@@ -157,7 +157,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.setOwner(caller);
-        switch (userToPM.get(caller)) {
+        switch (userToPM.get(caller)) { // FIXME: It is not the same caller as caller of `bootstrapFrontend`.
             case (?subMap) {
                 subMap.put(frontend, inst.canisterIds[0].1);
             };
