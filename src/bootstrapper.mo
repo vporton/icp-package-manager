@@ -119,10 +119,14 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
         Debug.print("A4");
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
+        ignore await indirect_caller_v.call({
+            canister = can;
+            name = "setOwner";
+            data = to_candid(Principal.fromActor(this));
+        });
         await pm.setIndirectCaller(indirect_caller_v);
         // TODO: the order of below operations
         Debug.print("A5");
-        // await pm.setOwner(Principal.fromActor(this));
         Debug.print("A6");
         let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: This fails
             canister = loc.0;
@@ -164,8 +168,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         Debug.print("A12");
-        await indirect_caller_v.setOwner(can);
-        Debug.print("A13");
         await pm.setOwner(caller);
         switch (userToPM.get(caller)) {
             case (?subMap) {
