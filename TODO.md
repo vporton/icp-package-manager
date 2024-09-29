@@ -1,11 +1,6 @@
 Remaining things to do:
 
-- Create a special "singleton" canister that will store URLs of user's package managers.
-  Store the URL of the canister itself in bootstrapper. Create it only when more than
-  one PM, otherwise, store the URL of the PM.
-  Who is responsible for cycles of this canister?
-  ...
-  Better solution: Use remaining dev's cycles to store URLs.
+- Use remaining dev's cycles to store URLs of PMs.
 
 - FIXME: ic0.app vs icp0.io
 
