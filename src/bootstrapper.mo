@@ -173,7 +173,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             case (?subMap) {
                 subMap.put(frontend, inst.canisterIds[0].1);
             };
-            case null { Debug.trap("TODO") };
+            case null {
+                let subMap = HashMap.HashMap<Principal, Principal>(1, Principal.equal, Principal.hash);
+                subMap.put(frontend, inst.canisterIds[0].1);
+                userToPM.put(frontend, subMap);
+
+            };
         };
         inst;
     };
