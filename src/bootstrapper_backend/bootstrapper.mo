@@ -45,16 +45,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         owner;
     };
 
-    /// user -> (frontend -> backend)
-    let userToPM = HashMap.HashMap<Principal, HashMap.HashMap<Principal, Principal>>(1, Principal.equal, Principal.hash);
-
-    public query({caller}) func getUserPMInfo(): async [(Principal, Principal)] {
-        switch (userToPM.get(caller)) {
-            case (?a) Iter.toArray(a.entries());
-            case null [];
-        };
-    };
-
     type OurModules = {
         pmFrontendModule: Common.Module;
         pmBackendModule: Common.Module;
@@ -88,11 +78,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     public shared({caller}) func bootstrapFrontend() : async Principal {
         let indirect_caller_v = getIndirectCaller();
 
-        let can = await* Install._installModuleButDontRegister(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
-        // assert Option.isNull(userToPM.get(caller)); // TODO: Lift this restriction.
-        let subMap = HashMap.HashMap<Principal, Principal>(0, Principal.equal, Principal.hash);
-        userToPM.put(caller, subMap);
-        can;
+       await* Install._installModuleButDontRegister(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
     };
 
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Common.RepositoryPartitionRO)
@@ -157,16 +143,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.setOwner(caller);
-        switch (userToPM.get(caller)) { // FIXME: It is not the same caller as caller of `bootstrapFrontend`.
-            case (?subMap) {
-                subMap.put(frontend, inst.canisterIds[0].1);
-            };
-            case null {
-                let subMap = HashMap.HashMap<Principal, Principal>(1, Principal.equal, Principal.hash);
-                subMap.put(frontend, inst.canisterIds[0].1);
-                userToPM.put(caller, subMap);
-            };
-        };
         inst;
     };
 

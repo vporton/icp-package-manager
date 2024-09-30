@@ -14,6 +14,11 @@
       "main": "src/bootstrapper_backend/bootstrapper.mo",
       "dependencies": []
     },
+    "bookmark": {
+      "type": "motoko",
+      "main": "src/bootstrapper_backend/bookmarks.mo",
+      "dependencies": []
+    },
     "RepositoryIndex": {
       "type": "motoko",
       "main": "src/repository_backend/RepositoryIndex.mo"
@@ -40,6 +45,7 @@
     "bootstrapper_frontend": {
       "dependencies": [
         "bootstrapper",
+        "bookmark",
         "internet_identity"
       ],
       "source": [
