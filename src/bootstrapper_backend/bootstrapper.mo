@@ -1,10 +1,10 @@
-import IndirectCaller "package_manager_backend/indirect_caller";
-import RepositoryIndex "repository_backend/RepositoryIndex";
-import RepositoryPartition "repository_backend/RepositoryPartition";
-import Common "common";
-import Install "install";
-import PackageManager "package_manager_backend/package_manager";
-import Counter "example/counter";
+import IndirectCaller "../package_manager_backend/indirect_caller";
+import RepositoryIndex "../repository_backend/RepositoryIndex";
+import RepositoryPartition "../repository_backend/RepositoryPartition";
+import Common "../common";
+import Install "../install";
+import PackageManager "../package_manager_backend/package_manager";
+import Counter "../example/counter";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";

@@ -11,7 +11,7 @@
     },
     "bootstrapper": {
       "type": "motoko",
-      "main": "src/bootstrapper.mo",
+      "main": "src/bootstrapper_backend/bootstrapper.mo",
       "dependencies": []
     },
     "RepositoryIndex": {
