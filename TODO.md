@@ -24,6 +24,8 @@ Remaining things to do:
 
 - Gzip modules.
 
+- Error handling in frontend.
+
 - Bootstrapping package manager partly done (depends on installing frontend canisters).
 
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
