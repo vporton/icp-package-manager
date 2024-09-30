@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
 import { AuthProvider, getIsLocal } from './auth/use-auth-client';
 import MainPage from './MainPage';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -39,7 +40,11 @@ function App2() {
             </Nav>
           </Navbar>
         </nav>
-        <MainPage/>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<MainPage/>}/>
+          </Routes>
+        </BrowserRouter>        
       </Container>
     </main>
  );
