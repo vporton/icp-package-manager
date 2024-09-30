@@ -31,16 +31,6 @@ function App() {
 
 function App2() {
   return (
-    <AuthContext.Consumer>{
-      ({isAuthenticated, principal, agent}) =>
-        <App3 isAuthenticated={isAuthenticated} principal={principal} agent={agent}/>
-      }
-    </AuthContext.Consumer>
-  );
-}
-
-function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
-  return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
         <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
