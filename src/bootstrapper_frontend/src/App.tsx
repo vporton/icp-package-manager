@@ -40,6 +40,38 @@ function App2() {
 }
 
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
+  return (
+    <main id="main">
+      <h1 style={{textAlign: 'center'}}>
+        <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
+        {" "}
+        Bootstrapper (Installer) of Package Manager
+      </h1>
+      <Container>
+        <nav>
+          <Navbar className="bg-body-secondary" style={{width: "auto"}}>
+            <Nav>
+              <AuthButton/>
+            </Nav>
+          </Navbar>
+        </nav>
+        <MainPage/>
+      </Container>
+    </main>
+ );
+}
+
+function MainPage() {
+  return (
+    <AuthContext.Consumer>{
+      ({isAuthenticated, principal, agent}) =>
+        <MainPage2 isAuthenticated={isAuthenticated} principal={principal} agent={agent}/>
+      }
+    </AuthContext.Consumer>
+  );
+}
+
+function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
   const [installations, setInstallations] = useState<Bookmark[]>([]);
   useEffect(() => {
     if (!props.isAuthenticated || props.agent === undefined) {
@@ -62,33 +94,19 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
     open(url);
   }
   return (
-    <main id="main">
-      <h1 style={{textAlign: 'center'}}>
-        <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
-        {" "}
-        Bootstrapper (Installer) of Package Manager
-      </h1>
-      <Container>
-        <nav>
-          <Navbar className="bg-body-secondary" style={{width: "auto"}}>
-            <Nav>
-              <AuthButton/>
-            </Nav>
-          </Navbar>
-        </nav>
-        <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install Package Manager IC Pack</Button></p>
-        <h2>Installed Package Manager</h2>
-        {installations.length === 0 ? <i>None</i> :
-          <ul>
-            {installations.map(inst => {
-              let url = `https://${inst.frontend}.ic0.app?backend=${inst.backend}`;
-              return <li><a href={url}>{url}</a></li>;
-            })}
-          </ul>
-        }
-      </Container>
-    </main>
- );
+    <>
+      <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install Package Manager IC Pack</Button></p>
+      <h2>Installed Package Manager</h2>
+      {!props.isAuthenticated ? <i>Not logged in</i> : installations.length === 0 ? <i>None</i> :
+        <ul>
+          {installations.map(inst => {
+            let url = `https://${inst.frontend}.ic0.app?backend=${inst.backend}`;
+            return <li><a href={url}>{url}</a></li>;
+          })}
+        </ul>
+      }
+    </>
+  );
 }
 
 export default App;
