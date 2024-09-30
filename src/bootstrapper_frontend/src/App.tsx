@@ -5,7 +5,9 @@ import { AuthButton }  from './AuthButton';
 import { AuthContext, AuthProvider, getIsLocal } from './auth/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { Agent } from '@dfinity/agent';
-import { bootstrapper, createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
+import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
+import {  createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 // TODO: Remove react-router dependency from this app
 
 function App() {
@@ -38,14 +40,14 @@ function App2() {
 }
 
 function App3(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
-  const [installations, setInstallations] = useState<[Principal, Principal][]>([]);
+  const [installations, setInstallations] = useState<Bookmark[]>([]);
   useEffect(() => {
     if (!props.isAuthenticated || props.agent === undefined) {
       setInstallations([]);
       return;
     }
-    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-    bootstrapper.getUserPMInfo().then(list => {
+    const bootstrapper = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: props.agent});
+    bootstrapper.getUserBookmarks().then(list => {
       setInstallations(list);
     });
   }, [props.isAuthenticated, props.principal]);
@@ -76,8 +78,14 @@ function App3(props: {isAuthenticated: boolean, principal: Principal | undefined
         </nav>
         <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install Package Manager IC Pack</Button></p>
         <h2>Installed Package Manager</h2>
-        {installations.length === 0 && <i>None</i>}
-        {installations.map(inst => `https://${inst[0]}.ic0.app?backend=${inst[1]}`)}
+        {installations.length === 0 ? <i>None</i> :
+          <ul>
+            {installations.map(inst => {
+              let url = `https://${inst.frontend}.ic0.app?backend=${inst.backend}`;
+              return <li><a href={url}>{url}</a></li>;
+            })}
+          </ul>
+        }
       </Container>
     </main>
  );
