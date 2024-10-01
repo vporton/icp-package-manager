@@ -1,5 +1,7 @@
 Remaining things to do:
 
+- FIXME: After installing backend, redirects with `backend=` points to frontend.
+
 - Use remaining dev's cycles to store URLs of PMs.
 
 - FIXME: It doesn't show `icpack` in Installed Packages after bootstrapping.

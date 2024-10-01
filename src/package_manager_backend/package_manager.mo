@@ -212,6 +212,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
             canisterIds.add((moduleName, canister_id)); // do it later.
         };
+        Debug.print("installedPackages (" # Principal.toText(Principal.fromActor(this)) # ") " # debug_show(installationId)); // FIXME: Remove.
         installedPackages.put(installationId, installation);
 
         getIndirectCaller().callAllOneWay([{
