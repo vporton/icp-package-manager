@@ -2,6 +2,8 @@ Remaining things to do:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
+- FIXME: It doesn't show `icpack` in Installed Packages after bootstrapping.
+
 - FIXME: ic0.app vs icp0.io
 
 - FIXME: How to decide which modules to install/remove, if the module list in package description changes?
