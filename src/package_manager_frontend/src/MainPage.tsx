@@ -4,7 +4,7 @@ import Modal from "react-bootstrap/esm/Modal";
 import { canisterId, package_manager } from '../../declarations/package_manager';
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./auth/use-auth-client";
+import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { InstallationId } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
@@ -110,10 +110,12 @@ export default function MainPage() {
             reloadDistros();
         }
     }
+    const bookmark = {frontend: glob.frontend!, backend: glob.backend!};
+    const bookmarkingUrlBase = getIsLocal() ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_BOOKMARK!}&` : `https://${process.env.CANISTER_ID_BOOKMARK!}.icp0.io?`;
+    const bookmarkingUrl = `${bookmarkingUrlBase}frontend=${bookmark.frontend}&backend=${bookmark.backend}`;
     useEffect(() => {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
-        bookmarks.hasBookmark({frontend: glob.frontend!, backend: glob.backend!})
-            .then((f: boolean) => setBookmarked(f));
+        bookmarks.hasBookmark(bookmark).then((f: boolean) => setBookmarked(f));
         
     }, []);
 
@@ -124,6 +126,7 @@ export default function MainPage() {
                     <Alert variant="warning">This page was not bookmarked in our bookmark system.
                         You are <strong>strongly</strong> recommended to bookmark it, otherwise
                         you may lose this URL and be unable to find it.
+                        <a className="btn" href={bookmarkingUrl}>Bookmark</a>
                     </Alert>
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
                 </>

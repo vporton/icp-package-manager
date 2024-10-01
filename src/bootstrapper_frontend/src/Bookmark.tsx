@@ -22,7 +22,7 @@ export default function Bookmark() {
     useEffect(() => {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
         bookmarks.hasBookmark(bookmark).then(f => setDone(f));
-    }, [principal])
+    }, [])
     return (
         <>
             <p>Bookmark your package manager location:<br/><code>{url}</code></p>

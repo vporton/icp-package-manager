@@ -55,7 +55,7 @@ export default function MainPage() {
 
     return (
       <>
-        {!showAdvanced &&
+        {installations.length === 0 &&
           <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>}
         <h2>Installed Package Manager</h2>
         {!props.isAuthenticated ? <i>Not logged in</i> : installations.length === 0 ? <i>None</i> :
