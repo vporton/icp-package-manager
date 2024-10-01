@@ -41,7 +41,7 @@ export default function MainPage() {
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.ic0.app`;
       alert("You may need press reload (press F5) the page one or more times before it works."); // TODO
-      open(url);
+      open(url, '_self');
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",
