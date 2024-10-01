@@ -107,7 +107,7 @@ function App2() {
     <main id="main">
       <div>
         <Container>
-          <nav style={{marginBottom: '0.5ex'}}>
+          <nav style={{marginBottom: '1ex'}}>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
                 <Link className="nav-link" to="/">Main page</Link>
