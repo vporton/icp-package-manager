@@ -67,19 +67,21 @@ export default function MainPage() {
             })}
           </ul>
         }
-        <Accordion defaultActiveKey={undefined}>
-          <Accordion.Item eventKey="advanced">
-            <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
-            <Accordion.Body>
-              <Alert variant="warning">
-                You are not recommended to install package manager more than once.{" "}
-                <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several installations of the package manager.
-                Also note that multiple package managers will be totally separate, each having its own set of installed packages.
-              </Alert>
-              <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
+        {installations.length !== 0 &&
+          <Accordion defaultActiveKey={undefined}>
+            <Accordion.Item eventKey="advanced">
+              <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
+              <Accordion.Body>
+                <Alert variant="warning">
+                  You are not recommended to install package manager more than once.{" "}
+                  <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several installations of the package manager.
+                  Also note that multiple package managers will be totally separate, each having its own set of installed packages.
+                </Alert>
+                <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        }
         <BootstrapAgainDialog/>
       </>
     );
