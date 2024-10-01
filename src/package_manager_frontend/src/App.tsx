@@ -87,7 +87,7 @@ function GlobalUI() {
       //     // TODO: more detailed error check
       //   }
       // }
-      open(`${base}backend=${backend_str}&bookmarkMsg=1`); // TODO: Don't open new tab.
+      open(`${base}backend=${backend_str}`, '_self');
     }
     // TODO: Start installation automatically, without clicking a button?
     return (

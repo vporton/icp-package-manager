@@ -4,6 +4,7 @@ import { AuthButton }  from './AuthButton';
 import { AuthProvider, getIsLocal } from './auth/use-auth-client';
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Bookmark from './Bookmark';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -42,7 +43,8 @@ function App2() {
         </nav>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<MainPage/>}/>
+          <Route path="/" element={<MainPage/>}/>
+          <Route path="/bookmark" element={<Bookmark/>}/>
           </Routes>
         </BrowserRouter>        
       </Container>

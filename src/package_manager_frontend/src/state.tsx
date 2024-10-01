@@ -4,11 +4,9 @@ import React, { createContext } from "react";
 export const GlobalContext = createContext<{
   frontend: Principal | undefined,
   backend: Principal | undefined,
-  bookmarkMsg: boolean,
 }>({
   frontend: undefined,
   backend: undefined,
-  bookmarkMsg: false,
 });
 
 /**
@@ -16,8 +14,6 @@ export const GlobalContext = createContext<{
  */
 export function GlobalContextProvider(props: { children: any }) {
   const params = new URLSearchParams(window.location.search);
-
-  const bookmarkMsg = params.get('bookmarkMsg') !== null;
 
   const backend_str = params.get('backend');
   const backend = backend_str !== null ? Principal.fromText(backend_str) : undefined;
@@ -39,7 +35,7 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
 
-  return <GlobalContext.Provider value={{backend, frontend, bookmarkMsg}}>{props.children}</GlobalContext.Provider>;
+  return <GlobalContext.Provider value={{backend, frontend}}>{props.children}</GlobalContext.Provider>;
 };
 
 // export const useGlobalContext = () => useContext(GlobalContext);
