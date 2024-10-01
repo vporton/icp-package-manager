@@ -112,7 +112,7 @@ export default function MainPage() {
     }
     const bookmark = {frontend: glob.frontend!, backend: glob.backend!};
     const bookmarkingUrlBase = getIsLocal()
-        ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}/bookmark&`
+        ? `http://localhost:4943/bookmark?canisterId=${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}&`
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
     const bookmarkingUrl = `${bookmarkingUrlBase}frontend=${bookmark.frontend}&backend=${bookmark.backend}`;
     useEffect(() => {
@@ -130,7 +130,8 @@ export default function MainPage() {
                         you may lose this URL and be unable to find it.{" "}
                         <a className="btn btn-primary" href={bookmarkingUrl} target="_blank">Bookmark</a>
                     </Alert>
-                    <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
+                    <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site{" "}
+                        (provided that you've bookmarked it).</Alert>
                 </>
             }
             <h2>Distribution</h2>
