@@ -125,7 +125,7 @@ export default function MainPage() {
         <>
             {!bookmarked &&
                 <>
-                    <Alert variant="warning">This page was not bookmarked in our bookmark system.
+                    <Alert variant="warning">This page has not been bookmarked in our bookmark system.
                         You are <strong>strongly</strong> recommended to bookmark it, otherwise
                         you may lose this URL and be unable to find it.{" "}
                         <a className="btn btn-primary" href={bookmarkingUrl} target="_blank">Bookmark</a>
