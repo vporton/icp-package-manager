@@ -111,7 +111,9 @@ export default function MainPage() {
         }
     }
     const bookmark = {frontend: glob.frontend!, backend: glob.backend!};
-    const bookmarkingUrlBase = getIsLocal() ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_BOOKMARK!}&` : `https://${process.env.CANISTER_ID_BOOKMARK!}.icp0.io?`;
+    const bookmarkingUrlBase = getIsLocal()
+        ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}/bookmark&`
+        : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
     const bookmarkingUrl = `${bookmarkingUrlBase}frontend=${bookmark.frontend}&backend=${bookmark.backend}`;
     useEffect(() => {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
