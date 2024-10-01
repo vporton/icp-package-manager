@@ -213,7 +213,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // TODO: Are two lines below duplicates of each other?
             ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
             canisterIds.add((moduleName, canister_id)); // do it later.
-            installedPackages.put(installationId, installation)
+            installedPackages.put(installationId, installation);
         };
 
         getIndirectCaller().callAllOneWay([{
