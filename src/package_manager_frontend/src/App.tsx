@@ -64,12 +64,10 @@ function GlobalUI() {
         }
       }));
       const firstPart = foundParts.filter(v => v !== null)[0];
-      console.log("firstPart1", firstPart.toText()); // TODO: Remove.
 
       const result = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
       const backend_princ = result.canisterIds[0][1];
       const backend_str = backend_princ.toString();
-      const backendRO = pmCreateActor(backend_princ, {agent: defaultAgent}); // FIXME: Whqt happens if no WASM yet?
       const base = getIsLocal() ? `http://localhost:4943?canisterId=${glob.frontend}&` : `https://${glob.frontend}.icp0.io?`;
       // TODO: busy indicator
       // for (let i = 0;; ++i) { // TODO: Choose the value.

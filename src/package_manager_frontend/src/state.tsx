@@ -18,7 +18,8 @@ export function GlobalContextProvider(props: { children: any }) {
   const backend_str = params.get('backend');
   const backend = backend_str !== null ? Principal.fromText(backend_str) : undefined;
 
-  const frontend_str = window.location.hostname.replace(/\..*/, ""); // TODO: doesn't work for custom domains
+  const canisterId = params.get('canisterId');
+  const frontend_str = canisterId !== null ? canisterId : window.location.hostname.replace(/\..*/, ""); // TODO: doesn't work for custom domains
   let frontend = undefined;
   if (frontend_str !== null) {
     try {

@@ -126,7 +126,7 @@ export default function MainPage() {
                     <Alert variant="warning">This page was not bookmarked in our bookmark system.
                         You are <strong>strongly</strong> recommended to bookmark it, otherwise
                         you may lose this URL and be unable to find it.
-                        <a className="btn" href={bookmarkingUrl}>Bookmark</a>
+                        <a className="btn" href={bookmarkingUrl} target="_blank">Bookmark</a>
                     </Alert>
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
                 </>
