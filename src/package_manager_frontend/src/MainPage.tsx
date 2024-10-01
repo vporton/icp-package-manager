@@ -10,6 +10,7 @@ import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
 import { RepositoryIndex } from "../../declarations/RepositoryIndex";
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
+import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -49,6 +50,7 @@ export default function MainPage() {
     const [curDistro, setCurDistro] = useState<Principal | undefined>();
     const [packageName, setPackageName] = useState("");
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageCanister: Principal}[]>();
+    const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
         package_manager.getHalfInstalledPackages().then(h => {
             setPackagesToRepair(h);
@@ -102,19 +104,27 @@ export default function MainPage() {
             }
         }
     }
-
     async function removeRepository() {
         if (confirm("Remove installation media?")) {
             await package_manager.removeRepository(curDistro!);
             reloadDistros();
         }
     }
+    useEffect(() => {
+        const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
+        bookmarks.hasBookmark({frontend: glob.frontend!, backend: glob.backend!})
+            .then((f: boolean) => setBookmarked(f));
+        
+    }, []);
 
     return (
         <>
-            {glob.bookmarkMsg &&
-                <> {/* TODO: It bookmarks page with the message, but should not. */}
-                    <Alert variant="warning">Bookmark this page</Alert>
+            {!bookmarked &&
+                <>
+                    <Alert variant="warning">This page was not bookmarked in our bookmark system.
+                        You are <strong>strongly</strong> recommended to bookmark it, otherwise
+                        you may lose this URL and be unable to find it.
+                    </Alert>
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site.</Alert>
                 </>
             }
