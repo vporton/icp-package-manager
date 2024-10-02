@@ -16,6 +16,8 @@ Remaining things to do:
 
 - FIXME: Check that `getPackage` and similar methods don't hang us.
 
+- Bootstrapping the PM together with any other package(s).
+
 - Prevent browser window to close during bootstrap.
 
 - `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
