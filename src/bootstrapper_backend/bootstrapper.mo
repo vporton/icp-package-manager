@@ -143,7 +143,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.setOwner(caller);
-        inst;
+        {installationId = inst.installationId; canisterIds = [("backend", can)]};
     };
 
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;
