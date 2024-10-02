@@ -74,4 +74,6 @@ Remaining things to do:
 - Option to re-use a canister for another package (should require non-safe confirmation from both
   user and package).
 
+- Statistics of use.
+
 - `FIXME`/`TODO` in the sources.
