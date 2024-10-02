@@ -69,7 +69,7 @@ Remaining things to do:
 
 - Package manager (and probably some other packages) should be non-removable.
 
-- `!` is TypeScript.
+- `!` in TypeScript.
 
 - Option to re-use a canister for another package (should require non-safe confirmation from both
   user and package).
