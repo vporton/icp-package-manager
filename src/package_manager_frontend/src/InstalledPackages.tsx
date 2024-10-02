@@ -1,10 +1,11 @@
 import Button from "react-bootstrap/esm/Button";
-import { package_manager } from "../../declarations/package_manager";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { Link } from "react-router-dom";
+import { GlobalContext } from "./state";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, SharedInstalledPackageInfo][]>}) {
+    console.log('allInstalled', props.allInstalled); // FIXME: Remove.
     const packages = props.allInstalled.get(props.packageName);
     const versionsSet = new Set(packages!.map(p => p[1].version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
@@ -36,15 +37,22 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
 export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]>>();
     useEffect(() => {
-        package_manager.getAllInstalledPackages().then(allPackages => {
+        const glob = useContext(GlobalContext);
+        glob.package_manager_ro!.getAllInstalledPackages().then(allPackages => {
+            console.log("allPackages", allPackages) // FIXME: Remove
             const namesSet = new Set(allPackages.map(p => p[1].name));
+            console.log("namesSet", namesSet) // FIXME: Remove
             const names = Array.from(namesSet);
+            console.log("names", names) // FIXME: Remove
             names.sort();
+            console.log("names", names) // FIXME: Remove
             const byName0 = names.map(name => {
                 const p: [string, [bigint, SharedInstalledPackageInfo][]] = [name, Array.from(allPackages.filter(p => p[1].name === name))];
                 return p;
             });
+            console.log("byName0", byName0) // FIXME: Remove
             const byName = new Map(byName0);
+            console.log("byName", byName) // FIXME: Remove
             setInstalledVersions(byName);
         });
     }, []);

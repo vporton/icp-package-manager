@@ -1,12 +1,21 @@
 import { Principal } from "@dfinity/principal";
 import React, { createContext } from "react";
+import { PackageManager } from "../../declarations/package_manager/package_manager.did";
+import { package_manager } from "../../declarations/package_manager";
+import { useAuth } from "./auth/use-auth-client";
+import { idlFactory as packageManagerIDL } from '../../declarations/package_manager/package_manager.did.js';
+import { Actor } from "@dfinity/agent";
 
 export const GlobalContext = createContext<{
   frontend: Principal | undefined,
   backend: Principal | undefined,
+  package_manager_ro: PackageManager | undefined,
+  package_manager_rw: PackageManager | undefined,
 }>({
   frontend: undefined,
   backend: undefined,
+  package_manager_ro: undefined,
+  package_manager_rw: undefined,
 });
 
 /**
@@ -35,8 +44,15 @@ export function GlobalContextProvider(props: { children: any }) {
       }
     }
   }
+  const {agent, defaultAgent} = useAuth();
+  const package_manager_ro: PackageManager = Actor.createActor(packageManagerIDL, {canisterId: backend!, agent: defaultAgent});
+  const package_manager_rw: PackageManager = Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
 
-  return <GlobalContext.Provider value={{backend, frontend}}>{props.children}</GlobalContext.Provider>;
+  return (
+    <GlobalContext.Provider value={{backend, frontend, package_manager_ro, package_manager_rw}}>
+      {props.children}
+    </GlobalContext.Provider>
+  );
 };
 
 // export const useGlobalContext = () => useContext(GlobalContext);

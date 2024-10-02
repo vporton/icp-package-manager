@@ -1,7 +1,6 @@
 import { ChangeEvent, createRef, useContext, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
-import { canisterId, package_manager } from '../../declarations/package_manager';
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
@@ -18,7 +17,8 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
     const handleSave = async () => {
         // TODO: Don't allow to add the same repo twice.
         props.handleClose();
-        await package_manager.addRepository(Principal.fromText(principal), name);
+        const glob = useContext(GlobalContext);
+        await glob.package_manager_rw!.addRepository(Principal.fromText(principal), name);
         props.handleReload();
     };
     return (
@@ -52,14 +52,14 @@ export default function MainPage() {
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
-        package_manager.getHalfInstalledPackages().then(h => {
+        glob.package_manager_ro!.getHalfInstalledPackages().then(h => {
             setPackagesToRepair(h);
         });
     });
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        package_manager.getRepositories().then((r) => {
+        glob.package_manager_ro!.getRepositories().then((r) => {
             setDistros(r);
             if (r.length !== 0) {
                 setCurDistro(r[0].canister);
@@ -88,7 +88,8 @@ export default function MainPage() {
 
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                await package_manager.installPackage({
+                const glob = useContext(GlobalContext);
+                await glob.package_manager_rw!.installPackage({
                     packageName: p.name,
                     version: p.version,
                     canister: p.packageCanister,
@@ -100,13 +101,15 @@ export default function MainPage() {
     async function deleteChecked() {
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                await package_manager.uninstallPackage(BigInt(p.installationId));
+                const glob = useContext(GlobalContext);
+                await glob.package_manager_rw!.uninstallPackage(BigInt(p.installationId));
             }
         }
     }
     async function removeRepository() {
         if (confirm("Remove installation media?")) {
-            await package_manager.removeRepository(curDistro!);
+            const glob = useContext(GlobalContext);
+            await glob.package_manager_rw!.removeRepository(curDistro!);
             reloadDistros();
         }
     }

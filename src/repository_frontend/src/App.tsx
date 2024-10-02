@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
-import { package_manager } from '../../declarations/package_manager';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';

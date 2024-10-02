@@ -1,11 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useAuth } from "./auth/use-auth-client";
-import { useEffect, useState } from "react";
-import { package_manager } from "../../declarations/package_manager";
+import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/esm/Button"; // FIXME
 import { FullPackageInfo, PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
+import { GlobalContext } from "./state";
 
 export default function Installation(props: {}) {
     const { installationId } = useParams();
@@ -16,7 +16,8 @@ export default function Installation(props: {}) {
         if (defaultAgent === undefined) {
             return;
         }
-        package_manager.getInstalledPackage(BigInt(installationId!)).then(pkg => {
+        const glob = useContext(GlobalContext);
+        glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageCanister!, agent: defaultAgent});
             part.getFullPackageInfo(pkg.name).then(fullInfo => {
@@ -29,7 +30,8 @@ export default function Installation(props: {}) {
 
     // TODO: Ask for confirmation.
     async function uninstall() {
-        let id = await package_manager.uninstallPackage(BigInt(installationId!));
+        const glob = useContext(GlobalContext);
+        let id = await glob.package_manager_rw!.uninstallPackage(BigInt(installationId!));
         // TODO:
         alert("Uninstallation finished");
     }
