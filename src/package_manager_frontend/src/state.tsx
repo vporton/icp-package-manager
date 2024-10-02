@@ -45,8 +45,8 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
   const {agent, defaultAgent} = useAuth();
-  const package_manager_ro: PackageManager = Actor.createActor(packageManagerIDL, {canisterId: backend!, agent: defaultAgent});
-  const package_manager_rw: PackageManager = Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
+  const package_manager_ro: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent: defaultAgent});
+  const package_manager_rw: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
 
   return (
     <GlobalContext.Provider value={{backend, frontend, package_manager_ro, package_manager_rw}}>
