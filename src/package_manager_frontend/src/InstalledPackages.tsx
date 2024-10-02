@@ -36,8 +36,8 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
 
 export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]>>();
+    const glob = useContext(GlobalContext);
     useEffect(() => {
-        const glob = useContext(GlobalContext);
         glob.package_manager_ro!.getAllInstalledPackages().then(allPackages => {
             console.log("allPackages", allPackages) // FIXME: Remove
             const namesSet = new Set(allPackages.map(p => p[1].name));

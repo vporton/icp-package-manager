@@ -14,10 +14,10 @@ import { createActor as createBookmarkActor } from "../../declarations/bookmark"
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
     const [principal, setPrincipal] = useState(""); // TODO: validate
+    const glob = useContext(GlobalContext);
     const handleSave = async () => {
         // TODO: Don't allow to add the same repo twice.
         props.handleClose();
-        const glob = useContext(GlobalContext);
         await glob.package_manager_rw!.addRepository(Principal.fromText(principal), name);
         props.handleReload();
     };
@@ -88,7 +88,6 @@ export default function MainPage() {
 
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                const glob = useContext(GlobalContext);
                 await glob.package_manager_rw!.installPackage({
                     packageName: p.name,
                     version: p.version,
@@ -101,14 +100,12 @@ export default function MainPage() {
     async function deleteChecked() {
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                const glob = useContext(GlobalContext);
                 await glob.package_manager_rw!.uninstallPackage(BigInt(p.installationId));
             }
         }
     }
     async function removeRepository() {
         if (confirm("Remove installation media?")) {
-            const glob = useContext(GlobalContext);
             await glob.package_manager_rw!.removeRepository(curDistro!);
             reloadDistros();
         }

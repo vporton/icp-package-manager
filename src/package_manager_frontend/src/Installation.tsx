@@ -12,11 +12,11 @@ export default function Installation(props: {}) {
     const {defaultAgent} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [pkg2, setPkg2] = useState<PackageInfo | undefined>();
+    const glob = useContext(GlobalContext);
     useEffect(() => {
         if (defaultAgent === undefined) {
             return;
         }
-        const glob = useContext(GlobalContext);
         glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageCanister!, agent: defaultAgent});
@@ -30,7 +30,6 @@ export default function Installation(props: {}) {
 
     // TODO: Ask for confirmation.
     async function uninstall() {
-        const glob = useContext(GlobalContext);
         let id = await glob.package_manager_rw!.uninstallPackage(BigInt(installationId!));
         // TODO:
         alert("Uninstallation finished");
