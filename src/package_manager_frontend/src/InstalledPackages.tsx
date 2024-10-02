@@ -1,7 +1,5 @@
-import Button from "react-bootstrap/esm/Button";
 import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
-import { Link } from "react-router-dom";
 import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
 
