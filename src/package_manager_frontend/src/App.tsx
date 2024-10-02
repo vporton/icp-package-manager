@@ -21,26 +21,26 @@ function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
   return (
     <BrowserRouter>
-      <GlobalContextProvider>
-        <AuthProvider options={{loginOptions: {
-            identityProvider,
-            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-            onSuccess: () => {
-                console.log('Login Successful!');
-            },
-            onError: (error) => {
-                console.error('Login Failed: ', error);
-            },
-        }}}>
+      <AuthProvider options={{loginOptions: {
+          identityProvider,
+          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+          onSuccess: () => {
+              console.log('Login Successful!');
+          },
+          onError: (error) => {
+              console.error('Login Failed: ', error);
+          },
+      }}}>
+        <GlobalContextProvider>
           <h1 style={{textAlign: 'center'}}>
             <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
             {" "}
             Package Manager
           </h1>
           <GlobalUI/>
-        </AuthProvider>
-      </GlobalContextProvider>
+        </GlobalContextProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

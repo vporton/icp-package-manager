@@ -38,6 +38,9 @@ export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]>>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
+        if (glob.package_manager_ro === undefined) { // Why is this check needed?
+            return;
+        }
         glob.package_manager_ro!.getAllInstalledPackages().then(allPackages => {
             console.log("allPackages", allPackages) // FIXME: Remove
             const namesSet = new Set(allPackages.map(p => p[1].name));
@@ -55,7 +58,7 @@ export default function InstalledPackages(props: {}) {
             console.log("byName", byName) // FIXME: Remove
             setInstalledVersions(byName);
         });
-    }, []);
+    }, [glob.package_manager_ro]);
 
     return (
         <>
