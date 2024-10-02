@@ -216,7 +216,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         installedPackages.put(installationId, installation);
 
         getIndirectCaller().callAllOneWay([{
-            canister = Principal.fromActor(this);
+            canister = Principal.fromActor(getIndirectCaller());
             name = "installPackageWrapper";
             data = to_candid({
                 installationId;
