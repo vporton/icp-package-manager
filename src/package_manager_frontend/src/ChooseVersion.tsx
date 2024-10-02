@@ -13,10 +13,11 @@ import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
+import { myUseNavigate } from "./MyNavigate";
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
-    const navigate = useNavigate();
+    const navigate = myUseNavigate();
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());

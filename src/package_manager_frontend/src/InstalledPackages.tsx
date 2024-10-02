@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { Link } from "react-router-dom";
 import { GlobalContext } from "./state";
+import { MyLink } from "./MyNavigate";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, SharedInstalledPackageInfo][]>}) {
     console.log('allInstalled', props.allInstalled); // FIXME: Remove.
@@ -20,10 +21,10 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
                 return (
                     <span key={version}>
                         {packages.length === 1 ?
-                            <Link to={'/installed/show/'+packages[0][0].toString()}>{version}</Link> :
+                            <MyLink to={'/installed/show/'+packages[0][0].toString()}>{version}</MyLink> :
                             <span>{version} ({packages.map(([k, _]) =>
                                 <span key={k}>
-                                    <Link to={'/installed/show/'+k.toString()}>{k.toString()}</Link>{" "}
+                                    <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>{" "}
                                 </span>
                             )})</span>
                         }

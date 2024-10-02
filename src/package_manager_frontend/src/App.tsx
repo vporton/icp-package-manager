@@ -16,6 +16,7 @@ import { createActor as repoPartitionCreateActor } from '../../declarations/Repo
 import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
 import { RepositoryIndex } from '../../declarations/RepositoryIndex';
+import { MyLink } from './MyNavigate';
 
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`; // FIXME
@@ -110,10 +111,10 @@ function App2() {
           <nav style={{marginBottom: '1ex'}}>
             <Navbar className="bg-body-secondary" style={{width: "auto"}}>
               <Nav>
-                <Link className="nav-link" to="/">Main page</Link>
+                <MyLink className="nav-link" to="/">Main page</MyLink>
               </Nav>
               <Nav>
-                <Link className="nav-link" to="/installed">Installed packages</Link>
+                <MyLink className="nav-link" to="/installed">Installed packages</MyLink>
               </Nav>
               <Nav>
                 <AuthButton/>

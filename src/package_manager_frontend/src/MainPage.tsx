@@ -10,6 +10,7 @@ import Alert from "react-bootstrap/esm/Alert";
 import { RepositoryIndex } from "../../declarations/RepositoryIndex";
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { myUseNavigate } from "./MyNavigate";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("TODO");
@@ -44,7 +45,7 @@ export default function MainPage() {
     const { defaultAgent } = useAuth();
     const glob = useContext(GlobalContext);
 
-    const navigate = useNavigate();
+    const navigate = myUseNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
     const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
     const [curDistro, setCurDistro] = useState<Principal | undefined>();
