@@ -28,10 +28,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     ///
     /// If a method is missing, stop.
     private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        Debug.print("callAllOneWayImpl"); // FIXME: Remove
         try {
             for (method in methods.vals()) {
-                Debug.print("callAllOneWayImpl " # method.name); // FIXME: Remove.
                 ignore await IC.call(method.canister, method.name, method.data); 
             };
         }
@@ -116,7 +114,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     }) {
         onlyOwner(caller);
 
-        Debug.print("installPackageWrapper"); // FIXME: Remove.
         try {
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {

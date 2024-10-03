@@ -85,7 +85,6 @@ export default function MainPage() {
             }
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
-        console.log("firstPart3", firstPart.toText()); // TODO: Remove.
 
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {

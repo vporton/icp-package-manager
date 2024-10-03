@@ -63,7 +63,6 @@ export default function ChooseVersion(props: {}) {
             }
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
-        console.log("firstPart2", firstPart.toText()); // TODO: Remove.
     
         let id = await package_manager.installPackage({
             canister: packagePk!,

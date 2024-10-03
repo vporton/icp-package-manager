@@ -4,7 +4,6 @@ import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, SharedInstalledPackageInfo][]>}) {
-    console.log('allInstalled', props.allInstalled); // FIXME: Remove.
     const packages = props.allInstalled.get(props.packageName);
     const versionsSet = new Set(packages!.map(p => p[1].version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
