@@ -214,7 +214,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         installedPackages.put(installationId, installation);
 
-        Debug.print("Call installPackageWrapper");
         getIndirectCaller().callAllOneWay([{
             canister = Principal.fromActor(getIndirectCaller());
             name = "installPackageWrapper";
@@ -284,7 +283,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         realPackage: Common.RealPackageInfo;
         caller: Principal;
     }): async* () {
-        Debug.print("_finishInstallPackage");
         label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let ?state = ourHalfInstalled.modules.get(moduleName) else {
                 Debug.trap("programming error");
@@ -317,7 +315,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             }*/;
         };
 
-        Debug.print("_finishInstallPackage end");
         _updateAfterInstall({installationId});
     };
 

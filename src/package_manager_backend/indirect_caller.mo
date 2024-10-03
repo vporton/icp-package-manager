@@ -64,7 +64,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
-        Debug.print("callAllOneWay"); // FIXME: Remove
         onlyOwner(caller);
 
         await* callAllOneWayImpl(caller, methods);
