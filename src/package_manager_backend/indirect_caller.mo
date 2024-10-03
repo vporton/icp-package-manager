@@ -112,28 +112,33 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
     }) {
-        let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-        let package = await part.getPackage(packageName, version); // may hang, so in a callback
+        try {
+            let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+            let package = await part.getPackage(packageName, version); // may hang, so in a callback
 
-        type o = actor {
-            // TODO: Check it carefully.
-            installPackageCallback: ({
-                installationId: Common.InstallationId;
-                canister: Principal;
-                packageName: Common.PackageName;
-                version: Common.Version;
-                preinstalledModules: ?[(Text, Common.Location)];
-                package: Common.PackageInfo;
-            }) -> async ();
+            type o = actor {
+                // TODO: Check it carefully.
+                installPackageCallback: ({
+                    installationId: Common.InstallationId;
+                    canister: Principal;
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    preinstalledModules: ?[(Text, Common.Location)];
+                    package: Common.PackageInfo;
+                }) -> async ();
+            };
+            let pm: o = actor(Principal.toText(owner));
+            await pm.installPackageCallback({
+                installationId;
+                canister;
+                packageName;
+                version;
+                preinstalledModules;
+                package;
+            });
+        }
+        catch (e) {
+            Debug.print("installPackageWrapper: " # Error.message(e));
         };
-        let pm: o = actor(Principal.toText(owner));
-        await pm.installPackageCallback({
-            installationId;
-            canister;
-            packageName;
-            version;
-            preinstalledModules;
-            package;
-        });
     };
 }
