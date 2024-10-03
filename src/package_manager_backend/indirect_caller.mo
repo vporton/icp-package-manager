@@ -110,34 +110,44 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     public shared({caller}) func installPackageWrapper({
         installationId: Common.InstallationId;
-        canister: Principal;
+        pmPrincipal: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
     }) {
         // FIXME: Check caller.
         Debug.print("installPackageWrapper");
         try {
-            let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-            let package = await part.getPackage(packageName, version); // may hang, so in a callback
-
-            type o = actor {
-                // TODO: Check it carefully.
+            let pm = actor (Principal.toText(pmPrincipal)) : actor {
+                getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
+                    packageName: Text;
+                    version: Common.Version;
+                    package: Common.PackageInfo;
+                };
                 installPackageCallback: ({
                     installationId: Common.InstallationId;
-                    canister: Principal;
                     packageName: Common.PackageName;
                     version: Common.Version;
                     package: Common.PackageInfo;
                 }) -> async ();
             };
-            let pm: o = actor(Principal.toText(owner));
+            // TODO: Is the below over-engineering?
+            let info = await pm.getHalfInstalledPackageById(installationId);
+
+            type o = actor {
+                // TODO: Check it carefully.
+                installPackageCallback: ({
+                    installationId: Common.InstallationId;
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    package: Common.PackageInfo;
+                }) -> async ();
+            };
             Debug.print("Call installPackageCallback");
             await pm.installPackageCallback({
                 installationId;
-                canister;
                 packageName;
                 version;
-                package;
+                package = /*Common.installedPackageInfoUnshare(*/info.package/*)*/;
             });
         }
         catch (e) {

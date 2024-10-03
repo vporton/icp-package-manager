@@ -220,9 +220,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             name = "installPackageWrapper";
             data = to_candid({
                 installationId;
-                canister;
-                packageName;
-                version;
+                pmPrincipal = Principal.fromActor(this);
+                packageName; // TODO: seems unneeded
+                version; // TODO: seems unneeded
            });
         }]);
 
@@ -231,10 +231,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     public shared({caller}) func installPackageCallback({
         installationId: Common.InstallationId;
-        canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        package: Common.PackageInfo;
+        package: Common.PackageInfo; // TODO: Rename.
     }): async () {
         Debug.print("installPackageCallback");
         let #real realPackage = package.specific else {
@@ -626,6 +625,18 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 version = x.1.version;
             },
         ));
+    };
+
+    /// TODO: very unstable API.
+    public query func getHalfInstalledPackageById(installationId: Common.InstallationId): async {
+        packageName: Text;
+        version: Common.Version;
+        package: Common.PackageInfo;
+    } {
+        let ?res = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such package")
+        };
+        {packageName = res.name; version = res.version; package = res.package};
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
