@@ -114,8 +114,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageName: Common.PackageName;
         version: Common.Version;
     }) {
-        // FIXME: Check caller.
-        Debug.print("installPackageWrapper");
+        onlyOwner(caller);
+
+        Debug.print("installPackageWrapper"); // FIXME: Remove.
         try {
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
