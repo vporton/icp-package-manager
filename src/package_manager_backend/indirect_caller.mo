@@ -28,8 +28,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     ///
     /// If a method is missing, stop.
     private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+        Debug.print("callAllOneWayImpl"); // FIXME: Remove
         try {
             for (method in methods.vals()) {
+                Debug.print("callAllOneWayImpl " # method.name); // FIXME: Remove.
                 ignore await IC.call(method.canister, method.name, method.data); 
             };
         }
@@ -64,6 +66,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+        Debug.print("callAllOneWay"); // FIXME: Remove
         onlyOwner(caller);
 
         await* callAllOneWayImpl(caller, methods);
@@ -110,7 +113,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: ?[(Text, Common.Location)];
     }) {
         // FIXME: Check caller.
         Debug.print("installPackageWrapper");
@@ -125,7 +127,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     canister: Principal;
                     packageName: Common.PackageName;
                     version: Common.Version;
-                    preinstalledModules: ?[(Text, Common.Location)];
                     package: Common.PackageInfo;
                 }) -> async ();
             };
@@ -136,7 +137,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 canister;
                 packageName;
                 version;
-                preinstalledModules;
                 package;
             });
         }

@@ -223,7 +223,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 canister;
                 packageName;
                 version;
-                preinstalledModules; // FIXME: wrong type
            });
         }]);
 
