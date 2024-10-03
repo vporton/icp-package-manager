@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { idlFactory as frontendIDL } from "../../declarations/bootstrapper_frontend/bootstrapper_frontend.did.js";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
-import { Agent } from "@dfinity/agent";
+import { Actor, Agent } from "@dfinity/agent";
 import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert, useAccordionButton } from "react-bootstrap";
@@ -13,14 +14,14 @@ import useConfirm from "./useConfirm";
 export default function MainPage() {
     return (
       <AuthContext.Consumer>{
-        ({isAuthenticated, principal, agent}) =>
-          <MainPage2 isAuthenticated={isAuthenticated} principal={principal} agent={agent}/>
+        ({isAuthenticated, principal, agent, defaultAgent}) =>
+          <MainPage2 isAuthenticated={isAuthenticated} principal={principal} agent={agent} defaultAgent={defaultAgent}/>
         }
       </AuthContext.Consumer>
     );
   }
   
-  function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined}) {
+  function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const [installations, setInstallations] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
@@ -36,12 +37,24 @@ export default function MainPage() {
     async function bootstrap() {
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
       const frontendPrincipal = await bootstrapper.bootstrapFrontend();
-      // TODO: Wait till frontend is bootstrapped and go to it.
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.ic0.app`;
-      alert("You may need press reload (press F5) the page one or more times before it works."); // TODO
-      open(url, '_self');
+      const frontend = Actor.createActor(frontendIDL, {canisterId: frontendPrincipal, agent: props.defaultAgent});
+      for (let i = 0; i < 20; ++i) {
+        try {
+          await new Promise<void>((resolve, _reject) => {
+            setTimeout(() => resolve(), 1000);
+          });
+          await frontend.http_request({body: [], headers: [], method: 'GET', url: "/", certificate_version: []});
+          open(url, '_self');
+          return; // upload finished
+        }
+        catch(e) {
+          console.log("ERR:", e); // FIXME: Remove.
+        }
+      }
+      alert("Error: Cannot load the page"); // TODO: better dialog
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",
