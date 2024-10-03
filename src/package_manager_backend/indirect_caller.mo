@@ -112,6 +112,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
     }) {
+        Debug.print("installPackageWrapper");
         try {
             let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
             let package = await part.getPackage(packageName, version); // may hang, so in a callback
@@ -128,6 +129,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 }) -> async ();
             };
             let pm: o = actor(Principal.toText(owner));
+            Debug.print("Call installPackageCallback");
             await pm.installPackageCallback({
                 installationId;
                 canister;
