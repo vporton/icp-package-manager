@@ -14,7 +14,6 @@ module {
     /// This is an internal function used in bootstrapper.
     ///
     /// Returns canister ID of installed module.
-    // FIXME: We, not indirect caller, should be owner of the PM module.
     public func _installModuleButDontRegister(
         wasmModule: Common.Module,
         installArg: Blob,
@@ -26,7 +25,7 @@ module {
 
         Cycles.add<system>(10_000_000_000_000);
         // FIXME: Later transfer control to the PM's indirect_caller.
-        let {canister_id} = await IC.create_canister({
+        let {canister_id} = await IC.create_canister({ // Owner is set later in `bootstrapBackend`.
             settings = ?{
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                 // TODO: Remove being controlled by `Bootstrapper` (for `install_code`) later in the code.
