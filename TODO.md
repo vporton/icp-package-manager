@@ -10,6 +10,8 @@ Remaining things to do:
 
 - FIXME: Check that `getPackage` and similar methods don't hang us.
 
+- Wait curtains.
+
 - Bootstrapping the PM together with any other package(s).
 
 - Prevent browser window to close during bootstrap.
