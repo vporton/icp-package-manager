@@ -110,7 +110,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         await pm.setIndirectCaller(indirect_caller_v);
         await indirect_caller_v.setOwner(can);
         // TODO: the order of below operations
-        let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: This fails
+        let inst = await pm.installPackageWithPreinstalledModules({
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
