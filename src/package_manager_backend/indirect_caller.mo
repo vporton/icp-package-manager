@@ -112,6 +112,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Common.Location)];
     }) {
+        // FIXME: Check caller.
         Debug.print("installPackageWrapper");
         try {
             let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
