@@ -325,7 +325,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
-        Debug.print("Add installationId: " # debug_show(installationId));
         installedPackages.put(installationId, {
             id = installationId;
             name = ourHalfInstalled.name;
