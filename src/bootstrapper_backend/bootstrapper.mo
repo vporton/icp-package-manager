@@ -79,6 +79,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let indirect_caller_v = getIndirectCaller();
 
        await* Install._installModuleButDontRegister(getOurModules().pmFrontendModule, to_candid(()), null, indirect_caller_v, Principal.fromActor(this)); // PM frontend
+        // Don't install package here, because we don't have where to register it.
     };
 
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Common.RepositoryPartitionRO)
