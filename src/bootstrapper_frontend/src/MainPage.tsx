@@ -50,9 +50,7 @@ export default function MainPage() {
           open(url, '_self');
           return; // upload finished
         }
-        catch(e) {
-          console.log("ERR:", e); // FIXME: Remove.
-        }
+        catch(e) {}
       }
       alert("Error: Cannot load the page"); // TODO: better dialog
     }
