@@ -124,7 +124,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             moduleName = "indirect"; // TODO: a better name?
         });
         await ic.update_settings({canister_id = Principal.fromActor(indirect_caller_v); sender_canister_version = null; settings = {
-            controllers = ?[Principal.fromActor(indirect_caller_v)]; // FIXME: Should it be self-controlled?
+            controllers = ?[can, Principal.fromActor(indirect_caller_v)];
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;
