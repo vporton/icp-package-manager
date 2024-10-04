@@ -137,7 +137,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             moduleName = "backend";
         });
         await ic.update_settings({canister_id = can; sender_canister_version = null; settings = {
-            controllers = ?[can]; // self-controlled // FIXME: Should it also be user-controlled?
+            controllers = ?[can, caller]; // self-controlled
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;
