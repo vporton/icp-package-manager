@@ -189,11 +189,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             let canister_id = switch (preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
-                    let ?(_, canister_id) = Iter.filter(
+                    let res = Iter.filter(
                         preinstalledModules.vals(),
-                        func((n, m): (Text, Principal)): Bool = n == moduleName,
+                        func((n, _m): (Text, Principal)): Bool = n == moduleName,
                     ).next();
-                    canister_id;
+                    switch (res) {
+                        case (?(_, canister_id)) canister_id;
+                        case null { Debug.trap("programming error"); }; 
+                    };                    
                 };
                 case null {
                     Cycles.add<system>(10_000_000_000_000);
