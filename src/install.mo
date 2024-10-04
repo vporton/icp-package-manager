@@ -57,9 +57,11 @@ module {
                         canister = Principal.fromActor(IC);
                         name = "install_code";
                         data = to_candid({
-                            // user = ; // TODO: Useful? Maybe, just ask PM?
-                            // packageManager; // FIXME: uncomment?
-                            arg = installArg;
+                            arg = {
+                                userArg = installArg;
+                                packageManagerOrBootstrapper;
+                                // user = ; // TODO: Useful? Maybe, just ask PM?
+                            };
                             wasm_module;
                             mode = #install;
                             canister_id;
