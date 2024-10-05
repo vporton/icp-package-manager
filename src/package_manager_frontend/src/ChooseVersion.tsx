@@ -73,7 +73,7 @@ export default function ChooseVersion(props: {}) {
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
-        setChosenVersion(versions[0]); // FIXME: if there are zero versions?
+        setChosenVersion(versions[0]); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>

@@ -8,7 +8,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 
 // TODO: Move this function to GlobalState
 export function getIsLocal() {
-    return process.env.DFX_NETWORK !== "ic";
+  return /localhost/.test(document.location.hostname); // TODO: Cache the result.
 }
 
 export const AuthContext = createContext<{
