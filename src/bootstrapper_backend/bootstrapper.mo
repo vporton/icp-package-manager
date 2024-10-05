@@ -83,7 +83,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Common.RepositoryPartitionRO)
-        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
+        : async {installationId: Common.InstallationId; backend: Principal}
     {
         Cycles.add<system>(1_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
@@ -110,7 +110,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         await pm.setIndirectCaller(indirect_caller_v);
         await indirect_caller_v.setOwner(can);
         // TODO: the order of below operations
-        let inst = await pm.installPackageWithPreinstalledModules({
+        let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: one-way - .put(installationId, ...) not finished.
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
@@ -144,7 +144,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.setOwner(caller);
-        {installationId = inst.installationId; canisterIds = [("backend", can)]};
+        {installationId = inst.installationId; backend = can};
     };
 
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;

@@ -106,14 +106,18 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func installPackageWrapper({
-        installationId: Common.InstallationId;
+        repo: Common.RepositoryPartitionRO; // TODO: Rename.
         pmPrincipal: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
+        installationId: Common.InstallationId;
+        preinstalledModules: ?[(Text, Principal)];
     }) {
         onlyOwner(caller);
 
         try {
+            let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
+
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
                     packageName: Text;
@@ -121,30 +125,24 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     package: Common.PackageInfo;
                 };
                 installPackageCallback: ({
-                    installationId: Common.InstallationId;
                     packageName: Common.PackageName;
                     version: Common.Version;
                     package: Common.PackageInfo;
+                    installationId: Common.InstallationId;
+                    repo: Common.RepositoryPartitionRO;
+                    preinstalledModules: ?[(Text, Principal)];
                 }) -> async ();
             };
-            // TODO: Is the below over-engineering?
-            let info = await pm.getHalfInstalledPackageById(installationId);
+            // let info = await pm.getHalfInstalledPackageById(installationId);
 
-            type o = actor {
-                // TODO: Check it carefully.
-                installPackageCallback: ({
-                    installationId: Common.InstallationId;
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                    package: Common.PackageInfo;
-                }) -> async ();
-            };
             Debug.print("Call installPackageCallback");
             await pm.installPackageCallback({
                 installationId;
                 packageName;
                 version;
-                package = /*Common.installedPackageInfoUnshare(*/info.package/*)*/;
+                package;
+                repo;
+                preinstalledModules;
             });
         }
         catch (e) {

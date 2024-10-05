@@ -63,10 +63,9 @@ function GlobalUI() {
       }));
       const firstPart = foundParts.filter(v => v !== null)[0];
 
-      const result = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
-      const backend_princ = result.canisterIds[0][1];
+      const {installationId, backend: backend_princ} = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
+      // const backend_princ = result.canisterIds[0][1]; // FIXME
       const backend_str = backend_princ.toString();
-      const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
       // TODO: busy indicator
       // for (let i = 0;; ++i) { // TODO: Choose the value.
       //   if (i == 20) {
@@ -83,6 +82,7 @@ function GlobalUI() {
       //     // TODO: more detailed error check
       //   }
       // }
+      const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
       open(`${base}backend=${backend_str}`, '_self');
     }
     // TODO: Start installation automatically, without clicking a button?

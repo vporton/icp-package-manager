@@ -91,7 +91,6 @@ export default function MainPage() {
                 await glob.package_manager_rw!.installPackage({
                     packageName: p.name,
                     version: p.version,
-                    canister: p.packageCanister,
                     repo: firstPart,
                 });
             }

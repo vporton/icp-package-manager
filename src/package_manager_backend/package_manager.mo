@@ -103,47 +103,69 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     public shared({caller}) func installPackage({
-        canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
     })
-        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
+        : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; canister; packageName; version; preinstalledModules = null; repo});
+        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo});
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
-        canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
     })
-        : async {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]}
+        : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; canister; packageName; version; preinstalledModules = ?preinstalledModules; repo});
+        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo});
     };
 
     /// We don't install dependencies here (see `specs.odt`).
     private func _installPackage({
         caller: Principal;
-        canister: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
     })
-        : async* {installationId: Common.InstallationId; canisterIds: [(Text, Principal)]} // TODO: Precreate and return canister IDs.
+        : async* {installationId: Common.InstallationId} // TODO: Precreate and return canister IDs.
     {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        let package = await repo.getPackage(packageName, version);
+        getIndirectCaller().callAllOneWay([{
+            canister = Principal.fromActor(getIndirectCaller());
+            name = "installPackageWrapper";
+            data = to_candid({
+                repo;
+                pmPrincipal = Principal.fromActor(this);
+                packageName; // TODO: seems unneeded
+                version; // TODO: seems unneeded
+                installationId;
+                preinstalledModules;
+           });
+        }]);
+
+        {installationId};
+    };
+
+    public shared({caller}) func installPackageCallback({
+        packageName: Common.PackageName;
+        version: Common.Version;
+        package: Common.PackageInfo;
+        installationId: Common.InstallationId;
+        repo: Common.RepositoryPartitionRO;
+        preinstalledModules: ?[(Text, Principal)];
+    }): async () {
+        Debug.print("installPackageCallback");
+
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
@@ -157,7 +179,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
             package;
-            packageCanister = canister;
+            packageCanister = Principal.fromActor(repo);
             preinstalledModules;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
@@ -166,7 +188,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             id = installationId;
             name = packageName;
             package;
-            packageCanister = canister;
+            packageCanister = Principal.fromActor(repo);
             version;
             modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
@@ -213,34 +235,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             canisterIds.add((moduleName, canister_id)); // do it later.
         };
         installedPackages.put(installationId, installation);
-
-        getIndirectCaller().callAllOneWay([{
-            canister = Principal.fromActor(getIndirectCaller());
-            name = "installPackageWrapper";
-            data = to_candid({
-                installationId;
-                pmPrincipal = Principal.fromActor(this);
-                packageName; // TODO: seems unneeded
-                version; // TODO: seems unneeded
-           });
-        }]);
-
-        {installationId; canisterIds = Buffer.toArray(canisterIds)};
-    };
-
-    public shared({caller}) func installPackageCallback({
-        installationId: Common.InstallationId;
-        packageName: Common.PackageName;
-        version: Common.Version;
-        package: Common.PackageInfo; // TODO: Rename.
-    }): async () {
-        Debug.print("installPackageCallback");
-        let #real realPackage = package.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such installation");
-        };
 
         await* _finishInstallPackage({
             installationId;

@@ -21,7 +21,6 @@ export default function ChooseVersion(props: {}) {
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
-    const [packagePk, setPackagePk] = useState<Principal | undefined>();
     useEffect(() => {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         index.getCanistersByPK("main").then(async pks => {
@@ -35,7 +34,6 @@ export default function ChooseVersion(props: {}) {
                 }
                 // FIXME: Take into account `.versions` map from `FullPackageInfo`.
                 setVersions(fullInfo.packages.map(pkg => pkg[0]));
-                setPackagePk(Principal.fromText(pk));
                 break;
             }
         });
@@ -65,7 +63,6 @@ export default function ChooseVersion(props: {}) {
         const firstPart = foundParts.filter(v => v !== null)[0];
     
         let id = await package_manager.installPackage({
-            canister: packagePk!,
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,

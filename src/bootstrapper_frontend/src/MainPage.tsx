@@ -39,7 +39,7 @@ export default function MainPage() {
       const frontendPrincipal = await bootstrapper.bootstrapFrontend();
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
-        : `https://${frontendPrincipal}.ic0.app`;
+        : `https://${frontendPrincipal}.icp0.io`;
       const frontend = Actor.createActor(frontendIDL, {canisterId: frontendPrincipal, agent: props.defaultAgent});
       for (let i = 0; i < 20; ++i) {
         try {
