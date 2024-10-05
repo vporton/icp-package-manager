@@ -8,7 +8,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 
 // TODO: Move
 export function getIsLocal(): boolean {
-    return true; // FIXME
+    return /localhost/.test(document.location.hostname); // TODO: Cache the result.
 }
 
 export const AuthContext = createContext<{

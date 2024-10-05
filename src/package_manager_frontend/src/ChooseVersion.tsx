@@ -23,7 +23,7 @@ export default function ChooseVersion(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     const [packagePk, setPackagePk] = useState<Principal | undefined>();
     useEffect(() => {
-        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent}); // FIXME: convert pk to Principal?
+        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         index.getCanistersByPK("main").then(async pks => {
             const res: [string, FullPackageInfo][] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
