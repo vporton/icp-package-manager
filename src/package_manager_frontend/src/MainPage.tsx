@@ -112,7 +112,7 @@ export default function MainPage() {
     }
     const bookmark = {frontend: glob.frontend!, backend: glob.backend!};
     const bookmarkingUrlBase = getIsLocal()
-        ? `http://localhost:4943/bookmark?canisterId=${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}&`
+        ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:4943/bookmark?`
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
     const bookmarkingUrl = `${bookmarkingUrlBase}frontend=${bookmark.frontend}&backend=${bookmark.backend}`;
     useEffect(() => {

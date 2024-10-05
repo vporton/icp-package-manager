@@ -11,7 +11,7 @@ export default function Bookmark() {
     const frontend = Principal.fromText(paramValues.frontend);
     const backend = Principal.fromText(paramValues.backend);
     const bookmark = {frontend, backend};
-    const base = getIsLocal() ? `http://localhost:4943?canisterId=${frontend.toString()}&` : `https://${frontend.toString()}.icp0.io?`;
+    const base = getIsLocal() ? `http://${frontend.toString()}.localhost:4943?` : `https://${frontend.toString()}.icp0.io?`;
     const url = base + `backend=${backend.toString()}`;
     async function createBookmark() {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent});

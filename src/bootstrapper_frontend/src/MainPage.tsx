@@ -72,7 +72,7 @@ export default function MainPage() {
         {!props.isAuthenticated ? <i>Not logged in</i> : installations.length === 0 ? <i>None</i> :
           <ul>
             {installations.map(inst => {
-              const base = getIsLocal() ? `http://localhost:4943?canisterId=${inst.frontend}&` : `https://${inst.frontend}.icp0.io?`;
+              const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
               const url = base + `backend=${inst.backend.toString()}`;
               return <li key={url}><a href={url}>{url}</a></li>;
             })}
