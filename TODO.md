@@ -2,8 +2,6 @@ Remaining things to do:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
-- FIXME: ic0.app vs icp0.io
-
 - FIXME: future compaitibility in package format.
 
 - FIXME: Deploy not only WASM but also metadata.
