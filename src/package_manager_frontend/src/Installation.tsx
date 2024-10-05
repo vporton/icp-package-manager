@@ -2,8 +2,8 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "./auth/use-auth-client";
 import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
-import Button from "react-bootstrap/esm/Button"; // FIXME
-import { FullPackageInfo, PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
+import Button from "react-bootstrap/Button";
+import { PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 
