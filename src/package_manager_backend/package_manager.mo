@@ -30,7 +30,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
     };
 
-    var initialized: Bool = false; // intentionally non-stable // FIXME: Being non-stable may be an error.
+    var initialized: Bool = false; // intentionally non-stable // TODO: separate variable for signaling upgrading?
 
     // TODO: needed?
     // public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init(
@@ -143,9 +143,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        // let ?installation = installedPackages.get(installationId) else { // FIXME: This is a wrong place for this code!
-        //     Debug.trap("no such package");
-        // };
         let package = await repo.getPackage(packageName, version);
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
