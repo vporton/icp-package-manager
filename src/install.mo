@@ -4,6 +4,7 @@ import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 import Blob "mo:base/Blob";
 import HashMap "mo:base/HashMap";
+import Buffer "mo:base/Buffer";
 import Asset "mo:assets-api";
 import copy_assets "copy_assets";
 import Common "common";
@@ -20,6 +21,7 @@ module {
         initArg: ?Blob, // init is optional
         indirectCaller: IndirectCaller.IndirectCaller,
         packageManagerOrBootstrapper: Principal,
+        user: Principal,
     ): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
@@ -79,35 +81,28 @@ module {
                 ]);
             };
             case _ {
-                // FIXME: The below sets a wrong owner.
-                let installCode = {
-                    canister = Principal.fromActor(IC);
-                    name = "install_code";
-                    data = to_candid({
-                        arg = Blob.toArray(installArg);
-                        wasm_module;
-                        mode = #install;
-                        canister_id;
-                    });
-                };
-                ignore await indirectCaller.call(installCode); // FIXME: May hang, if a malicious subnet.
-                switch (initArg) {
-                    case (?initArg) {
-                        indirectCaller.callIgnoringMissingOneWay([
-                            {
-                                canister = canister_id;
-                                name = Common.NamespacePrefix # "init";
-                                data = to_candid({
-                                    // user = ; // TODO: Useful? Maybe, just ask PM?
-                                    // packageManager = packageManagerOrBootstrapper; // TODO
-                                    indirect_caller = indirectCaller;
-                                    arg = initArg;
-                                });
-                            }
-                        ]);
-                    };
-                    case null {};
-                };
+                indirectCaller.callIgnoringMissingOneWay([
+                    {
+                        canister = Principal.fromActor(IC);
+                        name = "install_code";
+                        data = to_candid({
+                            arg = Blob.toArray(installArg);
+                            wasm_module;
+                            mode = #install;
+                            canister_id;
+                        });
+                    },
+                    {
+                        canister = canister_id;
+                        name = Common.NamespacePrefix # "init";
+                        data = to_candid({
+                            user;
+                            packageManagerOrBootstrapper;
+                            indirect_caller = indirectCaller; // TODO: consistent casing
+                            arg = initArg;
+                        });
+                    },
+                ]);
             };
         };
         canister_id;
@@ -121,8 +116,9 @@ module {
         packageManager: Principal,
         installation: Common.InstallationId,
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+        user: Principal,
     ): async* Principal {
-        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
+        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user);
         await* _registerModule({installation; canister; packageManager; installedPackages});
         canister;
     };
@@ -136,8 +132,9 @@ module {
         installation: Common.InstallationId,
         moduleName: Text,
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+        user: Principal,
    ): async* Principal {
-        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager);
+        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user);
         await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages});
         canister;
     };

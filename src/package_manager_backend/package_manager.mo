@@ -33,24 +33,15 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     var initialized: Bool = false; // intentionally non-stable // TODO: separate variable for signaling upgrading?
 
     // TODO: needed?
-    // public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init(
-    //     {indirect_caller: IndirectCaller.IndirectCaller; arg: {frontend: Principal}} // TODO: Twice `arg` is counter-intuitive.
-    // ) : async () {
-    //     ignore Cycles.accept<system>(10_000_000_000_000);
-    //     onlyOwner(caller);
+    public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
+        user: Principal;
+        indirect_caller: Principal;
+    }) : async () {
+        indirect_caller_ := ?actor(Principal.toText(indirect_caller));
+        owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
 
-    //     indirect_caller_ := ?indirect_caller;
-    //     let IC = actor ("aaaaa-aa") : actor {
-    //         deposit_cycles : shared { canister_id : Common.canister_id } -> async ();
-    //     };
-    //     Cycles.add<system>(5_000_000_000_000);
-    //     await IC.deposit_cycles({ canister_id = Principal.fromActor(indirect_caller) });
-
-    //     // TODO: Store among registered modules (not as named modules, because installPackageWithPreinstalledModules already does)
-    //     //       itself and PM frontend.
-
-    //     initialized := true; // TODO: Re-enable this assignment.
-    // };
+        initialized := true; // TODO: Re-enable this assignment.
+    };
 
     // TODO
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
@@ -294,7 +285,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         installationId: Nat;
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
-        caller: Principal;
+        caller: Principal; // TODO: Rename to `user`.
     }): async* () {
         label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let ?state = ourHalfInstalled.modules.get(moduleName) else {
@@ -307,7 +298,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages);
+                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
                 getIndirectCaller().callIgnoringMissingOneWay(
                     [{
                         canister;
@@ -399,7 +390,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages);
+                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
