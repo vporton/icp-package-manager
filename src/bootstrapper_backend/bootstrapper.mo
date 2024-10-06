@@ -90,6 +90,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`.
+        Debug.print("A1");
         let can = await* Install._installModuleButDontRegister(
             getOurModules().pmBackendModule,
             to_candid(()),
@@ -97,28 +98,48 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             indirect_caller_v,
             Principal.fromActor(this),
         );
+        Debug.print("A2");
 
         let #Wasm loc = getOurModules().pmBackendModule else {
             Debug.trap("missing PM backend");
         };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
-        ignore await indirect_caller_v.call({
-            canister = can;
-            name = "setOwner";
-            data = to_candid(Principal.fromActor(this));
-        });
+        Debug.print("A3");
+        // await pm.setOwner(can); // TODO: doesn't change anything
+        Debug.print("A4");
         await pm.setIndirectCaller(indirect_caller_v);
+        Debug.print("A5");
         await indirect_caller_v.setOwner(can);
         // TODO: the order of below operations
-        let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: one-way - .put(installationId, ...) not finished.
+        Debug.print("A6");
+        let inst = await pm.installPackageWithPreinstalledModules({
             canister = loc.0;
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", frontend)];
             repo;
+            callback = ?bootstrapBackendCallback;
+            caller;
         });
+        Debug.print("A7");
+        await pm.setOwner(caller);
+        {installationId = inst.installationId; backend = can};
+    };
+
+    public shared({caller}) func bootstrapBackendCallback({
+        installationId: Common.InstallationId;
+        can: Principal;
+        caller: Principal;
+    }): async () {
+        let indirect_caller_v = getIndirectCaller();
+
+        if (caller != Principal.fromActor(indirect_caller_v)) {
+            Debug.trap("callback only from indirect_caller");
+        };
+
+        let pm: PackageManager.PackageManager = actor(Principal.toText(can));
         await pm.registerNamedModule({
-            installation = inst.installationId;
+            installation = installationId;
             canister = Principal.fromActor(indirect_caller_v);
             packageManager = can;
             moduleName = "indirect"; // TODO: a better name?
@@ -131,7 +152,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.registerNamedModule({ // PM backend registers itself.
-            installation = inst.installationId;
+            installation = installationId;
             canister = can;
             packageManager = can;
             moduleName = "backend";
@@ -144,7 +165,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             reserved_cycles_limit = null;
         }});
         await pm.setOwner(caller);
-        {installationId = inst.installationId; backend = can};
     };
 
     stable var indirect_caller: ?IndirectCaller.IndirectCaller = null;

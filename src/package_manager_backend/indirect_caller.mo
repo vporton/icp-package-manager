@@ -112,6 +112,11 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: ?[(Text, Principal)];
+        callback: ?(shared ({
+            installationId: Common.InstallationId;
+            can: Principal;
+            caller: Principal;
+        }) -> async ());
     }) {
         onlyOwner(caller);
 
@@ -144,6 +149,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 repo;
                 preinstalledModules;
             });
+            switch (callback) {
+                case (?callback) {
+                    await callback({installationId; can = pmPrincipal; caller});
+                };
+                case null {};
+            };
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));

@@ -66,6 +66,7 @@ export default function ChooseVersion(props: {}) {
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,
+            callback: [],
         });
         navigate(`/installed/show/${id}`);
     }

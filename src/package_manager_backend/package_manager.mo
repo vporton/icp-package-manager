@@ -106,12 +106,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
+        callback: ?(shared ({
+            installationId: Common.InstallationId;
+            can: Principal;
+            caller: Principal;
+        }) -> async ());
     })
         : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo});
+        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo; callback = null});
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
@@ -119,12 +124,20 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
+        caller: Principal;
+        callback: ?(shared ({
+            installationId: Common.InstallationId;
+            can: Principal;
+            caller: Principal;
+        }) -> async ());
     })
         : async {installationId: Common.InstallationId}
     {
+        Debug.print("B1");
         onlyOwner(caller);
+        Debug.print("B2");
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo});
+        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo; callback});
     };
 
     /// We don't install dependencies here (see `specs.odt`).
@@ -134,6 +147,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
+        callback: ?(shared ({
+            installationId: Common.InstallationId;
+            can: Principal;
+            caller: Principal;
+        }) -> async ());
     })
         : async* {installationId: Common.InstallationId} // TODO: Precreate and return canister IDs.
     {
@@ -150,6 +168,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 version; // TODO: seems unneeded
                 installationId;
                 preinstalledModules;
+                callback;
            });
         }]);
 

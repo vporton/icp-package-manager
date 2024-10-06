@@ -79,6 +79,7 @@ module {
                 ]);
             };
             case _ {
+                // FIXME: The below sets a wrong owner.
                 let installCode = {
                     canister = Principal.fromActor(IC);
                     name = "install_code";
@@ -89,7 +90,7 @@ module {
                         canister_id;
                     });
                 };
-                ignore await indirectCaller.call(installCode);
+                ignore await indirectCaller.call(installCode); // FIXME: May hang, if a maliciious subnet.
                 switch (initArg) {
                     case (?initArg) {
                         indirectCaller.callIgnoringMissingOneWay([

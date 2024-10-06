@@ -92,6 +92,7 @@ export default function MainPage() {
                     packageName: p.name,
                     version: p.version,
                     repo: firstPart,
+                    callback: [],
                 });
             }
         }
