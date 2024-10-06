@@ -90,7 +90,7 @@ module {
                         canister_id;
                     });
                 };
-                ignore await indirectCaller.call(installCode); // FIXME: May hang, if a maliciious subnet.
+                ignore await indirectCaller.call(installCode); // FIXME: May hang, if a malicious subnet.
                 switch (initArg) {
                     case (?initArg) {
                         indirectCaller.callIgnoringMissingOneWay([
