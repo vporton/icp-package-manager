@@ -90,7 +90,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
-        Debug.print("A1");
         let can = await* Install._installModuleButDontRegister(
             getOurModules().pmBackendModule,
             to_candid(()),
@@ -99,17 +98,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             Principal.fromActor(this),
             caller,
         );
-        Debug.print("A2");
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
-        Debug.print("A3");
         // await pm.setOwner(caller); // set by *_init()
-        Debug.print("A4");
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
-        Debug.print("A5");
         await indirect_caller_v.setOwner(can);
         // TODO: the order of below operations
-        Debug.print("A6 " # debug_show(can));
         let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
@@ -118,7 +112,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             caller;
             callback = ?bootstrapBackendCallback;
         });
-        Debug.print("A7");
         {installationId = inst.installationId; backend = can};
     };
 
