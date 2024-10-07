@@ -101,9 +101,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         );
         Debug.print("A2");
 
-        let #Wasm loc = getOurModules().pmBackendModule else {
-            Debug.trap("missing PM backend");
-        };
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
         Debug.print("A3");
         // await pm.setOwner(caller); // set by *_init()
