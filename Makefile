@@ -1,21 +1,29 @@
 #!/usr/bin/make -f
 
 .PHONY: deploy
-deploy: repository pm
 
-.PHONY: repository
-repository:
-	dfx generate RepositoryPartition
-	dfx generate RepositoryIndex  # for prepare.ts
-	dfx generate package_manager  # TODO: needed?
-	dfx deploy RepositoryIndex
+.PHONY: deploy
+deploy:
+	dfx canister create package_manager
+	dfx canister create bootstrapper
+	dfx canister create package_manager_frontend
+	dfx canister create bootstrapper_frontend
+	dfx canister create RepositoryIndex
+	dfx canister create bookmark
+	dfx canister create internet_identity
+	dfx build package_manager
+	dfx build bootstrapper
+	dfx build RepositoryIndex
+	dfx generate RepositoryIndex
+	dfx generate package_manager
+	dfx generate bootstrapper
+	dfx build package_manager_frontend
+	dfx build bootstrapper_frontend
+	dfx build bookmark
+	dfx canister install -m auto package_manager_frontend
+	dfx canister install -m auto bootstrapper_frontend
+	dfx canister install -m auto RepositoryIndex
+	dfx canister install -m auto bookmark
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	-dfx canister call RepositoryIndex init "()"
-	dfx deploy counter
-#	npx ts-node scripts/prepare.ts
-#	dfx canister call RepositoryIndex setRepositoryName "RedSocks"
-
-.PHONY: pm
-pm:
-	dfx deploy package_manager
-	dfx ledger fabricate-cycles --t 2000000 --canister package_manager
+	npx ts-node scripts/prepare.ts
