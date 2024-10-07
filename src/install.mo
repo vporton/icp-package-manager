@@ -102,7 +102,7 @@ module {
                         data = to_candid({
                             user;
                             packageManagerOrBootstrapper;
-                            indirect_caller = indirectCaller; // TODO: consistent casing
+                            indirect_caller = Principal.fromActor(indirectCaller); // TODO: consistent casing
                             arg = initArg;
                         });
                     },
