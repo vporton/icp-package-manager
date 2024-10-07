@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
-import { idlFactory as frontendIDL } from "./misc/frontend";
+import { idlFactory as frontendIDL } from "./misc/frontend.did";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
 import { Actor, Agent } from "@dfinity/agent";
