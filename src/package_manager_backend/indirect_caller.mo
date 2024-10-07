@@ -139,7 +139,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     version: Common.Version;
                     package: Common.PackageInfo;
                     installationId: Common.InstallationId;
-                    repo: Common.RepositoryPartitionRO;
+                    repo: Common.RepositoryPartitionRO; // TODO: needed?
                     preinstalledModules: ?[(Text, Principal)];
                 }) -> async ();
             };

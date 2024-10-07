@@ -96,7 +96,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installPackage({
         packageName: Common.PackageName;
         version: Common.Version;
-        repo: Common.RepositoryPartitionRO;
         callback: ?(shared ({
             installationId: Common.InstallationId;
             can: Principal;
@@ -107,28 +106,33 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     {
         onlyOwner(caller);
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo; callback = null});
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+
+        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo = null; installationId; callback = null});
+        {installationId};
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
-        repo: Common.RepositoryPartitionRO;
+        repo: ?Common.RepositoryPartitionRO;
         caller: Principal;
+        installationId: Common.InstallationId;
         callback: ?(shared ({
             installationId: Common.InstallationId;
             can: Principal;
             caller: Principal;
         }) -> async ());
     })
-        : async {installationId: Common.InstallationId}
+        : async ()
     {
         Debug.print("B1");
         onlyOwner(caller);
         Debug.print("B2");
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo; callback});
+        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo; installationId; callback});
     };
 
     /// We don't install dependencies here (see `specs.odt`).
@@ -137,18 +141,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
-        repo: Common.RepositoryPartitionRO;
+        repo: ?Common.RepositoryPartitionRO;
+        installationId: Common.InstallationId;
         callback: ?(shared ({
             installationId: Common.InstallationId;
             can: Principal;
             caller: Principal;
         }) -> async ());
     })
-        : async* {installationId: Common.InstallationId} // TODO: Precreate and return canister IDs.
+        : async* () // TODO: Precreate and return canister IDs.
     {
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
-
         getIndirectCaller().callAllOneWay([{
             canister = Principal.fromActor(getIndirectCaller());
             name = "installPackageWrapper";
@@ -162,8 +164,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 callback;
            });
         }]);
-
-        {installationId};
     };
 
     public shared({caller}) func installPackageCallback({
@@ -661,12 +661,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         repositories;
     };
 
-    public func registerNamedModule({
+    public shared({caller}) func registerNamedModule({
         installation: Common.InstallationId;
         canister: Principal;
         packageManager: Principal;
         moduleName: Text;
     }): async () {
+        onlyOwner(caller);
+
         await* Install._registerNamedModule({
             installation;
             canister;
@@ -674,5 +676,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             moduleName;
             installedPackages; // TODO: not here
         });
+    };
+
+    public shared({caller})  func createInstaallation(): async Common.InstallationId {
+        onlyOwner(caller);
+
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+        installationId;
     }
 }

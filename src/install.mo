@@ -15,6 +15,8 @@ module {
     /// This is an internal function used in bootstrapper.
     ///
     /// Returns canister ID of installed module.
+    ///
+    /// TODO: Rename this function. // TODO: Make {} argument type.
     public func _installModuleButDontRegister(
         wasmModule: Common.Module,
         installArg: Blob,
@@ -22,7 +24,16 @@ module {
         indirectCaller: IndirectCaller.IndirectCaller,
         packageManagerOrBootstrapper: Principal,
         user: Principal,
-    ): async* Principal {
+        frontend: ?Principal,
+        repo: ?Common.RepositoryPartitionRO, // is some, only when callback is some
+        callback: ?(shared ({
+            can: Principal;
+            indirect_caller_v: IndirectCaller.IndirectCaller;
+            installationId: Common.InstallationId;
+            repo: Common.RepositoryPartitionRO;
+            frontend: Principal; // FIXME: hack!
+        }) -> async ()),
+    ): async* {installationId: Common.InstallationId; can: Principal} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         Cycles.add<system>(10_000_000_000_000);
@@ -35,6 +46,11 @@ module {
                 memory_allocation = null; // TODO (a low priority task)
             }
         });
+        let pm = actor(Principal.toText(canister_id)) : actor {
+            createInstallation: shared () -> async (Common.InstallationId);
+        };
+        let installationId = await pm.createInstallation();
+        
         let wasmModuleLocation = switch (wasmModule) {
             case (#Wasm wasmModuleLocation) {
                 wasmModuleLocation;
@@ -109,7 +125,19 @@ module {
                 ]);
             };
         };
-        canister_id;
+        switch (callback) {
+            case (?callback) {
+                let ?fe2 = frontend else {
+                    Debug.trap("programming error");
+                };
+                let ?r = repo else {
+                    Debug.trap("programming error");
+                };
+                await callback({can = canister_id; indirect_caller_v = indirectCaller; installationId; frontend = fe2; repo = r}); // TODO: Rename variable.
+            };
+            case null {};
+        };
+        {installationId; can = canister_id};
     };
 
     public func _installModule(
@@ -122,7 +150,7 @@ module {
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
     ): async* Principal {
-        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user);
+        let {can = canister} = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user, null, null, null);
         await* _registerModule({installation; canister; packageManager; installedPackages});
         canister;
     };
@@ -138,7 +166,7 @@ module {
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
    ): async* Principal {
-        let canister = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user);
+        let {can = canister} = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user, null, null, null);
         await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages});
         canister;
     };
