@@ -112,8 +112,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         Debug.print("A5");
         await indirect_caller_v.setOwner(can);
         // TODO: the order of below operations
-        Debug.print("A6");
-        let inst = await pm.installPackageWithPreinstalledModules({
+        Debug.print("A6 " # debug_show(can));
+        let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", frontend)];

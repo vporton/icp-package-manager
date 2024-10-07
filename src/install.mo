@@ -62,7 +62,7 @@ module {
                             arg = to_candid({
                                 userArg = installArg;
                                 packageManagerOrBootstrapper;
-                                // user = ; // TODO: Useful? Maybe, just ask PM?
+                                user;
                             });
                             wasm_module;
                             mode = #install;
@@ -86,7 +86,11 @@ module {
                         canister = Principal.fromActor(IC);
                         name = "install_code";
                         data = to_candid({
-                            arg = Blob.toArray(installArg);
+                            arg = to_candid({
+                                userArg = installArg;
+                                packageManagerOrBootstrapper;
+                                user;
+                            });
                             wasm_module;
                             mode = #install;
                             canister_id;

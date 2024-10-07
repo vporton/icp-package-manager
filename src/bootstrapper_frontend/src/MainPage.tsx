@@ -40,12 +40,12 @@ export default function MainPage() {
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.icp0.io`;
-      const frontend = Actor.createActor(frontendIDL, {canisterId: frontendPrincipal, agent: props.defaultAgent});
       for (let i = 0; i < 20; ++i) {
         try {
           await new Promise<void>((resolve, _reject) => {
             setTimeout(() => resolve(), 1000);
           });
+          const frontend = Actor.createActor(frontendIDL, {canisterId: frontendPrincipal, agent: props.defaultAgent}); // TODO: Can we move it out of the loop?
           await frontend.http_request({body: [], headers: [], method: 'GET', url: "/", certificate_version: []});
           open(url, '_self');
           return; // upload finished
