@@ -28,14 +28,16 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     ///
     /// If a method is missing, stop.
     private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        try {
-            for (method in methods.vals()) {
+        label cycle for (method in methods.vals()) {
+            try {
                 ignore await IC.call(method.canister, method.name, method.data); 
+            }
+            catch (e) {
+                let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
+                Debug.print(msg);
+                Debug.trap(msg);
+                break cycle;
             };
-        }
-        catch (e) {
-            Debug.print("Indirect caller: " # Error.message(e));
-            Debug.trap("Indirect caller: " # Error.message(e));
         };
     };
 
@@ -48,8 +50,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 ignore await IC.call(method.canister, method.name, method.data);
             }
             catch (e) {
-                Debug.print("Indirect caller: " # Error.message(e));
-                Debug.trap("Indirect caller: " # Error.message(e));
+                let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
+                Debug.print(msg);
+                Debug.trap(msg);
                 if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
                     throw e; // Other error cause interruption.
                 }
@@ -76,8 +79,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             return await IC.call(method.canister, method.name, method.data); 
         }
         catch (e) {
-            Debug.print("Indirect caller: " # Error.message(e));
-            Debug.trap("Indirect caller: " # Error.message(e));
+            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
+            Debug.print(msg);
+            Debug.trap(msg);
         };
     };
 
@@ -88,8 +92,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             return await IC.call(method.canister, method.name, method.data);
         }
         catch (e) {
-            Debug.print("Indirect caller: " # Error.message(e));
-            Debug.trap("Indirect caller: " # Error.message(e));
+            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
+            Debug.print(msg);
+            Debug.trap(msg);
         };
     };
 
@@ -100,8 +105,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             return await* CopyAssets.copyAll({from; to});
         }
         catch (e) {
-            Debug.print("Indirect caller: " # Error.message(e));
-            Debug.trap("Indirect caller: " # Error.message(e));
+            Debug.print("Indirect caller copyAll: " # Error.message(e));
+            Debug.trap("Indirect caller copyAll: " # Error.message(e));
         };
     };
 
