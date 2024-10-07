@@ -124,11 +124,11 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
-                getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
-                    packageName: Text;
-                    version: Common.Version;
-                    package: Common.PackageInfo;
-                };
+                // getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
+                //     packageName: Text;
+                //     version: Common.Version;
+                //     package: Common.PackageInfo;
+                // };
                 installPackageCallback: ({
                     packageName: Common.PackageName;
                     version: Common.Version;
