@@ -36,7 +36,7 @@ module {
 
         Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let {canister_id} = await IC.create_canister({ // Owner is set later in `bootstrapBackend`.
+        let {canister_id} = await IC.create_canister({ // Owner is set later in `bootstrapBackend`. // FIXME: Move to one-way against malicious subnets.
             settings = ?{
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                 controllers = ?[Principal.fromActor(indirectCaller), packageManagerOrBootstrapper];
@@ -125,6 +125,7 @@ module {
         };
         switch (callback) {
             case (?callback) {
+                // FIXME: called before the above OneWay completes.
                 await callback({can = canister_id; indirect_caller_v = indirectCaller; installationId; indirectCaller; data}); // TODO: Rename variable `indirect_caller_v`.
             };
             case null {};
