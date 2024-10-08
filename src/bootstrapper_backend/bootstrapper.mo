@@ -79,7 +79,16 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let indirect_caller_v = getIndirectCaller();
 
         let mod = getOurModules().pmFrontendModule;
-        let {can = canister} = await* Install._installModuleButDontRegister(mod, to_candid(()), null, indirect_caller_v, Principal.fromActor(this), caller, null, null, null); // PM frontend
+        let {can = canister} = await* Install._installModuleButDontRegister({ // PM frontend
+            callback = null;
+            data = to_candid(());
+            indirectCaller = indirect_caller_v;
+            initArg = null;
+            installArg = to_candid(());
+            packageManagerOrBootstrapper = Principal.fromActor(this);
+            user = caller;
+            wasmModule = mod;
+        });
         // Don't install package here, because we don't have where to register it.
         canister;
     };
@@ -92,29 +101,33 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
-        let {can; installationId} = await* Install._installModuleButDontRegister(
-            getOurModules().pmBackendModule,
-            to_candid(()),
-            null, // ?(to_candid({frontend})), // TODO
-            indirect_caller_v,
-            Principal.fromActor(this),
-            caller,
-            ?frontend,
-            null,
-            ?bootstrapBackendCallback1,
-        );
-        {installationId ; backend = can};
+        let {can; installationId} = await* Install._installModuleButDontRegister({
+            wasmModule = getOurModules().pmBackendModule;
+            installArg = to_candid(());
+            initArg = ?to_candid(()); // ?(to_candid({frontend})), // TODO: init is optional // FIXME: Make it non-optional?
+            indirectCaller = indirect_caller_v;
+            packageManagerOrBootstrapper = Principal.fromActor(this);
+            user = caller;
+            callback = ?bootstrapBackendCallback1;
+            data = to_candid({
+                indirectCaller = getIndirectCaller();
+            });
+        });
+        {installationId; backend = can};
     };
 
     public shared({caller}) func bootstrapBackendCallback1({
         can: Principal;
         indirect_caller_v: IndirectCaller.IndirectCaller;
         installationId: Common.InstallationId;
-        frontend: Principal;
-        repo: Common.RepositoryPartitionRO;
+        data: Blob;
     }): async () {
         if (caller != Principal.fromActor(indirect_caller_v)) {
             Debug.trap("callback only from indirect_caller");
+        };
+
+        let ?d: ?{frontend: Principal; repo: Common.RepositoryPartitionRO} = from_candid(data) else {
+            Debug.trap("programming error");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
@@ -125,18 +138,20 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
-            preinstalledModules = [("frontend", frontend)];
-            repo = ?repo;
+            preinstalledModules = [("frontend", d.frontend)];
+            repo = ?d.repo;
             caller;
             installationId;
             callback = ?bootstrapBackendCallback2;
+            data;
         });
     };
 
-    public shared({caller}) func bootstrapBackendCallback2({
+    public shared func bootstrapBackendCallback2({
         installationId: Common.InstallationId;
         can: Principal;
         caller: Principal;
+        data: Blob;
     }): async () {
         let indirect_caller_v = getIndirectCaller();
 

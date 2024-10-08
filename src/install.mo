@@ -16,24 +16,22 @@ module {
     ///
     /// Returns canister ID of installed module.
     ///
-    /// TODO: Rename this function. // TODO: Make {} argument type.
-    public func _installModuleButDontRegister(
-        wasmModule: Common.Module,
-        installArg: Blob,
-        initArg: ?Blob, // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller,
-        packageManagerOrBootstrapper: Principal,
-        user: Principal,
-        frontend: ?Principal,
-        repo: ?Common.RepositoryPartitionRO, // is some, only when callback is some
+    /// TODO: Rename this function.
+    public func _installModuleButDontRegister({
+        wasmModule: Common.Module;
+        installArg: Blob;
+        initArg: ?Blob; // init is optional
+        indirectCaller: IndirectCaller.IndirectCaller;
+        packageManagerOrBootstrapper: Principal;
+        user: Principal;
+        data: Blob;
         callback: ?(shared ({
             can: Principal;
-            indirect_caller_v: IndirectCaller.IndirectCaller;
             installationId: Common.InstallationId;
-            repo: Common.RepositoryPartitionRO;
-            frontend: Principal; // FIXME: hack!
-        }) -> async ()),
-    ): async* {installationId: Common.InstallationId; can: Principal} {
+            indirect_caller_v: IndirectCaller.IndirectCaller; // TODO: Rename.
+            data: Blob;
+        }) -> async ());
+    }): async* {installationId: Common.InstallationId; can: Principal} {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
 
         Cycles.add<system>(10_000_000_000_000);
@@ -127,13 +125,7 @@ module {
         };
         switch (callback) {
             case (?callback) {
-                let ?fe2 = frontend else {
-                    Debug.trap("programming error");
-                };
-                let ?r = repo else {
-                    Debug.trap("programming error");
-                };
-                await callback({can = canister_id; indirect_caller_v = indirectCaller; installationId; frontend = fe2; repo = r}); // TODO: Rename variable.
+                await callback({can = canister_id; indirect_caller_v = indirectCaller; installationId; indirectCaller; data}); // TODO: Rename variable `indirect_caller_v`.
             };
             case null {};
         };
@@ -150,8 +142,17 @@ module {
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
     ): async* Principal {
-        let {can = canister} = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user, null, null, null);
-        await* _registerModule({installation; canister; packageManager; installedPackages});
+        let {can = canister} = await* _installModuleButDontRegister({
+            wasmModule;
+            installArg;
+            initArg;
+            indirectCaller;
+            packageManagerOrBootstrapper = packageManager;
+            user;
+            callback = null;
+            data = to_candid(());
+        });
+        await* _registerModule({installation; canister; packageManager; installedPackages}); // FIXME: Is one-way function above finished?
         canister;
     };
 
@@ -166,8 +167,17 @@ module {
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
    ): async* Principal {
-        let {can = canister} = await* _installModuleButDontRegister(wasmModule, installArg, initArg, indirectCaller, packageManager, user, null, null, null);
-        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages});
+        let {can = canister} = await* _installModuleButDontRegister({
+            wasmModule;
+            installArg;
+            initArg;
+            indirectCaller;
+            packageManagerOrBootstrapper = packageManager;
+            user;
+            callback = null;
+            data = to_candid(());
+        });
+        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages}); // FIXME: Is one-way function above finished?
         canister;
     };
 

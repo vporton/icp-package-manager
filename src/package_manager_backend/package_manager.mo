@@ -98,8 +98,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         callback: ?(shared ({
             installationId: Common.InstallationId;
-            can: Principal;
-            caller: Principal;
+            indirectCaller: IndirectCaller.IndirectCaller;
+            data: Blob;
         }) -> async ());
     })
         : async {installationId: Common.InstallationId}
@@ -109,7 +109,16 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = null; repo = null; installationId; callback = null});
+        await* _installPackage({
+            pmPrincipal = Principal.fromActor(this);
+            caller;
+            packageName;
+            version;
+            preinstalledModules = null;
+            repo = null; installationId;
+            callback = null;
+            data = to_candid(());
+        });
         {installationId};
     };
 
@@ -121,10 +130,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         caller: Principal;
         installationId: Common.InstallationId;
         callback: ?(shared ({
-            installationId: Common.InstallationId;
-            can: Principal;
             caller: Principal;
+            can: Principal;
+            installationId: Common.InstallationId;
+            // indirectCaller: IndirectCaller.IndirectCaller;
+            data: Blob;
         }) -> async ());
+        data: Blob;
     })
         : async ()
     {
@@ -132,11 +144,22 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         onlyOwner(caller);
         Debug.print("B2");
 
-        await* _installPackage({caller; packageName; version; preinstalledModules = ?preinstalledModules; repo; installationId; callback});
+        await* _installPackage({
+            pmPrincipal = Principal.fromActor(this);
+            caller;
+            packageName;
+            version;
+            preinstalledModules = ?preinstalledModules;
+            repo;
+            installationId;
+            callback = ?installPackageCallback;
+            data;
+        });
     };
 
     /// We don't install dependencies here (see `specs.odt`).
     private func _installPackage({
+        pmPrincipal: Principal;
         caller: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
@@ -147,7 +170,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             installationId: Common.InstallationId;
             can: Principal;
             caller: Principal;
+            package: Common.PackageInfo;
+            data: Blob;
         }) -> async ());
+        data: Blob;
     })
         : async* () // TODO: Precreate and return canister IDs.
     {
@@ -155,26 +181,38 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             canister = Principal.fromActor(getIndirectCaller());
             name = "installPackageWrapper";
             data = to_candid({
-                repo;
-                pmPrincipal = Principal.fromActor(this);
-                packageName; // TODO: seems unneeded
-                version; // TODO: seems unneeded
                 installationId;
-                preinstalledModules;
-                callback;
-           });
+                data = {
+                    repo;
+                    pmPrincipal;
+                    packageName;
+                    version;
+                    installationId;
+                    preinstalledModules;
+                    callback;
+                    data;
+                };
+            });
         }]);
     };
 
     public shared({caller}) func installPackageCallback({
-        packageName: Common.PackageName;
-        version: Common.Version;
-        package: Common.PackageInfo;
         installationId: Common.InstallationId;
-        repo: Common.RepositoryPartitionRO;
-        preinstalledModules: ?[(Text, Principal)];
+        can: Principal;
+        caller: Principal;
+        package: Common.PackageInfo;
+        data: Blob;
     }): async () {
         Debug.print("installPackageCallback");
+
+        let ?d: ?{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryPartitionRO;
+            preinstalledModules: ?[(Text, Principal)];
+        } = from_candid(data) else {
+            Debug.trap("programming error")
+        };
 
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -189,17 +227,17 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
             package;
-            packageCanister = Principal.fromActor(repo);
-            preinstalledModules;
+            packageCanister = Principal.fromActor(d.repo);
+            preinstalledModules = d.preinstalledModules;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         let installation: Common.InstalledPackageInfo = {
             id = installationId;
-            name = packageName;
+            name = d.packageName;
             package;
-            packageCanister = Principal.fromActor(repo);
-            version;
+            packageCanister = Principal.fromActor(d.repo);
+            version = d.version;
             modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
             allModules = Buffer.Buffer<Principal>(0); // 0?
@@ -215,7 +253,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             if (created) {
                 continue create;
             };
-            let canister_id = switch (preinstalledModules) {
+            let canister_id = switch (d.preinstalledModules) {
                 case (?preinstalledModules) {
                     // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
                     let res = Iter.filter(

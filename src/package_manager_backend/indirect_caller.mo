@@ -117,10 +117,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: ?[(Text, Principal)];
+        data: Blob;
         callback: ?(shared ({
             installationId: Common.InstallationId;
-            can: Principal;
-            caller: Principal;
+            data: Blob;
         }) -> async ());
     }) {
         onlyOwner(caller);
@@ -156,7 +156,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
             switch (callback) {
                 case (?callback) {
-                    await callback({installationId; can = pmPrincipal; caller});
+                    await callback({installationId; can = pmPrincipal; caller; package; data});
                 };
                 case null {};
             };
