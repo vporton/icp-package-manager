@@ -197,4 +197,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
         indirect_caller2;
     };
+
+    // TODO: HACK
+    public shared func createInstallation(): async Common.InstallationId { 0 };
 }

@@ -4,6 +4,7 @@ import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Buffer "mo:base/Buffer";
 import OrderedHashMap "mo:ordered-map";
+import Entity "mo:candb/Entity";
 
 module {
     public let NamespacePrefix = "b44c4a9beec74e1c8a7acbe46256f92f_";
@@ -107,6 +108,7 @@ module {
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: Text, version: Version) -> async PackageInfo;
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
+        getAttribute: query (sk: Text, subkey: Text) -> async ?Entity.AttributeValue; // TODO: Probably shouldn't be here.
     };
 
     public type InstalledPackageInfo = {

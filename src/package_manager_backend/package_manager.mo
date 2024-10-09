@@ -64,7 +64,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         indirect_caller_ := ?indirect_caller_v;
     };
 
-    stable var nextInstallationId: Nat = 0;
+    stable var nextInstallationId: Nat = 1; // 0 is reserved for bootstrapper (HACK)
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =

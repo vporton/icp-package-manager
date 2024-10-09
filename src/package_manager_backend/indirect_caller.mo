@@ -1,8 +1,11 @@
 /// Canister that takes on itself potentially non-returning calls.
+import Exp "mo:base/ExperimentalInternetComputer";
+import Cycles "mo:base/ExperimentalCycles";
 import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
+import Blob "mo:base/Blob";
 import Asset "mo:assets-api";
 import Common "../common";
 import CopyAssets "../copy_assets";
@@ -156,7 +159,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
             switch (callback) {
                 case (?callback) {
-                    await callback({installationId; can = pmPrincipal; caller; package; data});
+                    await callback({installationId; can = pmPrincipal/* FIXME */; caller; package; data});
                 };
                 case null {};
             };
@@ -165,4 +168,99 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.print("installPackageWrapper: " # Error.message(e));
         };
     };
+
+    public shared func installModuleButDontRegisterWrapper({
+        installationId: Common.InstallationId;
+        wasmModule: Common.Module;
+        installArg: Blob;
+        initArg: ?Blob; // init is optional
+        user: Principal;
+        packageManagerOrBootstrapper: Principal;
+        data: Blob;
+        callback: ?(shared ({
+            can: Principal;
+            installationId: Common.InstallationId;
+            indirectCaller: IndirectCaller; // TODO: Rename.
+            data: Blob;
+        }) -> async ());
+    }): () {
+        let IC: Common.CanisterCreator = actor("aaaaa-aa");
+        Cycles.add<system>(10_000_000_000_000);
+        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
+        let {canister_id} = await IC.create_canister({ // Owner is set later in `bootstrapBackend`. // FIXME: Move to one-way against malicious subnets.
+            settings = ?{
+                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
+                controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper];
+                compute_allocation = null; // TODO
+                memory_allocation = null; // TODO (a low priority task)
+            }
+        });
+        let pm = actor(Principal.toText(canister_id)) : actor {
+            createInstallation: shared () -> async (Common.InstallationId);
+        };
+
+        let wasmModuleLocation = switch (wasmModule) {
+            case (#Wasm wasmModuleLocation) {
+                wasmModuleLocation;
+            };
+            case (#Assets {wasm}) {
+                wasm;
+            };
+        };
+        let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
+        let ?(#blob wasm_module) =
+            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
+        else {
+            Debug.trap("package WASM code is not available");
+        };
+
+        switch (wasmModule) {
+            case (#Assets {assets}) {
+                await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+                    arg = Blob.toArray(to_candid({
+                        userArg = installArg;
+                        packageManagerOrBootstrapper;
+                        user;
+                    }));
+                    wasm_module;
+                    mode = #install;
+                    canister_id;
+                    // sender_canister_version = ;
+                });
+                await this.copyAll({ // TODO: Don't call shared.
+                    from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                });
+                // TODO: Should here also call `init()` like below?
+            };
+            case _ {
+                await IC.install_code({
+                    arg = Blob.toArray(to_candid({
+                        userArg = installArg;
+                        packageManagerOrBootstrapper;
+                        user;
+                    }));
+                    wasm_module;
+                    mode = #install;
+                    canister_id;
+                });
+                ignore await Exp.call(
+                    canister_id,
+                    Common.NamespacePrefix # "init",
+                    to_candid({
+                        user;
+                        packageManagerOrBootstrapper;
+                        indirect_caller = Principal.fromActor(this); // TODO: consistent casing
+                        arg = initArg;
+                    })
+                );
+            };
+        };
+        switch (callback) {
+            case (?callback) {
+                // FIXME: called before the above OneWay completes.
+                await callback({can = canister_id; installationId; indirectCaller = this; data}); // TODO: Rename variable `indirect_caller_v`.
+            };
+            case null {};
+        };
+    }
 }

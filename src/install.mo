@@ -28,109 +28,25 @@ module {
         callback: ?(shared ({
             can: Principal;
             installationId: Common.InstallationId;
-            indirect_caller_v: IndirectCaller.IndirectCaller; // TODO: Rename.
+            indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
             data: Blob;
         }) -> async ());
-    }): async* {installationId: Common.InstallationId; can: Principal} {
-        let IC: Common.CanisterCreator = actor("aaaaa-aa");
-
-        Cycles.add<system>(10_000_000_000_000);
-        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let {canister_id} = await IC.create_canister({ // Owner is set later in `bootstrapBackend`. // FIXME: Move to one-way against malicious subnets.
-            settings = ?{
-                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                controllers = ?[Principal.fromActor(indirectCaller), packageManagerOrBootstrapper];
-                compute_allocation = null; // TODO
-                memory_allocation = null; // TODO (a low priority task)
-            }
-        });
-        let pm = actor(Principal.toText(canister_id)) : actor {
-            createInstallation: shared () -> async (Common.InstallationId);
+    }): async* {installationId: Common.InstallationId} {
+        let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+            createInstallation: () -> async Common.InstallationId;
         };
         let installationId = await pm.createInstallation();
-        
-        let wasmModuleLocation = switch (wasmModule) {
-            case (#Wasm wasmModuleLocation) {
-                wasmModuleLocation;
-            };
-            case (#Assets {wasm}) {
-                wasm;
-            };
-        };
-        let wasmModuleSourcePartition: RepositoryPartition.RepositoryPartition =
-            actor(Principal.toText(wasmModuleLocation.0));
-        let ?(#blob wasm_module) =
-            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
-        else {
-            Debug.trap("package WASM code is not available");
-        };
-
-        switch (wasmModule) {
-            case (#Assets {assets}) {
-                indirectCaller.callAllOneWay([
-                    {
-                        // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            arg = to_candid({
-                                userArg = installArg;
-                                packageManagerOrBootstrapper;
-                                user;
-                            });
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                            // sender_canister_version = ;
-                        });
-                    },
-                    {
-                        canister = Principal.fromActor(indirectCaller);
-                        name = "copyAll";
-                        data = to_candid({
-                            from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                        });
-                    },
-                    // TODO: Should here also call `init()` like below?
-                ]);
-            };
-            case _ {
-                indirectCaller.callIgnoringMissingOneWay([
-                    {
-                        canister = Principal.fromActor(IC);
-                        name = "install_code";
-                        data = to_candid({
-                            arg = to_candid({
-                                userArg = installArg;
-                                packageManagerOrBootstrapper;
-                                user;
-                            });
-                            wasm_module;
-                            mode = #install;
-                            canister_id;
-                        });
-                    },
-                    {
-                        canister = canister_id;
-                        name = Common.NamespacePrefix # "init";
-                        data = to_candid({
-                            user;
-                            packageManagerOrBootstrapper;
-                            indirect_caller = Principal.fromActor(indirectCaller); // TODO: consistent casing
-                            arg = initArg;
-                        });
-                    },
-                ]);
-            };
-        };
-        switch (callback) {
-            case (?callback) {
-                // FIXME: called before the above OneWay completes.
-                await callback({can = canister_id; indirect_caller_v = indirectCaller; installationId; indirectCaller; data}); // TODO: Rename variable `indirect_caller_v`.
-            };
-            case null {};
-        };
-        {installationId; can = canister_id};
+        indirectCaller.installModuleButDontRegisterWrapper({
+            installationId;
+            wasmModule;
+            installArg;
+            initArg;
+            packageManagerOrBootstrapper;
+            user;
+            callback;
+            data;
+        });
+        {installationId};
     };
 
     public func _installModule(
@@ -142,8 +58,8 @@ module {
         installation: Common.InstallationId,
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
-    ): async* Principal {
-        let {can = canister} = await* _installModuleButDontRegister({
+    ): async* () {
+        ignore await* _installModuleButDontRegister({
             wasmModule;
             installArg;
             initArg;
@@ -154,7 +70,6 @@ module {
             data = to_candid(());
         });
         await* _registerModule({installation; canister; packageManager; installedPackages}); // FIXME: Is one-way function above finished?
-        canister;
     };
 
     public func _installNamedModule(
@@ -168,7 +83,7 @@ module {
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
    ): async* Principal {
-        let {can = canister} = await* _installModuleButDontRegister({
+        ignore await* _installModuleButDontRegister({
             wasmModule;
             installArg;
             initArg;
@@ -179,7 +94,6 @@ module {
             data = to_candid(());
         });
         await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages}); // FIXME: Is one-way function above finished?
-        canister;
     };
 
     public func _registerModule({
