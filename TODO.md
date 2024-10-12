@@ -8,6 +8,8 @@ Remaining things to do:
 
 - FIXME: Check that `getPackage` and similar methods don't hang us.
 
+- Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
+
 - Wait curtains.
 
 - Bootstrapping the PM together with any other package(s).
