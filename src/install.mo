@@ -49,53 +49,6 @@ module {
         {installationId};
     };
 
-    public func _installModule(
-        wasmModule: Common.Module,
-        installArg: Blob,
-        initArg: ?Blob, // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller,
-        packageManager: Principal,
-        installation: Common.InstallationId,
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
-        user: Principal,
-    ): async* () {
-        ignore await* _installModuleButDontRegister({
-            wasmModule;
-            installArg;
-            initArg;
-            indirectCaller;
-            packageManagerOrBootstrapper = packageManager;
-            user;
-            callback = null;
-            data = to_candid(());
-        });
-        await* _registerModule({installation; canister; packageManager; installedPackages}); // FIXME: Is one-way function above finished?
-    };
-
-    public func _installNamedModule(
-        wasmModule: Common.Module,
-        installArg: Blob,
-        initArg: ?Blob, // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller,
-        packageManager: Principal,
-        installation: Common.InstallationId,
-        moduleName: Text,
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
-        user: Principal,
-   ): async* Principal {
-        ignore await* _installModuleButDontRegister({
-            wasmModule;
-            installArg;
-            initArg;
-            indirectCaller;
-            packageManagerOrBootstrapper = packageManager;
-            user;
-            callback = null;
-            data = to_candid(());
-        });
-        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages}); // FIXME: Is one-way function above finished?
-    };
-
     public func _registerModule({
         installation: Common.InstallationId;
         canister: Principal;

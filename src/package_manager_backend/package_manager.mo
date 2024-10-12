@@ -336,7 +336,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                let canister = await* Install._installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
+                let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
                 getIndirectCaller().callIgnoringMissingOneWay(
                     [{
                         canister;
@@ -358,6 +358,29 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
 
         _updateAfterInstall({installationId});
+    };
+
+    private func _installModule(
+        wasmModule: Common.Module,
+        installArg: Blob,
+        initArg: ?Blob, // init is optional
+        indirectCaller: IndirectCaller.IndirectCaller,
+        packageManager: Principal,
+        installation: Common.InstallationId,
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+        user: Principal,
+    ): async* () {
+        ignore await* _installModuleButDontRegister({
+            wasmModule;
+            installArg;
+            initArg;
+            indirectCaller;
+            packageManagerOrBootstrapper = packageManager;
+            user;
+            callback = null;
+            data = to_candid(());
+        });
+        await* _registerModule({installation; canister; packageManager; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
@@ -428,7 +451,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                     let ?(installArg, initArg) = modules2.get(m.0) else {
                         Debug.trap("programming error");
                     };
-                    ignore await* Install._installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
+                    ignore await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
@@ -441,6 +464,30 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 Debug.trap("cannot install modules on a virtual package");
             };
         };
+    };
+
+    private func _installNamedModule(
+        wasmModule: Common.Module,
+        installArg: Blob,
+        initArg: ?Blob, // init is optional
+        indirectCaller: IndirectCaller.IndirectCaller,
+        packageManager: Principal,
+        installation: Common.InstallationId,
+        moduleName: Text,
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+        user: Principal,
+   ): async* Principal {
+        ignore await* _installModuleButDontRegister({
+            wasmModule;
+            installArg;
+            initArg;
+            indirectCaller;
+            packageManagerOrBootstrapper = packageManager;
+            user;
+            callback = null;
+            data = to_candid(());
+        });
+        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
