@@ -336,8 +336,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 arg = to_candid({}); // TODO: correct?
             });
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
+                // FIXME: `canister` is `()`.
                 let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
-                getIndirectCaller().callIgnoringMissingOneWay(
+                getIndirectCaller().callIgnoringMissingOneWay( // FIXME: It should be called even in installButDontRegister().
                     [{
                         canister;
                         name = Common.NamespacePrefix # "init";
