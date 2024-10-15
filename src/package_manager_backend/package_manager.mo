@@ -11,11 +11,14 @@ import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Option "mo:base/Option";
+import Nat64 "mo:base/Nat64";
+import Time "mo:base/Time";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
 import IndirectCaller "indirect_caller";
 import Install "../install";
+import cycles_ledger "canister:cycles_ledger";
 
 /// TODO: Methods to query for all installed packages.
 shared({caller = initialOwner}) actor class PackageManager() = this {
@@ -271,14 +274,22 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 };
                 case null {
                     Cycles.add<system>(10_000_000_000_000);
-                    let {canister_id} = await IC.create_canister({
-                        settings = ?{
-                            freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                            controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
-                            compute_allocation = null; // TODO
-                            memory_allocation = null; // TODO (a low priority task)
-                        }
-                    });
+                    let #Ok {canister_id} = await cycles_ledger.create_canister({
+                        amount = 0;
+                        created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+                        creation_args = ?{
+                            settings = ?{
+                                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
+                                controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
+                                compute_allocation = null; // TODO
+                                memory_allocation = null; // TODO (a low priority task)
+                            };
+                            subnet_selection = null;
+                        };
+                        from_subaccount = null; // FIXME
+                    }) else {
+                        Debug.trap("cannot create canister");
+                    };
                     canister_id;
                 };
             };

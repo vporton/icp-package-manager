@@ -95,7 +95,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let frontendId = nextBootstrapId;
         nextBootstrapId += 1;
 
+        Debug.print("X1");
         let mod = getOurModules().pmFrontendModule;
+        Debug.print("X2");
         let {installationId} = await* Install._installModuleButDontRegister({ // PM frontend
             callback = ?bootstrapFrontendCallback;
             data = to_candid({frontendId});
@@ -106,6 +108,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             user = caller;
             wasmModule = mod;
         });
+        Debug.print("X3");
         // Don't install package here, because we don't have where to register it.
         {installationId; frontendId};
     };

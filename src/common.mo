@@ -182,9 +182,9 @@ module {
     public type wasm_module = Blob;
 
     public type CanisterCreator = actor {
-        create_canister : shared { settings : ?canister_settings } -> async {
-            canister_id : canister_id;
-        };
+        // create_canister : shared { settings : ?canister_settings } -> async {
+        //     canister_id : canister_id;
+        // };
         install_code : shared {
             arg : [Nat8];
             wasm_module : wasm_module;
