@@ -99,7 +99,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         version: Common.Version;
         callback: ?(shared ({
             installationId: Common.InstallationId;
-            indirectCaller: IndirectCaller.IndirectCaller;
+            can: Principal;
+            caller: Principal;
+            package: Common.PackageInfo;
             data: Blob;
         }) -> async ());
     })
