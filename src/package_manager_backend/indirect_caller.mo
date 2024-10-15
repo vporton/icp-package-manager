@@ -200,7 +200,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Cycles.add<system>(20_000_000_000_000);
             // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
             let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-                amount = 20_000_000_000_000; // FIXME
+                amount = 10_000_000_000_000; // FIXME
                 created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
                 creation_args = ?{
                     settings = ?{

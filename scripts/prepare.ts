@@ -21,6 +21,7 @@ global.fetch = node_fetch as any;
 
 execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex")
 execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper")
+execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger") // FIXME: only if local
 
 function commandOutput(command: string): Promise<string> {
     return new Promise((resolve) => exec(command, function(error, stdout, stderr){ resolve(stdout); }));

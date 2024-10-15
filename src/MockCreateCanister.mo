@@ -81,6 +81,7 @@ actor MockCreateCanister {
         compute_allocation : ?Nat;
     };
 
+    // FIXME: `args.amount`
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
         Debug.print("Y0");
         ignore Cycles.accept<system>(20_000_000_000_000);

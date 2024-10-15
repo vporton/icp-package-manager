@@ -33,5 +33,7 @@ deploy:
 	dfx canister install -m auto indirect_caller
 	dfx deploy internet_identity
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
+	dfx ledger fabricate-cycles --t 2000000 --canister cycles_ledger
+	dfx ledger fabricate-cycles --t 2000000 --canister indirect_caller
 	-dfx canister call RepositoryIndex init "()"
 	npx ts-node scripts/prepare.ts
