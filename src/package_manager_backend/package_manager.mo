@@ -100,10 +100,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
-        callback: ?(shared ({
+        callback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
             can: Principal;
-            caller: Principal;
+            // caller: Principal;
             package: Common.PackageInfo;
             data: Blob;
         }) -> async ());
@@ -121,7 +121,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             packageName;
             version;
             preinstalledModules = null;
-            repo = ?repo;
+            repo; // TODO: Pass it in `data` instead.
             installationId;
             callback;
             data = to_candid(());
@@ -133,11 +133,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
-        repo: ?Common.RepositoryPartitionRO;
+        repo: Common.RepositoryPartitionRO;
         caller: Principal;
         installationId: Common.InstallationId;
-        callback: ?(shared ({
-            caller: Principal;
+        callback: ?(shared ({ // TODO
+            // caller: Principal;
             can: Principal;
             installationId: Common.InstallationId;
             // indirectCaller: IndirectCaller.IndirectCaller;
@@ -172,12 +172,12 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
-        repo: ?Common.RepositoryPartitionRO;
+        repo: Common.RepositoryPartitionRO;
         installationId: Common.InstallationId;
-        callback: ?(shared ({
+        callback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
             can: Principal;
-            caller: Principal;
+            // caller: Principal;
             package: Common.PackageInfo;
             data: Blob;
         }) -> async ());
@@ -185,29 +185,22 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async* () // TODO: Precreate and return canister IDs.
     {
-        getIndirectCaller().callAllOneWay([{
-            canister = Principal.fromActor(getIndirectCaller());
-            name = "installPackageWrapper";
-            data = to_candid({
-                installationId;
-                data = {
-                    repo;
-                    pmPrincipal;
-                    packageName;
-                    version;
-                    installationId;
-                    preinstalledModules;
-                    callback;
-                    data;
-                };
-            });
-        }]);
+        getIndirectCaller().installPackageWrapper({
+            repo;
+            pmPrincipal;
+            packageName;
+            version;
+            installationId;
+            preinstalledModules;
+            callback;
+            data = to_candid(()); // TODO: correct?
+        });
     };
 
-    public shared({caller}) func installPackageCallback({
+    public shared({caller}) func installPackageCallback({ // TODO
         installationId: Common.InstallationId;
         can: Principal;
-        caller: Principal;
+        // caller: Principal;
         package: Common.PackageInfo;
         data: Blob;
     }): async () {

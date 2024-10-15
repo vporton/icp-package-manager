@@ -174,7 +174,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", d.frontend)];
-            repo = ?d.repo;
+            repo = d.repo;
             caller;
             installationId;
             callback = ?bootstrapBackendCallback2;
@@ -187,10 +187,10 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         bootstrapIds.put(backendId, can); // TODO: Should move up in the source?
     };
 
-    public shared func bootstrapBackendCallback2({
+    public shared({caller}) func bootstrapBackendCallback2({
         installationId: Common.InstallationId;
         can: Principal;
-        caller: Principal;
+        // caller: Principal; // TODO
         data: Blob;
     }): async () {
         if (caller != Principal.fromActor(indirect_caller)) {
@@ -218,13 +218,13 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             moduleName = "backend";
         });
         await ic.update_settings({canister_id = can; sender_canister_version = null; settings = {
-            controllers = ?[can, caller]; // self-controlled
+            controllers = ?[can, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;
             reserved_cycles_limit = null;
         }});
-        await pm.setOwner(caller);
+        // await pm.setOwner(caller); // FIXME: Put the correct `caller` (`user` instead).
     };
 
     // TODO: HACK

@@ -124,15 +124,19 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: ?[(Text, Principal)];
-        data: Blob;
         callback: ?(shared ({
             installationId: Common.InstallationId;
+            package: Common.PackageInfo;
+            can: Principal;
             data: Blob;
         }) -> async ());
-    }) {
-        onlyOwner(caller);
-
+        data: Blob;
+    }): () {
         try {
+            Debug.print("installPackageWrapper"); // TODO: Remove.
+
+            onlyOwner(caller);
+
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
@@ -163,7 +167,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
             switch (callback) {
                 case (?callback) {
-                    await callback({installationId; can = pmPrincipal/* FIXME */; caller; package; data});
+                    await callback({installationId; can = pmPrincipal/* FIXME */; caller; package; data}); // TODO: arguments unused
                 };
                 case null {};
             };

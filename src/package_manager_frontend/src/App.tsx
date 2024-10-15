@@ -71,6 +71,7 @@ function GlobalUI() {
             setTimeout(() => resolve(), 1000);
           });
           backendPrincipal = await bootstrapper.getBootstrappedCanister(backendId);
+          break;
         }
         catch(e) {}
       }
