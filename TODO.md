@@ -75,3 +75,18 @@ Remaining things to do:
 - Statistics of use.
 
 - `FIXME`/`TODO` in the sources.
+
+- Security policy:
+
+```
+WARN: This project does not define a security policy for some assets.
+WARN: You should define a security policy in .ic-assets.json5. For example:
+WARN: [
+WARN:   {
+WARN:     "match": "**/*",
+WARN:     "security_policy": "standard"
+WARN:   }
+WARN: ]
+WARN: Assets without any security policy: all
+WARN: To disable the policy warning, define "disable_security_policy_warning": true in .ic-assets.json5.
+```
