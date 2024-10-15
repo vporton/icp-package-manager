@@ -264,7 +264,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
             switch (callback) {
                 case (?callback) {
-                    // FIXME: called before the above OneWay completes.
                     await callback({can = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
                 };
                 case null {};
