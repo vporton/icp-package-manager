@@ -160,6 +160,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             callback = ?installPackageCallback;
             data;
         });
+        // FIXME: Call it from parent callback.
+        // switch (callback) {
+        //     case (?callback) {
+        //         await callback({caller; package; data});
+        //     };
+        //     case null {};
+        // };
     };
 
     /// We don't install dependencies here (see `specs.odt`).
