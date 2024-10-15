@@ -274,7 +274,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 };
                 case null {
                     Cycles.add<system>(10_000_000_000_000);
-                    let #Ok {canister_id} = await cycles_ledger.create_canister({
+                    let res = await cycles_ledger.create_canister({
                         amount = 0;
                         created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
                         creation_args = ?{
@@ -287,8 +287,14 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                             subnet_selection = null;
                         };
                         from_subaccount = null; // FIXME
-                    }) else {
-                        Debug.trap("cannot create canister");
+                    });
+                    let canister_id = switch (res) {
+                        case (#Ok {canister_id}) canister_id;
+                        case (#Err err) {
+                            let msg = debug_show(err);
+                            Debug.print("cannot create canister: " # msg);
+                            Debug.trap("cannot create canister: " # msg);
+                        };
                     };
                     canister_id;
                 };

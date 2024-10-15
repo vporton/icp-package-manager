@@ -197,10 +197,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.print("A1.00");
             let IC: Common.CanisterCreator = actor("aaaaa-aa");
             Debug.print("A1.01");
-            Cycles.add<system>(10_000_000_000_000);
+            Cycles.add<system>(20_000_000_000_000);
             // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-            let #Ok {canister_id} = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-                amount = 0;
+            let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
+                amount = 20_000_000_000_000; // FIXME
                 created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
                 creation_args = ?{
                     settings = ?{
@@ -212,8 +212,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     subnet_selection = null;
                 };
                 from_subaccount = null; // FIXME
-            }) else {
-                Debug.trap("cannot create canister");
+            });
+            let canister_id = switch (res) {
+                case (#Ok {canister_id}) canister_id;
+                case (#Err err) {
+                    let msg = debug_show(err);
+                    Debug.print("cannot create canister: " # msg);
+                    Debug.trap("cannot create canister: " # msg);
+                };
             };
             Debug.print("A1.1");
             let pm = actor(Principal.toText(canister_id)) : actor {

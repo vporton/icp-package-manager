@@ -5,8 +5,9 @@
 /// TODO: Extract this to a separate MOPS package
 import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
+import Principal "mo:base/Principal";
 
-actor class MockCreateCanister() {
+actor MockCreateCanister {
     // Cycles Ledger API
 
     type BlockIndex = Nat;
@@ -82,10 +83,10 @@ actor class MockCreateCanister() {
 
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
         Debug.print("Y0");
-        ignore Cycles.accept<system>(10_000_000_000_000);
+        ignore Cycles.accept<system>(20_000_000_000_000);
         let sub = do ? { args.creation_args!.settings! };
         Debug.print("Y1");
-        Cycles.add<system>(10_000_000_000_000);
+        Cycles.add<system>(20_000_000_000_000);
         let { canister_id } = await IC.create_canister({
             settings = sub;
         });
