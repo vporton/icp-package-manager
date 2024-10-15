@@ -174,7 +174,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
         await getIndirectCaller().setOwner(can);
 
-        let inst = await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
+        await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", d.frontend)];
