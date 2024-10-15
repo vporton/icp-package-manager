@@ -118,7 +118,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             preinstalledModules = null;
             repo = ?repo;
             installationId;
-            callback = null;
+            callback;
             data = to_candid(());
         });
         {installationId};
