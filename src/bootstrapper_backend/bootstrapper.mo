@@ -18,7 +18,7 @@ import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import {ic} "mo:ic"; // TODO: Use this in other places, too.
-import indirect_caller "canister:indirect_caller";
+import indirect_caller "canister:indirect_caller"; // TODO: Rename to signify, it is only for boottstrapper.
 
 shared({caller = initialOwner}) actor class Bootstrap() = this {
     var owner = initialOwner;
@@ -112,7 +112,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         installationId: Common.InstallationId;
         packageManagerOrBootstrapper : Principal
     }): async () {
-        if (caller != Principal.fromActor(indirect_caller)) { // TODO
+        if (caller != Principal.fromActor(indirectCaller)) { // TODO
             Debug.trap("callback not by indirect_caller");
         };
 
@@ -152,7 +152,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         {installationId; backendId};
     };
 
-    public shared({caller}) func bootstrapBackendCallback1({ // FIXME: It isn't called.
+    public shared({caller}) func bootstrapBackendCallback1({
         can: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
         installationId: Common.InstallationId;
@@ -160,7 +160,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         data: Blob;
     }): async () {
         Debug.print("Call bootstrapBackendCallback1"); // FIXME: Remove.
-        if (caller != Principal.fromActor(indirect_caller)) { // TODO
+        if (caller != Principal.fromActor(indirectCaller)) { // TODO
             Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
 
@@ -172,7 +172,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         // await pm.setOwner(caller); // set by *_init()
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
         Debug.print("U1"); // FIXME: Remove.
-        await indirect_caller.setOwner(can);
+        await indirectCaller.setOwner(can);
 
         Debug.print("U2"); // FIXME: Remove.
         await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
@@ -197,22 +197,23 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     public shared({caller}) func bootstrapBackendCallback2({
         installationId: Common.InstallationId;
         can: Principal;
+        indirectCaller: IndirectCaller.IndirectCaller;
         // caller: Principal; // TODO
         data: Blob;
     }): async () {
-        if (caller != Principal.fromActor(indirect_caller)) {
+        if (caller != Principal.fromActor(indirectCaller)) {
             Debug.trap("bootstrapBackendCallback2: callback only from indirect_caller");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
         await pm.registerNamedModule({
             installation = installationId;
-            canister = Principal.fromActor(indirect_caller);
+            canister = Principal.fromActor(indirectCaller);
             packageManager = can;
             moduleName = "indirect"; // TODO: a better name?
         });
-        await ic.update_settings({canister_id = Principal.fromActor(indirect_caller); sender_canister_version = null; settings = {
-            controllers = ?[can, Principal.fromActor(indirect_caller)];
+        await ic.update_settings({canister_id = Principal.fromActor(indirectCaller); sender_canister_version = null; settings = {
+            controllers = ?[can, Principal.fromActor(indirectCaller)];
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;

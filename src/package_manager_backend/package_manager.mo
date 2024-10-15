@@ -105,6 +105,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             can: Principal;
             // caller: Principal;
             package: Common.PackageInfo;
+            indirectCaller: IndirectCaller.IndirectCaller;
             data: Blob;
         }) -> async ());
     })
@@ -140,7 +141,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             // caller: Principal;
             can: Principal;
             installationId: Common.InstallationId;
-            // indirectCaller: IndirectCaller.IndirectCaller;
+            indirectCaller: IndirectCaller.IndirectCaller;
             data: Blob;
         }) -> async ());
         data: Blob;
@@ -181,6 +182,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             can: Principal;
             // caller: Principal;
             package: Common.PackageInfo;
+            indirectCaller: IndirectCaller.IndirectCaller;
             data: Blob;
         }) -> async ());
         data: Blob;

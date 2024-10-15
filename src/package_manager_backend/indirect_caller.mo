@@ -128,6 +128,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             installationId: Common.InstallationId;
             package: Common.PackageInfo;
             can: Principal;
+            indirectCaller: IndirectCaller;
             data: Blob;
         }) -> async ());
         data: Blob;
@@ -167,7 +168,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
             switch (callback) {
                 case (?callback) {
-                    await callback({installationId; can = pmPrincipal/* FIXME */; caller; package; data}); // TODO: arguments unused
+                    await callback({installationId; can = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
                 };
                 case null {};
             };
