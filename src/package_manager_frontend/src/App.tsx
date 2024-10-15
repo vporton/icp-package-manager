@@ -63,9 +63,24 @@ function GlobalUI() {
       }));
       const firstPart = foundParts.filter(v => v !== null)[0];
 
-      const {installationId, backend: backend_princ} = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
+      const {installationId, backendId} = await bootstrapper.bootstrapBackend(glob.frontend!/*, firstPart*/); // TODO: `!`
+      let backendPrincipal;
+      for (let i = 0; i < 20; ++i) {
+        try {
+          await new Promise<void>((resolve, _reject) => {
+            setTimeout(() => resolve(), 1000);
+          });
+          backendPrincipal = await bootstrapper.getBootstrappedCanister(backendId);
+        }
+        catch(e) {}
+      }
+      if (backendPrincipal === undefined) {
+        alert("No backend canister principal found"); // TODO: better dialog
+        return;
+      }
+
       // const backend_princ = result.canisterIds[0][1]; // FIXME
-      const backend_str = backend_princ.toString();
+      const backend_str = backendPrincipal.toString();
       // TODO: busy indicator
       // for (let i = 0;; ++i) { // TODO: Choose the value.
       //   if (i == 20) {

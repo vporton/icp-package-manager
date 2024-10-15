@@ -180,6 +180,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         callback: ?(shared ({
             can: Principal;
             installationId: Common.InstallationId;
+            packageManagerOrBootstrapper : Principal;
             indirectCaller: IndirectCaller; // TODO: Rename.
             data: Blob;
         }) -> async ());
@@ -251,14 +252,19 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         packageManagerOrBootstrapper;
                         indirect_caller = Principal.fromActor(this); // TODO: consistent casing
                         arg = initArg;
-                    })
+                    }),
                 );
+                // TODO:
+                // modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
+                //     ourHalfInstalled.modules.entries(),
+                //     func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
+                // ));
             };
         };
         switch (callback) {
             case (?callback) {
                 // FIXME: called before the above OneWay completes.
-                await callback({can = canister_id; installationId; indirectCaller = this; data}); // TODO: Rename variable `indirect_caller_v`.
+                await callback({can = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
             };
             case null {};
         };

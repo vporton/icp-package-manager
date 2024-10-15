@@ -36,7 +36,21 @@ export default function MainPage() {
     }, [props.isAuthenticated, props.principal]);
     async function bootstrap() {
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      const frontendPrincipal = await bootstrapper.bootstrapFrontend();
+      const {installationId, frontendId} = await bootstrapper.bootstrapFrontend();
+      let frontendPrincipal;
+      for (let i = 0; i < 20; ++i) {
+        try {
+          await new Promise<void>((resolve, _reject) => {
+            setTimeout(() => resolve(), 1000);
+          });
+          frontendPrincipal = await bootstrapper.getBootstrappedCanister(frontendId);
+        }
+        catch(e) {}
+      }
+      if (frontendPrincipal === undefined) {
+        alert("No frontend canister principal found"); // TODO: better dialog
+        return;
+      }
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.icp0.io`;

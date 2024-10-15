@@ -94,6 +94,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     public shared({caller}) func installPackage({
+        repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
         callback: ?(shared ({
@@ -115,7 +116,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             packageName;
             version;
             preinstalledModules = null;
-            repo = null; installationId;
+            repo = ?repo;
+            installationId;
             callback = null;
             data = to_candid(());
         });
@@ -338,20 +340,6 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
                 // FIXME: `canister` is `()`.
                 let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
-                getIndirectCaller().callIgnoringMissingOneWay( // FIXME: It should be called even in installButDontRegister().
-                    [{
-                        canister;
-                        name = Common.NamespacePrefix # "init";
-                        data = to_candid({
-                            user = caller;
-                            modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
-                                ourHalfInstalled.modules.entries(),
-                                func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
-                            ));
-                            packageManager = this; // TODO: non-standard arguments?
-                        });
-                    }],
-                );
             }/* else {
                 // We don't need to initialize installed module, because it can be only
                 // PM's frontend.
@@ -368,20 +356,36 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         indirectCaller: IndirectCaller.IndirectCaller,
         packageManager: Principal,
         installation: Common.InstallationId,
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
+        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // FIXME: not here
         user: Principal,
     ): async* () {
-        ignore await* _installModuleButDontRegister({
+        ignore await* Install._installModuleButDontRegister({
             wasmModule;
             installArg;
             initArg;
             indirectCaller;
             packageManagerOrBootstrapper = packageManager;
             user;
-            callback = null;
-            data = to_candid(());
+            callback = ?installModuleCallback;
+            data = to_candid({/*installedPackages*/}); // FIXME: Ship package info.
         });
-        await* _registerModule({installation; canister; packageManager; installedPackages}); // FIXME: Is one-way function above finished?
+    };
+
+    public shared({caller}) func installModuleCallback({
+        can: Principal;
+        installationId: Common.InstallationId;
+        indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
+        packageManagerOrBootstrapper: Principal;
+        data: Blob;
+    }) : async () {
+        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
+            Debug.trap("callback not by indirect_caller");
+        };
+
+        let ?{/*installedPackages*/}: ?{/*installedPackages: */} = from_candid(data) else {
+            Debug.trap("programming error");
+        };
+        await* Install._registerModule({installation = installationId; canister = can; packageManager = packageManagerOrBootstrapper; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
@@ -477,20 +481,42 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         moduleName: Text,
         installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
         user: Principal,
-   ): async* Principal {
-        ignore await* _installModuleButDontRegister({
+   ): async* () {
+        ignore await* Install._installModuleButDontRegister({
             wasmModule;
             installArg;
             initArg;
             indirectCaller;
             packageManagerOrBootstrapper = packageManager;
             user;
-            callback = null;
-            data = to_candid(());
+            callback = ?installNamedModuleCallback;
+            data = to_candid({moduleName});
         });
-        await* _registerNamedModule({installation; canister; packageManager; moduleName; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
+    public shared({caller}) func installNamedModuleCallback({
+        can: Principal;
+        installationId: Common.InstallationId;
+        packageManagerOrBootstrapper: Principal;
+        indirectCaller: IndirectCaller.IndirectCaller;
+        data: Blob;
+    }): async () {
+        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
+            Debug.trap("callback not by indirect_caller");
+        };
+
+        let ?{moduleName}: ?{moduleName: Text} = from_candid(data) else {
+            Debug.trap("programming error");
+        };
+        await* Install._registerNamedModule({
+            installation = installationId;
+            canister = can;
+            packageManager = packageManagerOrBootstrapper; // TODO: correct `OrBootstrapper`?
+            moduleName;
+            installedPackages;
+        });
+    };
+        
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
         : async ()
     {

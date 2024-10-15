@@ -89,9 +89,9 @@ export default function MainPage() {
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
                 await glob.package_manager_rw!.installPackage({
+                    repo: firstPart,
                     packageName: p.name,
                     version: p.version,
-                    repo: firstPart,
                     callback: [],
                 });
             }

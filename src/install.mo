@@ -29,6 +29,7 @@ module {
             can: Principal;
             installationId: Common.InstallationId;
             indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
+            packageManagerOrBootstrapper: Principal;
             data: Blob;
         }) -> async ());
     }): async* {installationId: Common.InstallationId} {
@@ -53,12 +54,13 @@ module {
         installation: Common.InstallationId;
         canister: Principal;
         packageManager: Principal;
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // TODO: not here
+        // installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // FIXME
     }): async* () {
-        let ?inst = installedPackages.get(installation) else {
-            Debug.trap("no such installationId: " # debug_show(installation));
-        };
-        inst.allModules.add(canister);
+        // TODO:
+        // let ?inst = installedPackages.get(installation) else {
+        //     Debug.trap("no such installationId: " # debug_show(installation));
+        // };
+        // inst.allModules.add(canister);
         // TODO
     };
 
