@@ -291,7 +291,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 case null {
                     Cycles.add<system>(10_000_000_000_000);
                     let res = await cycles_ledger.create_canister({
-                        amount = 0;
+                        amount = 0; // FIXME
                         created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
                         creation_args = ?{
                             settings = ?{

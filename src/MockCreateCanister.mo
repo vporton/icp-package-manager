@@ -83,12 +83,15 @@ actor MockCreateCanister {
 
     // FIXME: `args.amount`
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
-        ignore Cycles.accept<system>(20_000_000_000_000);
+        Debug.print("F1"); // FIXME: Remove.
+        ignore Cycles.accept<system>(10_000_000_000_000);
         let sub = do ? { args.creation_args!.settings! };
-        Cycles.add<system>(20_000_000_000_000);
+        Debug.print("F2"); // FIXME: Remove.
+        Cycles.add<system>(10_000_000_000_000);
         let { canister_id } = await IC.create_canister({
             settings = sub;
         });
+        Debug.print("F3"); // FIXME: Remove.
         #Ok {
             block_id = 0;
             canister_id;

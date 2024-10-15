@@ -127,7 +127,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         : async {installationId: Common.InstallationId; backendId: Nat}
     {
         Debug.print("bootstrapBackend"); // FIXME: Remove.
-        Cycles.add<system>(1_000_000_000_000);
+        Cycles.add<system>(10_000_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
 
         let backendId = nextBootstrapId;
