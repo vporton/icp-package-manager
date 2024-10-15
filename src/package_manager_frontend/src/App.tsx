@@ -64,6 +64,7 @@ function GlobalUI() {
       const firstPart = foundParts.filter(v => v !== null)[0];
 
       const {installationId, backendId} = await bootstrapper.bootstrapBackend(glob.frontend!/*, firstPart*/); // TODO: `!`
+      console.log("backendId", backendId); // FIXME: Remove.
       let backendPrincipal;
       for (let i = 0; i < 20; ++i) {
         try {
@@ -71,6 +72,7 @@ function GlobalUI() {
             setTimeout(() => resolve(), 1000);
           });
           backendPrincipal = await bootstrapper.getBootstrappedCanister(backendId);
+          console.log("backendPrincipal", backendPrincipal); // FIXME: Remove.
           break;
         }
         catch(e) {}

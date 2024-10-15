@@ -147,8 +147,10 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async ()
     {
+        Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
         onlyOwner(caller);
 
+        Debug.print("Z1"); // FIXME: Remove.
         await* _installPackage({
             pmPrincipal = Principal.fromActor(this);
             caller;
@@ -185,6 +187,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async* () // TODO: Precreate and return canister IDs.
     {
+        Debug.print("calling installPackageWrapper"); // FIXME: Remove.
         getIndirectCaller().installPackageWrapper({
             repo;
             pmPrincipal;

@@ -33,6 +33,7 @@ module {
             data: Blob;
         }) -> async ());
     }): async* {installationId: Common.InstallationId} {
+        Debug.print("_installModuleButDontRegister"); // FIXME: Remove.
         let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
             createInstallation: () -> async Common.InstallationId;
         };
