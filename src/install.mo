@@ -33,12 +33,10 @@ module {
             data: Blob;
         }) -> async ());
     }): async* {installationId: Common.InstallationId} {
-        Debug.print("B1");
         let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
             createInstallation: () -> async Common.InstallationId;
         };
         let installationId = await pm.createInstallation();
-        Debug.print("B2");
         indirectCaller.installModuleButDontRegisterWrapper({
             installationId;
             wasmModule;
@@ -49,7 +47,6 @@ module {
             callback;
             data;
         });
-        Debug.print("B3");
         {installationId};
     };
 

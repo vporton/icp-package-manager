@@ -189,14 +189,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             data: Blob;
         }) -> async ());
     }): () {
-        Debug.print("A0");
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
 
-            Debug.print("A1");
-            Debug.print("A1.00");
             let IC: Common.CanisterCreator = actor("aaaaa-aa");
-            Debug.print("A1.01");
             Cycles.add<system>(20_000_000_000_000);
             // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
             let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
@@ -221,7 +217,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     Debug.trap("cannot create canister: " # msg);
                 };
             };
-            Debug.print("A1.1");
             let pm = actor(Principal.toText(canister_id)) : actor {
                 createInstallation: shared () -> async (Common.InstallationId);
             };
@@ -235,17 +230,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
             };
             let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
-            Debug.print("A1.2");
             let ?(#blob wasm_module) =
                 await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
             else {
                 Debug.trap("package WASM code is not available");
             };
 
-            Debug.print("A1.3");
             switch (wasmModule) {
                 case (#Assets {assets}) {
-                    Debug.print("A1.4");
                     await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
                         arg = Blob.toArray(to_candid({
                             userArg = installArg;
@@ -257,11 +249,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         canister_id;
                         // sender_canister_version = ;
                     });
-                    Debug.print("A1.5");
                     await this.copyAll({ // TODO: Don't call shared.
                         from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                     });
-                    Debug.print("A1.6");
                     // TODO: Should here also call `init()` like below?
                 };
                 case _ {
@@ -292,7 +282,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     // ));
                 };
             };
-            Debug.print("A2");
             switch (callback) {
                 case (?callback) {
                     await callback({can = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});

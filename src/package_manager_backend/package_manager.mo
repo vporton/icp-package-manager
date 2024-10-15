@@ -147,9 +147,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async ()
     {
-        Debug.print("B1");
         onlyOwner(caller);
-        Debug.print("B2");
 
         await* _installPackage({
             pmPrincipal = Principal.fromActor(this);
