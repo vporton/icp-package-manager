@@ -158,15 +158,11 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
             repo;
             installationId;
             callback = ?installPackageCallback;
-            data;
+            data = to_candid({ // FIXME
+                firstCallback = callback;
+                firstData = data;
+            });
         });
-        // FIXME: Call it from parent callback.
-        // switch (callback) {
-        //     case (?callback) {
-        //         await callback({caller; package; data});
-        //     };
-        //     case null {};
-        // };
     };
 
     /// We don't install dependencies here (see `specs.odt`).
@@ -217,12 +213,31 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     }): async () {
         Debug.print("installPackageCallback");
 
+        let ?{firstData; firstCallback}: ?{
+            firstData: Blob;
+            firstCallback: ?(shared ({
+                installationId: Common.InstallationId;
+                can: Principal;
+                caller: Principal;
+                package: Common.PackageInfo;
+                data: Blob;
+            }) -> async ());
+        } = from_candid(data) else {
+            Debug.trap("programming error");
+        };
+        switch (firstCallback) {
+            case (?firstCallback) {
+                await firstCallback({installationId; can; caller; package; data = to_candid(())}); // FIXME: `data`
+            };
+            case null {};
+        };
+
         let ?d: ?{
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryPartitionRO;
             preinstalledModules: ?[(Text, Principal)];
-        } = from_candid(data) else {
+        } = from_candid(firstData) else {
             Debug.trap("programming error")
         };
 
