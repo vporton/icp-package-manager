@@ -161,7 +161,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     }): async () {
         Debug.print("Call bootstrapBackendCallback1"); // FIXME: Remove.
         if (caller != Principal.fromActor(indirect_caller)) { // TODO
-            Debug.trap("callback only from indirect_caller");
+            Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
 
         let ?d: ?{frontend: Principal; repo: Common.RepositoryPartitionRO} = from_candid(data) else {
@@ -201,7 +201,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         data: Blob;
     }): async () {
         if (caller != Principal.fromActor(indirect_caller)) {
-            Debug.trap("callback only from indirect_caller");
+            Debug.trap("bootstrapBackendCallback2: callback only from indirect_caller");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
