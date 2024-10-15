@@ -56,6 +56,7 @@ async function main() {
     const pmFrontendModule = await repositoryIndex.uploadModule({Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}});
     const pmBackendModule = await repositoryIndex.uploadModule({Wasm: pmBackendBlob});
 
+    console.log("Creating packages...");
     const real: RealPackageInfo = {
         modules: [['frontend', pmFrontendModule]],
         extraModules: [['backend', pmBackendModule]],
@@ -99,6 +100,7 @@ async function main() {
     // };
     // await repositoryIndex.createPackage("counter", counterFullInfo);
 
+    console.log("Setting bootstrapper...");
     const bootstrapper: Bootstrap = Actor.createActor(bootstrapperIdl, {agent, canisterId: process.env.CANISTER_ID_BOOTSTRAPPER!});
     await bootstrapper.init();
     await bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
