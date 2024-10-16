@@ -7,7 +7,7 @@
     "package_manager": {
       "type": "motoko",
       "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": []
+      "dependencies": ["cycles_ledger"]
     },
     "bootstrapper": {
       "type": "motoko",

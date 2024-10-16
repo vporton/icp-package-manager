@@ -117,13 +117,13 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
 
         let ?{frontendId}: ?{frontendId: Nat} = from_candid(data) else {
-            Debug.trap("programming error");
+            Debug.trap("programming error: can't extract frontendId");
         };
         bootstrapIds.put(frontendId, can);
     };
 
     // FIXME: correct indirect_caller here and in the callback?
-    public shared({caller}) func bootstrapBackend(frontend: Principal)
+    public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Principal)
         : async {installationId: Common.InstallationId; backendId: Nat}
     {
         Debug.print("bootstrapBackend"); // FIXME: Remove.
@@ -145,7 +145,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             user = caller;
             callback = ?bootstrapBackendCallback1;
             data = to_candid({
-                indirectCaller = indirect_caller_v;
+                repo;
+                frontend;
                 backendId;
             });
         });
@@ -164,8 +165,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
 
-        let ?d: ?{frontend: Principal; repo: Common.RepositoryPartitionRO} = from_candid(data) else {
-            Debug.trap("programming error");
+        let ?d: ?{backendId: Nat; frontend: Principal; repo: Common.RepositoryPartitionRO} = from_candid(data) else { // TODO: needed?
+            Debug.trap("programming error: can't extract backendId");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
@@ -187,11 +188,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         });
 
         Debug.print("U3"); // FIXME: Remove.
-        let ?{backendId}: ?{backendId: Nat} = from_candid(data) else {
-            Debug.trap("programming error");
-        };
-        Debug.print("U4"); // FIXME: Remove.
-        bootstrapIds.put(backendId, can); // TODO: Should move up in the source?
+        bootstrapIds.put(d.backendId, can); // TODO: Should move up in the source?
     };
 
     public shared({caller}) func bootstrapBackendCallback2({
