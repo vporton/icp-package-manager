@@ -279,16 +279,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         canister_id;
                     });
                     Debug.print("K8"); // FIXME: Remove.
-                    ignore await Exp.call( // FIXME: It's optional
-                        canister_id,
-                        Common.NamespacePrefix # "init",
-                        to_candid({
-                            user;
-                            packageManagerOrBootstrapper;
-                            indirect_caller = Principal.fromActor(this); // TODO: consistent casing
-                            arg = initArg;
-                        }),
-                    );
                     // TODO:
                     // modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
                     //     ourHalfInstalled.modules.entries(),
@@ -304,6 +294,26 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
                 case null {};
             };
+            try {
+                // Init is after the callback, because init diverges the owner of the canister.
+                ignore await Exp.call( // FIXME: It's optional
+                    canister_id,
+                    Common.NamespacePrefix # "init",
+                    to_candid({
+                        user;
+                        packageManagerOrBootstrapper;
+                        indirect_caller = Principal.fromActor(this); // TODO: consistent casing
+                        arg = initArg;
+                    }),
+                );
+            }
+            catch (e) {
+                let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
+                if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
+                    throw e; // Other error cause interruption.
+                }
+            };
+
         }
         catch (e) {
             let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);

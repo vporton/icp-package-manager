@@ -28,7 +28,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     // TODO: more flexible control of owners
     public shared({caller}) func setOwner(newOwner: Principal): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "setOwner");
 
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
     };
@@ -40,6 +40,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         user: Principal;
         indirect_caller: Principal;
     }) : async () {
+        Debug.print("initializing package manager");
+
         indirect_caller_ := ?actor(Principal.toText(indirect_caller));
         owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
 
@@ -62,7 +64,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     public shared({caller}) func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "setIndirectCaller");
 
         indirect_caller_ := ?indirect_caller_v;
     };
@@ -90,9 +92,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
-    func onlyOwner(caller: Principal) {
+    func onlyOwner(caller: Principal, msg: Text) {
         if (owners.get(caller) == null) {
-            Debug.trap("not the owner");
+            Debug.trap("not the owner: " # msg);
         }
     };
 
@@ -111,7 +113,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     })
         : async {installationId: Common.InstallationId}
     {
-        onlyOwner(caller);
+        onlyOwner(caller, "installPackage");
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
@@ -149,7 +151,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         : async ()
     {
         Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
-        onlyOwner(caller);
+        onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         Debug.print("Z1"); // FIXME: Remove.
         await* _installPackage({
@@ -343,7 +345,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func finishInstallPackage({
         installationId: Nat;
     }): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "finishInstallPackage");
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
@@ -473,7 +475,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
         avoidRepeated: Bool,
     ): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "installNamedModules");
 
         let ?installation = installedPackages.get(installationId) else {
             Debug.trap("no such package");
@@ -559,7 +561,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
         : async ()
     {
-        onlyOwner(caller);
+        onlyOwner(caller, "uninstallPackage");
 
         let ?installation = installedPackages.get(installationId) else {
             Debug.trap("no such installed installation");
@@ -646,7 +648,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
      /// Finish installation of a half-installed package.
     public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "finishUninstallPackage");
         
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package uninstallation has not been started");
@@ -795,13 +797,13 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "addRepository");
 
         repositories := Array.append(repositories, [{canister; name}]); // TODO: Use `Buffer` instead.
     };
 
     public shared({caller}) func removeRepository(canister: Principal): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "removeRepository");
 
         repositories := Iter.toArray(Iter.filter(
             repositories.vals(),
@@ -818,7 +820,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         packageManager: Principal;
         moduleName: Text;
     }): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "registerNamedModule");
 
         await* Install._registerNamedModule({
             installation;
@@ -830,7 +832,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     };
 
     public shared({caller})  func createInstaallation(): async Common.InstallationId {
-        onlyOwner(caller);
+        onlyOwner(caller, "createInstaallation");
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
