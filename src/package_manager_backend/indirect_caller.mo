@@ -126,8 +126,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         preinstalledModules: ?[(Text, Principal)];
         callback: ?(shared ({
             installationId: Common.InstallationId;
-            package: Common.PackageInfo;
             can: Principal;
+            caller: Principal;
+            package: Common.PackageInfo;
             indirectCaller: IndirectCaller;
             data: Blob;
         }) -> async ());

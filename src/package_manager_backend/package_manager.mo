@@ -180,7 +180,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         callback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
             can: Principal;
-            // caller: Principal;
+            caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller.IndirectCaller;
             data: Blob;
@@ -205,8 +205,9 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
     public shared({caller}) func installPackageCallback({ // TODO
         installationId: Common.InstallationId;
         can: Principal;
-        // caller: Principal;
+        caller: Principal;
         package: Common.PackageInfo;
+        indirectCaller: IndirectCaller.IndirectCaller;
         data: Blob;
     }): async () {
         Debug.print("installPackageCallback");
@@ -218,6 +219,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 can: Principal;
                 caller: Principal;
                 package: Common.PackageInfo;
+                indirectCaller: IndirectCaller.IndirectCaller;
                 data: Blob;
             }) -> async ());
         } = from_candid(data) else {
@@ -225,7 +227,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         };
         switch (firstCallback) {
             case (?firstCallback) {
-                await firstCallback({installationId; can; caller; package; data = to_candid(())}); // FIXME: `data`
+                await firstCallback({installationId; can; caller; indirectCaller; package; data = to_candid(())}); // FIXME: `data`
             };
             case null {};
         };
