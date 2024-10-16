@@ -94,7 +94,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let {installationId} = await* Install._installModuleButDontRegister({ // PM frontend
             callback = ?bootstrapFrontendCallback;
             data = to_candid({frontendId});
-            indirectCaller = indirect_caller;
+            indirectCaller = actor(Principal.toText(Principal.fromActor(indirect_caller))); // TODO: Why is this equillibristic needed?
             initArg = null;
             installArg = to_candid(());
             packageManagerOrBootstrapper = Principal.fromActor(this);
@@ -117,7 +117,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
 
         let ?{frontendId}: ?{frontendId: Nat} = from_candid(data) else {
-            Debug.trap("programming error: can't extract frontendId");
+            Debug.trap("programming error: can't extract in bootstrapFrontendCallback");
         };
         bootstrapIds.put(frontendId, can);
     };
@@ -165,8 +165,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
 
-        let ?d: ?{backendId: Nat; frontend: Principal; repo: Common.RepositoryPartitionRO} = from_candid(data) else { // TODO: needed?
-            Debug.trap("programming error: can't extract backendId");
+        let ?d: ?{backendId: Nat; frontend: Principal; repo: Principal} = from_candid(data) else { // TODO: needed?
+            Debug.trap("programming error: can't extract in bootstrapBackendCallback1");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
@@ -180,7 +180,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", d.frontend)];
-            repo = d.repo;
+            repo = actor(Principal.toText(d.repo)) : Common.RepositoryPartitionRO; // TODO: inefficient
             caller;
             installationId;
             callback = ?bootstrapBackendCallback2;
