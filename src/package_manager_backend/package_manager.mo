@@ -35,7 +35,8 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
 
     var initialized: Bool = false; // intentionally non-stable // TODO: separate variable for signaling upgrading?
 
-    // TODO: needed?
+    // TODO: needed? // FIXME: `onlyOwner`
+    // TODO: indirectCaller set at an earlier stage with `setIndirectCaller()`
     public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
         user: Principal;
         indirect_caller: Principal;
@@ -45,7 +46,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         indirect_caller_ := ?actor(Principal.toText(indirect_caller));
         owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
 
-        initialized := true; // TODO: Re-enable this assignment.
+        initialized := true;
     };
 
     // TODO
@@ -63,6 +64,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
         indirect_caller_2;
     };
 
+    // TODO: too low-level?
     public shared({caller}) func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
         onlyOwner(caller, "setIndirectCaller");
 
@@ -296,7 +298,7 @@ shared({caller = initialOwner}) actor class PackageManager() = this {
                 };
                 case null {
                     Cycles.add<system>(10_000_000_000_000);
-                    let res = await cycles_ledger.create_canister({
+                    let res = await cycles_ledger.create_canister({ // FIXME: can hang, if fraudulent subnet
                         amount = 0; // FIXME
                         created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
                         creation_args = ?{

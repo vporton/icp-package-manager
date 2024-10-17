@@ -173,6 +173,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         // await pm.setOwner(caller); // set by *_init()
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
         Debug.print("U1"); // FIXME: Remove.
+        await pm.setIndirectCaller(indirectCaller);
         await indirectCaller.setOwner(can);
 
         Debug.print("U2"); // FIXME: Remove.

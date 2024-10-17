@@ -8,6 +8,8 @@ Remaining things to do:
 
 - FIXME: Check that `getPackage` and similar methods don't hang us.
 
+- Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
+
 - Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
 
 - Wait curtains.
