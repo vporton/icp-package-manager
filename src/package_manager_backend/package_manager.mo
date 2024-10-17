@@ -118,9 +118,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
-        callback: ?(shared ({ // TODO
+        postInstallCallback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
-            createdCanister: Principal;
+            // createdCanister: Principal;
             // caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller.IndirectCaller;
@@ -142,7 +142,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             preinstalledModules = null;
             repo; // TODO: Pass it in `data` instead.
             installationId;
-            callback;
+            postInstallCallback;
             data = to_candid(());
         });
         {installationId};
@@ -155,9 +155,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         caller: Principal;
         installationId: Common.InstallationId;
-        callback: ?(shared ({ // finish callback // TODO
+        postInstallCallback: ?(shared ({ // finish callback // TODO
             installationId: Common.InstallationId;
-            createdCanister: Principal;
+            // createdCanister: Principal;
             indirectCaller: IndirectCaller.IndirectCaller;
             package: Common.PackageInfo;
             // caller: Principal; // TODO
@@ -179,9 +179,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             preinstalledModules = ?preinstalledModules;
             repo;
             installationId;
-            callback = ?installationWorkCallback; // finish callback
+            // FIXME: postInstallCallback&installationWorkCallback don't match each other:
+            postInstallCallback = ?installationWorkCallback; // finish callback
             data = to_candid({ // FIXME
-                firstCallback = callback;
+                firstCallback = postInstallCallback;
                 firstData = data;
             });
         });
@@ -198,7 +199,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         postInstallCallback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
-            createdCanister: Principal;
+            // createdCanister: Principal;
             caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller.IndirectCaller;
@@ -221,6 +222,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
     };
 
+    /// Does most of the work of installing a package.
     public shared({caller}) func installationWorkCallback({ // callback 1 // TODO
         installationId: Common.InstallationId;
         // createdCanister: Principal;
@@ -235,7 +237,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             firstData: Blob;
             firstCallback: ?(shared ({ // callback 1
                 installationId: Common.InstallationId;
-                createdCanister: Principal;
+                // createdCanister: Principal;
                 indirectCaller: IndirectCaller.IndirectCaller;
                 package: Common.PackageInfo;
                 // caller: Principal; // TODO

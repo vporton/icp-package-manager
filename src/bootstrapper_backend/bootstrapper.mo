@@ -190,7 +190,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             repo = actor(Principal.toText(d.repo)) : Common.RepositoryPartitionRO; // TODO: inefficient
             caller;
             installationId;
-            callback = ?bootstrapBackendFinishCallback;
+            postInstallCallback = ?bootstrapBackendFinishCallback;
             data;
         });
 
@@ -199,6 +199,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         bootstrapIds.put(d.backendId, createdCanister); // TODO: Should move up in the source?
     };
 
+    // FIXME: I have a contradiction here: it needs `createdCanister` but
+    //        `installPackageWithPreinstalledModules` may create several modules.
     public shared({caller}) func bootstrapBackendFinishCallback({
         installationId: Common.InstallationId;
         createdCanister: Principal;
