@@ -23,11 +23,17 @@ import cycles_ledger "canister:cycles_ledger";
 /// TODO: Methods to query for all installed packages.
 shared({/*caller = initialOwner*/}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
-    initialIndirectCaller: Principal; // TODO: Rename.
+    userArg: Blob;
 }) = this {
+    let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
+        initialIndirectCaller: Principal; // TODO: Rename.
+    } = from_candid(userArg) else {
+        Debug.trap("argument userArg is wrong");
+    };
+
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (initialIndirectCaller, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (userArgValue.initialIndirectCaller, ())].vals(), 1, Principal.equal, Principal.hash);
 
     // TODO: more flexible control of owners
     public shared({caller}) func setOwner(newOwner: Principal): async () {

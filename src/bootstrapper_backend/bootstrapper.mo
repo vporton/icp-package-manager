@@ -140,7 +140,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let {installationId} = await* Install._installModuleButDontRegister({
             wasmModule = getOurModules().pmBackendModule;
             installArg = to_candid({
-                packageManagerOrBootstrapper = Principal.fromActor(this);
+                // packageManagerOrBootstrapper = Principal.fromActor(this); // is present at the top level of the `PackageManager`'s arg
                 initialIndirectCaller = Principal.fromActor(indirect_caller_v)});
             initArg = ?to_candid(()); // ?(to_candid({frontend})), // TODO: init is optional // FIXME: Make it non-optional?
             indirectCaller = indirect_caller_v;

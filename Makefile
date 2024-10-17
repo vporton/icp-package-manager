@@ -24,7 +24,7 @@ deploy:
 	dfx build package_manager_frontend
 	dfx build bootstrapper_frontend
 	dfx build bookmark
-	dfx canister install -m auto package_manager
+#	dfx canister install -m auto package_manager
 	dfx canister install -m auto bootstrapper
 	dfx canister install -m auto package_manager_frontend
 	dfx canister install -m auto bootstrapper_frontend

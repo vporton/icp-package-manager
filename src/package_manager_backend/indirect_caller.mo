@@ -268,12 +268,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
                 case _ {
                     Debug.print("K7"); // FIXME: Remove.
+                    let arg = {
+                        userArg = installArg;
+                        packageManagerOrBootstrapper;
+                        user;
+                    };
+                    Debug.print("XX: " # debug_show(arg));
                     await IC.install_code({
-                        arg = Blob.toArray(to_candid({
-                            userArg = installArg;
-                            packageManagerOrBootstrapper;
-                            user;
-                        }));
+                        arg = Blob.toArray(to_candid(arg));
                         wasm_module;
                         mode = #install;
                         canister_id;
