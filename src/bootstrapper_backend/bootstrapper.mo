@@ -220,6 +220,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             packageManager = createdCanister;
             moduleName = "indirect"; // TODO: a better name?
         });
+        // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
         await ic.update_settings({canister_id = Principal.fromActor(indirectCaller); sender_canister_version = null; settings = {
             controllers = ?[createdCanister, Principal.fromActor(indirectCaller)];
             freezing_threshold = null;
@@ -233,6 +234,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             packageManager = createdCanister;
             moduleName = "backend";
         });
+        // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
         await ic.update_settings({canister_id = createdCanister; sender_canister_version = null; settings = {
             controllers = ?[createdCanister, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
             freezing_threshold = null;
