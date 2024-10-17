@@ -190,7 +190,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             repo = actor(Principal.toText(d.repo)) : Common.RepositoryPartitionRO; // TODO: inefficient
             caller;
             installationId;
-            callback = ?bootstrapBackendCallback2;
+            callback = ?bootstrapBackendFinishCallback;
             data;
         });
 
@@ -199,15 +199,16 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         bootstrapIds.put(d.backendId, createdCanister); // TODO: Should move up in the source?
     };
 
-    public shared({caller}) func bootstrapBackendCallback2({
+    public shared({caller}) func bootstrapBackendFinishCallback({
         installationId: Common.InstallationId;
         createdCanister: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
+        package: Common.PackageInfo;
         // caller: Principal; // TODO
         data: Blob;
     }): async () {
         if (caller != Principal.fromActor(indirectCaller)) {
-            Debug.trap("bootstrapBackendCallback2: callback only from indirect_caller");
+            Debug.trap("bootstrapBackendFinishCallback: callback only from indirect_caller");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(createdCanister));

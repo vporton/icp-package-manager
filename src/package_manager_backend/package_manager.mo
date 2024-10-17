@@ -155,11 +155,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         caller: Principal;
         installationId: Common.InstallationId;
-        callback: ?(shared ({ // TODO
-            // caller: Principal;
-            createdCanister: Principal;
+        callback: ?(shared ({ // finish callback // TODO
             installationId: Common.InstallationId;
+            createdCanister: Principal;
             indirectCaller: IndirectCaller.IndirectCaller;
+            package: Common.PackageInfo;
+            // caller: Principal; // TODO
             data: Blob;
         }) -> async ());
         data: Blob;
@@ -178,7 +179,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             preinstalledModules = ?preinstalledModules;
             repo;
             installationId;
-            callback = ?installPackageCallback;
+            callback = ?installationWorkCallback; // finish callback
             data = to_candid({ // FIXME
                 firstCallback = callback;
                 firstData = data;
@@ -195,7 +196,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         preinstalledModules: ?[(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
         installationId: Common.InstallationId;
-        callback: ?(shared ({ // TODO
+        postInstallCallback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
             createdCanister: Principal;
             caller: Principal;
@@ -215,32 +216,33 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             version;
             installationId;
             preinstalledModules;
-            callback;
+            postInstallCallback;
             data = to_candid(()); // TODO: correct?
         });
     };
 
-    public shared({caller}) func installPackageCallback({ // TODO
+    public shared({caller}) func installationWorkCallback({ // callback 1 // TODO
         installationId: Common.InstallationId;
-        createdCanister: Principal; // FIXME: seems superfluous
+        // createdCanister: Principal;
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
         data: Blob;
     }): async () {
-        Debug.print("installPackageCallback");
+        Debug.print("installationWorkCallback");
 
         let ?{firstData; firstCallback}: ?{
             firstData: Blob;
-            firstCallback: ?(shared ({
+            firstCallback: ?(shared ({ // callback 1
                 installationId: Common.InstallationId;
-                caller: Principal;
-                package: Common.PackageInfo;
+                createdCanister: Principal;
                 indirectCaller: IndirectCaller.IndirectCaller;
+                package: Common.PackageInfo;
+                // caller: Principal; // TODO
                 data: Blob;
             }) -> async ());
         } = from_candid(data) else {
-            Debug.trap("programming error");
+            Debug.trap("installationWorkCallback 1: programming error");
         };
         switch (firstCallback) {
             case (?firstCallback) {
@@ -255,7 +257,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             repo: Common.RepositoryPartitionRO;
             preinstalledModules: ?[(Text, Principal)];
         } = from_candid(firstData) else {
-            Debug.trap("programming error")
+            Debug.trap("installationWorkCallback 2: programming error");
         };
 
         let #real realPackage = package.specific else {
@@ -306,7 +308,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                     ).next();
                     switch (res) {
                         case (?(_, canister_id)) canister_id;
-                        case null { Debug.trap("programming error"); }; 
+                        case null { Debug.trap("programming error: wrong preinstalled modules"); }; 
                     };                    
                 };
                 case null {
@@ -385,7 +387,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     }): async* () {
         label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let ?state = ourHalfInstalled.modules.get(moduleName) else {
-                Debug.trap("programming error");
+                Debug.trap("_finishInstallPackage: programming error");
             };
             if (state.1 == #installed) {
                 continue install;
@@ -438,8 +440,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             Debug.trap("callback not by indirect_caller");
         };
 
-        let ?{/*installedPackages*/}: ?{/*installedPackages: */} = from_candid(data) else {
-            Debug.trap("programming error");
+        let ?{/*installedPackages*/}: ?{/*installedPackages: */} = from_candid(data) else { // TODO
+            Debug.trap("installModuleCallback: programming error");
         };
         await* Install._registerModule({installation = installationId; canister = createdCanister; packageManager = packageManagerOrBootstrapper; installedPackages}); // FIXME: Is one-way function above finished?
     };
@@ -510,9 +512,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                         Debug.trap("no extra module '" # m.0 # "'");
                     };
                     let ?(installArg, initArg) = modules2.get(m.0) else {
-                        Debug.trap("programming error");
+                        Debug.trap("programming error: wrong extra module");
                     };
-                    ignore await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
+                    await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
                 };
                 if (avoidRepeated) {
                     // TODO: wrong condition
@@ -562,7 +564,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
 
         let ?{moduleName}: ?{moduleName: Text} = from_candid(data) else {
-            Debug.trap("programming error");
+            Debug.trap("installNamedModuleCallback: programming error");
         };
         await* Install._registerNamedModule({
             installation = installationId;
@@ -647,7 +649,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         installedPackages.delete(installationId);
         let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
-            Debug.trap("programming error");
+            Debug.trap("programming error: can't get package by name");
         };
         // TODO: The below is inefficient and silly, need to change data structure?
         if (Array.size(byName) == 1) {
@@ -751,7 +753,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         // TODO: Eliminiate duplicate code:
         Iter.toArray(Iter.map(ids.vals(), func (id: Common.InstallationId): Common.SharedInstalledPackageInfo {
             let ?info = installedPackages.get(id) else {
-                Debug.trap("programming error");
+                Debug.trap("getInstalledPackagesInfoByName: programming error");
             };
             Common.installedPackageInfoShare(info);
         }));

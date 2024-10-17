@@ -247,7 +247,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     };
     let idEncoded = Base32.encode(Buffer.toArray(idAsBytes));
     let ?text = Text.decodeUtf8(Blob.fromArray(idEncoded)) else {
-      Debug.trap("programming error");
+      Debug.trap("encodeId: programming error");
     };
     text;
   };

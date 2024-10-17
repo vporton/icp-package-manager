@@ -85,11 +85,11 @@ shared ({ caller = owner }) actor class RepositoryPartition({
         switch (_getAttribute(name, "p")) {
           case (?#blob blob) {
             let ?result = from_candid(blob): ?Common.FullPackageInfo else {
-              Debug.trap("programming error");
+              Debug.trap("_getFullPackageInfo 1: programming error");
             };
             result;
           };
-          case _ { Debug.trap("programming error"); }
+          case _ { Debug.trap("_getFullPackageInfo 2: programming error"); }
         }
       };
       case null { Debug.trap("no such package"); };

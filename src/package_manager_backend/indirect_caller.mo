@@ -124,7 +124,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: ?[(Text, Principal)];
-        callback: ?(shared ({
+        postInstallCallback: ?(shared ({
             installationId: Common.InstallationId;
             createdCanister: Principal;
             caller: Principal;
@@ -147,29 +147,32 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 //     version: Common.Version;
                 //     package: Common.PackageInfo;
                 // };
-                installPackageCallback: ({
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                    package: Common.PackageInfo;
+                installationWorkCallback: ({
                     installationId: Common.InstallationId;
-                    repo: Common.RepositoryPartitionRO; // TODO: needed?
-                    preinstalledModules: ?[(Text, Principal)];
+                    // createdCanister: Principal; // FIXME: seems superfluous
+                    caller: Principal;
+                    package: Common.PackageInfo;
+                    indirectCaller: IndirectCaller;
+                    data: Blob;
                 }) -> async ();
             };
             // let info = await pm.getHalfInstalledPackageById(installationId);
+            // let ?{indirectCaller}: ?{indirectCaller: Principal} = from_candid(data) else { // TODO: hack
+            //     Debug.trap("programming error");
+            // };
 
-            Debug.print("Call installPackageCallback");
-            await pm.installPackageCallback({
+            Debug.print("Call installationWorkCallback");
+            await pm.installationWorkCallback({ // FIXME: This callback should call the next one, in order to deliver `createdCanister`.
                 installationId;
-                packageName;
-                version;
+                // createdCanister;
+                caller;
                 package;
-                repo;
-                preinstalledModules;
+                indirectCaller = this;
+                data;
             });
-            switch (callback) {
-                case (?callback) {
-                    await callback({installationId; createdCanister = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
+            switch (postInstallCallback) {
+                case (?postInstallCallback) {
+                    await postInstallCallback({installationId; createdCanister = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
                 };
                 case null {};
             };
