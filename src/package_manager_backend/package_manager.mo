@@ -21,16 +21,24 @@ import Install "../install";
 import cycles_ledger "canister:cycles_ledger";
 
 /// TODO: Methods to query for all installed packages.
-shared({caller = initialOwner}) actor class PackageManager() = this {
+shared({/*caller = initialOwner*/}) actor class PackageManager({
+    packageManagerOrBootstrapper: Principal;
+    initialIndirectCaller: Principal; // TODO: Rename.
+}) = this {
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (initialIndirectCaller, ())].vals(), 1, Principal.equal, Principal.hash);
 
     // TODO: more flexible control of owners
     public shared({caller}) func setOwner(newOwner: Principal): async () {
         onlyOwner(caller, "setOwner");
 
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+    };
+
+    // TODO: Remove.
+    public query func getOwners(): async [Principal] {
+        Iter.toArray(owners.keys());
     };
 
     var initialized: Bool = false; // intentionally non-stable // TODO: separate variable for signaling upgrading?

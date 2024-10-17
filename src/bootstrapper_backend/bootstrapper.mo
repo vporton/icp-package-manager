@@ -136,9 +136,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
         Debug.print("Call _installModuleButDontRegister"); // FIXME: Remove.
+        Debug.print("initializing PM with bootstrapper = " # debug_show(Principal.fromActor(this)));
         let {installationId} = await* Install._installModuleButDontRegister({
             wasmModule = getOurModules().pmBackendModule;
-            installArg = to_candid(());
+            installArg = to_candid({
+                packageManagerOrBootstrapper = Principal.fromActor(this);
+                initialIndirectCaller = Principal.fromActor(indirect_caller_v)});
             initArg = ?to_candid(()); // ?(to_candid({frontend})), // TODO: init is optional // FIXME: Make it non-optional?
             indirectCaller = indirect_caller_v;
             packageManagerOrBootstrapper = Principal.fromActor(this);
@@ -164,19 +167,22 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         if (caller != Principal.fromActor(indirectCaller)) { // TODO
             Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
+        // FIXME: Remove:
+        Debug.print("this = " # debug_show(Principal.fromActor(this))
+            # "; packageManagerOrBootstrapper = " # debug_show(packageManagerOrBootstrapper));
 
         let ?d: ?{backendId: Nat; frontend: Principal; repo: Principal} = from_candid(data) else { // TODO: needed?
             Debug.trap("programming error: can't extract in bootstrapBackendCallback1");
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(can));
-        // await pm.setOwner(caller); // set by *_init()
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
         Debug.print("U1"); // FIXME: Remove.
         await pm.setIndirectCaller(indirectCaller);
         await indirectCaller.setOwner(can);
 
         Debug.print("U2"); // FIXME: Remove.
+        Debug.print("owners = " # debug_show(await pm.getOwners())); // FIXME: Remove.
         await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
@@ -189,6 +195,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         });
 
         Debug.print("U3"); // FIXME: Remove.
+        // await pm.setOwner(caller); // TODO: Uncomment.
         bootstrapIds.put(d.backendId, can); // TODO: Should move up in the source?
     };
 
