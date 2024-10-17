@@ -201,6 +201,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
     // FIXME: I have a contradiction here: it needs `createdCanister` but
     //        `installPackageWithPreinstalledModules` may create several modules.
+    // FIXME: Move `registerNamedModule`s to the correct place in the code.
     public shared({caller}) func bootstrapBackendFinishCallback({
         installationId: Common.InstallationId;
         createdCanister: Principal;
