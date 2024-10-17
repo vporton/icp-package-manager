@@ -120,7 +120,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         version: Common.Version;
         callback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
-            can: Principal;
+            createdCanister: Principal;
             // caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller.IndirectCaller;
@@ -157,7 +157,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         callback: ?(shared ({ // TODO
             // caller: Principal;
-            can: Principal;
+            createdCanister: Principal;
             installationId: Common.InstallationId;
             indirectCaller: IndirectCaller.IndirectCaller;
             data: Blob;
@@ -197,7 +197,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         callback: ?(shared ({ // TODO
             installationId: Common.InstallationId;
-            can: Principal;
+            createdCanister: Principal;
             caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller.IndirectCaller;
@@ -222,7 +222,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     public shared({caller}) func installPackageCallback({ // TODO
         installationId: Common.InstallationId;
-        can: Principal;
+        createdCanister: Principal; // FIXME: seems superfluous
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
@@ -234,7 +234,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             firstData: Blob;
             firstCallback: ?(shared ({
                 installationId: Common.InstallationId;
-                can: Principal;
                 caller: Principal;
                 package: Common.PackageInfo;
                 indirectCaller: IndirectCaller.IndirectCaller;
@@ -245,7 +244,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         switch (firstCallback) {
             case (?firstCallback) {
-                await firstCallback({installationId; can; caller; indirectCaller; package; data = to_candid(())}); // FIXME: `data`
+                await firstCallback({installationId; /*createdCanister;*/ caller; indirectCaller; package; data = to_candid(())}); // FIXME: `data`
             };
             case null {};
         };
@@ -429,7 +428,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     public shared({caller}) func installModuleCallback({
-        can: Principal;
+        createdCanister: Principal;
         installationId: Common.InstallationId;
         indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
         packageManagerOrBootstrapper: Principal;
@@ -442,7 +441,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?{/*installedPackages*/}: ?{/*installedPackages: */} = from_candid(data) else {
             Debug.trap("programming error");
         };
-        await* Install._registerModule({installation = installationId; canister = can; packageManager = packageManagerOrBootstrapper; installedPackages}); // FIXME: Is one-way function above finished?
+        await* Install._registerModule({installation = installationId; canister = createdCanister; packageManager = packageManagerOrBootstrapper; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
@@ -552,7 +551,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     public shared({caller}) func installNamedModuleCallback({
-        can: Principal;
+        createdCanister: Principal;
         installationId: Common.InstallationId;
         packageManagerOrBootstrapper: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
@@ -567,7 +566,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         await* Install._registerNamedModule({
             installation = installationId;
-            canister = can;
+            canister = createdCanister;
             packageManager = packageManagerOrBootstrapper; // TODO: correct `OrBootstrapper`?
             moduleName;
             installedPackages;

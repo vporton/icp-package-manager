@@ -26,7 +26,7 @@ module {
         user: Principal;
         data: Blob;
         callback: ?(shared ({
-            can: Principal;
+            createdCanister: Principal;
             installationId: Common.InstallationId;
             indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
             packageManagerOrBootstrapper: Principal;

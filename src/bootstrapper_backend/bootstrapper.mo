@@ -106,7 +106,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     public shared({caller}) func bootstrapFrontendCallback({
-        can: Principal;
+        createdCanister: Principal;
         data: Blob;
         indirectCaller: IndirectCaller.IndirectCaller;
         installationId: Common.InstallationId;
@@ -119,7 +119,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let ?{frontendId}: ?{frontendId: Nat} = from_candid(data) else {
             Debug.trap("programming error: can't extract in bootstrapFrontendCallback");
         };
-        bootstrapIds.put(frontendId, can);
+        bootstrapIds.put(frontendId, createdCanister);
     };
 
     // FIXME: correct indirect_caller here and in the callback?
@@ -157,7 +157,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     public shared({caller}) func bootstrapBackendCallback1({
-        can: Principal;
+        createdCanister: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
         installationId: Common.InstallationId;
         packageManagerOrBootstrapper: Principal;
@@ -175,11 +175,11 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             Debug.trap("programming error: can't extract in bootstrapBackendCallback1");
         };
 
-        let pm: PackageManager.PackageManager = actor(Principal.toText(can));
+        let pm: PackageManager.PackageManager = actor(Principal.toText(createdCanister));
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
         Debug.print("U1"); // FIXME: Remove.
         await pm.setIndirectCaller(indirectCaller);
-        await indirectCaller.setOwner(can);
+        await indirectCaller.setOwner(createdCanister);
 
         Debug.print("U2"); // FIXME: Remove.
         Debug.print("owners = " # debug_show(await pm.getOwners())); // FIXME: Remove.
@@ -196,12 +196,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         Debug.print("U3"); // FIXME: Remove.
         // await pm.setOwner(caller); // TODO: Uncomment.
-        bootstrapIds.put(d.backendId, can); // TODO: Should move up in the source?
+        bootstrapIds.put(d.backendId, createdCanister); // TODO: Should move up in the source?
     };
 
     public shared({caller}) func bootstrapBackendCallback2({
         installationId: Common.InstallationId;
-        can: Principal;
+        createdCanister: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
         // caller: Principal; // TODO
         data: Blob;
@@ -210,15 +210,15 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             Debug.trap("bootstrapBackendCallback2: callback only from indirect_caller");
         };
 
-        let pm: PackageManager.PackageManager = actor(Principal.toText(can));
+        let pm: PackageManager.PackageManager = actor(Principal.toText(createdCanister));
         await pm.registerNamedModule({
             installation = installationId;
             canister = Principal.fromActor(indirectCaller);
-            packageManager = can;
+            packageManager = createdCanister;
             moduleName = "indirect"; // TODO: a better name?
         });
         await ic.update_settings({canister_id = Principal.fromActor(indirectCaller); sender_canister_version = null; settings = {
-            controllers = ?[can, Principal.fromActor(indirectCaller)];
+            controllers = ?[createdCanister, Principal.fromActor(indirectCaller)];
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;
@@ -226,12 +226,12 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         }});
         await pm.registerNamedModule({ // PM backend registers itself.
             installation = installationId;
-            canister = can;
-            packageManager = can;
+            canister = createdCanister;
+            packageManager = createdCanister;
             moduleName = "backend";
         });
-        await ic.update_settings({canister_id = can; sender_canister_version = null; settings = {
-            controllers = ?[can, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
+        await ic.update_settings({canister_id = createdCanister; sender_canister_version = null; settings = {
+            controllers = ?[createdCanister, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
             freezing_threshold = null;
             memory_allocation = null;
             compute_allocation = null;

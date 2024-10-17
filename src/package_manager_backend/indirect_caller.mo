@@ -126,7 +126,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         preinstalledModules: ?[(Text, Principal)];
         callback: ?(shared ({
             installationId: Common.InstallationId;
-            can: Principal;
+            createdCanister: Principal;
             caller: Principal;
             package: Common.PackageInfo;
             indirectCaller: IndirectCaller;
@@ -169,7 +169,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
             switch (callback) {
                 case (?callback) {
-                    await callback({installationId; can = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
+                    await callback({installationId; createdCanister = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
                 };
                 case null {};
             };
@@ -188,7 +188,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         data: Blob;
         callback: ?(shared ({
-            can: Principal;
+            createdCanister: Principal;
             installationId: Common.InstallationId;
             packageManagerOrBootstrapper : Principal;
             indirectCaller: IndirectCaller; // TODO: Rename.
@@ -292,7 +292,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             switch (callback) {
                 case (?callback) {
                     Debug.print("KA"); // FIXME: Remove.
-                    await callback({can = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
+                    await callback({createdCanister = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
                 };
                 case null {};
             };
