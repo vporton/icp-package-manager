@@ -170,7 +170,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
-        Debug.print("Z1"); // FIXME: Remove.
         await* _installPackage({
             pmPrincipal = Principal.fromActor(this);
             caller;

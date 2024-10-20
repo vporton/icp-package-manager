@@ -199,7 +199,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         }) -> async ());
     }): () {
         try {
-            Debug.print("K1"); // FIXME: Remove.
             // onlyOwner(caller); // FIXME: Uncomment.
 
             let IC: Common.CanisterCreator = actor("aaaaa-aa");
@@ -219,7 +218,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
                 from_subaccount = null; // FIXME
             });
-            Debug.print("K2"); // FIXME: Remove.
             let canister_id = switch (res) {
                 case (#Ok {canister_id}) canister_id;
                 case (#Err err) {
@@ -228,12 +226,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     Debug.trap("cannot create canister: " # msg);
                 };
             };
-            Debug.print("K3"); // FIXME: Remove.
             let pm = actor(Principal.toText(canister_id)) : actor {
                 createInstallation: shared () -> async (Common.InstallationId);
             };
 
-            Debug.print("K4"); // FIXME: Remove.
             let wasmModuleLocation = switch (wasmModule) {
                 case (#Wasm wasmModuleLocation) {
                     wasmModuleLocation;
@@ -243,13 +239,11 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
             };
             let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
-            Debug.print("K5"); // FIXME: Remove.
             let ?(#blob wasm_module) =
                 await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
             else {
                 Debug.trap("package WASM code is not available");
             };
-            Debug.print("K6"); // FIXME: Remove.
 
             switch (wasmModule) {
                 case (#Assets {assets}) {
@@ -270,20 +264,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     // TODO: Should here also call `init()` like below?
                 };
                 case _ {
-                    Debug.print("K7"); // FIXME: Remove.
                     let arg = {
                         userArg = installArg;
                         packageManagerOrBootstrapper;
                         user;
                     };
-                    Debug.print("XX: " # debug_show(arg));
                     await IC.install_code({
                         arg = Blob.toArray(to_candid(arg));
                         wasm_module;
                         mode = #install;
                         canister_id;
                     });
-                    Debug.print("K8"); // FIXME: Remove.
                     // TODO:
                     // modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
                     //     ourHalfInstalled.modules.entries(),
@@ -291,10 +282,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     // ));
                 };
             };
-            Debug.print("K9"); // FIXME: Remove.
             switch (callback) {
                 case (?callback) {
-                    Debug.print("KA"); // FIXME: Remove.
                     await callback({createdCanister = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
                 };
                 case null {};

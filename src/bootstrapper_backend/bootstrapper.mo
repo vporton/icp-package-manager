@@ -126,7 +126,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Principal)
         : async {installationId: Common.InstallationId; backendId: Nat}
     {
-        Debug.print("bootstrapBackend"); // FIXME: Remove.
         Cycles.add<system>(10_000_000_000_000_000);
         let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
 
@@ -167,9 +166,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         if (caller != Principal.fromActor(indirectCaller)) { // TODO
             Debug.trap("bootstrapBackendCallback1: callback only from indirect_caller");
         };
-        // FIXME: Remove:
-        Debug.print("this = " # debug_show(Principal.fromActor(this))
-            # "; packageManagerOrBootstrapper = " # debug_show(packageManagerOrBootstrapper));
 
         let ?d: ?{backendId: Nat; frontend: Principal; repo: Principal} = from_candid(data) else { // TODO: needed?
             Debug.trap("programming error: can't extract in bootstrapBackendCallback1");
@@ -177,12 +173,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(createdCanister));
         // await pm.setIndirectCaller(indirect_caller_v); // set by *_init()
-        Debug.print("U1"); // FIXME: Remove.
         await pm.setIndirectCaller(indirectCaller);
         await indirectCaller.setOwner(createdCanister);
 
-        Debug.print("U2"); // FIXME: Remove.
-        Debug.print("owners = " # debug_show(await pm.getOwners())); // FIXME: Remove.
         await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
@@ -194,7 +187,6 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
             data;
         });
 
-        Debug.print("U3"); // FIXME: Remove.
         // await pm.setOwner(caller); // TODO: Uncomment.
         bootstrapIds.put(d.backendId, createdCanister); // TODO: Should move up in the source?
     };
