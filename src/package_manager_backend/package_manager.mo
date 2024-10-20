@@ -228,7 +228,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
-        data: Blob;
     }): async () {
         Debug.print("installationWorkCallback");
 
@@ -244,12 +243,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             }) -> async ());
         } = from_candid(data) else {
             Debug.trap("installationWorkCallback 1: programming error");
-        };
-        switch (firstCallback) {
-            case (?firstCallback) {
-                await firstCallback({installationId; /*createdCanister;*/ caller; indirectCaller; package; data = to_candid(())}); // FIXME: `data`
-            };
-            case null {};
         };
 
         let ?d: ?{
@@ -297,154 +290,39 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         // TODO: Don't wait for creation of a previous canister to create the next one.
         label create for ((moduleName, wasmModule) in realPackage.modules.vals()) {
             let created = Option.isSome(ourHalfInstalled.modules.get(moduleName));
-            if (created) {
-                continue create;
+            if (not created) { // TODO: If all are created...
+                getIndirectCaller().installModule(TODO);
             };
-            let canister_id = switch (d.preinstalledModules) {
-                case (?preinstalledModules) {
-                    // assert preinstalledModules.size() == realPackage.modules.size(); // TODO: correct?
-                    let res = Iter.filter(
-                        preinstalledModules.vals(),
-                        func((n, _m): (Text, Principal)): Bool = n == moduleName,
-                    ).next();
-                    switch (res) {
-                        case (?(_, canister_id)) canister_id;
-                        case null { Debug.trap("programming error: wrong preinstalled modules"); }; 
-                    };                    
-                };
-                case null {
-                    Cycles.add<system>(10_000_000_000_000);
-                    let res = await cycles_ledger.create_canister({ // FIXME: can hang, if fraudulent subnet
-                        amount = 0; // FIXME
-                        created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-                        creation_args = ?{
-                            settings = ?{
-                                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                                controllers = ?[Principal.fromActor(getIndirectCaller())]; // No package manager as a controller, because the PM may be upgraded.
-                                compute_allocation = null; // TODO
-                                memory_allocation = null; // TODO (a low priority task)
-                            };
-                            subnet_selection = null;
-                        };
-                        from_subaccount = null; // FIXME
-                    });
-                    let canister_id = switch (res) {
-                        case (#Ok {canister_id}) canister_id;
-                        case (#Err err) {
-                            let msg = debug_show(err);
-                            Debug.print("cannot create canister: " # msg);
-                            Debug.trap("cannot create canister: " # msg);
-                        };
-                    };
-                    canister_id;
-                };
-            };
-            // TODO: Are two lines below duplicates of each other?
+            // FIXME: Move to `updateModule`:
             ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
             canisterIds.add((moduleName, canister_id)); // do it later.
         };
-        installedPackages.put(installationId, installation);
-
-        await* _finishInstallPackage({
-            installationId;
-            ourHalfInstalled;
-            realPackage;
-            caller;
-            preinstalledModules = switch(ourHalfInstalled.preinstalledModules) {
-                case (?preinstalledModules) {
-                    ?(HashMap.fromIter<Text, Principal>(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash));
-                };
-                case null null;
-            };
-        });
     };  
 
-    /// Finish installation of a half-installed package.
-    public shared({caller}) func finishInstallPackage({
-        installationId: Nat;
-    }): async () {
-        onlyOwner(caller, "finishInstallPackage");
-        
-        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
-            Debug.trap("package installation has not been started");
-        };
-        let #real realPackage = ourHalfInstalled.package.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        await* _finishInstallPackage({
-            installationId;
-            ourHalfInstalled;
-            realPackage;
-            caller;
-        });
-    };
-
     // TODO: Keep registry of ALL installed modules.
-    private func _finishInstallPackage({
+    // FIXME: Rewrite.
+    public shared({caller}) func updateModule({ // TODO: Rename here and in the diagram.
         installationId: Nat;
         ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal; // TODO: Rename to `user`.
     }): async* () {
-        label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
-            let ?state = ourHalfInstalled.modules.get(moduleName) else {
-                Debug.trap("_finishInstallPackage: programming error");
-            };
-            if (state.1 == #installed) {
-                continue install;
-            };
-            let installArg = to_candid({
-                arg = to_candid({}); // TODO: correct?
-            });
-            if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-                // FIXME: `canister` is `()`.
-                let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
-            }/* else {
-                // We don't need to initialize installed module, because it can be only
-                // PM's frontend.
-            }*/;
+        let ?wasmModule = realPackage.modules.get(moduleName) else {
+            Debug.trap("programming error");
         };
-
-        _updateAfterInstall({installationId});
-    };
-
-    private func _installModule(
-        wasmModule: Common.Module,
-        installArg: Blob,
-        initArg: ?Blob, // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller,
-        packageManager: Principal,
-        installation: Common.InstallationId,
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // FIXME: not here
-        user: Principal,
-    ): async* () {
-        ignore await* Install._installModuleButDontRegister({
-            wasmModule;
-            installArg;
-            initArg;
-            indirectCaller;
-            packageManagerOrBootstrapper = packageManager;
-            user;
-            callback = ?installModuleCallback;
-            data = to_candid({/*installedPackages*/}); // FIXME: Ship package info.
+        let ?state = ourHalfInstalled.modules.get(moduleName) else {
+            Debug.trap("_finishInstallPackage: programming error");
+        };
+        _registerNamedModule({
+            installation: installationId;
+            canister: Principal;
+            packageManager = Principal.fromActor(this);
+            moduleName;
         });
-    };
-
-    public shared({caller}) func installModuleCallback({
-        createdCanister: Principal;
-        installationId: Common.InstallationId;
-        indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
-        packageManagerOrBootstrapper: Principal;
-        data: Blob;
-    }) : async () {
-        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
-            Debug.trap("callback not by indirect_caller");
+        if (inst.modules.size() == realPackage.modules.size()) { // All module hve been installed. // TODO: efficient?
+            halfInstalledPackages.delete(installationId);
+            _updateAfterInstall({installationId});
         };
-
-        let ?{/*installedPackages*/}: ?{/*installedPackages: */} = from_candid(data) else { // TODO
-            Debug.trap("installModuleCallback: programming error");
-        };
-        await* Install._registerModule({installation = installationId; canister = createdCanister; packageManager = packageManagerOrBootstrapper; installedPackages}); // FIXME: Is one-way function above finished?
     };
 
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
@@ -474,15 +352,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             };
         };
     };
-
-    /// Intended to use only in bootstrapping.
-    ///
-    /// TODO: Should we disable calling this after bootstrapping finished?
-    // public shared({caller}) func installModule(wasmModule: Common.Module, installArg: Blob, initArg: ?Blob): async Principal {
-    //     onlyOwner(caller);
-
-    //     await* Install._installModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this));
-    // };
 
     /// It can be used directly from frontend.
     ///
@@ -553,6 +422,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
     };
 
+    // FIXME: Remove.
     public shared({caller}) func installNamedModuleCallback({
         createdCanister: Principal;
         installationId: Common.InstallationId;
