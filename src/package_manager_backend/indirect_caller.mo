@@ -124,15 +124,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: ?[(Text, Principal)];
-        postInstallCallback: ?(shared ({
-            installationId: Common.InstallationId;
-            createdCanister: Principal;
-            caller: Principal;
-            package: Common.PackageInfo;
-            indirectCaller: IndirectCaller;
-            data: Blob;
-        }) -> async ());
-        data: Blob;
     }): () {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
@@ -142,24 +133,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
-                // getHalfInstalledPackageById: query (installationId: Common.InstallationId) -> async {
-                //     packageName: Text;
-                //     version: Common.Version;
-                //     package: Common.PackageInfo;
-                // };
                 installationWorkCallback: ({
                     installationId: Common.InstallationId;
                     // createdCanister: Principal; // FIXME: seems superfluous
                     caller: Principal;
                     package: Common.PackageInfo;
                     indirectCaller: IndirectCaller;
-                    data: Blob;
                 }) -> async ();
             };
-            // let info = await pm.getHalfInstalledPackageById(installationId);
-            // let ?{indirectCaller}: ?{indirectCaller: Principal} = from_candid(data) else { // TODO: hack
-            //     Debug.trap("programming error");
-            // };
 
             Debug.print("Call installationWorkCallback");
             await pm.installationWorkCallback({ // FIXME: This callback should call the next one, in order to deliver `createdCanister`.
@@ -168,35 +149,21 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 caller;
                 package;
                 indirectCaller = this;
-                data;
             });
-            switch (postInstallCallback) {
-                case (?postInstallCallback) {
-                    await postInstallCallback({installationId; createdCanister = pmPrincipal/* FIXME */; indirectCaller = this; caller; package; data}); // TODO: arguments unused
-                };
-                case null {};
-            };
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
         };
     };
 
-    public shared func installModuleButDontRegisterWrapper({
+    // FIXME: Accept `preinstalledModules`.
+    public shared func installModule({
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         installArg: Blob;
         initArg: ?Blob; // init is optional
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        data: Blob;
-        callback: ?(shared ({
-            createdCanister: Principal;
-            installationId: Common.InstallationId;
-            packageManagerOrBootstrapper : Principal;
-            indirectCaller: IndirectCaller; // TODO: Rename.
-            data: Blob;
-        }) -> async ());
     }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
@@ -224,10 +191,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     let msg = debug_show(err);
                     Debug.print("cannot create canister: " # msg);
                     Debug.trap("cannot create canister: " # msg);
-                };
+                };  
             };
-            let pm = actor(Principal.toText(canister_id)) : actor {
-                createInstallation: shared () -> async (Common.InstallationId);
+            let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor { // FIXME: What we do, if it's bootstrapper?
+                updateModule: shared () -> async (Common.InstallationId);
             };
 
             let wasmModuleLocation = switch (wasmModule) {
@@ -282,15 +249,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     // ));
                 };
             };
-            switch (callback) {
-                case (?callback) {
-                    await callback({createdCanister = canister_id; installationId; packageManagerOrBootstrapper; indirectCaller = this; data});
-                };
-                case null {};
-            };
             try {
-                // Init is after the callback, because init diverges the owner of the canister.
-                ignore await Exp.call( // FIXME: It's optional
+                ignore await Exp.call(
                     canister_id,
                     Common.NamespacePrefix # "init",
                     to_candid({
