@@ -159,7 +159,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     private func _installModuleCode({
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
-    }): Principal {
+    }): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
         Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
@@ -250,13 +250,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         wasmModule: Common.Module;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        preinstalledModules: ?[(Text, Principal)];
+        preinstalledCanisterId: ?Principal;
+        weArePackageManager: Bool;
     }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
             let canister_id = switch (preinstalledCanisterId) {
                 case(?preinstalledCanisterId) preinstalledCanisterId;
-                case null _installModuleCode({installationId; wasmModule});
+                case null await* _installModuleCode({installationId; wasmModule});
             };
             try {
                 ignore await Exp.call(
@@ -277,6 +278,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 }
             };
 
+            let pmPrincipal = if (weArePackageManager) {
+                canister_id;
+            } else {
+                packageManagerOrBootstrapper;
+            };
+            let pm = actor(pmPrincipal);
             pm.updateModule(); // FIXME: Add arguments.
         }
         catch (e) {

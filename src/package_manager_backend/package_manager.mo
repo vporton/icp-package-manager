@@ -422,8 +422,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
     };
 
-    // FIXME: Remove.
-    public shared({caller}) func installNamedModuleCallback({
+    /// Internal
+    public shared({caller}) func updateModule({
         createdCanister: Principal;
         installationId: Common.InstallationId;
         packageManagerOrBootstrapper: Principal;
