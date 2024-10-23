@@ -9,7 +9,7 @@ Remaining things to do:
 - FIXME: Check that `getPackage` and similar methods don't hang us.
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
-  (It to be done by checking in writing a result that it was not yet written.)
+  (It to be done by checking in writing a result that it has not been not yet written.)
 
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
 
