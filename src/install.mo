@@ -37,7 +37,6 @@ module {
         let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
             createInstallation: () -> async Common.InstallationId;
         };
-        let installationId = await pm.createInstallation();
         indirectCaller.installModuleButDontRegisterWrapper({
             installationId;
             wasmModule;

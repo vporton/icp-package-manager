@@ -131,9 +131,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     {
         onlyOwner(caller, "installPackage");
 
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
-
         await* _installPackage({
             pmPrincipal = Principal.fromActor(this);
             caller;
@@ -141,11 +138,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             version;
             preinstalledModules = null;
             repo; // TODO: Pass it in `data` instead.
-            installationId;
-            postInstallCallback;
-            data = to_candid(());
         });
-        {installationId};
     };
 
     public shared({caller}) func installPackageWithPreinstalledModules({
@@ -155,17 +148,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         caller: Principal;
         installationId: Common.InstallationId;
-        postInstallCallback: ?(shared ({ // finish callback // TODO
-            installationId: Common.InstallationId;
-            // createdCanister: Principal;
-            indirectCaller: IndirectCaller.IndirectCaller;
-            package: Common.PackageInfo;
-            // caller: Principal; // TODO
-            data: Blob;
-        }) -> async ());
-        data: Blob;
     })
-        : async ()
+        : async {installationId: Common.InstallationId}
     {
         Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
         onlyOwner(caller, "installPackageWithPreinstalledModules");
@@ -178,12 +162,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             preinstalledModules = ?preinstalledModules;
             repo;
             installationId;
-            // FIXME: postInstallCallback&installationWorkCallback don't match each other:
-            postInstallCallback = ?installationWorkCallback; // finish callback
-            data = to_candid({ // FIXME
-                firstCallback = postInstallCallback;
-                firstData = data;
-            });
         });
     };
 
@@ -195,20 +173,14 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         version: Common.Version;
         preinstalledModules: ?[(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
-        installationId: Common.InstallationId;
-        postInstallCallback: ?(shared ({ // TODO
-            installationId: Common.InstallationId;
-            // createdCanister: Principal;
-            caller: Principal;
-            package: Common.PackageInfo;
-            indirectCaller: IndirectCaller.IndirectCaller;
-            data: Blob;
-        }) -> async ());
-        data: Blob;
     })
-        : async* () // TODO: Precreate and return canister IDs.
+        : async* {installationId: Common.InstallationId}
     {
         Debug.print("calling installPackageWrapper"); // FIXME: Remove.
+
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+
         getIndirectCaller().installPackageWrapper({
             repo;
             pmPrincipal;
@@ -219,31 +191,19 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             postInstallCallback;
             data = to_candid(()); // TODO: correct?
         });
+
+        {installationId};
     };
 
     /// Does most of the work of installing a package.
     public shared({caller}) func installationWorkCallback({ // callback 1 // TODO
-        installationId: Common.InstallationId;
+        installationId: ?Common.InstallationId; /// `null` means we are not installing a package.
         // createdCanister: Principal;
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
     }): async () {
         Debug.print("installationWorkCallback");
-
-        let ?{firstData; firstCallback}: ?{
-            firstData: Blob;
-            firstCallback: ?(shared ({ // callback 1
-                installationId: Common.InstallationId;
-                // createdCanister: Principal;
-                indirectCaller: IndirectCaller.IndirectCaller;
-                package: Common.PackageInfo;
-                // caller: Principal; // TODO
-                data: Blob;
-            }) -> async ());
-        } = from_candid(data) else {
-            Debug.trap("installationWorkCallback 1: programming error");
-        };
 
         let ?d: ?{
             packageName: Common.PackageName;
@@ -301,20 +261,18 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     // TODO: Keep registry of ALL installed modules.
     // FIXME: Rewrite.
+    /// Internal
     public shared({caller}) func updateModule({ // TODO: Rename here and in the diagram.
         installationId: Nat;
-        ourHalfInstalled: Common.HalfInstalledPackageInfo;
         realPackage: Common.RealPackageInfo;
         caller: Principal; // TODO: Rename to `user`.
     }): async* () {
-        let ?wasmModule = realPackage.modules.get(moduleName) else {
-            Debug.trap("programming error");
+        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
+            Debug.trap("callback not by indirect_caller");
         };
-        let ?state = ourHalfInstalled.modules.get(moduleName) else {
-            Debug.trap("_finishInstallPackage: programming error");
-        };
+
         _registerNamedModule({
-            installation: installationId;
+            installation = installationId;
             canister: Principal;
             packageManager = Principal.fromActor(this);
             moduleName;
@@ -356,7 +314,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     /// It can be used directly from frontend.
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
-    /// TODO: What if, due actor model's non-reability, it installed partially.
+    /// TODO: What if, due actor model's non-realiability, it installed partially.
     public shared({caller}) func installNamedModules(
         installationId: Common.InstallationId,
         modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
@@ -422,30 +380,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
     };
 
-    /// Internal
-    public shared({caller}) func updateModule({
-        createdCanister: Principal;
-        installationId: Common.InstallationId;
-        packageManagerOrBootstrapper: Principal;
-        indirectCaller: IndirectCaller.IndirectCaller;
-        data: Blob;
-    }): async () {
-        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
-            Debug.trap("callback not by indirect_caller");
-        };
-
-        let ?{moduleName}: ?{moduleName: Text} = from_candid(data) else {
-            Debug.trap("installNamedModuleCallback: programming error");
-        };
-        await* Install._registerNamedModule({
-            installation = installationId;
-            canister = createdCanister;
-            packageManager = packageManagerOrBootstrapper; // TODO: correct `OrBootstrapper`?
-            moduleName;
-            installedPackages;
-        });
-    };
-        
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
         : async ()
     {

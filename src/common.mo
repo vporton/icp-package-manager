@@ -161,6 +161,7 @@ module {
         versionsMap: [(Version, Version)];
     };
 
+    /// FIXME: Make a part of values optional, for installing just named modules instead of the package. (Also rename.)
     public type HalfInstalledPackageInfo = {
         shouldHaveModules: Nat;
         packageCanister: Principal;

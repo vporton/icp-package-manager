@@ -246,7 +246,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     // FIXME: Accept `preinstalledModules`.
     public shared func installModule({
-        installationId: Common.InstallationId;
+        installationId: ?Common.InstallationId; /// `null` means we are not installing a package.
         wasmModule: Common.Module;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
@@ -284,7 +284,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 packageManagerOrBootstrapper;
             };
             let pm = actor(pmPrincipal);
-            pm.updateModule(); // FIXME: Add arguments.
+            pm.updateModule({installationId}); // FIXME: Add arguments.
         }
         catch (e) {
             let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
