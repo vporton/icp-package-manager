@@ -118,15 +118,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
-        postInstallCallback: ?(shared ({ // TODO
-            installationId: Common.InstallationId;
-            // createdCanister: Principal;
-            // caller: Principal;
-            package: Common.PackageInfo;
-            indirectCaller: IndirectCaller.IndirectCaller;
-            data: Blob;
-        }) -> async ());
-    })
+        })
         : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackage");
@@ -137,7 +129,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             packageName;
             version;
             preinstalledModules = null;
-            repo; // TODO: Pass it in `data` instead.
+            repo;
         });
     };
 
