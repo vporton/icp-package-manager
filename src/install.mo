@@ -24,19 +24,8 @@ module {
         indirectCaller: IndirectCaller.IndirectCaller;
         packageManagerOrBootstrapper: Principal;
         user: Principal;
-        data: Blob;
-        callback: ?(shared ({
-            createdCanister: Principal;
-            installationId: Common.InstallationId;
-            indirectCaller: IndirectCaller.IndirectCaller; // TODO: Rename.
-            packageManagerOrBootstrapper: Principal;
-            data: Blob;
-        }) -> async ());
     }): async* {installationId: Common.InstallationId} {
         Debug.print("_installModuleButDontRegister"); // FIXME: Remove.
-        let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-            createInstallation: () -> async Common.InstallationId;
-        };
         indirectCaller.installModuleButDontRegisterWrapper({
             installationId;
             wasmModule;
@@ -44,8 +33,6 @@ module {
             initArg;
             packageManagerOrBootstrapper;
             user;
-            callback;
-            data;
         });
         {installationId};
     };

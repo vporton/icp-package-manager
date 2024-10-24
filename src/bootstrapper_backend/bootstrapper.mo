@@ -1,3 +1,4 @@
+/// FIXME: Rewrite.
 import IndirectCaller "../package_manager_backend/indirect_caller";
 import RepositoryIndex "../repository_backend/RepositoryIndex";
 import RepositoryPartition "../repository_backend/RepositoryPartition";
@@ -18,7 +19,7 @@ import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import {ic} "mo:ic"; // TODO: Use this in other places, too.
-import indirect_caller "canister:indirect_caller"; // TODO: Rename to signify, it is only for boottstrapper.
+import indirect_caller "canister:indirect_caller"; // TODO: Rename to signify, it is only for bootstrapper.
 
 shared({caller = initialOwner}) actor class Bootstrap() = this {
     var owner = initialOwner;

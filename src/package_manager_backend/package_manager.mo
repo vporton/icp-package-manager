@@ -188,8 +188,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             version;
             installationId;
             preinstalledModules;
-            postInstallCallback;
-            data = to_candid(()); // TODO: correct?
         });
 
         {installationId};
@@ -202,17 +200,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
-    }): async () {
-        Debug.print("installationWorkCallback");
-
-        let ?d: ?{
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryPartitionRO;
             preinstalledModules: ?[(Text, Principal)];
-        } = from_candid(firstData) else {
-            Debug.trap("installationWorkCallback 2: programming error");
-        };
+    }): async () {
+        Debug.print("installationWorkCallback");
 
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -263,8 +256,13 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     // FIXME: Rewrite.
     /// Internal
     public shared({caller}) func updateModule({ // TODO: Rename here and in the diagram.
-        installationId: Nat;
-        realPackage: Common.RealPackageInfo;
+        installationInfo: {
+            #package : {
+                installationId: Nat;
+                realPackage: Common.RealPackageInfo;
+            };
+            #withoutPackage;
+        };
         caller: Principal; // TODO: Rename to `user`.
     }): async* () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
@@ -315,35 +313,24 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
     /// TODO: What if, due actor model's non-realiability, it installed partially.
-    public shared({caller}) func installNamedModules(
+    public shared({caller}) func installNamedModule(
         installationId: Common.InstallationId,
-        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
+        m: (Text, Blob, ?Blob), // name, installArg, initArg
         avoidRepeated: Bool,
     ): async () {
-        onlyOwner(caller, "installNamedModules");
+        onlyOwner(caller, "installNamedModule");
 
         let ?installation = installedPackages.get(installationId) else {
             Debug.trap("no such package");
         };
         let package = installation.package;
 
-        // TODO: Don't install already installed.
-        let modules0 = Iter.map<(Text, Blob, ?Blob), (Text, (Blob, ?Blob))>(
-            modules.vals(),
-            func(x: (Text, Blob, ?Blob)): (Text, (Blob, ?Blob)) = (x.0, (x.1, x.2)));
         let modules2 = HashMap.fromIter<Text, (Blob, ?Blob)>(modules0, Array.size(modules), Text.equal, Text.hash);
         switch (package.specific) {
             case (#real package) {
                 let extraModules2 = HashMap.fromIter<Text, Common.Module>(package.extraModules.vals(), Array.size(modules), Text.equal, Text.hash);
-                for (m in modules0) {
-                    let ?wasmModule = extraModules2.get(m.0) else {
-                        Debug.trap("no extra module '" # m.0 # "'");
-                    };
-                    let ?(installArg, initArg) = modules2.get(m.0) else {
-                        Debug.trap("programming error: wrong extra module");
-                    };
-                    await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
-                };
+                let (wasmModule, installArg, initArg) = m;
+                await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
                 if (avoidRepeated) {
                     // TODO: wrong condition
                     // if (iter.next() != null) {
@@ -375,8 +362,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             indirectCaller;
             packageManagerOrBootstrapper = packageManager;
             user;
-            callback = ?installNamedModuleCallback;
-            data = to_candid({moduleName});
         });
     };
 
