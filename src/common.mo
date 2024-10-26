@@ -64,13 +64,13 @@ module {
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 
-    func shareModule(m: Module): SharedModule =
+    public func shareModule(m: Module): SharedModule =
         {
             code = m.code;
             callbacks = Iter.toArray(m.callbacks.entries());
         };
 
-    func unshareModule(m: SharedModule): Module =
+    public func unshareModule(m: SharedModule): Module =
         {
             code = m.code;
             callbacks = HashMap.fromIter(
@@ -196,6 +196,15 @@ module {
             }
         };
 
+    public func unsharePackageInfo(info: SharedPackageInfo): PackageInfo =
+        {
+            base = info.base;
+            specific = switch (info.specific) {
+                case (#real x) { #real (unshareRealPackageInfo(x)); };
+                case (#virtual x) { #virtual x; };
+            }
+        };
+
     public type InstallationId = Nat;
 
     public type RepositoryIndexRO = actor {
@@ -264,10 +273,46 @@ module {
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
-    public type FullPackageInfo = {
-        packages: [(Version, PackageInfo)];
+    public type SharedFullPackageInfo = {
+        packages: [(Version, SharedPackageInfo)];
         versionsMap: [(Version, Version)];
     };
+
+    // Remark: There can be same named real package and a virtual package (of different versions).
+    public type FullPackageInfo = {
+        packages: HashMap.HashMap<Version, PackageInfo>;
+        versionsMap: HashMap.HashMap<Version, Version>;
+    };
+
+    public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
+        {
+            packages = Iter.toArray(
+                Iter.map<(Version, PackageInfo), (Version, SharedPackageInfo)>(
+                    info.packages.entries(),
+                    func ((v, i): (Version, PackageInfo)): (Version, SharedPackageInfo) = (v, sharePackageInfo(i)),
+                ),
+            );
+            versionsMap = Iter.toArray(info.versionsMap.entries());
+        };
+
+    public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
+        {
+            packages = HashMap.fromIter(
+                Iter.map<(Version, SharedPackageInfo), (Version, PackageInfo)>(
+                    info.packages.vals(),
+                    func ((v, i): (Version, SharedPackageInfo)): (Version, PackageInfo) = (v, unsharePackageInfo(i)),
+                ),
+                info.packages.size(),
+                Text.equal,
+                Text.hash,
+            );
+            versionsMap = HashMap.fromIter(
+                info.versionsMap.vals(),
+                info.versionsMap.size(),
+                Text.equal,
+                Text.hash,
+            );
+        };
 
     /// FIXME: Make a part of values optional, for installing just named modules instead of the package. (Also rename.)
     public type HalfInstalledPackageInfo = {

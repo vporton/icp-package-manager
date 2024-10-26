@@ -79,12 +79,12 @@ shared ({ caller = owner }) actor class RepositoryPartition({
 
   // Repository data methods //
 
-  private func _getFullPackageInfo(name: Common.PackageName): Common.FullPackageInfo {
+  private func _getFullPackageInfo(name: Common.PackageName): Common.SharedFullPackageInfo {
     switch (_getAttribute(name, "v")) { // version
       case (?#int 0) {
         switch (_getAttribute(name, "p")) {
           case (?#blob blob) {
-            let ?result = from_candid(blob): ?Common.FullPackageInfo else {
+            let ?result = from_candid(blob): ?Common.SharedFullPackageInfo else {
               Debug.trap("_getFullPackageInfo 1: programming error");
             };
             result;
