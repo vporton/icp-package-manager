@@ -1,3 +1,4 @@
+/// TODO: Methods to query for all installed packages.
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
@@ -20,7 +21,6 @@ import IndirectCaller "indirect_caller";
 import Install "../install";
 import cycles_ledger "canister:cycles_ledger";
 
-/// TODO: Methods to query for all installed packages.
 shared({/*caller = initialOwner*/}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     userArg: Blob;
@@ -68,7 +68,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         initialized;
     };
 
-    // TODO: Join into a single var.
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
@@ -118,7 +117,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
-        })
+    })
         : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackage");
@@ -192,10 +191,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         caller: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryPartitionRO;
-            preinstalledModules: ?[(Text, Principal)];
+        packageName: Common.PackageName;
+        version: Common.Version;
+        repo: Common.RepositoryPartitionRO;
+        preinstalledModules: ?[(Text, Principal)];
     }): async () {
         Debug.print("installationWorkCallback");
 
@@ -305,9 +304,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
     /// TODO: What if, due actor model's non-realiability, it installed partially.
-    public shared({caller}) func installNamedModule(
+    /// FIXME: This should be combined with package installation.
+    public shared({caller}) func installNamedModules(
         installationId: Common.InstallationId,
-        m: (Text, Blob, ?Blob), // name, installArg, initArg
+        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
         avoidRepeated: Bool,
     ): async () {
         onlyOwner(caller, "installNamedModule");
@@ -318,24 +318,27 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let package = installation.package;
 
         let modules2 = HashMap.fromIter<Text, (Blob, ?Blob)>(modules0, Array.size(modules), Text.equal, Text.hash);
-        switch (package.specific) {
-            case (#real package) {
-                let extraModules2 = HashMap.fromIter<Text, Common.Module>(package.extraModules.vals(), Array.size(modules), Text.equal, Text.hash);
-                let (wasmModule, installArg, initArg) = m;
-                await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
-                if (avoidRepeated) {
-                    // TODO: wrong condition
-                    // if (iter.next() != null) {
-                    //     Debug.trap("repeated install");
-                    // };
+        for (m in modules) {
+            switch (package.specific) {
+                case (#real package) {
+                    let extraModules2 = HashMap.fromIter<Text, Common.Module>(package.extraModules.vals(), Array.size(modules), Text.equal, Text.hash);
+                    let (wasmModule, installArg, initArg) = m;
+                    await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
+                    if (avoidRepeated) {
+                        // TODO: wrong condition
+                        // if (iter.next() != null) {
+                        //     Debug.trap("repeated install");
+                        // };
+                    };
                 };
-            };
-            case (#virtual _) {
-                Debug.trap("cannot install modules on a virtual package");
+                case (#virtual _) {
+                    Debug.trap("cannot install modules on a virtual package");
+                };
             };
         };
     };
 
+    /// FIXME: Remove, because we can call callbacks only when several modules are together.
     private func _installNamedModule(
         wasmModule: Common.Module,
         installArg: Blob,
@@ -630,7 +633,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
     };
 
-    public shared({caller})  func createInstaallation(): async Common.InstallationId {
+    public shared({caller}) func createInstaallation(): async Common.InstallationId {
         onlyOwner(caller, "createInstaallation");
 
         let installationId = nextInstallationId;

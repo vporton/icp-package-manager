@@ -137,7 +137,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     installationId: Common.InstallationId;
                     // createdCanister: Principal; // FIXME: seems superfluous
                     caller: Principal;
-                    package: Common.PackageInfo;
+                    package: Common.SharedPackageInfo;
                     indirectCaller: IndirectCaller;
                 }) -> async ();
             };
@@ -189,7 +189,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             updateModule: shared () -> async (Common.InstallationId);
         };
 
-        let wasmModuleLocation = switch (wasmModule) {
+        let wasmModuleLocation = switch (wasmModule.code) {
             case (#Wasm wasmModuleLocation) {
                 wasmModuleLocation;
             };
@@ -204,7 +204,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.trap("package WASM code is not available");
         };
 
-        switch (wasmModule) {
+        switch (wasmModule.code) {
             case (#Assets {assets}) {
                 await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
                     arg = Blob.toArray(to_candid({
@@ -262,7 +262,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             try {
                 ignore await Exp.call(
                     canister_id,
-                    Common.NamespacePrefix # "init",
+                    Common.NamespacePrefix # "init", // FIXME
                     to_candid({
                         user;
                         packageManagerOrBootstrapper;

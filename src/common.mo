@@ -3,6 +3,8 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Buffer "mo:base/Buffer";
+import HashMap "mo:base/HashMap";
+import Hash "mo:base/Hash";
 import OrderedHashMap "mo:ordered-map";
 import Entity "mo:candb/Entity";
 
@@ -26,7 +28,25 @@ module {
 
     public type Location = (canister: Principal, id: Text);
 
-    public type Module = {
+    public type ModuleEvent = {
+        #CanisterCreated;
+        #CodeInstalled;
+        #AllCanistersCreated;
+        #CodeInstalledForAllCanisters;
+    };
+
+    private func moduleEventHash(e: ModuleEvent): Hash.Hash =
+        switch (e) {
+            case (#CanisterCreated) 0;
+            case (#CodeInstalled) 1;
+            case (#AllCanistersCreated) 2;
+            case (#CodeInstalledForAllCanisters) 3;
+        };
+
+    /// Shared/query method name.
+    public type MethodName = Text;
+
+    public type ModuleCode = {
         #Wasm : Location;
         #Assets : {
             wasm: Location;
@@ -34,7 +54,34 @@ module {
         };
     };
 
-    public type ModuleUpload = {
+    public type SharedModule = {
+        code: ModuleCode;
+        callbacks: [(ModuleEvent, MethodName)];
+    };
+
+    public type Module = {
+        code: ModuleCode;
+        callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
+    };
+
+    func shareModule(m: Module): SharedModule =
+        {
+            code = m.code;
+            callbacks = Iter.toArray(m.callbacks.entries());
+        };
+
+    func unshareModule(m: SharedModule): Module =
+        {
+            code = m.code;
+            callbacks = HashMap.fromIter(
+                m.callbacks.vals(),
+                m.callbacks.size(),
+                func (a: ModuleEvent, b: ModuleEvent): Bool = a == b,
+                moduleEventHash,
+            );
+        };
+
+    public type ModuleUploadCode = {
         #Wasm : Blob;
         #Assets : {
             wasm: Blob;
@@ -42,13 +89,15 @@ module {
         };
     };
 
-    /// Shared/query method name.
-    public type MethodName = Text;
+    public type ModuleUpload = {
+        code: ModuleUploadCode;
+        callbacks: [(ModuleEvent, MethodName)];
+    };
 
-    public type RealPackageInfo = {
+    public type SharedRealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, Module)]; // Modules are named for correct upgrades.
-        extraModules: [(Text, Module)]; // to be installed on-demand
+        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
+        extraModules: [(Text, SharedModule)]; // to be installed on-demand
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -58,6 +107,48 @@ module {
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [(Principal, MethodName)])];
     };
+
+    public type RealPackageInfo = {
+        /// it's an array, because may contain several canisters.
+        modules: HashMap.HashMap<Text, SharedModule>; // Modules are named for correct upgrades.
+        extraModules: HashMap.HashMap<Text, SharedModule>; // to be installed on-demand
+        /// Empty versions list means any version.
+        ///
+        /// TODO: Suggests/recommends akin Debian.
+        dependencies: [(PackageName, [VersionRange])];
+        // TODO: Introduce dependencies between modules.
+        /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
+        functions: [(PackageName, [VersionRange])];
+        permissions: [(Text, [(Principal, MethodName)])];
+    };
+
+    public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
+        {
+            modules = Iter.toArray(package.modules.entries());
+            extraModules = Iter.toArray(package.extraModules.entries());
+            dependencies = package.dependencies;
+            functions = package.functions;
+            permissions = package.permissions;
+        };
+
+    public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
+        {
+            modules = HashMap.fromIter(
+                package.modules.vals(),
+                package.modules.size(),
+                Text.equal,
+                Text.hash,
+            );
+            extraModules = HashMap.fromIter(
+                package.extraModules.vals(),
+                package.extraModules.size(),
+                Text.equal,
+                Text.hash,
+            );
+            dependencies = package.dependencies;
+            functions = package.functions;
+            permissions = package.permissions;
+        };
 
     public type RealPackageInfoUpload = {
         /// it's an array, because may contain several canisters.
@@ -80,6 +171,14 @@ module {
         default: PackageName;
     };
 
+    public type SharedPackageInfo = {
+        base: CommonPackageInfo;
+        specific: {
+            #real : SharedRealPackageInfo;
+            #virtual : VirtualPackageInfo;
+        };
+    };
+
     public type PackageInfo = {
         base: CommonPackageInfo;
         specific: {
@@ -87,6 +186,15 @@ module {
             #virtual : VirtualPackageInfo;
         };
     };
+
+    public func sharePackageInfo(info: PackageInfo): SharedPackageInfo =
+        {
+            base = info.base;
+            specific = switch (info.specific) {
+                case (#real x) { #real (shareRealPackageInfo(x)); };
+                case (#virtual x) { #virtual x; };
+            }
+        };
 
     public type InstallationId = Nat;
 
@@ -106,7 +214,7 @@ module {
         ///
         /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
-        getPackage: query (name: Text, version: Version) -> async PackageInfo;
+        getPackage: query (name: Text, version: Version) -> async SharedPackageInfo;
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
         getAttribute: query (sk: Text, subkey: Text) -> async ?Entity.AttributeValue; // TODO: Probably shouldn't be here.
     };
