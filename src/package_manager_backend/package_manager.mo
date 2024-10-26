@@ -114,81 +114,91 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     public shared({caller}) func installPackage({
-        repo: RepositoryPartition.RepositoryPartition;
         packageName: Common.PackageName;
         version: Common.Version;
+        repo: Common.RepositoryPartitionRO;
+        user: Principal;
     })
         : async {installationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackage");
 
-        await* _installPackage({
-            pmPrincipal = Principal.fromActor(this);
-            caller;
-            packageName;
-            version;
-            preinstalledModules = null;
+        let installationId = nextInstallationId;
+        nextInstallationId += 1;
+
+        await* _installModulesGroup({
+            installPackage = true;
+            pmPrincipal = ?Principal.fromActor(this);
             repo;
+            objectToInstall = #package {packageName; version};
+            user;
+            preinstalledModules = [];
         });
     };
 
+    /// Internal used for bootstrapping.
     public shared({caller}) func installPackageWithPreinstalledModules({
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
-        caller: Principal;
-        installationId: Common.InstallationId;
+        user: Principal;
     })
         : async {installationId: Common.InstallationId}
     {
-        Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
         onlyOwner(caller, "installPackageWithPreinstalledModules");
-
-        await* _installPackage({
-            pmPrincipal = Principal.fromActor(this);
-            caller;
-            packageName;
-            version;
-            preinstalledModules = ?preinstalledModules;
-            repo;
-            installationId;
-        });
-    };
-
-    /// We don't install dependencies here (see `specs.odt`).
-    private func _installPackage({
-        pmPrincipal: Principal;
-        caller: Principal;
-        packageName: Common.PackageName;
-        version: Common.Version;
-        preinstalledModules: ?[(Text, Principal)];
-        repo: Common.RepositoryPartitionRO;
-    })
-        : async* {installationId: Common.InstallationId}
-    {
-        Debug.print("calling installPackageWrapper"); // FIXME: Remove.
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        getIndirectCaller().installPackageWrapper({
+        await* _installModulesGroup({
+            installPackage = true;
+            pmPrincipal = ?Principal.fromActor(this);
             repo;
-            pmPrincipal;
-            packageName;
-            version;
-            installationId;
+            objectToInstall = #package {packageName; version};
+            user;
             preinstalledModules;
         });
+    };
 
-        {installationId};
+    /// It can be used directly from frontend.
+    ///
+    /// `avoidRepeated` forbids to install them same named modules more than once.
+    /// TODO: What if, due actor model's non-realiability, it installed partially.
+    /// FIXME: This should be combined with package installation.
+    public shared({caller}) func installNamedModules(
+        installationId: Common.InstallationId,
+        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
+        avoidRepeated: Bool,
+    ): async () {
+        onlyOwner(caller, "installNamedModule");
+
+        await* _installModulesGroup({
+            pmPrincipal = ?Principal.fromActor(this);
+            repo: Common.RepositoryPartitionRO;
+            objectToInstall = #package {packageName; version};
+            user;
+            preinstalledModules;
+        });
+    };
+
+    type ObjectToInstall = {
+        #package : {
+            packageName: Common.PackageName;
+            version: Common.Version;
+        };
+        #namedModules : {
+            dest: Common.InstallationId;
+            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg
+        };
     };
 
     /// Does most of the work of installing a package.
     public shared({caller}) func installationWorkCallback({ // callback 1 // TODO
-        installationId: ?Common.InstallationId; /// `null` means we are not installing a package.
+        installPackage: Bool; /// install package or named modules.
+        installationId: Common.InstallationId;
         // createdCanister: Principal;
-        caller: Principal;
+        user: Principal;
         package: Common.PackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
         packageName: Common.PackageName;
@@ -246,15 +256,11 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     // TODO: Keep registry of ALL installed modules.
     // FIXME: Rewrite.
     /// Internal
-    public shared({caller}) func updateModule({ // TODO: Rename here and in the diagram.
-        installationInfo: {
-            #package : {
-                installationId: Nat;
-                realPackage: Common.RealPackageInfo;
-            };
-            #withoutPackage;
-        };
-        caller: Principal; // TODO: Rename to `user`.
+    public shared({caller}) func installModule({ // TODO: Rename here and in the diagram.
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        installingModules: [(Text, Module)];
+        user: Principal; // TODO: Rename to `user`.
     }): async* () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
@@ -262,7 +268,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
         _registerNamedModule({
             installation = installationId;
-            canister: Principal;
+            canister;
             packageManager = Principal.fromActor(this);
             moduleName;
         });
@@ -298,66 +304,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
             };
         };
-    };
-
-    /// It can be used directly from frontend.
-    ///
-    /// `avoidRepeated` forbids to install them same named modules more than once.
-    /// TODO: What if, due actor model's non-realiability, it installed partially.
-    /// FIXME: This should be combined with package installation.
-    public shared({caller}) func installNamedModules(
-        installationId: Common.InstallationId,
-        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
-        avoidRepeated: Bool,
-    ): async () {
-        onlyOwner(caller, "installNamedModule");
-
-        let ?installation = installedPackages.get(installationId) else {
-            Debug.trap("no such package");
-        };
-        let package = installation.package;
-
-        let modules2 = HashMap.fromIter<Text, (Blob, ?Blob)>(modules0, Array.size(modules), Text.equal, Text.hash);
-        for (m in modules) {
-            switch (package.specific) {
-                case (#real package) {
-                    let extraModules2 = HashMap.fromIter<Text, Common.Module>(package.extraModules.vals(), Array.size(modules), Text.equal, Text.hash);
-                    let (wasmModule, installArg, initArg) = m;
-                    await* _installNamedModule(wasmModule, installArg, initArg, getIndirectCaller(), Principal.fromActor(this), installationId, m.0, installedPackages, caller);
-                    if (avoidRepeated) {
-                        // TODO: wrong condition
-                        // if (iter.next() != null) {
-                        //     Debug.trap("repeated install");
-                        // };
-                    };
-                };
-                case (#virtual _) {
-                    Debug.trap("cannot install modules on a virtual package");
-                };
-            };
-        };
-    };
-
-    /// FIXME: Remove, because we can call callbacks only when several modules are together.
-    private func _installNamedModule(
-        wasmModule: Common.Module,
-        installArg: Blob,
-        initArg: ?Blob, // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller,
-        packageManager: Principal,
-        installation: Common.InstallationId,
-        moduleName: Text,
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>, // TODO: not here
-        user: Principal,
-   ): async* () {
-        ignore await* Install._installModuleButDontRegister({
-            wasmModule;
-            installArg;
-            initArg;
-            indirectCaller;
-            packageManagerOrBootstrapper = packageManager;
-            user;
-        });
     };
 
     public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
@@ -616,28 +562,45 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repositories;
     };
 
-    public shared({caller}) func registerNamedModule({
-        installation: Common.InstallationId;
-        canister: Principal;
-        packageManager: Principal;
-        moduleName: Text;
-    }): async () {
-        onlyOwner(caller, "registerNamedModule");
+    // public shared({caller}) func registerNamedModule({
+    //     installation: Common.InstallationId;
+    //     canister: Principal;
+    //     packageManager: Principal;
+    //     moduleName: Text;
+    // }): async () {
+    //     onlyOwner(caller, "registerNamedModule");
 
-        await* Install._registerNamedModule({
-            installation;
-            canister;
-            packageManager;
-            moduleName;
-            installedPackages; // TODO: not here
+    //     await* Install._registerNamedModule({
+    //         installation;
+    //         canister;
+    //         packageManager;
+    //         moduleName;
+    //         installedPackages; // TODO: not here
+    //     });
+    // };
+
+    /// We don't install dependencies here (see `specs.odt`).
+    private func _installModulesGroup({
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping).
+        repo: Common.RepositoryPartitionRO;
+        objectToInstall: ObjectToInstall;
+        user: Principal;
+        preinstalledModules: [(Text, Principal)];
+    })
+        : async* {installationId: Common.InstallationId}
+    {
+        getIndirectCaller().installPackageWrapper({
+            installPackage;
+            installationId;
+            pmPrincipal;
+            repo;
+            objectToInstall;
+            user;
+            preinstalledModules;
         });
+
+        {installationId};
     };
-
-    public shared({caller}) func createInstaallation(): async Common.InstallationId {
-        onlyOwner(caller, "createInstaallation");
-
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
-        installationId;
-    }
 }

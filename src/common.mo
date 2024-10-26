@@ -96,8 +96,7 @@ module {
 
     public type SharedRealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
-        extraModules: [(Text, SharedModule)]; // to be installed on-demand
+        modules: [(Text, (SharedModule, Bool))]; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -110,8 +109,7 @@ module {
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: HashMap.HashMap<Text, SharedModule>; // Modules are named for correct upgrades.
-        extraModules: HashMap.HashMap<Text, SharedModule>; // to be installed on-demand
+        modules: HashMap.HashMap<Text, (SharedModule, Bool)>; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -125,7 +123,6 @@ module {
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
         {
             modules = Iter.toArray(package.modules.entries());
-            extraModules = Iter.toArray(package.extraModules.entries());
             dependencies = package.dependencies;
             functions = package.functions;
             permissions = package.permissions;
@@ -139,12 +136,6 @@ module {
                 Text.equal,
                 Text.hash,
             );
-            extraModules = HashMap.fromIter(
-                package.extraModules.vals(),
-                package.extraModules.size(),
-                Text.equal,
-                Text.hash,
-            );
             dependencies = package.dependencies;
             functions = package.functions;
             permissions = package.permissions;
@@ -152,8 +143,7 @@ module {
 
     public type RealPackageInfoUpload = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, ModuleUpload)]; // Modules are named for correct upgrades.
-        extraModules: [(Text, ModuleUpload)]; // to be installed on-demand
+        modules: [(Text, (ModuleUpload, Bool))]; // Modules are named for correct upgrades.
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -235,7 +225,6 @@ module {
         packageCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
-        // extraModules: Buffer.Buffer<(Text, Principal)>; // TODO: `HashMap`?
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
     };
 
@@ -246,7 +235,6 @@ module {
         packageCanister: Principal;
         version: Version;
         modules: [(Text, Principal)];
-        // extraModules: [(Text, Principal)];
         allModules: [Principal];
     };
 
@@ -257,7 +245,6 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
-        // extraModules = Buffer.toArray(info.extraModules);
         allModules = Buffer.toArray(info.allModules);
     };
 
@@ -268,7 +255,6 @@ module {
         packageCanister = info.packageCanister;
         version = info.version;
         modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
-        // extraModules = Buffer.fromArray(info.extraModules);
         allModules = Buffer.fromArray(info.allModules);
     };
 

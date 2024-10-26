@@ -256,28 +256,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
             let canister_id = switch (preinstalledCanisterId) {
-                case(?preinstalledCanisterId) preinstalledCanisterId;
-                case null await* _installModuleCode({installationId; wasmModule});
+                case (?preinstalledCanisterId) preinstalledCanisterId;
+                case (null) await* _installModuleCode({installationId; wasmModule});
             };
-            try {
-                ignore await Exp.call(
-                    canister_id,
-                    Common.NamespacePrefix # "init", // FIXME
-                    to_candid({
-                        user;
-                        packageManagerOrBootstrapper;
-                        indirect_caller = Principal.fromActor(this); // TODO: consistent casing
-                        arg = initArg;
-                    }),
-                );
-            }
-            catch (e) {
-                let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
-                if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
-                    throw e; // Other error cause interruption.
-                }
-            };
-
             let pmPrincipal = if (weArePackageManager) {
                 canister_id;
             } else {
