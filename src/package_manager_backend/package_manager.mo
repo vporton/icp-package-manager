@@ -253,14 +253,34 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
     };  
 
-    // TODO: Keep registry of ALL installed modules.
     // FIXME: Rewrite.
     /// Internal
-    public shared({caller}) func installModule({ // TODO: Rename here and in the diagram.
+    public shared({caller}) func onCreateCanister({
         installPackage: Bool;
         installationId: Common.InstallationId;
         installingModules: [(Text, Module)];
-        user: Principal; // TODO: Rename to `user`.
+        user: Principal;
+    }): async* () {
+        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
+            Debug.trap("callback not by indirect_caller");
+        };
+
+        let ?package = installedPackages.get(installationId) else {
+            Debug.trap("no such package");
+        };
+        if (inst.modules.size() == realPackage.modules.size()) { // All module hve been installed. // TODO: efficient?
+            halfInstalledPackages.delete(installationId);
+            _updateAfterInstall({installationId});
+        };
+    };
+
+    // FIXME: Rewrite.
+    /// Internal
+    public shared({caller}) func onInstallCode({ // TODO: Rename here and in the diagram.
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        installingModules: [(Text, Module)];
+        user: Principal;
     }): async* () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
@@ -278,6 +298,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
     };
 
+    // TODO: Keep registry of ALL installed modules.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
