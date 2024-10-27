@@ -259,16 +259,27 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installPackage: Bool;
         installationId: Common.InstallationId;
         installingModules: [(Text, Module)];
+        canister: Principal;
         user: Principal;
     }): async* () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
         };
 
-        let ?package = installedPackages.get(installationId) else {
-            Debug.trap("no such package");
+        let ?inst = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such package"); // better message
         };
-        if (inst.modules.size() == realPackage.modules.size()) { // All module hve been installed. // TODO: efficient?
+        switch (inst.package.callbacks.get(#CanisterCreated)) {
+            case (callbackName) {
+                callAllOneWay([{
+                    canister;
+                    name = callbackName;
+                    data = to_candid(); // TODO 
+                }]);
+            };
+            case null {};
+        };
+        if (inst.modules.size() == installingModules.size()) { // FIXME // All module have been installed. // TODO: efficient?
             halfInstalledPackages.delete(installationId);
             _updateAfterInstall({installationId});
         };

@@ -9,8 +9,6 @@ import OrderedHashMap "mo:ordered-map";
 import Entity "mo:candb/Entity";
 
 module {
-    public let NamespacePrefix = "b44c4a9beec74e1c8a7acbe46256f92f_";
-
     public type PackageName = Text;
 
     // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.
