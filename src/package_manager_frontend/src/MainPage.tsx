@@ -50,7 +50,7 @@ export default function MainPage() {
     const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
     const [curDistro, setCurDistro] = useState<Principal | undefined>();
     const [packageName, setPackageName] = useState("");
-    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageCanister: Principal}[]>();
+    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
         glob.package_manager_ro!.getHalfInstalledPackages().then(h => {

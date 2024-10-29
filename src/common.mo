@@ -220,7 +220,7 @@ module {
         id: InstallationId;
         name: PackageName;
         package: PackageInfo;
-        packageCanister: Principal;
+        packageRepoCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
@@ -230,7 +230,7 @@ module {
         id: InstallationId;
         name: PackageName;
         package: PackageInfo;
-        packageCanister: Principal;
+        packageRepoCanister: Principal;
         version: Version;
         modules: [(Text, Principal)];
         allModules: [Principal];
@@ -240,7 +240,7 @@ module {
         id = info.id;
         name = info.name;
         package = info.package;
-        packageCanister = info.packageCanister;
+        packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
         allModules = Buffer.toArray(info.allModules);
@@ -250,7 +250,7 @@ module {
         id = info.id;
         name = info.name;
         package = info.package;
-        packageCanister = info.packageCanister;
+        packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
         allModules = Buffer.fromArray(info.allModules);
@@ -300,13 +300,14 @@ module {
 
     /// FIXME: Make a part of values optional, for installing just named modules instead of the package. (Also rename.)
     public type HalfInstalledPackageInfo = {
-        shouldHaveModules: Nat;
-        packageCanister: Principal;
+        numberOfModulesToInstall: Nat;
+        packageRepoCanister: Principal;
         name: PackageName;
         version: Version;
-        modules: OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>; // TODO: need ordered?
+        numberWithoutCode: HashMap.HashMap<Text, Principal>;
+        installedModules: HashMap.HashMap<Text, Principal>;
         package: PackageInfo;
-        preinstalledModules: ?[(Text, Principal)];
+        preinstalledModules: HashMap.HashMap<Text, Principal>;
     };
 
     public type canister_settings = {

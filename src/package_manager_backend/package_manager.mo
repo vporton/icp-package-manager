@@ -96,7 +96,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         /// The number of modules in fully installed state.
-        shouldHaveModules: Nat;
+        numberOfModulesToInstall: Nat;
         name: Common.PackageName;
         version: Common.Version;
         modules: [Principal];
@@ -214,14 +214,14 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
         let numPackages = Array.size(realPackage.modules);
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = numPackages;
+            numberOfModulesToInstall = numPackages;
             // id = installationId;
             name = package.base.name;
             version = package.base.version;
             modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
             package;
-            packageCanister = Principal.fromActor(d.repo);
+            packageRepoCanister = Principal.fromActor(d.repo);
             preinstalledModules = d.preinstalledModules;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
@@ -230,7 +230,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             id = installationId;
             name = d.packageName;
             package;
-            packageCanister = Principal.fromActor(d.repo);
+            packageRepoCanister = Principal.fromActor(d.repo);
             version = d.version;
             modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
@@ -323,7 +323,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 ourHalfInstalled.modules.entries(),
                 func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
             ), ourHalfInstalled.modules.size(), Text.equal, Text.hash);
-            packageCanister = ourHalfInstalled.packageCanister;
+            packageRepoCanister = ourHalfInstalled.packageRepoCanister;
             // extraModules = Buffer.Buffer<Principal>(0);
             allModules = Buffer.Buffer<Principal>(0);
         });
@@ -346,11 +346,11 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?installation = installedPackages.get(installationId) else {
             Debug.trap("no such installed installation");
         };
-        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(installation.packageCanister));
+        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(installation.packageRepoCanister));
         let packageInfo = await part.getPackage(installation.name, installation.version);
 
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            shouldHaveModules = installation.modules.size(); // TODO: Is it a nonsense?
+            numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
             name = installation.name;
             version = installation.version;
             modules = OrderedHashMap.fromIter( // TODO: can be made simpler?
@@ -363,7 +363,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 Text.hash,
             );
             package = packageInfo;
-            packageCanister = installation.packageCanister;
+            packageRepoCanister = installation.packageRepoCanister;
             preinstalledModules = null; // TODO: Seems right, but check again.
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
@@ -458,7 +458,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         // _halfInstalledPackagesSave := Iter.toArray(Iter.map(
         //     halfInstalledPackages,
         //     {
-        //         shouldHaveModules: Nat;
+        //         numberOfModulesToInstall: Nat;
         //         name: Common.PackageName;
         //         version: Common.Version;
         //         modules: [Principal];
@@ -536,24 +536,24 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     /// TODO: very unstable API.
     public query func getHalfInstalledPackages(): async [{
         installationId: Common.InstallationId;
-        packageCanister: Principal;
+        packageRepoCanister: Principal;
         name: Common.PackageName;
         version: Common.Version;
     }] {
         Iter.toArray(Iter.map<(Common.InstallationId, Common.HalfInstalledPackageInfo), {
             installationId: Common.InstallationId;
-            packageCanister: Principal;
+            packageRepoCanister: Principal;
             name: Common.PackageName;
             version: Common.Version;
         }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, Common.HalfInstalledPackageInfo)): {
             installationId: Common.InstallationId;
-            packageCanister: Principal;
+            packageRepoCanister: Principal;
             name: Common.PackageName;
             version: Common.Version;
         } =
             {
                 installationId = x.0;
-                packageCanister = x.1.packageCanister;
+                packageRepoCanister = x.1.packageRepoCanister;
                 name = x.1.name;
                 version = x.1.version;
             },

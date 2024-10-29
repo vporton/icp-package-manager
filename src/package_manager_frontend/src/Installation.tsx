@@ -19,7 +19,7 @@ export default function Installation(props: {}) {
         }
         glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
-            const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageCanister!, agent: defaultAgent});
+            const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageRepoCanister!, agent: defaultAgent});
             part.getFullPackageInfo(pkg.name).then(fullInfo => {
                 const pi = fullInfo.packages.filter(([version, _]) => version == pkg.version).map(([_, pkg]) => pkg)[0]; // TODO: undefined
                 setPkg2(pi);
