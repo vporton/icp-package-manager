@@ -301,10 +301,15 @@ module {
     /// FIXME: Make a part of values optional, for installing just named modules instead of the package. (Also rename.)
     public type HalfInstalledPackageInfo = {
         numberOfModulesToInstall: Nat;
-        packageRepoCanister: Principal;
-        name: PackageName;
-        version: Version;
-        numberWithoutCode: HashMap.HashMap<Text, Principal>;
+        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
+        specific: {
+            #package : {
+                name: PackageName;
+                version: Version;
+            };
+            #simplyModules;
+        };
+        modulesWithoutCode: HashMap.HashMap<Text, Principal>;
         installedModules: HashMap.HashMap<Text, Principal>;
         package: PackageInfo;
         preinstalledModules: HashMap.HashMap<Text, Principal>;

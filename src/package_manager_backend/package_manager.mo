@@ -253,7 +253,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
     };  
 
-    // FIXME: Rewrite.
     /// Internal
     public shared({caller}) func onCreateCanister({
         installPackage: Bool;
@@ -279,13 +278,21 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             };
             case null {};
         };
-        if (inst.modules.size() == installingModules.size()) { // FIXME // All module have been installed. // TODO: efficient?
-            halfInstalledPackages.delete(installationId);
-            _updateAfterInstall({installationId});
+        // FIXME: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
+        if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
+            switch (inst.package.callbacks.get(#AllCanistersCreated)) {
+                case (callbackName) {
+                    callAllOneWay([{
+                        canister;
+                        name = callbackName;
+                        data = to_candid(); // TODO 
+                    }]);
+                };
+                case null {};
+            };
         };
     };
 
-    // FIXME: Rewrite.
     /// Internal
     public shared({caller}) func onInstallCode({ // TODO: Rename here and in the diagram.
         installPackage: Bool;
@@ -297,13 +304,38 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             Debug.trap("callback not by indirect_caller");
         };
 
+        let ?inst = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such package"); // better message
+        };
+        // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
+        switch (inst.package.callbacks.get(#CodeInstalled)) {
+            case (callbackName) {
+                callAllOneWay([{
+                    canister;
+                    name = callbackName;
+                    data = to_candid(); // TODO 
+                }]);
+            };
+            case null {};
+        };
         _registerNamedModule({
             installation = installationId;
             canister;
             packageManager = Principal.fromActor(this);
             moduleName;
         });
-        if (inst.modules.size() == realPackage.modules.size()) { // All module hve been installed. // TODO: efficient?
+        if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
+            // TODO: order of this code
+            switch (inst.package.callbacks.get(#CodeInstalledForAllCanisters)) {
+                case (callbackName) {
+                    callAllOneWay([{
+                        canister;
+                        name = callbackName;
+                        data = to_candid(); // TODO 
+                    }]);
+                };
+                case null {};
+            };
             halfInstalledPackages.delete(installationId);
             _updateAfterInstall({installationId});
         };
