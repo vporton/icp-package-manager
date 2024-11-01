@@ -274,6 +274,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         catch (e) {
             let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
             Debug.print(msg);
-        }
-    }
+        };
+    };
 }
