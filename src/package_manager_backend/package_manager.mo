@@ -342,6 +342,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     // TODO: Keep registry of ALL installed modules.
+    // FIXME: If installing simply modules, not a package.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
