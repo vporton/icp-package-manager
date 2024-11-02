@@ -127,7 +127,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageName: Common.PackageName;
         version: Common.Version;
         installationId: Common.InstallationId;
-        preinstalledModules: ?[(Text, Principal)];
+        preinstalledModules: [(Text, Principal)];
     }): () {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
@@ -136,7 +136,15 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
-            let pm = actor (Principal.toText(pmPrincipal)) : actor {
+            let realPMPrincipal = switch (pmPrincipal) {
+                case (?pmPrincipal) {
+                    pmPrincipal;
+                };
+                case null {
+                    preinstalledModules[0].1;
+                };
+            };
+            let pm = actor (Principal.toText(realPMPrincipal)) : actor {
                 installationWorkCallback: ({
                     installationId: Common.InstallationId;
                     // createdCanister: Principal; // FIXME: seems superfluous
@@ -277,15 +285,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             // onlyOwner(caller); // FIXME: Uncomment.
             let canister_id = switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) preinstalledCanisterId; // FIXME: callbacks also here
-                case (null) await* _installModuleCode({
-                    installationId;
-                    wasmModule = Common.unshareModule(wasmModule);
-                    installPackage;
-                    installArg;
-                    installingModules;
-                    packageManagerOrBootstrapper;
-                    user;
-                });
+                case null {
+                    await* _installModuleCode({
+                        installationId;
+                        wasmModule = Common.unshareModule(wasmModule);
+                        installPackage;
+                        installArg;
+                        installingModules;
+                        packageManagerOrBootstrapper;
+                        user;
+                    });
+                };
             };
         }
         catch (e) {

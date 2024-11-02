@@ -129,6 +129,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         await* _installModulesGroup({
             installationId;
             packageName;
+            packageVersion = version;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -156,6 +157,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         await* _installModulesGroup({
             installationId;
             packageName;
+            packageVersion = version;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -187,6 +189,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             installPackage = false;
             installationId;
             packageName = inst.package.base.name;
+            packageVersion = inst.package.base.version;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
