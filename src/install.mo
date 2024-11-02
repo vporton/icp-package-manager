@@ -12,31 +12,6 @@ import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
 
 module {
-    /// This is an internal function used in bootstrapper.
-    ///
-    /// Returns canister ID of installed module.
-    ///
-    /// TODO: Rename this function.
-    public func _installModuleButDontRegister({
-        wasmModule: Common.Module;
-        installArg: Blob;
-        initArg: ?Blob; // init is optional
-        indirectCaller: IndirectCaller.IndirectCaller;
-        packageManagerOrBootstrapper: Principal;
-        user: Principal;
-    }): async* {installationId: Common.InstallationId} {
-        Debug.print("_installModuleButDontRegister"); // FIXME: Remove.
-        indirectCaller.installModuleButDontRegisterWrapper({
-            installationId;
-            wasmModule;
-            installArg;
-            initArg;
-            packageManagerOrBootstrapper;
-            user;
-        });
-        {installationId};
-    };
-
     public func _registerModule({
         installation: Common.InstallationId;
         canister: Principal;
