@@ -4,13 +4,13 @@ import { exec, execSync } from "child_process";
 import { Actor, createAssetCanisterActor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { RealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedRealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
 import { idlFactory as bootstrapperIdl } from '../src/declarations/bootstrapper';
-import { Location, Module, _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
+import { Location, SharedModule, _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
-import { PackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
-import { FullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedFullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
 import { Bootstrap } from '../src/declarations/bootstrapper/bootstrapper.did';
@@ -57,14 +57,13 @@ async function main() {
     const pmBackendModule = await repositoryIndex.uploadModule({Wasm: pmBackendBlob});
 
     console.log("Creating packages...");
-    const real: RealPackageInfo = {
-        modules: [['frontend', pmFrontendModule]],
-        extraModules: [['backend', pmBackendModule]],
+    const real: SharedRealPackageInfo = {
+        modules: [['frontend', [pmFrontendModule, true]], ['backend', [pmBackendModule, false]]],
         dependencies: [],
         functions: [],
         permissions: [],
     };
-    const pmInfo: PackageInfo = {
+    const pmInfo: SharedPackageInfo = {
         base: {
             name: "icpack",
             version: "0.0.1",
@@ -73,13 +72,13 @@ async function main() {
         },
         specific: {real},
     };
-    const pmFullInfo: FullPackageInfo = {
+    const pmFullInfo: SharedFullPackageInfo = {
         packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
         versionsMap: [],
     };
     await repositoryIndex.createPackage("icpack", pmFullInfo);
 
-    // const counterInfo: PackageInfo = {
+    // const counterInfo: SharedPackageInfo = {
     //     base: {
     //         name: "counter",
     //         version: "1.0.0",
@@ -94,7 +93,7 @@ async function main() {
     //         permissions: [],
     //     }) },
     // };
-    // const counterFullInfo: FullPackageInfo = {
+    // const counterFullInfo: SharedFullPackageInfo = {
     //     packages: [["1.0.0", counterInfo]],
     //     versionsMap: [],
     // };
@@ -107,7 +106,7 @@ async function main() {
 }
 
 // TODO: Remove?
-// function getModuleLocation(m: Module): Location {
+// function getModuleLocation(m: SharedModule): Location {
 //     return (m as any).Wasm !== undefined ? (m as any).Wasm : (m as any).Assets.wasm;
 // }
 
