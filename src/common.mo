@@ -222,7 +222,7 @@ module {
         package: PackageInfo;
         packageRepoCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
-        modules: OrderedHashMap.OrderedHashMap<Text, Principal>; // TODO: why ordered?
+        modules: HashMap.HashMap<Text, Principal>;
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
     };
 
@@ -252,7 +252,7 @@ module {
         package = unsharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
         version = info.version;
-        modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
+        modules = HashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
         allModules = Buffer.fromArray(info.allModules);
     };
 
@@ -303,9 +303,9 @@ module {
         numberOfModulesToInstall: Nat; // TODO: Remove in regard of `modulesToInstall`.
         modulesToInstall: HashMap.HashMap<Text, Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        specific: {
+        packageName: PackageName;
+        specific: { // TODO: needed?
             #package : {
-                name: PackageName;
                 version: Version;
             };
             #simplyModules;

@@ -128,6 +128,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
         await* _installModulesGroup({
             installationId;
+            packageName;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -154,6 +155,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
         await* _installModulesGroup({
             installationId;
+            packageName;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -184,6 +186,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         await* _installModulesGroup({
             installPackage = false;
             installationId;
+            packageName = inst.package.packageName;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
@@ -235,7 +238,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
-            name = package.base.name;
+            packageName = package.base.name;
             version = package.base.version;
             modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
@@ -262,7 +265,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             package = package2;
             packageRepoCanister = Principal.fromActor(repo);
             version;
-            modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
+            modules = HashMap.HashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
             allModules = Buffer.Buffer<Principal>(0); // 0?
         };
@@ -377,13 +380,11 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         installedPackages.put(installationId, {
             id = installationId;
-            name = ourHalfInstalled.name;
+            name = ourHalfInstalled.packageName;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = OrderedHashMap.fromIter(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
-                ourHalfInstalled.modules.entries(),
-                func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
-            ), ourHalfInstalled.modules.size(), Text.equal, Text.hash);
+            // FIXME: Need deep copy for `modules`?
+            modules = ourHalfInstalled.installedModules;
             packageRepoCanister = ourHalfInstalled.packageRepoCanister;
             // extraModules = Buffer.Buffer<Principal>(0);
             allModules = Buffer.Buffer<Principal>(0);
@@ -414,11 +415,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
             name = installation.name;
             version = installation.version;
-            modules = OrderedHashMap.fromIter( // TODO: can be made simpler?
+            // FIXME: Is `modules` expression correct?
+            modules = HashMap.fromIter<(Text, (Principal, {#empty; #installed}))>( // TODO: can be made simpler?
                 Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
                     installation.modules.entries(),
-                    func ((x, y): (Text, Principal)) = (x, (y, #installed))
-                ),                
+                    func ((x, y): (Text, Principal)): (Text, (Principal, {#empty; #installed})) = (x, (y, #installed)),
+                ),
                 installation.modules.size(),
                 Text.equal,
                 Text.hash,
@@ -448,61 +450,62 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         delete_canister : shared { canister_id : Common.canister_id } -> async ();
     };
 
-    private func _finishUninstallPackage({
-        installationId: Nat;
-        ourHalfInstalled: Common.HalfInstalledPackageInfo;
-        realPackage: Common.RealPackageInfo;
-    }): async* () {
-        let IC: CanisterDeletor = actor("aaaaa-aa");
-        while (ourHalfInstalled.modules.size() != 0) {
-            let vals = Iter.toArray(ourHalfInstalled.modules.vals()); // TODO: slow
-            let canister_id = vals[vals.size() - 1].0;
-            getIndirectCaller().callAllOneWay([
-                {
-                    canister = Principal.fromActor(IC);
-                    name = "stop_canister";
-                    data = to_candid({canister_id});
-                },
-                {
-                    canister = Principal.fromActor(IC);
-                    name = "delete_canister";
-                    data = to_candid({canister_id});
-                },
-            ]);
-            ignore ourHalfInstalled.modules.removeLast();
-        };
-        installedPackages.delete(installationId);
-        let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
-            Debug.trap("programming error: can't get package by name");
-        };
-        // TODO: The below is inefficient and silly, need to change data structure?
-        if (Array.size(byName) == 1) {
-            installedPackagesByName.delete(ourHalfInstalled.name);
-        } else {
-            let new = Iter.filter(byName.vals(), func (e: Common.InstallationId): Bool {
-                e != installationId;
-            });
-            installedPackagesByName.put(ourHalfInstalled.name, Iter.toArray(new));
-        };
-        halfInstalledPackages.delete(installationId);
-    };
+    // TODO: Uncomment.
+    // private func _finishUninstallPackage({
+    //     installationId: Nat;
+    //     ourHalfInstalled: Common.HalfInstalledPackageInfo;
+    //     realPackage: Common.RealPackageInfo;
+    // }): async* () {
+    //     let IC: CanisterDeletor = actor("aaaaa-aa");
+    //     while (/*ourHalfInstalled.modules.size()*/0 != 0) { // FIXME
+    //         let vals = []; //Iter.toArray(ourHalfInstalled.modules.vals()); // TODO: slow // FIXME
+    //         let canister_id = vals[vals.size() - 1].0;
+    //         getIndirectCaller().callAllOneWay([
+    //             {
+    //                 canister = Principal.fromActor(IC);
+    //                 name = "stop_canister";
+    //                 data = to_candid({canister_id});
+    //             },
+    //             {
+    //                 canister = Principal.fromActor(IC);
+    //                 name = "delete_canister";
+    //                 data = to_candid({canister_id});
+    //             },
+    //         ]);
+    //         ignore ourHalfInstalled.modules.removeLast();
+    //     };
+    //     installedPackages.delete(installationId);
+    //     let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
+    //         Debug.trap("programming error: can't get package by name");
+    //     };
+    //     // TODO: The below is inefficient and silly, need to change data structure?
+    //     if (Array.size(byName) == 1) {
+    //         installedPackagesByName.delete(ourHalfInstalled.name);
+    //     } else {
+    //         let new = Iter.filter(byName.vals(), func (e: Common.InstallationId): Bool {
+    //             e != installationId;
+    //         });
+    //         installedPackagesByName.put(ourHalfInstalled.name, Iter.toArray(new));
+    //     };
+    //     halfInstalledPackages.delete(installationId);
+    // };
 
-     /// Finish installation of a half-installed package.
-    public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
-        onlyOwner(caller, "finishUninstallPackage");
+    //  /// Finish installation of a half-installed package.
+    // public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
+    //     onlyOwner(caller, "finishUninstallPackage");
         
-        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
-            Debug.trap("package uninstallation has not been started");
-        };
-        let #real realPackage = ourHalfInstalled.package.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        await* _finishUninstallPackage({
-            installationId;
-            ourHalfInstalled;
-            realPackage;
-        });
-    };
+    //     let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+    //         Debug.trap("package uninstallation has not been started");
+    //     };
+    //     let #real realPackage = ourHalfInstalled.package.specific else {
+    //         Debug.trap("trying to directly install a virtual package");
+    //     };
+    //     await* _finishUninstallPackage({
+    //         installationId;
+    //         ourHalfInstalled;
+    //         realPackage;
+    //     });
+    // };
 
    system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
@@ -630,7 +633,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package")
         };
-        {packageName = res.name; version = res.version; package = res.package};
+        {packageName = res.packageName; version = res.version; package = res.package};
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
@@ -672,7 +675,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     //     });
     // };
 
-    /// We don't install dependencies here (see `specs.odt`).
     private func _installModulesGroup({
         installPackage: Bool;
         installationId: Common.InstallationId;
