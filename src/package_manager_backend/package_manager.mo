@@ -262,21 +262,20 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        let installation: Common.InstalledPackageInfo = {
-            id = installationId;
-            name = packageName;
-            package = package2;
-            packageRepoCanister = Principal.fromActor(repo);
-            version;
-            modules = HashMap.HashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
-            // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
-            allModules = Buffer.Buffer<Principal>(0); // 0?
-        };
-
-        // FIXME: I forgot to call `indirect_caller.installModule` in this function.
         for (m in modulesToInstall.vals()) {
             // FIXME: correct indirect caller?
-            getIndirectCaller().installModule();
+            // Starting installation of all modules in parallel:
+            getIndirectCaller().installModule({
+                installArg = "";
+                installPackage;
+                installationId;
+                modulesToInstall; // FIXME: Isn't this optional for the case of installing now a package?
+                packageManagerOrBootstrapper = Principal.fromActor(this);
+                preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
+                user;
+                wasmModule = m.1;
+                weArePackageManager;
+            });
         };
     };
 
@@ -284,7 +283,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Common.SharedModule)]; // TODO: Don't draw it through shared methods (here and in other places).
+        modulesToInstall: [(Text, Common.SharedModule)]; // TODO: Don't draw it through shared methods (here and in other places).
         module_: Common.SharedModule;
         canister: Principal;
         user: Principal;
@@ -326,7 +325,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Common.SharedModule)]; // TODO: Don't pass it around in shared methods (here and in other places).
+        modulesToInstall: [(Text, Common.SharedModule)]; // TODO: Don't pass it around in shared methods (here and in other places).
         canister: Principal;
         moduleName: ?Text;
         user: Principal;
@@ -395,7 +394,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // FIXME: Need deep copy for `modules`?
             modules = ourHalfInstalled.installedModules;
             packageRepoCanister = ourHalfInstalled.packageRepoCanister;
-            // extraModules = Buffer.Buffer<Principal>(0);
             allModules = Buffer.Buffer<Principal>(0);
         });
         halfInstalledPackages.delete(installationId);

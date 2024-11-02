@@ -173,7 +173,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
-        installingModules: [(Text, Common.SharedModule)];
+        modulesToInstall: [(Text, Common.SharedModule)];
         installArg: Blob;
         user: Principal;
     }): async* Principal {
@@ -207,21 +207,21 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             onCreateCanister: shared ({
                 installPackage: Bool;
                 installationId: Common.InstallationId;
-                installingModules: [(Text, Common.SharedModule)];
+                modulesToInstall: [(Text, Common.SharedModule)];
                 canister: Principal;
                 user: Principal;
             }) -> async ();
             onInstallCode: shared ({ // TODO: Rename here and in the diagram.
                 installPackage: Bool;
                 installationId: Common.InstallationId;
-                installingModules: [(Text, Common.SharedModule)];
+                modulesToInstall: [(Text, Common.SharedModule)];
                 user: Principal;
             }) -> async ();
         };
         await pm.onCreateCanister({
             installPackage; // Bool
             installationId;
-            installingModules;
+            modulesToInstall;
             canister = canister_id;
             user: Principal;
         });
@@ -255,7 +255,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await pm.onInstallCode({
             installPackage; // Bool
             installationId;
-            installingModules; // TODO: needed?
+            modulesToInstall; // TODO: needed?
             user;
         });
         switch (wasmModule.code) {
@@ -279,7 +279,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         preinstalledCanisterId: ?Principal;
         weArePackageManager: Bool;
         installArg: Blob;
-        installingModules: [(Text, Common.SharedModule)];
+        modulesToInstall: [(Text, Common.SharedModule)];
     }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
@@ -291,7 +291,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         wasmModule = Common.unshareModule(wasmModule);
                         installPackage;
                         installArg;
-                        installingModules;
+                        modulesToInstall;
                         packageManagerOrBootstrapper;
                         user;
                     });
