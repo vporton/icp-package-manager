@@ -300,7 +300,8 @@ module {
 
     /// FIXME: Make a part of values optional, for installing just named modules instead of the package. (Also rename.)
     public type HalfInstalledPackageInfo = {
-        numberOfModulesToInstall: Nat;
+        numberOfModulesToInstall: Nat; // TODO: Remove in regard of `modulesToInstall`.
+        modulesToInstall: HashMap.HashMap<Text, Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
         specific: {
             #package : {

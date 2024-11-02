@@ -213,7 +213,16 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
+        modulesToInstall: [(Text, Common.SharedModule)];
         preinstalledModules: [(Text, Principal)];
+        specific: {
+            #package : {
+                name: Common.PackageName;
+                version: Common.Version;
+            };
+            #simplyModules;
+        };
+
     }): async () {
         Debug.print("installationWorkCallback");
 
@@ -232,7 +241,18 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // packageDescriptionIn = part;
             package = package2;
             packageRepoCanister = Principal.fromActor(repo);
-            preinstalledModules = preinstalledModules;
+            preinstalledModules = HashMap.fromIter(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
+            modulesToInstall = HashMap.fromIter(
+                Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                    modulesToInstall.vals(),
+                    func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
+                ),
+                modulesToInstall.size(), // TODO: efficient?
+                Text.equal,
+                Text.hash);
+            modulesWithoutCode = HashMap.HashMap(modulesToInstall.size(), Text.equal, Text.hash); // TODO: efficient?
+            installedModules = HashMap.HashMap(modulesToInstall.size(), Text.equal, Text.hash); // TODO: efficient?
+            specific; // hacky?
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
@@ -252,7 +272,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Common.SharedModule)];
+        installingModules: [(Text, Common.SharedModule)]; // TODO: Don't draw it through shared methods (here and in other places).
+        module_: Common.SharedModule;
         canister: Principal;
         user: Principal;
     }): async () {
@@ -263,9 +284,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        switch (inst.package.callbacks.get(#CanisterCreated)) {
-            case (callbackName) {
-                callAllOneWay([{
+        let module2 = Common.unshareModule(module_); // TODO: necessary?
+        switch (module2.callbacks.get(#CanisterCreated)) {
+            case (?callbackName) {
+                getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
                     canister;
                     name = callbackName;
                     data = to_candid(); // TODO 
@@ -275,9 +297,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         // FIXME: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
         if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
-            switch (inst.package.callbacks.get(#AllCanistersCreated)) {
-                case (callbackName) {
-                    callAllOneWay([{
+            switch (module2.callbacks.get(#AllCanistersCreated)) {
+                case (?callbackName) {
+                    getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
                         canister;
                         name = callbackName;
                         data = to_candid(); // TODO 
@@ -294,6 +316,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         installingModules: [(Text, Common.SharedModule)];
         user: Principal;
+        module_: Common.SharedModule;
     }): async () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
@@ -302,10 +325,11 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
+        let module2 = Common.unshareModule(module_); // TODO: necessary?
         // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
-        switch (inst.package.callbacks.get(#CodeInstalled)) {
+        switch (module2.callbacks.get(#CodeInstalled)) {
             case (callbackName) {
-                callAllOneWay([{
+                getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                     canister;
                     name = callbackName;
                     data = to_candid(); // TODO 
@@ -321,9 +345,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
-            switch (inst.package.callbacks.get(#CodeInstalledForAllCanisters)) {
+            switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (callbackName) {
-                    callAllOneWay([{
+                    getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                         canister;
                         name = callbackName;
                         data = to_candid(); // TODO 
