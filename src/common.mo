@@ -229,7 +229,7 @@ module {
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         name: PackageName;
-        package: PackageInfo;
+        package: SharedPackageInfo;
         packageRepoCanister: Principal;
         version: Version;
         modules: [(Text, Principal)];
@@ -239,7 +239,7 @@ module {
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
         id = info.id;
         name = info.name;
-        package = info.package;
+        package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
@@ -249,7 +249,7 @@ module {
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
         id = info.id;
         name = info.name;
-        package = info.package;
+        package = unsharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = OrderedHashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);

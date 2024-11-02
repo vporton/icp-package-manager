@@ -127,6 +127,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         nextInstallationId += 1;
 
         await* _installModulesGroup({
+            installationId;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -152,6 +153,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         nextInstallationId += 1;
 
         await* _installModulesGroup({
+            installationId;
             installPackage = true;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
@@ -166,17 +168,25 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     /// `avoidRepeated` forbids to install them same named modules more than once.
     /// TODO: What if, due actor model's non-realiability, it installed partially.
     /// FIXME: This should be combined with package installation.
-    public shared({caller}) func installNamedModules(
-        installationId: Common.InstallationId,
-        modules: [(Text, Blob, ?Blob)], // name, installArg, initArg
-        avoidRepeated: Bool,
-    ): async () {
+    public shared({caller}) func installNamedModules({
+        installationId: Common.InstallationId;
+        repo: Common.RepositoryPartitionRO; // TODO: Install from multiple repos.
+        modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg // FIXME: The third arg is unused.
+        avoidRepeated: Bool; // TODO: Use.
+        user: Principal;
+        preinstalledModules: [(Text, Principal)];
+    }): async {installationId: Common.InstallationId} {
         onlyOwner(caller, "installNamedModule");
 
+        let ?inst = installedPackages.get(installationId) else {
+            Debug.trap("non such package");
+        };
         await* _installModulesGroup({
+            installPackage = false;
+            installationId;
             pmPrincipal = ?Principal.fromActor(this);
-            repo: Common.RepositoryPartitionRO;
-            objectToInstall = #package {packageName; version};
+            repo;
+            objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
             user;
             preinstalledModules;
         });
@@ -194,17 +204,16 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     /// Does most of the work of installing a package.
-    public shared({caller}) func installationWorkCallback({ // callback 1 // TODO
+    public shared({caller}) func installationWorkCallback({
         installPackage: Bool; /// install package or named modules.
         installationId: Common.InstallationId;
-        // createdCanister: Principal;
         user: Principal;
-        package: Common.PackageInfo;
+        package: Common.SharedPackageInfo;
         indirectCaller: IndirectCaller.IndirectCaller;
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
-        preinstalledModules: ?[(Text, Principal)];
+        preinstalledModules: [(Text, Principal)];
     }): async () {
         Debug.print("installationWorkCallback");
 
@@ -212,7 +221,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             Debug.trap("trying to directly install a virtual package");
         };
 
-        let numPackages = Array.size(realPackage.modules);
+        let package2 = Common.unsharePackageInfo(package); // TODO: why used twice below? seems to be a mis-programming.
+        let numPackages = realPackage.modules.size();
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
@@ -220,38 +230,23 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             version = package.base.version;
             modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
             // packageDescriptionIn = part;
-            package;
-            packageRepoCanister = Principal.fromActor(d.repo);
-            preinstalledModules = d.preinstalledModules;
+            package = package2;
+            packageRepoCanister = Principal.fromActor(repo);
+            preinstalledModules = preinstalledModules;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         let installation: Common.InstalledPackageInfo = {
             id = installationId;
-            name = d.packageName;
-            package;
-            packageRepoCanister = Principal.fromActor(d.repo);
-            version = d.version;
+            name = packageName;
+            package = package2;
+            packageRepoCanister = Principal.fromActor(repo);
+            version;
             modules = OrderedHashMap.OrderedHashMap<Text, Principal>(Array.size(realPackage.modules), Text.equal, Text.hash);
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
             allModules = Buffer.Buffer<Principal>(0); // 0?
         };
-
-        let IC: Common.CanisterCreator = actor("aaaaa-aa");
-
-        // TODO: Also correctly create canisters if installation was interrupted.
-        let canisterIds = Buffer.Buffer<(Text, Principal)>(realPackage.modules.size());
-        // TODO: Don't wait for creation of a previous canister to create the next one.
-        label create for ((moduleName, wasmModule) in realPackage.modules.vals()) {
-            let created = Option.isSome(ourHalfInstalled.modules.get(moduleName));
-            if (not created) { // TODO: If all are created...
-                getIndirectCaller().installModule(TODO);
-            };
-            // FIXME: Move to `updateModule`:
-            ourHalfInstalled.modules.put(moduleName, (canister_id, #empty));
-            canisterIds.add((moduleName, canister_id)); // do it later.
-        };
-    };  
+    };
 
     /// Internal
     public shared({caller}) func onCreateCanister({
@@ -297,7 +292,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onInstallCode({ // TODO: Rename here and in the diagram.
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Module)];
+        installingModules: [(Text, Common.SharedModule)];
         user: Principal;
     }): async () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
