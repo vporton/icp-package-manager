@@ -161,9 +161,11 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     private func _installModuleCode({
+        installPackage: Bool;
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
+        installingModules: [(Text, Common.SharedModule)];
         installArg: Blob;
         user: Principal;
     }): async* Principal {
@@ -193,12 +195,25 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };  
         };
         let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor { // FIXME: What we do, if it's bootstrapper?
-            updateModule: shared () -> async (Common.InstallationId);
+            // FIXME: Check that below matches the actual API!
+            onCreateCanister: shared ({
+                installPackage: Bool;
+                installationId: Common.InstallationId;
+                installingModules: [(Text, Common.SharedModule)];
+                canister: Principal;
+                user: Principal;
+            }) -> async ();
+            onInstallCode: shared ({ // TODO: Rename here and in the diagram.
+                installPackage: Bool;
+                installationId: Common.InstallationId;
+                installingModules: [(Text, Common.SharedModule)];
+                user: Principal;
+            }) -> async ();
         };
         await pm.onCreateCanister({
             installPackage; // Bool
             installationId;
-            installingModules: [(Text, Module)];
+            installingModules;
             canister = canister_id;
             user: Principal;
         });
@@ -232,7 +247,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await pm.onInstallCode({
             installPackage; // Bool
             installationId;
-            installingModules: [(Text, Module)]; // TODO: needed?
+            installingModules; // TODO: needed?
             user;
         });
         switch (wasmModule.code) {
@@ -266,8 +281,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             } else {
                 packageManagerOrBootstrapper;
             };
-            let pm = actor(pmPrincipal);
-            pm.updateModule({installationId}); // FIXME: Add arguments.
         }
         catch (e) {
             let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);

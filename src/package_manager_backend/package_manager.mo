@@ -257,10 +257,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Module)];
+        installingModules: [(Text, Common.SharedModule)];
         canister: Principal;
         user: Principal;
-    }): async* () {
+    }): async () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
         };
@@ -299,7 +299,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         installingModules: [(Text, Module)];
         user: Principal;
-    }): async* () {
+    }): async () {
         if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
             Debug.trap("callback not by indirect_caller");
         };
