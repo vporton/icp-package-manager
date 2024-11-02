@@ -263,23 +263,29 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     // FIXME: Accept `preinstalledModules`.
     public shared func installModule({
-        installationId: ?Common.InstallationId; /// `null` means we are not installing a package.
-        wasmModule: Common.Module;
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         weArePackageManager: Bool;
+        installArg: Blob;
+        installingModules: [(Text, Common.SharedModule)];
     }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
             let canister_id = switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) preinstalledCanisterId; // FIXME: callbacks also here
-                case (null) await* _installModuleCode({installationId; wasmModule});
-            };
-            let pmPrincipal = if (weArePackageManager) {
-                canister_id;
-            } else {
-                packageManagerOrBootstrapper;
+                case (null) await* _installModuleCode({
+                    installationId;
+                    wasmModule = Common.unshareModule(wasmModule);
+                    installPackage;
+                    installArg;
+                    installingModules;
+                    packageManagerOrBootstrapper;
+                    user;
+                });
             };
         }
         catch (e) {
