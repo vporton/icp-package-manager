@@ -123,7 +123,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
         repo: Common.RepositoryPartitionRO;
-        pmPrincipal: Principal;
+        pmPrincipal: ?Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         installationId: Common.InstallationId;

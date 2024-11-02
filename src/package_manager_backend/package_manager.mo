@@ -186,7 +186,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         await* _installModulesGroup({
             installPackage = false;
             installationId;
-            packageName = inst.package.packageName;
+            packageName = inst.package.base.name;
             pmPrincipal = ?Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
@@ -400,50 +400,51 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
     };
 
-    public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
-        : async ()
-    {
-        onlyOwner(caller, "uninstallPackage");
+    // TODO: Uncomment.
+    // public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
+    //     : async ()
+    // {
+    //     onlyOwner(caller, "uninstallPackage");
 
-        let ?installation = installedPackages.get(installationId) else {
-            Debug.trap("no such installed installation");
-        };
-        let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(installation.packageRepoCanister));
-        let packageInfo = await part.getPackage(installation.name, installation.version);
+    //     let ?installation = installedPackages.get(installationId) else {
+    //         Debug.trap("no such installed installation");
+    //     };
+    //     let part: RepositoryPartition.RepositoryPartition = actor (Principal.toText(installation.packageRepoCanister));
+    //     let packageInfo = await part.getPackage(installation.name, installation.version);
 
-        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
-            name = installation.name;
-            version = installation.version;
-            // FIXME: Is `modules` expression correct?
-            modules = HashMap.fromIter<(Text, (Principal, {#empty; #installed}))>( // TODO: can be made simpler?
-                Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
-                    installation.modules.entries(),
-                    func ((x, y): (Text, Principal)): (Text, (Principal, {#empty; #installed})) = (x, (y, #installed)),
-                ),
-                installation.modules.size(),
-                Text.equal,
-                Text.hash,
-            );
-            package = packageInfo;
-            packageRepoCanister = installation.packageRepoCanister;
-            preinstalledModules = null; // TODO: Seems right, but check again.
-        };
-        halfInstalledPackages.put(installationId, ourHalfInstalled);
+    //     let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+    //         numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
+    //         name = installation.name;
+    //         version = installation.version;
+    //         // FIXME: Is `modules` expression correct?
+    //         modules = HashMap.fromIter<Text, (Principal, {#empty; #installed})>( // TODO: can be made simpler?
+    //             Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
+    //                 installation.modules.entries(),
+    //                 func ((x, y): (Text, Principal)): (Text, (Principal, {#empty; #installed})) = (x, (y, #installed)),
+    //             ),
+    //             installation.modules.size(),
+    //             Text.equal,
+    //             Text.hash,
+    //         );
+    //         package = packageInfo;
+    //         packageRepoCanister = installation.packageRepoCanister;
+    //         preinstalledModules = null; // TODO: Seems right, but check again.
+    //     };
+    //     halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        // TODO:
-        // let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
-        // let installation = await part.getPackage(packageName, version);
-        let #real realPackage = packageInfo.specific else {
-            Debug.trap("trying to directly install a virtual installation");
-        };
+    //     // TODO:
+    //     // let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+    //     // let installation = await part.getPackage(packageName, version);
+    //     let #real realPackage = packageInfo.specific else {
+    //         Debug.trap("trying to directly install a virtual installation");
+    //     };
 
-        await* _finishUninstallPackage({
-            installationId;
-            ourHalfInstalled;
-            realPackage;
-        });
-    };
+    //     await* _finishUninstallPackage({
+    //         installationId;
+    //         ourHalfInstalled;
+    //         realPackage;
+    //     });
+    // };
 
     type CanisterDeletor = actor {
         stop_canister : shared { canister_id : Common.canister_id } -> async ();
@@ -618,8 +619,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             {
                 installationId = x.0;
                 packageRepoCanister = x.1.packageRepoCanister;
-                name = x.1.name;
-                version = x.1.version;
+                name = x.1.packageName;
+                version = x.1.package.base.version;
             },
         ));
     };
@@ -628,12 +629,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public query func getHalfInstalledPackageById(installationId: Common.InstallationId): async {
         packageName: Text;
         version: Common.Version;
-        package: Common.PackageInfo;
+        package: Common.SharedPackageInfo;
     } {
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package")
         };
-        {packageName = res.packageName; version = res.version; package = res.package};
+        {packageName = res.packageName; version = res.package.base.version; package = Common.sharePackageInfo(res.package)};
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
@@ -678,6 +679,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     private func _installModulesGroup({
         installPackage: Bool;
         installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        packageVersion: Common.Version;
         pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping).
         repo: Common.RepositoryPartitionRO;
         objectToInstall: ObjectToInstall;
@@ -689,6 +692,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         getIndirectCaller().installPackageWrapper({
             installPackage;
             installationId;
+            packageName;
+            version = packageVersion;
             pmPrincipal;
             repo;
             objectToInstall;
