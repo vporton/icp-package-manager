@@ -192,6 +192,13 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor { // FIXME: What we do, if it's bootstrapper?
             updateModule: shared () -> async (Common.InstallationId);
         };
+        await pm.onCreateCanister({
+            installPackage; // Bool
+            installationId;
+            installingModules: [(Text, Module)];
+            canister = canister_id;
+            user: Principal;
+        });
 
         let wasmModuleLocation = switch (wasmModule.code) {
             case (#Wasm wasmModuleLocation) {
@@ -208,42 +215,30 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.trap("package WASM code is not available");
         };
 
+        await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+            arg = Blob.toArray(to_candid({
+                userArg = installArg;
+                packageManagerOrBootstrapper;
+                user;
+            }));
+            wasm_module;
+            mode = #install;
+            canister_id;
+            // sender_canister_version = ;
+        });
+        await pm.onInstallCode({
+            installPackage; // Bool
+            installationId;
+            installingModules: [(Text, Module)]; // TODO: needed?
+            user;
+        });
         switch (wasmModule.code) {
             case (#Assets {assets}) {
-                await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
-                    arg = Blob.toArray(to_candid({
-                        userArg = installArg;
-                        packageManagerOrBootstrapper;
-                        user;
-                    }));
-                    wasm_module;
-                    mode = #install;
-                    canister_id;
-                    // sender_canister_version = ;
-                });
                 await this.copyAll({ // TODO: Don't call shared.
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
-                // TODO: Should here also call `init()` like below?
             };
-            case _ {
-                let arg = {
-                    userArg = installArg;
-                    packageManagerOrBootstrapper;
-                    user;
-                };
-                await IC.install_code({
-                    arg = Blob.toArray(to_candid(arg));
-                    wasm_module;
-                    mode = #install;
-                    canister_id;
-                });
-                // TODO:
-                // modules = Iter.toArray(Iter.map<(Text, (Principal, {#empty; #installed})), (Text, Principal)>(
-                //     ourHalfInstalled.modules.entries(),
-                //     func ((x, (y, z)): (Text, (Principal, {#empty; #installed}))) = (x, y),
-                // ));
-            };
+            case _ {};
         };
         canister_id;
     };
@@ -260,7 +255,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
             let canister_id = switch (preinstalledCanisterId) {
-                case (?preinstalledCanisterId) preinstalledCanisterId;
+                case (?preinstalledCanisterId) preinstalledCanisterId; // FIXME: callbacks also here
                 case (null) await* _installModuleCode({installationId; wasmModule});
             };
             let pmPrincipal = if (weArePackageManager) {
