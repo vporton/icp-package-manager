@@ -12,31 +12,5 @@ import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
 
 module {
-    public func _registerModule({
-        installation: Common.InstallationId;
-        canister: Principal;
-        packageManager: Principal;
-        // installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // FIXME
-    }): async* () {
-        // TODO:
-        // let ?inst = installedPackages.get(installation) else {
-        //     Debug.trap("no such installationId: " # debug_show(installation));
-        // };
-        // inst.allModules.add(canister);
-        // TODO
-    };
-
-    public func _registerNamedModule({
-        installation: Common.InstallationId;
-        canister: Principal;
-        packageManager: Principal;
-        moduleName: Text;
-        installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo>; // TODO: not here
-    }): async* () {
-        await* _registerModule({installation; canister; packageManager; installedPackages});
-        let ?inst = installedPackages.get(installation) else {
-            Debug.trap("no such installationId: " # debug_show(installation));
-        };
-        inst.modules.put(moduleName, canister);
-    };
+    // TODO: delete
 }

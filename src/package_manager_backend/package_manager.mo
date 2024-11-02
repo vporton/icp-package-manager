@@ -311,10 +311,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     /// Internal
-    public shared({caller}) func onInstallCode({ // TODO: Rename here and in the diagram.
+    public shared({caller}) func onInstallCode({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        installingModules: [(Text, Common.SharedModule)];
+        installingModules: [(Text, Common.SharedModule)]; // TODO: Don't pass it around in shared methods (here and in other places).
+        canister: Principal;
+        moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
@@ -328,7 +330,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let module2 = Common.unshareModule(module_); // TODO: necessary?
         // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
         switch (module2.callbacks.get(#CodeInstalled)) {
-            case (callbackName) {
+            case (?callbackName) {
                 getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                     canister;
                     name = callbackName;
@@ -337,16 +339,23 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             };
             case null {};
         };
-        _registerNamedModule({
-            installation = installationId;
-            canister;
-            packageManager = Principal.fromActor(this);
-            moduleName;
-        });
+        switch (moduleName) {
+            case (?moduleName) {
+                await* _registerNamedModule({
+                    installation = installationId;
+                    canister;
+                    packageManager = Principal.fromActor(this);
+                    moduleName;
+                });
+            };
+            case null {
+                // FIXME: Register unnamed module
+            };
+        };
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
-                case (callbackName) {
+                case (?callbackName) {
                     getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                         canister;
                         name = callbackName;
@@ -686,5 +695,31 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         });
 
         {installationId};
+    };
+
+    private func _registerModule({
+        installation: Common.InstallationId;
+        canister: Principal;
+        packageManager: Principal;
+    }): async* () {
+        // TODO:
+        // let ?inst = installedPackages.get(installation) else {
+        //     Debug.trap("no such installationId: " # debug_show(installation));
+        // };
+        // inst.allModules.add(canister);
+        // TODO
+    };
+
+    private func _registerNamedModule({
+        installation: Common.InstallationId;
+        canister: Principal;
+        packageManager: Principal;
+        moduleName: Text;
+    }): async* () {
+        await* _registerModule({installation; canister; packageManager; installedPackages});
+        let ?inst = installedPackages.get(installation) else {
+            Debug.trap("no such installationId: " # debug_show(installation));
+        };
+        inst.modules.put(moduleName, canister);
     };
 }
