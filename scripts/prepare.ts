@@ -53,8 +53,11 @@ async function main() {
     await repositoryIndex.setRepositoryName("RedSocks");
 
     console.log("Uploading WASM code...");
-    const pmFrontendModule = await repositoryIndex.uploadModule({Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}});
-    const pmBackendModule = await repositoryIndex.uploadModule({Wasm: pmBackendBlob});
+    const pmFrontendModule = await repositoryIndex.uploadModule({
+        code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
+        callbacks: []
+    });
+    const pmBackendModule = await repositoryIndex.uploadModule({code: {Wasm: pmBackendBlob}, callbacks: []});
 
     console.log("Creating packages...");
     const real: SharedRealPackageInfo = {
