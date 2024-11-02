@@ -274,6 +274,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
 
         // FIXME: I forgot to call `indirect_caller.installModule` in this function.
+        for (m in modulesToInstall.vals()) {
+            // FIXME: correct indirect caller?
+            getIndirectCaller().installModule();
+        };
     };
 
     /// Internal
