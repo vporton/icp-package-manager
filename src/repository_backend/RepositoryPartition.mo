@@ -99,11 +99,11 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     };
   };
 
-  public query func getFullPackageInfo(name: Common.PackageName): async Common.FullPackageInfo {
+  public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
     _getFullPackageInfo(name);
   };
 
-  private func _setFullPackageInfo(name: Common.PackageName, info: Common.FullPackageInfo) {
+  private func _setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo) {
     let b = to_candid(info);
     _putAttribute(name, "v", #int 0); // version info
     _putAttribute(name, "p", #blob b);
@@ -111,12 +111,12 @@ shared ({ caller = owner }) actor class RepositoryPartition({
 
   /// TODO: Put a barrier to make the update atomic.
   /// TODO: Don't call it directly.
-  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.FullPackageInfo): async () {
+  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
     onlyOwner(caller);
     _setFullPackageInfo(name, info);
   };
 
-  public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.PackageInfo {
+  public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
     let fullInfo = _getFullPackageInfo(name);
     for ((curVersion, info) in fullInfo.packages.vals()) {
       if (curVersion == version) {

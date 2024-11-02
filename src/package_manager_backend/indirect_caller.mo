@@ -163,6 +163,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     private func _installModuleCode({
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
+        packageManagerOrBootstrapper: Principal;
+        installArg: Blob;
+        user: Principal;
     }): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
         Cycles.add<system>(10_000_000_000_000);

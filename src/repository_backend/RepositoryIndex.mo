@@ -277,7 +277,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     {canister = Principal.fromActor(part); id = idText};
   };
 
-  public shared({caller}) func createPackage(name: Common.PackageName, info: Common.FullPackageInfo): async {canister: Principal} {
+  public shared({caller}) func createPackage(name: Common.PackageName, info: Common.SharedFullPackageInfo): async {canister: Principal} {
     onlyOwner(caller);
     let part0 = getLastCanisterByPKInternal("main");
     let part: RepositoryPartition.RepositoryPartition = actor(part0);
@@ -285,17 +285,20 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     {canister = Principal.fromActor(part)};
   };
 
-  public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.Module {
+  public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.SharedModule {
     onlyOwner(caller);
 
-    switch (module_) {
-      case (#Wasm blob) {
-          let {canister; id} = await* _uploadWasm(blob);
-          #Wasm (canister, id);
-      };
-      case (#Assets {wasm: Blob; assets: Principal}) {
-        let {canister; id} = await* _uploadWasm(wasm);
-        #Assets {wasm = (canister, id); assets};
+    {
+      callbacks = module_.callbacks;
+      code = switch (module_.code) {
+        case (#Wasm blob) {
+            let {canister; id} = await* _uploadWasm(blob);
+            #Wasm (canister, id);
+        };
+        case (#Assets {wasm: Blob; assets: Principal}) {
+          let {canister; id} = await* _uploadWasm(wasm);
+          #Assets {wasm = (canister, id); assets};
+        };
       };
     };
   };
