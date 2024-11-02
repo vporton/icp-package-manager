@@ -272,6 +272,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // extraModules = Buffer.Buffer<(Text, Principal)>(Array.size(realPackage.extraModules));
             allModules = Buffer.Buffer<Principal>(0); // 0?
         };
+
+        // FIXME: I forgot to call `indirect_caller.installModule` in this function.
     };
 
     /// Internal
