@@ -122,12 +122,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
+        whatToInstall: {
+            #package;
+            #simplyModules : [(Text, Common.SharedModule)];
+        };
         repo: Common.RepositoryPartitionRO;
         pmPrincipal: ?Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         installationId: Common.InstallationId;
         preinstalledModules: [(Text, Principal)];
+        user: Principal;
     }): () {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
@@ -146,21 +151,32 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
             let pm = actor (Principal.toText(realPMPrincipal)) : actor {
                 installationWorkCallback: ({
+                    whatToInstall: {
+                        #package;
+                        #simplyModules : [(Text, Common.SharedModule)];
+                    };
                     installationId: Common.InstallationId;
-                    // createdCanister: Principal; // FIXME: seems superfluous
-                    caller: Principal;
+                    user: Principal;
                     package: Common.SharedPackageInfo;
                     indirectCaller: IndirectCaller;
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    repo: Common.RepositoryPartitionRO;
+                    preinstalledModules: [(Text, Principal)];
                 }) -> async ();
             };
 
-            Debug.print("Call installationWorkCallback");
+            Debug.print("Call installationWorkCallback"); // FIXME: Remove.
             await pm.installationWorkCallback({ // FIXME: This callback should call the next one, in order to deliver `createdCanister`.
+                whatToInstall; /// install package or named modules.
                 installationId;
-                // createdCanister;
-                caller;
+                user;
                 package;
                 indirectCaller = this;
+                packageName; // TODO: duplicate in `specific`
+                version; // TODO: duplicate in `specific`
+                repo;
+                preinstalledModules;
             });
         }
         catch (e) {

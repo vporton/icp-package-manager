@@ -107,7 +107,7 @@ module {
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: HashMap.HashMap<Text, (SharedModule, Bool)>; // Modules are named for correct upgrades. `Bool` means "install by default".
+        modules: HashMap.HashMap<Text, (Module, Bool)>; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -120,7 +120,12 @@ module {
 
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
         {
-            modules = Iter.toArray(package.modules.entries());
+            modules = Iter.toArray(
+                Iter.map<(Text, (Module, Bool)), (Text, (SharedModule, Bool))>(
+                    package.modules.entries(),
+                    func ((k, (m, b)): (Text, (Module, Bool))): (Text, (SharedModule, Bool)) = (k, (shareModule(m), b)),
+                ),
+            );
             dependencies = package.dependencies;
             functions = package.functions;
             permissions = package.permissions;
@@ -129,7 +134,10 @@ module {
     public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
         {
             modules = HashMap.fromIter(
-                package.modules.vals(),
+                Iter.map<(Text, (SharedModule, Bool)), (Text, (Module, Bool))>(
+                    package.modules.vals(),
+                    func ((k, (m, b)): (Text, (SharedModule, Bool))): (Text, (Module, Bool)) = (k, (unshareModule(m), b)),
+                ),
                 package.modules.size(),
                 Text.equal,
                 Text.hash,
@@ -304,11 +312,9 @@ module {
         modulesToInstall: HashMap.HashMap<Text, Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
         packageName: PackageName;
-        specific: { // TODO: needed?
-            #package : {
-                version: Version;
-            };
-            #simplyModules;
+        whatToInstall: {
+            #package;
+            #simplyModules : [(Text, SharedModule)];
         };
         modulesWithoutCode: HashMap.HashMap<Text, Principal>;
         installedModules: HashMap.HashMap<Text, Principal>;
