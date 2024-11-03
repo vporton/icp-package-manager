@@ -228,7 +228,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             };
             #simplyModules;
         };
-
     }): async () {
         Debug.print("installationWorkCallback");
 
