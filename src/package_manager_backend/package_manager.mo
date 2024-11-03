@@ -266,7 +266,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // FIXME: correct indirect caller?
             // Starting installation of all modules in parallel:
             getIndirectCaller().installModule({
-                installArg = "";
+                installArg = ""; // TODO
                 installPackage;
                 installationId;
                 modulesToInstall; // FIXME: Isn't this optional for the case of installing now a package?
