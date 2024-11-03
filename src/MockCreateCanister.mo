@@ -4,7 +4,6 @@
 ///
 /// TODO: Extract this to a separate MOPS package
 import Cycles "mo:base/ExperimentalCycles";
-import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 
 actor MockCreateCanister {

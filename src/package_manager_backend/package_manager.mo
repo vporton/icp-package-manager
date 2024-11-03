@@ -291,7 +291,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         for (m in realModulesToInstall2.vals()) { // FIXME: Not all modules are installed by default.
             // FIXME: correct indirect caller?
             // Starting installation of all modules in parallel:
-            getIndirectCaller().installModule({
+            ignore getIndirectCaller().installModule({
                 installPackage = whatToInstall == #package; // a little bit hacky
                 installArg = ""; // TODO
                 installationId;

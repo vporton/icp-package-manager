@@ -1,5 +1,5 @@
 /// Canister that takes on itself potentially non-returning calls.
-import Exp "mo:base/ExperimentalInternetComputer";
+// import Exp "mo:base/ExperimentalInternetComputer"; // TODO: This or IC.call for calls?
 import Cycles "mo:base/ExperimentalCycles";
 import IC "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
@@ -34,7 +34,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
-    private func callAllOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
                 ignore await IC.call(method.canister, method.name, method.data); 
@@ -53,7 +53,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     /// If a method is missing, keep calling other methods.
     ///
     /// FIXME: We don't need this function.
-    private func callIgnoringMissingOneWayImpl(caller: Principal, methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+    private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         for (method in methods.vals()) {
             try {
                 ignore await IC.call(method.canister, method.name, method.data);
@@ -73,13 +73,13 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
         onlyOwner(caller);
 
-        await* callIgnoringMissingOneWayImpl(caller, methods)
+        await* callIgnoringMissingOneWayImpl(methods)
     };
 
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
         onlyOwner(caller);
 
-        await* callAllOneWayImpl(caller, methods);
+        await* callAllOneWayImpl(methods);
     };
 
     /// FIXME: We don't need this function.
@@ -280,7 +280,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         canister_id;
     };
 
-    // FIXME: Accept `preinstalledModules`.
     public shared func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -289,10 +288,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
-    }): () {
+    }): async Principal {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
-            let canister_id = switch (preinstalledCanisterId) {
+            switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) preinstalledCanisterId; // FIXME: callbacks also here
                 case null {
                     await* _installModuleCode({
@@ -309,6 +308,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         catch (e) {
             let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
             Debug.print(msg);
+            Debug.trap(msg);
         };
     };
 }
