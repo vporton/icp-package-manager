@@ -262,7 +262,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        for (m in modulesToInstall.vals()) {
+        for (m in modulesToInstall.vals()) { // FIXME: Not all modules are installed by default.
             // FIXME: correct indirect caller?
             // Starting installation of all modules in parallel:
             getIndirectCaller().installModule({
