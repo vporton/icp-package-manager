@@ -269,7 +269,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 installArg = ""; // TODO
                 installPackage;
                 installationId;
-                modulesToInstall; // FIXME: Isn't this optional for the case of installing now a package?
+                modulesToInstall;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
                 preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
                 user;
