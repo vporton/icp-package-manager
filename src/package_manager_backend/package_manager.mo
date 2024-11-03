@@ -274,7 +274,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
                 user;
                 wasmModule = m.1;
-                weArePackageManager;
             });
         };
     };
@@ -283,8 +282,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        modulesToInstall: [(Text, Common.SharedModule)]; // TODO: Don't draw it through shared methods (here and in other places).
         module_: Common.SharedModule;
+        moduleName: Text;
         canister: Principal;
         user: Principal;
     }): async () {
@@ -313,7 +312,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                     getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
                         canister;
                         name = callbackName;
-                        data = to_candid(); // TODO 
+                        data = to_candid({ // TODO
+                            installationId;
+                            moduleName;
+                            canister;
+                            user;
+                        });
                     }]);
                 };
                 case null {};
@@ -325,7 +329,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installPackage: Bool;
         installationId: Common.InstallationId;
-        modulesToInstall: [(Text, Common.SharedModule)]; // TODO: Don't pass it around in shared methods (here and in other places).
         canister: Principal;
         moduleName: ?Text;
         user: Principal;
@@ -370,7 +373,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                     getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                         canister;
                         name = callbackName;
-                        data = to_candid(); // TODO 
+                        data = to_candid({ // TODO
+                            installationId;
+                            moduleName;
+                            canister;
+                            user;
+                        });
                     }]);
                 };
                 case null {};
@@ -386,25 +394,30 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
-        installedPackages.put(installationId, {
-            id = installationId;
-            name = ourHalfInstalled.packageName;
-            package = ourHalfInstalled.package;
-            version = ourHalfInstalled.package.base.version; // TODO: needed?
-            // FIXME: Need deep copy for `modules`?
-            modules = ourHalfInstalled.installedModules;
-            packageRepoCanister = ourHalfInstalled.packageRepoCanister;
-            allModules = Buffer.Buffer<Principal>(0);
-        });
-        halfInstalledPackages.delete(installationId);
-        switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
-            case (?ids) {
-                installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
+        switch (ourHalfInstalled.specific) {
+            case (#package _) {
+                installedPackages.put(installationId, {
+                    id = installationId;
+                    name = ourHalfInstalled.packageName;
+                    package = ourHalfInstalled.package;
+                    version = ourHalfInstalled.package.base.version; // TODO: needed?
+                    // FIXME: Need deep copy for `modules`?
+                    modules = ourHalfInstalled.installedModules;
+                    packageRepoCanister = ourHalfInstalled.packageRepoCanister;
+                    allModules = Buffer.Buffer<Principal>(0);
+                });
+                switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
+                    case (?ids) {
+                        installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
+                    };
+                    case null {
+                        installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
+                    };
+                };
             };
-            case null {
-                installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
-            };
+            case (#simplyModules) {};
         };
+        halfInstalledPackages.delete(installationId);
     };
 
     // TODO: Uncomment.
