@@ -80,7 +80,7 @@ actor MockCreateCanister {
         compute_allocation : ?Nat;
     };
 
-    // FIXME: `args.amount`
+    // TODO: `args.amount`
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
         ignore Cycles.accept<system>(10_000_000_000_000);
         let sub = do ? { args.creation_args!.settings! };
