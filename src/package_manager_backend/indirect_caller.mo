@@ -158,9 +158,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     installationId: Common.InstallationId;
                     user: Principal;
                     package: Common.SharedPackageInfo;
-                    indirectCaller: IndirectCaller;
-                    packageName: Common.PackageName;
-                    version: Common.Version;
                     repo: Common.RepositoryPartitionRO;
                     preinstalledModules: [(Text, Principal)];
                 }) -> async ();
@@ -172,9 +169,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 installationId;
                 user;
                 package;
-                indirectCaller = this;
-                packageName; // TODO: duplicate in `specific`
-                version; // TODO: duplicate in `specific`
                 repo;
                 preinstalledModules;
             });

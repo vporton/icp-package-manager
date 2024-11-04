@@ -222,9 +222,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         user: Principal;
         package: Common.SharedPackageInfo;
-        indirectCaller: IndirectCaller.IndirectCaller;
-        packageName: Common.PackageName;
-        version: Common.Version;
         repo: Common.RepositoryPartitionRO;
         preinstalledModules: [(Text, Principal)];
     }): async () {
