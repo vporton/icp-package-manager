@@ -52,7 +52,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     ///
     /// If a method is missing, keep calling other methods.
     ///
-    /// FIXME: We don't need this function.
+    /// TODO: We don't need this function.
     private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         for (method in methods.vals()) {
             try {
@@ -69,7 +69,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
-    /// FIXME: We don't need this function.
+    /// TODO: We don't need this function.
     public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
         onlyOwner(caller);
 
@@ -82,7 +82,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await* callAllOneWayImpl(methods);
     };
 
-    /// FIXME: We don't need this function.
+    /// TODO: We don't need this function.
     public shared({caller}) func callIgnoringMissing(method: {canister: Principal; name: Text; data: Blob}): async Blob {
         onlyOwner(caller);
 
