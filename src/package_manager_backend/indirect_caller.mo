@@ -180,6 +180,21 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
+    private type Callbacks = actor {
+        // FIXME: Check that below matches the actual API!
+        onCreateCanister: shared ({
+            installPackage: Bool;
+            installationId: Common.InstallationId;
+            canister: Principal;
+            user: Principal;
+        }) -> async ();
+        onInstallCode: shared ({
+            installPackage: Bool;
+            installationId: Common.InstallationId;
+            user: Principal;
+        }) -> async ();
+    };
+
     private func _installModuleCode({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -219,20 +234,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         } else {
             packageManagerOrBootstrapper;
         };
-        let pm = actor(Principal.toText(pmPrincipal)) : actor {
-            // FIXME: Check that below matches the actual API!
-            onCreateCanister: shared ({
-                installPackage: Bool;
-                installationId: Common.InstallationId;
-                canister: Principal;
-                user: Principal;
-            }) -> async ();
-            onInstallCode: shared ({ // TODO: Rename here and in the diagram.
-                installPackage: Bool;
-                installationId: Common.InstallationId;
-                user: Principal;
-            }) -> async ();
-        };
+        let pm: Callbacks = actor(Principal.toText(pmPrincipal));
         await pm.onCreateCanister({
             installPackage; // Bool
             installationId;
@@ -295,7 +297,21 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
             switch (preinstalledCanisterId) {
-                case (?preinstalledCanisterId) preinstalledCanisterId; // FIXME: callbacks also here
+                case (?preinstalledCanisterId) {
+                    let preinstalledCanister: Callbacks = actor (Principal.toText(preinstalledCanisterId));
+                    await preinstalledCanister.onCreateCanister({
+                        installPackage;
+                        installationId;
+                        canister = preinstalledCanisterId;
+                        user;
+                    });
+                    await preinstalledCanister.onInstallCode({
+                        installPackage;
+                        installationId;
+                        user;
+                    });
+                    preinstalledCanisterId;
+                };
                 case null {
                     await* _installModuleCode({
                         installationId;

@@ -265,6 +265,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         };
         let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
 
+        let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
+            preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
@@ -274,7 +276,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // packageDescriptionIn = part;
             package = package2;
             packageRepoCanister = Principal.fromActor(repo);
-            preinstalledModules = HashMap.fromIter(preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
+            preinstalledModules = preinstalledModules2;
             modulesToInstall = HashMap.fromIter<Text, Common.Module>(
                 realModulesToInstall2.vals(),
                 realModulesToInstallSize,

@@ -69,23 +69,27 @@ module {
 
     public type SharedModule = {
         code: ModuleCode;
+        forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
     };
 
     public type Module = {
         code: ModuleCode;
+        forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 
     public func shareModule(m: Module): SharedModule =
         {
             code = m.code;
+            forceReinstall = m.forceReinstall;
             callbacks = Iter.toArray(m.callbacks.entries());
         };
 
     public func unshareModule(m: SharedModule): Module =
         {
             code = m.code;
+            forceReinstall = m.forceReinstall;
             callbacks = HashMap.fromIter(
                 m.callbacks.vals(),
                 m.callbacks.size(),
