@@ -9,17 +9,10 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
-import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
-import Option "mo:base/Option";
-import Nat64 "mo:base/Nat64";
-import Time "mo:base/Time";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
-import RepositoryPartition "../repository_backend/RepositoryPartition";
 import IndirectCaller "indirect_caller";
-import Install "../install";
-import cycles_ledger "canister:cycles_ledger";
 
 shared({/*caller = initialOwner*/}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
@@ -51,7 +44,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     // TODO: needed? // FIXME: `onlyOwner`
     // TODO: indirectCaller set at an earlier stage with `setIndirectCaller()`
-    public shared({caller}) func b44c4a9beec74e1c8a7acbe46256f92f_init({
+    public shared func b44c4a9beec74e1c8a7acbe46256f92f_init({ // FIXME: naming
         user: Principal;
         indirect_caller: Principal;
     }) : async () {
@@ -88,7 +81,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
-        HashMap.HashMap(0, Nat.equal, Int.hash);
+        HashMap.HashMap(0, Nat.equal, Common.IntHash);
 
     stable var _installedPackagesByNameSave: [(Common.PackageName, [Common.InstallationId])] = [];
     var installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
@@ -103,7 +96,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     })] = [];
     // TODO: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Int.hash);
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
@@ -593,7 +586,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 },
             ),Array.size(_installedPackagesSave),
             Nat.equal,
-            Int.hash,
+            Common.IntHash,
         );
         _installedPackagesSave := []; // Free memory.
 

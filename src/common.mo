@@ -5,10 +5,25 @@ import Text "mo:base/Text";
 import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
 import Hash "mo:base/Hash";
-import OrderedHashMap "mo:ordered-map";
+import Int "mo:base/Int";
+import Nat32 "mo:base/Nat32";
+import Nat "mo:base/Nat";
 import Entity "mo:candb/Entity";
 
 module {
+    public func IntHash(value: Int): Hash.Hash {
+        var v2 = Int.abs(value);
+        var hash: Nat32 = 0;
+        while (v2 != 0) {
+            let rem = v2 % (2**32);
+            hash ^= Nat32.fromNat(rem);
+        };
+        if (value < 0) {
+            hash ^= Nat32.fromNat(2**32 - 1); // invert every bit
+        };
+        hash;
+    };
+
     public type PackageName = Text;
 
     // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.

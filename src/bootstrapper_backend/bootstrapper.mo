@@ -77,7 +77,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     // TODO: Remove old elements to save space.
-    let bootstrapIds = TrieMap.TrieMap<Nat, Principal>(Nat.equal, Int.hash);
+    let bootstrapIds = TrieMap.TrieMap<Nat, Principal>(Nat.equal, Common.IntHash);
     var nextBootstrapId = 0;
 
     public shared func getBootstrappedCanister(i: Nat): async Principal {
