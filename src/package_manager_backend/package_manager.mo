@@ -7,7 +7,6 @@ import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
-import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import OrderedHashMap "mo:ordered-map";
@@ -106,6 +105,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         }
     };
 
+    func onlyIndirectCaller(caller: Principal, msg: Text) {
+        if (caller == Principal.fromActor(getIndirectCaller())) {
+            Debug.trap("not from indirectCaller: " # msg);
+        }
+    };
+
     public shared({caller}) func installPackage({
         packageName: Common.PackageName;
         version: Common.Version;
@@ -175,7 +180,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         installationId: Common.InstallationId;
         repo: Common.RepositoryPartitionRO; // TODO: Install from multiple repos.
         modules: [(Text, Common.SharedModule)]; // TODO: installArg, initArg
-        avoidRepeated: Bool; // TODO: Use.
+        _avoidRepeated: Bool; // TODO: Use.
         user: Principal;
         preinstalledModules: [(Text, Principal)];
     }): async {installationId: Common.InstallationId} {
@@ -223,7 +228,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         preinstalledModules: [(Text, Principal)];
     }): async () {
-        Debug.print("installationWorkCallback");
+        Debug.print("installationWorkCallback"); // FIXME: Remove.
+        onlyIndirectCaller(caller, "installationWorkCallback");
 
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -305,9 +311,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         canister: Principal;
         user: Principal;
     }): async () {
-        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
-            Debug.trap("callback not by indirect_caller");
-        };
+        onlyIndirectCaller(caller, "onCreateCanister");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
@@ -352,9 +356,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
-        if (caller != Principal.fromActor(getIndirectCaller())) { // TODO
-            Debug.trap("callback not by indirect_caller");
-        };
+        onlyIndirectCaller(caller, "onInstallCode");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
