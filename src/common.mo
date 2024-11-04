@@ -46,6 +46,7 @@ module {
         #CodeInstalled;
         #AllCanistersCreated;
         #CodeInstalledForAllCanisters;
+        // TODO: Event like `#CodeInstalled` for a particular module, but fired only after all canisters are created.
     };
 
     private func moduleEventHash(e: ModuleEvent): Hash.Hash =
