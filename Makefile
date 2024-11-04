@@ -10,12 +10,12 @@ deploy:
 	# dfx canister create bootstrapper_frontend
 	dfx canister create RepositoryIndex
 	# dfx canister create bookmark
-	dfx canister create indirect_caller
+	dfx canister create BootstrapperIndirectCaller
 	dfx canister create internet_identity
 	# TODO: What does it do with cycles_ledger on mainnet?
 	dfx canister create cycles_ledger
-	dfx build indirect_caller
-	dfx canister install -m auto indirect_caller
+	dfx build BootstrapperIndirectCaller
+	dfx canister install -m auto BootstrapperIndirectCaller
 	dfx build package_manager
 #	dfx canister install -m auto package_manager
 	# dfx build bootstrapper
@@ -36,6 +36,6 @@ deploy:
 	dfx deploy internet_identity
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister cycles_ledger
-	dfx ledger fabricate-cycles --t 2000000 --canister indirect_caller
+	dfx ledger fabricate-cycles --t 2000000 --canister BootstrapperIndirectCaller
 	-dfx canister call RepositoryIndex init "()"
 	# npx ts-node scripts/prepare.ts

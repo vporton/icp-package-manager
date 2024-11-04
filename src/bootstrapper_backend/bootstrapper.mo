@@ -19,7 +19,7 @@ import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import {ic} "mo:ic"; // TODO: Use this in other places, too.
-import indirect_caller "canister:indirect_caller"; // TODO: Rename to signify, it is only for bootstrapper.
+import bootstrapperIndirectCaller "canister:BootstrapperIndirectCaller"; // TODO: Rename to signify, it is only for bootstrapper.
 
 shared({caller = initialOwner}) actor class Bootstrap() = this {
     var owner = initialOwner;
@@ -95,7 +95,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let {installationId} = await* Install._installModuleButDontRegister({ // PM frontend
             callback = ?bootstrapFrontendCallback;
             data = to_candid({frontendId});
-            indirectCaller = actor(Principal.toText(Principal.fromActor(indirect_caller))); // TODO: Why is this equillibristic needed?
+            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: Why is this equillibristic needed?
             initArg = null;
             installArg = to_candid(());
             packageManagerOrBootstrapper = Principal.fromActor(this);

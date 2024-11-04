@@ -1,6 +1,6 @@
 {
   "canisters": {
-    "indirect_caller": {
+    "BootstrapperIndirectCaller": {
       "type": "motoko",
       "main": "src/package_manager_backend/indirect_caller.mo",
       "dependencies": ["cycles_ledger"]
@@ -13,7 +13,7 @@
     "bootstrapper": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["indirect_caller"]
+      "dependencies": ["BootstrapperIndirectCaller"]
     },
     "bookmark": {
       "type": "motoko",
