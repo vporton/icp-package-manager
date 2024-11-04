@@ -135,6 +135,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules = [];
+            bootstrappingPM = false;
         });
     };
 
@@ -168,6 +169,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
+            bootstrappingPM = true; // TODO: check this
         });
     };
 
@@ -199,6 +201,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
             user;
             preinstalledModules;
+            bootstrappingPM = false;
         });
     };
 
@@ -224,6 +227,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         repo: Common.RepositoryPartitionRO;
         preinstalledModules: [(Text, Principal)];
+        bootstrappingPM: Bool;
     }): async () {
         Debug.print("installationWorkCallback"); // FIXME: Remove.
         onlyIndirectCaller(caller, "installationWorkCallback");
@@ -295,6 +299,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
                 user;
                 wasmModule = Common.shareModule(m.1);
+                bootstrappingPM = bootstrappingPM and m.0 == "backend"; // HACK
             });
         };
     };
@@ -722,6 +727,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         user: Principal;
         preinstalledModules: [(Text, Principal)];
+        bootstrappingPM: Bool;
     })
         : async* {installationId: Common.InstallationId}
     {
@@ -734,6 +740,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             repo;
             user;
             preinstalledModules;
+            bootstrappingPM;
         });
 
         {installationId};

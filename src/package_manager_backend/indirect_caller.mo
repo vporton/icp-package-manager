@@ -133,6 +133,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         installationId: Common.InstallationId;
         preinstalledModules: [(Text, Principal)];
         user: Principal;
+        bootstrappingPM: Bool;
     }): () {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
@@ -160,17 +161,18 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryPartitionRO;
                     preinstalledModules: [(Text, Principal)];
+                    bootstrappingPM: Bool;
                 }) -> async ();
             };
 
-            Debug.print("Call installationWorkCallback"); // FIXME: Remove.
-            await pm.installationWorkCallback({ // FIXME: This callback should call the next one, in order to deliver `createdCanister`.
+            await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
                 installationId;
                 user;
                 package;
                 repo;
                 preinstalledModules;
+                bootstrappingPM;
             });
         }
         catch (e) {
@@ -185,6 +187,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         installArg: Blob;
         user: Principal;
+        bootstrappingPM: Bool; // We are installing the package manager.
     }): async* Principal {
         let IC: Common.CanisterCreator = actor("aaaaa-aa");
         Cycles.add<system>(10_000_000_000_000);
@@ -211,7 +214,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 Debug.trap("cannot create canister: " # msg);
             };  
         };
-        let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor { // FIXME: What we do, if it's bootstrapper?
+        let pmPrincipal = if (bootstrappingPM) {
+            canister_id;
+        } else {
+            packageManagerOrBootstrapper;
+        };
+        let pm = actor(Principal.toText(pmPrincipal)) : actor {
             // FIXME: Check that below matches the actual API!
             onCreateCanister: shared ({
                 installPackage: Bool;
@@ -282,6 +290,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
+        bootstrappingPM: Bool;
     }): async Principal {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
@@ -295,6 +304,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         installArg;
                         packageManagerOrBootstrapper;
                         user;
+                        bootstrappingPM;
                     });
                 };
             };
