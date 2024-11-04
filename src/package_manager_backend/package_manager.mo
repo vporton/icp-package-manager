@@ -323,7 +323,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
                     canister;
                     name = callbackName;
-                    data = to_candid(); // TODO 
+                    data = to_candid({ // TODO
+                        installationId;
+                        moduleName;
+                        canister;
+                        user;
+                    }); 
                 }]);
             };
             case null {};
