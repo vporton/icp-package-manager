@@ -228,7 +228,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         preinstalledModules: [(Text, Principal)];
         bootstrappingPM: Bool;
     }): async () {
-        Debug.print("installationWorkCallback"); // FIXME: Remove.
         onlyIndirectCaller(caller, "installationWorkCallback");
 
         let #real realPackage = package.specific else {
