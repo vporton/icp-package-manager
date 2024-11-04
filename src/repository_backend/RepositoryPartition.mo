@@ -11,7 +11,7 @@ import Common "../common";
 shared ({ caller = owner }) actor class RepositoryPartition({
   partitionKey: Text;
   scalingOptions: CanDB.ScalingOptions;
-  owners: [Principal]
+  owners: [Principal];
 }) = this {
   // CanDB paritition methods //
 
