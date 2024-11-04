@@ -317,7 +317,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        let module2 = Common.unshareModule(module_); // TODO: necessary?
+        let module2 = Common.unshareModule(module_); // TODO: necessary? or unshare only callbacks?
         switch (module2.callbacks.get(#CanisterCreated)) {
             case (?callbackName) {
                 getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
