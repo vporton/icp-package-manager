@@ -301,7 +301,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     /// Internal
     public shared({caller}) func onCreateCanister({
-        installPackage: Bool;
         installationId: Common.InstallationId;
         module_: Common.SharedModule;
         moduleName: Text;
@@ -346,7 +345,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     /// Internal
     public shared({caller}) func onInstallCode({
-        installPackage: Bool;
         installationId: Common.InstallationId;
         canister: Principal;
         moduleName: ?Text;
@@ -375,7 +373,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 await* _registerNamedModule({
                     installation = installationId;
                     canister;
-                    packageManager = Principal.fromActor(this);
                     moduleName;
                 });
             };
@@ -745,23 +742,19 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     private func _registerModule({
         installation: Common.InstallationId;
         canister: Principal;
-        packageManager: Principal;
     }): async* () {
-        // TODO:
-        // let ?inst = installedPackages.get(installation) else {
-        //     Debug.trap("no such installationId: " # debug_show(installation));
-        // };
-        // inst.allModules.add(canister);
-        // TODO
+        let ?inst = installedPackages.get(installation) else {
+            Debug.trap("no such installationId: " # debug_show(installation));
+        };
+        inst.allModules.add(canister);
     };
 
     private func _registerNamedModule({
         installation: Common.InstallationId;
         canister: Principal;
-        packageManager: Principal;
         moduleName: Text;
     }): async* () {
-        await* _registerModule({installation; canister; packageManager; installedPackages});
+        await* _registerModule({installation; canister});
         let ?inst = installedPackages.get(installation) else {
             Debug.trap("no such installationId: " # debug_show(installation));
         };
