@@ -1,5 +1,7 @@
 Remaining things to do:
 
+- FIXME: Motoko bindings: https://github.com/dfinity/motoko/issues/4753#issuecomment-2457831146
+
 - Use remaining dev's cycles to store URLs of PMs.
 
 - FIXME: future compaitibility in package format.
