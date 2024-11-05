@@ -333,7 +333,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             };
             case null {};
         };
-        // FIXME: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
+        // TODO: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
         if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
             switch (module2.callbacks.get(#AllCanistersCreated)) {
                 case (?callbackName) {
