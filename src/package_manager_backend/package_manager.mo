@@ -43,7 +43,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
 
     // TODO: needed? // FIXME: `onlyOwner`
     // TODO: indirectCaller set at an earlier stage with `setIndirectCaller()`
-    public shared func b44c4a9beec74e1c8a7acbe46256f92f_init({ // FIXME: naming
+    public shared func init({
         user: Principal;
         indirect_caller: Principal;
     }) : async () {
