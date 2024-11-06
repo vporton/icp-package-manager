@@ -490,11 +490,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     //     });
     // };
 
-    type CanisterDeletor = actor {
-        stop_canister : shared { canister_id : Common.canister_id } -> async ();
-        delete_canister : shared { canister_id : Common.canister_id } -> async ();
-    };
-
     // TODO: Uncomment.
     // private func _finishUninstallPackage({
     //     installationId: Nat;
