@@ -183,7 +183,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     private type Callbacks = actor {
-        // FIXME: Check that below matches the actual API!
         onCreateCanister: shared ({
             installPackage: Bool;
             installationId: Common.InstallationId;

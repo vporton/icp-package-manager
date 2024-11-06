@@ -2,6 +2,8 @@ Remaining things to do:
 
 - FIXME: Motoko bindings: https://github.com/dfinity/motoko/issues/4753#issuecomment-2457831146
 
+- FIXME: Check that all occurrences of  `actor {` match the actual APIs.
+
 - Use remaining dev's cycles to store URLs of PMs.
 
 - FIXME: future compaitibility in package format.
