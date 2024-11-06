@@ -290,6 +290,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
 
     {
       callbacks = module_.callbacks;
+      forceReinstall = module_.forceReinstall;
       code = switch (module_.code) {
         case (#Wasm blob) {
             let {canister; id} = await* _uploadWasm(blob);

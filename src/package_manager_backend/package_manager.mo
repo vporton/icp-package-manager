@@ -293,6 +293,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             // Starting installation of all modules in parallel:
             ignore getIndirectCaller().installModule({
                 installPackage = whatToInstall == #package; // a little bit hacky
+                moduleName = ?m.0;
                 installArg = ""; // TODO
                 installationId;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
@@ -308,7 +309,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installationId: Common.InstallationId;
         module_: Common.SharedModule;
-        moduleName: Text;
+        moduleName: ?Text;
         canister: Principal;
         user: Principal;
     }): async () {

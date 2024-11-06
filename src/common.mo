@@ -109,6 +109,7 @@ module {
 
     public type ModuleUpload = {
         code: ModuleUploadCode;
+        forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
     };
 

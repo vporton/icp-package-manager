@@ -1,7 +1,7 @@
 /// Canister that takes on itself potentially non-returning calls.
-// import Exp "mo:base/ExperimentalInternetComputer"; // TODO: This or IC.call for calls?
+// import Exp "mo:base/ExperimentalInternetComputer"; // TODO: This or ICE.call for calls?
 import Cycles "mo:base/ExperimentalCycles";
-import IC "mo:base/ExperimentalInternetComputer";
+import ICE "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
@@ -9,7 +9,9 @@ import Blob "mo:base/Blob";
 import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
+import Text "mo:base/Text";
 import Asset "mo:assets-api";
+import {ic} "mo:ic";
 import Common "../common";
 import CopyAssets "../copy_assets";
 import cycles_ledger "canister:cycles_ledger";
@@ -37,7 +39,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
-                ignore await IC.call(method.canister, method.name, method.data); 
+                ignore await ICE.call(method.canister, method.name, method.data); 
             }
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -56,7 +58,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         for (method in methods.vals()) {
             try {
-                ignore await IC.call(method.canister, method.name, method.data);
+                ignore await ICE.call(method.canister, method.name, method.data);
             }
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -87,7 +89,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         onlyOwner(caller);
 
         try {
-            return await IC.call(method.canister, method.name, method.data); 
+            return await ICE.call(method.canister, method.name, method.data); 
         }
         catch (e) {
             let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -100,7 +102,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         onlyOwner(caller);
 
         try {
-            return await IC.call(method.canister, method.name, method.data);
+            return await ICE.call(method.canister, method.name, method.data);
         }
         catch (e) {
             let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -196,6 +198,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     private func _installModuleCode({
+        moduleName: ?Text;
         installPackage: Bool;
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
@@ -204,7 +207,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
         bootstrappingPM: Bool; // We are installing the package manager.
     }): async* Principal {
-        let IC: Common.CanisterCreator = actor("aaaaa-aa");
         Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
@@ -237,9 +239,11 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         let pm: Callbacks = actor(Principal.toText(pmPrincipal));
         await pm.onCreateCanister({
             installPackage; // Bool
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
             installationId;
             canister = canister_id;
-            user: Principal;
+            user;
         });
 
         let wasmModuleLocation = switch (wasmModule.code) {
@@ -257,19 +261,22 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.trap("package WASM code is not available");
         };
 
-        await IC.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
-            arg = Blob.toArray(to_candid({
+        await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+            arg = to_candid({
                 userArg = installArg;
                 packageManagerOrBootstrapper;
                 user;
-            }));
+            });
             wasm_module;
             mode = #install;
             canister_id;
-            // sender_canister_version = ;
+            sender_canister_version = null; // TODO
         });
         await pm.onInstallCode({
             installPackage; // Bool
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
+            canister = canister_id;
             installationId;
             user;
         });
@@ -287,6 +294,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     public shared func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
+        moduleName: ?Text;
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
@@ -302,12 +310,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     await preinstalledCanister.onCreateCanister({
                         installPackage;
                         installationId;
+                        moduleName;
                         canister = preinstalledCanisterId;
                         user;
                     });
                     await preinstalledCanister.onInstallCode({
                         installPackage;
                         installationId;
+                        canister = preinstalledCanisterId;
                         user;
                     });
                     preinstalledCanisterId;
@@ -315,6 +325,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 case null {
                     await* _installModuleCode({
                         installationId;
+                        moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
                         installPackage;
                         installArg;
