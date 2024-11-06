@@ -47,8 +47,8 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     type OurModules = {
-        pmFrontendModule: Common.Module;
-        pmBackendModule: Common.Module;
+        pmFrontendModule: Common.SharedModule;
+        pmBackendModule: Common.SharedModule;
     };
 
     stable var ourModules: ?OurModules = null;
@@ -92,16 +92,24 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         nextBootstrapId += 1;
 
         let mod = getOurModules().pmFrontendModule;
-        let {installationId} = await* Install._installModuleButDontRegister({ // PM frontend
-            callback = ?bootstrapFrontendCallback;
-            data = to_candid({frontendId});
-            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: Why is this equillibristic needed?
-            initArg = null;
-            installArg = to_candid(());
-            packageManagerOrBootstrapper = Principal.fromActor(this);
+        // let {installationId} = await* Install._installModuleButDontRegister({ // PM frontend
+        //     callback = ?bootstrapFrontendCallback;
+        //     data = to_candid({frontendId});
+        //     indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: Why is this equillibristic needed?
+        //     initArg = null;
+        //     installArg = to_candid(());
+        //     packageManagerOrBootstrapper = Principal.fromActor(this);
+        //     user = caller;
+        //     wasmModule = mod;
+        // });
+        let {installationId} = installPackageWithPreinstalledModules({
+            whatToInstall = #package;
+            packageName = "icpack";
+            version = "0.0.1"; // FIXME
+            preinstalledModules = []; // FIXME: [(Text, Principal)];
+            repo;
             user = caller;
-            wasmModule = mod;
-        });
+        })
         // Don't install package here, because we don't have where to register it.
         {installationId; frontendId};
     };

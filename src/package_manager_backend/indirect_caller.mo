@@ -300,7 +300,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
         bootstrappingPM: Bool;
-    }): async Principal {
+    }): async Principal { // FIXME: Should be `()`.
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
 
@@ -337,7 +337,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
         }
         catch (e) {
-            let msg = "installModuleButDontRegisterWrapper: " # Error.message(e);
+            let msg = "installModule: " # Error.message(e);
             Debug.print(msg);
             Debug.trap(msg);
         };
