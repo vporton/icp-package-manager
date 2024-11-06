@@ -303,6 +303,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     }): async Principal {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
+
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     let preinstalledCanister: Callbacks = actor (Principal.toText(preinstalledCanisterId));
