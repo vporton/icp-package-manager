@@ -47,9 +47,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     type OurModules = {
-        pmFrontendModule: Common.SharedModuleUpload;
-        pmBackendModule: Common.SharedModuleUpload;
-        pmIndirectCallerModule: Common.SharedModuleUpload;
+        pmFrontendModule: Common.ModuleUpload;
+        pmBackendModule: Common.ModuleUpload;
+        pmIndirectCallerModule: Common.ModuleUpload;
     };
 
     stable var ourModules: ?OurModules = null;
