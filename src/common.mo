@@ -336,7 +336,7 @@ module {
         whatToInstall: {
             #package;
             #simplyModules : [(Text, SharedModule)];
-            #bootstrap : [(Text, SharedModule)]; // TODO: hack
+            #bootstrap : [(Text, Principal)]; // TODO: hack
         };
         modulesWithoutCode: HashMap.HashMap<Text, Principal>;
         installedModules: HashMap.HashMap<Text, Principal>;

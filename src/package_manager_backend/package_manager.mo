@@ -147,7 +147,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Principal)];
         };
         packageName: Common.PackageName;
         version: Common.Version;
@@ -226,7 +226,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Principal)];
         };
         installationId: Common.InstallationId;
         user: Principal;
@@ -270,11 +270,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 (iter, ms.size());  // TODO: efficient?
             };
             case (#bootstrap ms) {
-                let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                    ms.vals(),
-                    func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
-                );
-                (iter, ms.size());  // TODO: efficient?
+                ([].vals(), 0);
             };
         };
         let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
@@ -315,6 +311,10 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 user;
                 wasmModule = Common.shareModule(m.1);
                 bootstrappingPM = bootstrappingPM and m.0 == "backend"; // HACK
+                additionalArgs = switch (whatToInstall) {
+                    case (#bootstrap modules) #bootstrap modules;
+                    case _ #regular;
+                };
             });
         };
     };

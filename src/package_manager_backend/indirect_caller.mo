@@ -127,7 +127,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Principal)];
         };
         repo: Common.RepositoryPartitionRO;
         pmPrincipal: ?Principal;
@@ -158,7 +158,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     whatToInstall: {
                         #package;
                         #simplyModules : [(Text, Common.SharedModule)];
-                        #bootstrap : [(Text, Common.SharedModule)];
+                        #bootstrap : [(Text, Principal)];
                     };
                     installationId: Common.InstallationId;
                     user: Principal;
@@ -294,22 +294,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
             case _ {};
         };
-        if (bootstrappingPM) { // probably hacky: We are calling all of it over again (kinda recursively).
-            // FIXME: Should be here only for installing `"backend"`, not frontend
-            // FIXME:
-            // let pm = actor(Principal.toText(pmPrincipal));
-            // ignore await pm.installPackageWithPreinstalledModules({
-            //     whatToInstall = #package;
-            //     packageName;
-            //     version;
-            //     preinstalledModules: [(Text, Principal)];
-            //     repo: Common.RepositoryPartitionRO;
-            //     user: Principal;
-            // });
-        };
         canister_id;
     };
 
+    // TODO: I have several arguments indicating bootstrap: bootstrappingPM, additionalArgs, preinstalledCanisterId.
     public shared func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -320,11 +308,15 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
         bootstrappingPM: Bool; // FIXME: Here and in other places use `#bootstrap` instead.
+        additionalArgs: {
+            #bootstrap : [(Text, Principal)];
+            #regular;
+        }
     }): async Principal { // FIXME: Should be `()`.
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
 
-            switch (preinstalledCanisterId) {
+            let canister = switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     let preinstalledCanister: Callbacks = actor (Principal.toText(preinstalledCanisterId));
                     await preinstalledCanister.onCreateCanister({
@@ -355,6 +347,35 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     });
                 };
             };
+            switch (additionalArgs) {
+                case (#bootstrap modules) {
+                    // FIXME: Should be here only for installing `"backend"`, not frontend
+                    let pm = actor(Principal.toText(modules[1].1)) : actor { // TODO: hardcoded module index
+                        installPackageWithPreinstalledModules: shared ({
+                            whatToInstall: {
+                                #package;
+                                #simplyModules : [(Text, Common.SharedModule)];
+                                #bootstrap : [(Text, Principal)];
+                            };
+                            packageName: Common.PackageName;
+                            version: Common.Version;
+                            preinstalledModules: [(Text, Principal)];
+                            repo: Common.RepositoryPartitionRO;
+                            user: Principal;
+                        }) -> async {installationId: Common.InstallationId};
+                    };
+                    ignore await pm.installPackageWithPreinstalledModules({
+                        whatToInstall = #package;
+                        packageName = "icpack"; // TODO: hack
+                        version = "0.0.1"; // FIXME: bad hack
+                        preinstalledModules = modules;
+                        repo = actor("aaaaa-aa"); // hack
+                        user;
+                    });
+                };
+                case (#regular) {};
+            };
+            canister;
         }
         catch (e) {
             let msg = "installModule: " # Error.message(e);
