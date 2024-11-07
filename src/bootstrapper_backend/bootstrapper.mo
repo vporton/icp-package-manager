@@ -91,71 +91,55 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let frontendId = nextBootstrapId;
         nextBootstrapId += 1;
 
-        let mod = getOurModules().pmFrontendModule;
-        let {installationId} = await* Install._installModule({ // FIXME: This is one-way function. // PM frontend
-            callback = ?bootstrapFrontendCallback;
-            data = to_candid({frontendId});
-            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: Why is this equillibristic needed?
-            initArg = null;
-            installArg = to_candid(());
-            packageManagerOrBootstrapper = Principal.fromActor(this);
+        let frontendPrincipal = getOurModules().pmFrontendModule;
+        let {installationId} = await* Install._installModulesGroup({
+            indirectCaller = bootstrapperIndirectCaller;
+            whatToInstall = #bootstrap([
+                ("frontend", frontendPrincipal),
+            ]);
+            installationId = frontendId; // hack
+            packageName = "icpack";
+            packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
+            pmPrincipal = null;
+            repo;
             user = caller;
-            wasmModule = mod;
+            preinstalledModules = []; // FIXME
+            bootstrappingPM = true; // FIXME: correct?
         });
         // Don't install package here, because we don't have where to register it.
         {installationId; frontendId};
-    };
-
-    public shared({caller}) func bootstrapFrontendCallback({
-        createdCanister: Principal;
-        data: Blob;
-        indirectCaller: IndirectCaller.IndirectCaller;
-        installationId: Common.InstallationId;
-        packageManagerOrBootstrapper : Principal
-    }): async () {
-        if (caller != Principal.fromActor(indirectCaller)) { // TODO
-            Debug.trap("callback not by indirect_caller");
-        };
-
-        let ?{frontendId}: ?{frontendId: Nat} = from_candid(data) else {
-            Debug.trap("programming error: can't extract in bootstrapFrontendCallback");
-        };
-        bootstrapIds.put(frontendId, createdCanister);
     };
 
     // FIXME: correct indirect_caller here and in the callback?
     public shared({caller}) func bootstrapBackend(frontend: Principal, repo: Principal)
         : async {installationId: Common.InstallationId; backendId: Nat}
     {
-        Cycles.add<system>(10_000_000_000_000_000);
-        let indirect_caller_v = await IndirectCaller.IndirectCaller(); // a separate `IndirectCaller` for this PM
-
         let backendId = nextBootstrapId;
         nextBootstrapId += 1;
 
+        let backendPrincipal = getOurModules().pmBackendModule;
+        let indirectPrincipal = getOurModules().pmIndirectCallerModule;
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
-        Debug.print("Call _installModuleButDontRegister"); // FIXME: Remove.
-        Debug.print("initializing PM with bootstrapper = " # debug_show(Principal.fromActor(this)));
-        let {installationId} = await* Install._installModuleButDontRegister({
-            wasmModule = getOurModules().pmBackendModule;
-            installArg = to_candid({
-                // packageManagerOrBootstrapper = Principal.fromActor(this); // is present at the top level of the `PackageManager`'s arg
-                initialIndirectCaller = Principal.fromActor(indirect_caller_v)});
-            initArg = ?to_candid(()); // ?(to_candid({frontend})), // TODO: init is optional // FIXME: Make it non-optional?
-            indirectCaller = indirect_caller_v;
-            packageManagerOrBootstrapper = Principal.fromActor(this);
+        let {installationId} = await* Install._installModulesGroup({
+            indirectCaller = bootstrapperIndirectCaller;
+            whatToInstall = #bootstrap([
+                ("backend", backendPrincipal),
+                ("indirect", indirectPrincipal),
+            ]);
+            installationId = backendId; // hack
+            packageName = "icpack";
+            packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
+            pmPrincipal = null;
+            repo;
             user = caller;
-            callback = ?bootstrapBackendCallback1;
-            data = to_candid({
-                repo;
-                frontend;
-                backendId;
-            });
+            preinstalledModules = []; // FIXME
+            bootstrappingPM = true; // FIXME: correct?
         });
         {installationId; backendId};
     };
 
+    // FIXME
     public shared({caller}) func bootstrapBackendCallback1({
         createdCanister: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
@@ -195,6 +179,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     // FIXME: I have a contradiction here: it needs `createdCanister` but
     //        `installPackageWithPreinstalledModules` may create several modules.
     // FIXME: Move `registerNamedModule`s to the correct place in the code.
+    // FIXME
     public shared({caller}) func bootstrapBackendFinishCallback({
         installationId: Common.InstallationId;
         createdCanister: Principal;

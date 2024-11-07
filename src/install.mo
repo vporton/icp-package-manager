@@ -22,7 +22,7 @@ module {
         installationId: Common.InstallationId;
         packageName: Common.PackageName;
         packageVersion: Common.Version;
-        pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping).
+        pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping). // FIXME: It doesn't.
         repo: Common.RepositoryPartitionRO;
         user: Principal;
         preinstalledModules: [(Text, Principal)];

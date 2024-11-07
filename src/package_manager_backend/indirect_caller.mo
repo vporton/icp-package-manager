@@ -350,7 +350,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             switch (additionalArgs) {
                 case (#bootstrap modules) {
                     // FIXME: Should be here only for installing `"backend"`, not frontend
-                    let pm = actor(Principal.toText(modules[1].1)) : actor { // TODO: hardcoded module index
+                    let pm = actor(Principal.toText(modules[0].1)) : actor { // TODO: hardcoded module index
                         installPackageWithPreinstalledModules: shared ({
                             whatToInstall: {
                                 #package;
