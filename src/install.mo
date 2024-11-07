@@ -12,5 +12,36 @@ import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
 
 module {
-    // TODO: delete
+    public func _installModulesGroup({
+        indirectCaller: IndirectCaller.IndirectCaller;
+        whatToInstall: {
+            #package;
+            #simplyModules : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Common.SharedModule)];
+        };
+        installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        packageVersion: Common.Version;
+        pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping).
+        repo: Common.RepositoryPartitionRO;
+        user: Principal;
+        preinstalledModules: [(Text, Principal)];
+        bootstrappingPM: Bool;
+    })
+        : async* {installationId: Common.InstallationId}
+    {
+        indirectCaller.installPackageWrapper({
+            whatToInstall;
+            installationId;
+            packageName;
+            version = packageVersion;
+            pmPrincipal;
+            repo;
+            user;
+            preinstalledModules;
+            bootstrappingPM;
+        });
+
+        {installationId};
+    };
 }

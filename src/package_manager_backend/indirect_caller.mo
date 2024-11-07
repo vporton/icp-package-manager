@@ -127,6 +127,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Common.SharedModule)];
         };
         repo: Common.RepositoryPartitionRO;
         pmPrincipal: ?Principal;
@@ -157,6 +158,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     whatToInstall: {
                         #package;
                         #simplyModules : [(Text, Common.SharedModule)];
+                        #bootstrap : [(Text, Common.SharedModule)];
                     };
                     installationId: Common.InstallationId;
                     user: Principal;
@@ -235,15 +237,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         } else {
             packageManagerOrBootstrapper;
         };
-        let pm: Callbacks = actor(Principal.toText(pmPrincipal));
-        await pm.onCreateCanister({
-            installPackage; // Bool
-            moduleName;
-            module_ = Common.shareModule(wasmModule);
-            installationId;
-            canister = canister_id;
-            user;
-        });
+        if (not bootstrappingPM) {
+            let pm: Callbacks = actor(Principal.toText(pmPrincipal));
+            await pm.onCreateCanister({
+                installPackage; // Bool
+                moduleName;
+                module_ = Common.shareModule(wasmModule);
+                installationId;
+                canister = canister_id;
+                user;
+            });
+        };
 
         let wasmModuleLocation = switch (wasmModule.code) {
             case (#Wasm wasmModuleLocation) {
@@ -271,14 +275,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             canister_id;
             sender_canister_version = null; // TODO
         });
-        await pm.onInstallCode({
-            installPackage; // Bool
-            moduleName;
-            module_ = Common.shareModule(wasmModule);
-            canister = canister_id;
-            installationId;
-            user;
-        });
+        if (not bootstrappingPM) {
+            let pm: Callbacks = actor(Principal.toText(pmPrincipal));
+            await pm.onInstallCode({
+                installPackage; // Bool
+                moduleName;
+                module_ = Common.shareModule(wasmModule);
+                canister = canister_id;
+                installationId;
+                user;
+            });
+        };
         switch (wasmModule.code) {
             case (#Assets {assets}) {
                 await this.copyAll({ // TODO: Don't call shared.
@@ -286,6 +293,19 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 });
             };
             case _ {};
+        };
+        if (bootstrappingPM) { // probably hacky: We are calling all of it over again (kinda recursively).
+            // FIXME: Should be here only for installing `"backend"`, not frontend
+            // FIXME:
+            // let pm = actor(Principal.toText(pmPrincipal));
+            // ignore await pm.installPackageWithPreinstalledModules({
+            //     whatToInstall = #package;
+            //     packageName;
+            //     version;
+            //     preinstalledModules: [(Text, Principal)];
+            //     repo: Common.RepositoryPartitionRO;
+            //     user: Principal;
+            // });
         };
         canister_id;
     };
@@ -299,7 +319,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
-        bootstrappingPM: Bool;
+        bootstrappingPM: Bool; // FIXME: Here and in other places use `#bootstrap` instead.
     }): async Principal { // FIXME: Should be `()`.
         try {
             // onlyOwner(caller); // FIXME: Uncomment.

@@ -12,6 +12,7 @@ import Bool "mo:base/Bool";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
+import Install "../install";
 
 shared({/*caller = initialOwner*/}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
@@ -124,7 +125,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        await* _installModulesGroup({
+        await* Install._installModulesGroup({
+            indirectCaller = getIndirectCaller();
             whatToInstall = #package;
             installationId;
             packageName;
@@ -140,10 +142,12 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     };
 
     /// Internal used for bootstrapping.
+    // FIXME: Remove this function?
     public shared({caller}) func installPackageWithPreinstalledModules({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Common.SharedModule)];
         };
         packageName: Common.PackageName;
         version: Common.Version;
@@ -158,7 +162,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        await* _installModulesGroup({
+        await* Install._installModulesGroup({
+            indirectCaller = getIndirectCaller();
             whatToInstall;
             installationId;
             packageName;
@@ -190,7 +195,8 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         let ?inst = installedPackages.get(installationId) else {
             Debug.trap("non such package");
         };
-        await* _installModulesGroup({
+        await* Install._installModulesGroup({
+            indirectCaller = getIndirectCaller();
             whatToInstall = #simplyModules modules;
             installationId;
             packageName = inst.package.base.name;
@@ -220,6 +226,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
+            #bootstrap : [(Text, Common.SharedModule)];
         };
         installationId: Common.InstallationId;
         user: Principal;
@@ -256,6 +263,13 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 (iter, package3.modules.size()); // TODO: efficient?
             };
             case (#simplyModules ms) {
+                let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                    ms.vals(),
+                    func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
+                );
+                (iter, ms.size());  // TODO: efficient?
+            };
+            case (#bootstrap ms) {
                 let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
                     ms.vals(),
                     func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
@@ -440,6 +454,9 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 };
             };
             case (#simplyModules _) {};
+            case (#bootstrap _) {
+                // FIXME: Should do something here?
+            }
         };
         halfInstalledPackages.delete(installationId);
     };
@@ -714,37 +731,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
     //         installedPackages; // TODO: not here
     //     });
     // };
-
-    private func _installModulesGroup({
-        whatToInstall: {
-            #package;
-            #simplyModules : [(Text, Common.SharedModule)];
-        };
-        installationId: Common.InstallationId;
-        packageName: Common.PackageName;
-        packageVersion: Common.Version;
-        pmPrincipal: ?Principal; /// `null` means that the first installed module is the PM (used in bootstrapping).
-        repo: Common.RepositoryPartitionRO;
-        user: Principal;
-        preinstalledModules: [(Text, Principal)];
-        bootstrappingPM: Bool;
-    })
-        : async* {installationId: Common.InstallationId}
-    {
-        getIndirectCaller().installPackageWrapper({
-            whatToInstall;
-            installationId;
-            packageName;
-            version = packageVersion;
-            pmPrincipal;
-            repo;
-            user;
-            preinstalledModules;
-            bootstrappingPM;
-        });
-
-        {installationId};
-    };
 
     private func _registerModule({
         installation: Common.InstallationId;
