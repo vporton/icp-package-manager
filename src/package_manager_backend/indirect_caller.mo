@@ -249,14 +249,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             });
         };
 
-        let wasmModuleLocation = switch (wasmModule.code) {
-            case (#Wasm wasmModuleLocation) {
-                wasmModuleLocation;
-            };
-            case (#Assets {wasm}) {
-                wasm;
-            };
-        };
+        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
         let ?(#blob wasm_module) =
             await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")

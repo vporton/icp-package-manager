@@ -47,8 +47,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     type OurModules = {
-        pmFrontendModule: Common.SharedModule;
-        pmBackendModule: Common.SharedModule;
+        pmFrontendModule: Common.SharedModuleUpload;
+        pmBackendModule: Common.SharedModuleUpload;
+        pmIndirectCallerModule: Common.SharedModuleUpload;
     };
 
     stable var ourModules: ?OurModules = null;
@@ -93,9 +94,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
 
         let frontendPrincipal = getOurModules().pmFrontendModule;
         let {installationId} = await* Install._installModulesGroup({
-            indirectCaller = bootstrapperIndirectCaller;
+            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
             whatToInstall = #bootstrap([
-                ("frontend", frontendPrincipal),
+                ("frontend", Common.extractModuleUploadBlob(frontendPrincipal.code)),
             ]);
             installationId = frontendId; // hack
             packageName = "icpack";
@@ -122,10 +123,10 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         // TODO: Allow to install only once.
         // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
         let {installationId} = await* Install._installModulesGroup({
-            indirectCaller = bootstrapperIndirectCaller;
+            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
             whatToInstall = #bootstrap([
-                ("backend", backendPrincipal),
-                ("indirect", indirectPrincipal),
+                ("backend", Common.extractModuleUploadBlob(backendPrincipal)),
+                ("indirect", Common.extractModuleUploadBlob(indirectPrincipal)),
             ]);
             installationId = backendId; // hack
             packageName = "icpack";
@@ -161,7 +162,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         await pm.setIndirectCaller(indirectCaller);
         await indirectCaller.setOwner(createdCanister);
 
-        await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
+        ignore await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `"stable"`
             preinstalledModules = [("frontend", d.frontend)];

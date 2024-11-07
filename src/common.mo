@@ -365,4 +365,24 @@ module {
             canister_id : canister_id;
         } -> async ();
     };
+
+    public func extractModuleLocation(code: ModuleCode): (Principal, Text) =
+        switch (code) {
+            case (#Wasm wasmModuleLocation) {
+                wasmModuleLocation;
+            };
+            case (#Assets {wasm}) {
+                wasm;
+            };
+        };
+
+    public func extractModuleUploadBlob(code: ModuleUploadCode): Blob =
+        switch (code) {
+            case (#Wasm wasm) {
+                wasm;
+            };
+            case (#Assets {wasm}) {
+                wasm;
+            };
+        };
 }
