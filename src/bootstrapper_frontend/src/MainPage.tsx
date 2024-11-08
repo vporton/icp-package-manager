@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBootstrapperActor } from "../../declarations/BootstrapperIndirectCaller"; // TODO: Rename.
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
+import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { idlFactory as frontendIDL } from "./misc/frontend.did";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
@@ -10,6 +12,7 @@ import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert, useAccordionButton } from "react-bootstrap";
 import useConfirm from "./useConfirm";
+import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
 
 export default function MainPage() {
     return (
@@ -34,39 +37,30 @@ export default function MainPage() {
         setInstallations(list);
       });
     }, [props.isAuthenticated, props.principal]);
-    async function bootstrap() {
-      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      const {installationId, frontendId} = await bootstrapper.bootstrapFrontend();
-      let frontendPrincipal;
-      for (let i = 0; i < 20; ++i) {
+    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
+    async function bootstrap() { // TODO: Move to `useEffect`.
+      const repoParts = await repoIndex.getCanistersByPK("main");
+      let pkg: SharedPackageInfo | undefined = undefined;
+      const jobs = repoParts.map(async part => {
+        const obj = createRepositoryPartitionActor(part, {agent: props.agent});
         try {
-          await new Promise<void>((resolve, _reject) => {
-            setTimeout(() => resolve(), 1000);
-          });
-          frontendPrincipal = await bootstrapper.getBootstrappedCanister(frontendId);
+          pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
         }
-        catch(e) {}
-      }
-      if (frontendPrincipal === undefined) {
-        alert("No frontend canister principal found"); // TODO: better dialog
-        return;
-      }
+        catch (_) {}
+      });
+      await Promise.all(jobs);
+      const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+
+      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+      const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
+        wasmModule: pkgReal.modules[0][1][0],
+        installArg: [],
+        user: props.principal!,
+      });
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.icp0.io`;
-      for (let i = 0; i < 20; ++i) {
-        try {
-          await new Promise<void>((resolve, _reject) => {
-            setTimeout(() => resolve(), 1000);
-          });
-          const frontend = Actor.createActor(frontendIDL, {canisterId: frontendPrincipal, agent: props.defaultAgent}); // TODO: Can we move it out of the loop?
-          await frontend.http_request({body: [], headers: [], method: 'GET', url: "/", certificate_version: []});
-          open(url, '_self');
-          return; // upload finished
-        }
-        catch(e) {}
-      }
-      alert("Error: Cannot load the page"); // TODO: better dialog
+      open(url, '_self');
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",

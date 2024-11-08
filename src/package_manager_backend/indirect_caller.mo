@@ -397,8 +397,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         wasmModule: Common.SharedModule;
         installArg: Blob;
         user: Principal;
-    }): () {
-        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
+    }): async {canister_id: Principal} {
+        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         await* myInstallCode({
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
@@ -406,6 +406,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
+        {canister_id};
     };
 
     public shared func bootstrapBackend({
@@ -415,7 +416,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
     }): () {
         // TODO: Create and run two canisters in parallel.
-        let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
+        let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
@@ -424,16 +425,16 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             user;
         });
 
-        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
+        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         await* myInstallCode({
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = "";
-            packageManagerOrBootstrapper = bootstrapper;
+            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
 
-            // TODO: Make init() functions conforming to the specs and call init() automatically.
+        // TODO: Make init() functions conforming to the specs and call init() automatically.
         let backend = actor(Principal.toText(backend_canister_id)): actor {
             installPackageWithPreinstalledModules: shared ({
                 whatToInstall: {

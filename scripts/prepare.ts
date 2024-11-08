@@ -6,14 +6,12 @@ import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
 import { SharedRealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
-import { idlFactory as bootstrapperIdl } from '../src/declarations/bootstrapper';
 import { Location, SharedModule, _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
 import { SharedPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { SharedFullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
-import { Bootstrap } from '../src/declarations/bootstrapper/bootstrapper.did';
 
 dotenv_config({ path: '.env' });
 
@@ -34,7 +32,7 @@ async function main() {
 
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
     const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
-    // const counterBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/counter/counter.wasm"));
+    const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/BootstrapperIndirectCaller/BootstrapperIndirectCaller.wasm"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     agent.fetchRootKey(); // TODO: should not be used in production.
@@ -55,13 +53,27 @@ async function main() {
     console.log("Uploading WASM code...");
     const pmFrontendModule = await repositoryIndex.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
-        callbacks: []
+        forceReinstall: false,
+        callbacks: [],
     });
-    const pmBackendModule = await repositoryIndex.uploadModule({code: {Wasm: pmBackendBlob}, callbacks: []});
+    const pmBackendModule = await repositoryIndex.uploadModule({
+        code: {Wasm: pmBackendBlob},
+        forceReinstall: false,
+        callbacks: [],
+    });
+    const pmIndirectModule = await repositoryIndex.uploadModule({
+        code: {Wasm: pmIndirectBlob},
+        forceReinstall: true,
+        callbacks: [],
+    });
 
     console.log("Creating packages...");
     const real: SharedRealPackageInfo = {
-        modules: [['frontend', [pmFrontendModule, true]], ['backend', [pmBackendModule, false]]],
+        modules: [
+            ['frontend', [pmFrontendModule, true]],
+            ['backend', [pmBackendModule, false]],
+            ['indirect', [pmIndirectModule, false]],
+        ],
         dependencies: [],
         functions: [],
         permissions: [],
@@ -80,32 +92,6 @@ async function main() {
         versionsMap: [],
     };
     await repositoryIndex.createPackage("icpack", pmFullInfo);
-
-    // const counterInfo: SharedPackageInfo = {
-    //     base: {
-    //         name: "counter",
-    //         version: "1.0.0",
-    //         shortDescription: "Counter variable",
-    //         longDescription: "Counter variable controlled by a shared method",
-    //     },
-    //     specific: { real: await repositoryIndex.uploadRealPackageInfo({
-    //         modules: [['backend', {Wasm: counterBlob}]],
-    //         extraModules: [],
-    //         dependencies: [],
-    //         functions: [],
-    //         permissions: [],
-    //     }) },
-    // };
-    // const counterFullInfo: SharedFullPackageInfo = {
-    //     packages: [["1.0.0", counterInfo]],
-    //     versionsMap: [],
-    // };
-    // await repositoryIndex.createPackage("counter", counterFullInfo);
-
-    console.log("Setting bootstrapper...");
-    const bootstrapper: Bootstrap = Actor.createActor(bootstrapperIdl, {agent, canisterId: process.env.CANISTER_ID_BOOTSTRAPPER!});
-    await bootstrapper.init();
-    await bootstrapper.setOurModules({pmFrontendModule, pmBackendModule});
 }
 
 // TODO: Remove?
