@@ -40,7 +40,6 @@
     },
     "bootstrapper_frontend": {
       "dependencies": [
-        "bootstrapper",
         "bookmark",
         "internet_identity"
       ],
