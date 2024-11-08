@@ -10,11 +10,6 @@
       "main": "src/package_manager_backend/package_manager.mo",
       "dependencies": ["cycles_ledger"]
     },
-    "bootstrapper": {
-      "type": "motoko",
-      "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["BootstrapperIndirectCaller"]
-    },
     "bookmark": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bookmarks.mo",

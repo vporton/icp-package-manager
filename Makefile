@@ -5,7 +5,7 @@
 .PHONY: deploy
 deploy:
 	dfx canister create package_manager
-	dfx canister create bootstrapper
+	# dfx canister create bootstrapper
 	# dfx canister create package_manager_frontend
 	dfx canister create bootstrapper_frontend
 	dfx canister create RepositoryIndex
@@ -18,14 +18,14 @@ deploy:
 	dfx canister install -m auto BootstrapperIndirectCaller
 	dfx build package_manager
 #	dfx canister install -m auto package_manager
-	dfx build bootstrapper
+	# dfx build bootstrapper
 	dfx build RepositoryIndex
 	dfx generate RepositoryIndex
 	dfx canister install -m auto RepositoryIndex
 	dfx generate RepositoryPartition
 	dfx generate package_manager
-	dfx generate bootstrapper
-	dfx canister install -m auto bootstrapper
+	# dfx generate bootstrapper
+	# dfx canister install -m auto bootstrapper
 	dfx generate bookmark
 	# dfx build package_manager_frontend
 	# dfx canister install -m auto package_manager_frontend
