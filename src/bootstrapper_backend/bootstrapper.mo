@@ -108,7 +108,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         //     repo;
         //     user = caller;
         //     preinstalledModules = []; // FIXME
-        //     bootstrappingPM = true; // FIXME: correct?
+        //     noPMBackendYet = true; // FIXME: correct?
         // });
         // Don't install package here, because we don't have where to register it.
         {/*FIXME: installationId*/installationId = 0; frontendId};
@@ -139,7 +139,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         //     repo;
         //     user = caller;
         //     preinstalledModules = []; // FIXME
-        //     bootstrappingPM = true; // FIXME: correct?
+        //     noPMBackendYet = true; // FIXME: correct?
         // });
         {/*FIXME: installationId*/installationId = 0; backendId};
     };

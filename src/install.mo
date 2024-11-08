@@ -26,7 +26,7 @@ module {
         repo: Common.RepositoryPartitionRO;
         user: Principal;
         preinstalledModules: [(Text, Principal)];
-        bootstrappingPM: Bool;
+        noPMBackendYet: Bool;
     })
         : async* {installationId: Common.InstallationId}
     {
@@ -39,7 +39,7 @@ module {
             repo;
             user;
             preinstalledModules;
-            bootstrappingPM;
+            noPMBackendYet;
         });
 
         {installationId};

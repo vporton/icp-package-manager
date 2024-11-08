@@ -11,7 +11,7 @@ import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Text "mo:base/Text";
 import Asset "mo:assets-api";
-import {ic} "mo:ic";
+import IC "mo:ic";
 import Common "../common";
 import CopyAssets "../copy_assets";
 import cycles_ledger "canister:cycles_ledger";
@@ -136,7 +136,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         installationId: Common.InstallationId;
         preinstalledModules: [(Text, Principal)];
         user: Principal;
-        bootstrappingPM: Bool;
+        noPMBackendYet: Bool;
     }): () {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
@@ -165,7 +165,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryPartitionRO;
                     preinstalledModules: [(Text, Principal)];
-                    bootstrappingPM: Bool;
+                    noPMBackendYet: Bool;
                 }) -> async ();
             };
 
@@ -176,7 +176,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 package;
                 repo;
                 preinstalledModules;
-                bootstrappingPM;
+                noPMBackendYet;
             });
         }
         catch (e) {
@@ -198,19 +198,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         }) -> async ();
     };
 
-    private func _installModuleCode({
-        moduleName: ?Text;
-        installPackage: Bool;
-        installationId: Common.InstallationId;
-        wasmModule: Common.Module;
-        packageManagerOrBootstrapper: Principal;
-        installArg: Blob;
-        user: Principal;
-        bootstrappingPM: Bool; // We are installing the package manager.
-    }): async* Principal {
-        Cycles.add<system>(10_000_000_000_000);
-        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
+    private func myCreateCanister(): async* IC.CreateCanisterResult {
+        await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
             amount = 10_000_000_000_000; // FIXME
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             creation_args = ?{
@@ -224,31 +213,15 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
             from_subaccount = null; // FIXME
         });
-        let canister_id = switch (res) {
-            case (#Ok {canister_id}) canister_id;
-            case (#Err err) {
-                let msg = debug_show(err);
-                Debug.print("cannot create canister: " # msg);
-                Debug.trap("cannot create canister: " # msg);
-            };  
-        };
-        let pmPrincipal = if (bootstrappingPM) {
-            canister_id;
-        } else {
-            packageManagerOrBootstrapper;
-        };
-        if (not bootstrappingPM) {
-            let pm: Callbacks = actor(Principal.toText(pmPrincipal));
-            await pm.onCreateCanister({
-                installPackage; // Bool
-                moduleName;
-                module_ = Common.shareModule(wasmModule);
-                installationId;
-                canister = canister_id;
-                user;
-            });
-        };
+    };
 
+    private func myInstallCode({
+        canister_id: Principal;
+        wasmModule: Common.Module;
+        installArg: Blob;
+        packageManagerOrBootstrapper: Principal;
+        user: Principal;
+    }): async* () {
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
         let ?(#blob wasm_module) =
@@ -257,7 +230,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             Debug.trap("package WASM code is not available");
         };
 
-        await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 userArg = installArg;
                 packageManagerOrBootstrapper;
@@ -268,8 +241,51 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             canister_id;
             sender_canister_version = null; // TODO
         });
-        if (not bootstrappingPM) {
-            let pm: Callbacks = actor(Principal.toText(pmPrincipal));
+
+        switch (wasmModule.code) {
+            case (#Assets {assets}) {
+                await this.copyAll({ // TODO: Don't call shared.
+                    from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
+                });
+            };
+            case _ {};
+        };
+    };
+
+    private func _installModuleCode({
+        moduleName: ?Text;
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        wasmModule: Common.Module;
+        packageManagerOrBootstrapper: Principal;
+        installArg: Blob;
+        user: Principal;
+        noPMBackendYet: Bool; // Don't call callbacks
+    }): async* Principal {
+        Cycles.add<system>(10_000_000_000_000);
+        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
+        let {canister_id} = await* myCreateCanister();
+        if (not noPMBackendYet) {
+            let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+            await pm.onCreateCanister({
+                installPackage; // Bool
+                moduleName;
+                module_ = Common.shareModule(wasmModule);
+                installationId;
+                canister = canister_id;
+                user;
+            });
+        };
+
+        await* myInstallCode({
+            canister_id;
+            wasmModule;
+            installArg;
+            packageManagerOrBootstrapper;
+            user;
+        });
+        if (not noPMBackendYet) {
+            let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
             await pm.onInstallCode({
                 installPackage; // Bool
                 moduleName;
@@ -279,18 +295,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 user;
             });
         };
-        switch (wasmModule.code) {
-            case (#Assets {assets}) {
-                await this.copyAll({ // TODO: Don't call shared.
-                    from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                });
-            };
-            case _ {};
-        };
         canister_id;
     };
 
-    // TODO: I have several arguments indicating bootstrap: bootstrappingPM, additionalArgs, preinstalledCanisterId.
+    // TODO: I have several arguments indicating bootstrap: noPMBackendYet, additionalArgs, preinstalledCanisterId.
     public shared func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -300,12 +308,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
-        bootstrappingPM: Bool; // FIXME: Here and in other places use `#bootstrap` instead.
+        noPMBackendYet: Bool; // FIXME: Here and in other places use `#bootstrap` instead.
         additionalArgs: {
-            #bootstrap : [(Text, Principal)];
+            #bootstrap : [(Text, Principal)]; /// FIXME: Superfluous /// After finishing no-PM installing, restart installation with given modules.
             #regular;
         }
-    }): async Principal { // FIXME: Should be `()`.
+    }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
 
@@ -336,7 +344,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         installArg;
                         packageManagerOrBootstrapper;
                         user;
-                        bootstrappingPM;
+                        noPMBackendYet;
                     });
                 };
             };
@@ -368,12 +376,67 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 };
                 case (#regular) {};
             };
-            canister;
         }
         catch (e) {
             let msg = "installModule: " # Error.message(e);
             Debug.print(msg);
             Debug.trap(msg);
         };
+    };
+
+    public shared func bootstrapFrontend({
+        wasmModule: Common.SharedModule;
+        installArg: Blob;
+        bootstrapper: Principal;
+        user: Principal;
+    }): () {
+        let {canister_id} = await* myCreateCanister();
+        await* myInstallCode({
+            canister_id;
+            wasmModule = Common.unshareModule(wasmModule);
+            installArg;
+            packageManagerOrBootstrapper = bootstrapper;
+            user;
+        });
+    };
+
+    public shared func bootstrapBackend({
+        frontend: Principal;
+        backendWasmModule: Common.SharedModule;
+        indirectWasmModule: Common.SharedModule;
+        bootstrapper: Principal;
+        user: Principal;
+    }): () {
+        // TODO: Create and run two canisters in parallel.
+        let {canister_id = backend_canister_id} = await* myCreateCanister();
+        await* myInstallCode({
+            canister_id = backend_canister_id;
+            wasmModule = Common.unshareModule(backendWasmModule);
+            installArg = "";
+            packageManagerOrBootstrapper = bootstrapper;
+            user;
+        });
+
+        let {canister_id = indirect_canister_id} = await* myCreateCanister();
+        await* myInstallCode({
+            canister_id = indirect_canister_id;
+            wasmModule = Common.unshareModule(indirectWasmModule);
+            installArg = "";
+            packageManagerOrBootstrapper = bootstrapper;
+            user;
+        });
+
+        let backend = actor(Principal.toText(backend_canister_id)): actor {};
+        let indirect = actor(Principal.toText(indirect_canister_id)): actor {};
+        await backend.installPackageWithPreinstalledModules({
+            whatToInstall = #package;
+            packageName = "icpack";
+            version = "0.0.1"; // TODO: should be `stable`.
+            preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
+            repo = actor("aaaaa-aa"); // TODO: Does this hack work?
+            user;
+        });
+        await backend.init({user; indirectCaller = indirect_canister_id});
+        await indirect.init({user; owner = backend_canister_id}); // TODO: This function is not defined
     };
 }

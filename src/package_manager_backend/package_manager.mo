@@ -137,7 +137,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules = [];
-            bootstrappingPM = false;
+            noPMBackendYet = false;
         });
     };
 
@@ -174,7 +174,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
-            bootstrappingPM = true; // TODO: check this
+            noPMBackendYet = true; // TODO: check this
         });
     };
 
@@ -206,7 +206,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
             user;
             preinstalledModules;
-            bootstrappingPM = false;
+            noPMBackendYet = false;
         });
     };
 
@@ -233,7 +233,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         repo: Common.RepositoryPartitionRO;
         preinstalledModules: [(Text, Principal)];
-        bootstrappingPM: Bool;
+        noPMBackendYet: Bool;
     }): async () {
         onlyIndirectCaller(caller, "installationWorkCallback");
 
@@ -301,7 +301,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         for (m in realModulesToInstall2.vals()) {
             // FIXME: correct indirect caller?
             // Starting installation of all modules in parallel:
-            ignore getIndirectCaller().installModule({
+            getIndirectCaller().installModule({
                 installPackage = whatToInstall == #package; // a little bit hacky
                 moduleName = ?m.0;
                 installArg = ""; // TODO
@@ -310,7 +310,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
                 user;
                 wasmModule = Common.shareModule(m.1);
-                bootstrappingPM = bootstrappingPM and m.0 == "backend"; // HACK
+                noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
                 additionalArgs = switch (whatToInstall) {
                     case (#bootstrap modules) #bootstrap modules;
                     case _ #regular;
