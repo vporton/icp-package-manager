@@ -7,7 +7,7 @@ deploy:
 	dfx canister create package_manager
 	dfx canister create bootstrapper
 	# dfx canister create package_manager_frontend
-	# dfx canister create bootstrapper_frontend
+	dfx canister create bootstrapper_frontend
 	dfx canister create RepositoryIndex
 	# dfx canister create bookmark
 	dfx canister create BootstrapperIndirectCaller

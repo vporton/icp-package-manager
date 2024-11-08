@@ -226,7 +226,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Principal)];
+            #bootstrap : [(Text, Principal)]; /// Binaries should be already installed, because otherwise we have no `this`.
         };
         installationId: Common.InstallationId;
         user: Principal;
@@ -269,7 +269,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 );
                 (iter, ms.size());  // TODO: efficient?
             };
-            case (#bootstrap ms) {
+            case (#bootstrap _ms) {
                 ([].vals(), 0);
             };
         };

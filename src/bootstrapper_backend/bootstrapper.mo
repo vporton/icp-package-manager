@@ -19,6 +19,7 @@ import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import {ic} "mo:ic"; // TODO: Use this in other places, too.
+import cycles_ledger "canister:cycles_ledger";
 import bootstrapperIndirectCaller "canister:BootstrapperIndirectCaller"; // TODO: Rename to signify, it is only for bootstrapper.
 
 shared({caller = initialOwner}) actor class Bootstrap() = this {
@@ -47,9 +48,9 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
     };
 
     type OurModules = {
-        pmFrontendModule: Common.ModuleUpload;
-        pmBackendModule: Common.ModuleUpload;
-        pmIndirectCallerModule: Common.ModuleUpload;
+        pmFrontendModule: Common.SharedModule;
+        pmBackendModule: Common.SharedModule;
+        pmIndirectCallerModule: Common.SharedModule;
     };
 
     stable var ourModules: ?OurModules = null;
@@ -88,27 +89,29 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         v;
     };
 
+    /// FIXME: Wrong.
     public shared({caller}) func bootstrapFrontend(): async {installationId: Common.InstallationId; frontendId: Nat} {
         let frontendId = nextBootstrapId;
         nextBootstrapId += 1;
 
-        let frontendPrincipal = getOurModules().pmFrontendModule;
-        let {installationId} = await* Install._installModulesGroup({
-            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
-            whatToInstall = #bootstrap([
-                ("frontend", Common.extractModuleUploadBlob(frontendPrincipal.code)),
-            ]);
-            installationId = frontendId; // hack
-            packageName = "icpack";
-            packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
-            pmPrincipal = null;
-            repo;
-            user = caller;
-            preinstalledModules = []; // FIXME
-            bootstrappingPM = true; // FIXME: correct?
-        });
+        // FIXME
+        // let frontendPrincipal = getOurModules().pmFrontendModule;
+        // let {installationId} = await* Install._installModulesGroup({
+        //     indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
+        //     whatToInstall = #bootstrap([
+        //         ("frontend", Common.extractModule(frontendPrincipal.code)),
+        //     ]);
+        //     installationId = frontendId; // hack
+        //     packageName = "icpack";
+        //     packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
+        //     pmPrincipal = null;
+        //     repo;
+        //     user = caller;
+        //     preinstalledModules = []; // FIXME
+        //     bootstrappingPM = true; // FIXME: correct?
+        // });
         // Don't install package here, because we don't have where to register it.
-        {installationId; frontendId};
+        {/*FIXME: installationId*/installationId = 0; frontendId};
     };
 
     // FIXME: correct indirect_caller here and in the callback?
@@ -118,26 +121,27 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         let backendId = nextBootstrapId;
         nextBootstrapId += 1;
 
-        let backendPrincipal = getOurModules().pmBackendModule;
-        let indirectPrincipal = getOurModules().pmIndirectCallerModule;
-        // TODO: Allow to install only once.
-        // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
-        let {installationId} = await* Install._installModulesGroup({
-            indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
-            whatToInstall = #bootstrap([
-                ("backend", Common.extractModuleUploadBlob(backendPrincipal)),
-                ("indirect", Common.extractModuleUploadBlob(indirectPrincipal)),
-            ]);
-            installationId = backendId; // hack
-            packageName = "icpack";
-            packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
-            pmPrincipal = null;
-            repo;
-            user = caller;
-            preinstalledModules = []; // FIXME
-            bootstrappingPM = true; // FIXME: correct?
-        });
-        {installationId; backendId};
+        // FIXME
+        // let backendPrincipal = getOurModules().pmBackendModule;
+        // let indirectPrincipal = getOurModules().pmIndirectCallerModule;
+        // // TODO: Allow to install only once.
+        // // PM backend. It (and frontend) will be registered as an (unnamed) module by the below called `*_init()`. // FIXME
+        // let {installationId} = await* Install._installModulesGroup({
+        //     indirectCaller = actor(Principal.toText(Principal.fromActor(bootstrapperIndirectCaller))); // TODO: why so complex?
+        //     whatToInstall = #bootstrap([
+        //         ("backend", Common.extractModuleUploadBlob(backendPrincipal)),
+        //         ("indirect", Common.extractModuleUploadBlob(indirectPrincipal)),
+        //     ]);
+        //     installationId = backendId; // hack
+        //     packageName = "icpack";
+        //     packageVersion = "0.0.1"; // TODO: Should be `"stable"`.
+        //     pmPrincipal = null;
+        //     repo;
+        //     user = caller;
+        //     preinstalledModules = []; // FIXME
+        //     bootstrappingPM = true; // FIXME: correct?
+        // });
+        {/*FIXME: installationId*/installationId = 0; backendId};
     };
 
     // FIXME
@@ -162,16 +166,17 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         await pm.setIndirectCaller(indirectCaller);
         await indirectCaller.setOwner(createdCanister);
 
-        ignore await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
-            packageName = "icpack";
-            version = "0.0.1"; // TODO: should be `"stable"`
-            preinstalledModules = [("frontend", d.frontend)];
-            repo = actor(Principal.toText(d.repo)) : Common.RepositoryPartitionRO; // TODO: inefficient
-            caller;
-            installationId;
-            postInstallCallback = ?bootstrapBackendFinishCallback;
-            data;
-        });
+        // FIXME: Unomment.
+        // ignore await pm.installPackageWithPreinstalledModules({ // FIXME: `install_code` for `pm` may be not run yet.
+        //     packageName = "icpack";
+        //     version = "0.0.1"; // TODO: should be `"stable"`
+        //     preinstalledModules = [("frontend", d.frontend)];
+        //     repo = actor(Principal.toText(d.repo)) : Common.RepositoryPartitionRO; // TODO: inefficient
+        //     caller;
+        //     installationId;
+        //     postInstallCallback = ?bootstrapBackendFinishCallback;
+        //     data;
+        // });
 
         // await pm.setOwner(caller); // TODO: Uncomment.
         bootstrapIds.put(d.backendId, createdCanister); // TODO: Should move up in the source?
@@ -185,7 +190,7 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         installationId: Common.InstallationId;
         createdCanister: Principal;
         indirectCaller: IndirectCaller.IndirectCaller;
-        package: Common.PackageInfo;
+        package: Common.SharedPackageInfo;
         // caller: Principal; // TODO
         data: Blob;
     }): async () {
@@ -194,34 +199,35 @@ shared({caller = initialOwner}) actor class Bootstrap() = this {
         };
 
         let pm: PackageManager.PackageManager = actor(Principal.toText(createdCanister));
-        await pm.registerNamedModule({
-            installation = installationId;
-            canister = Principal.fromActor(indirectCaller);
-            packageManager = createdCanister;
-            moduleName = "indirect"; // TODO: a better name?
-        });
-        // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
-        await ic.update_settings({canister_id = Principal.fromActor(indirectCaller); sender_canister_version = null; settings = {
-            controllers = ?[createdCanister, Principal.fromActor(indirectCaller)];
-            freezing_threshold = null;
-            memory_allocation = null;
-            compute_allocation = null;
-            reserved_cycles_limit = null;
-        }});
-        await pm.registerNamedModule({ // PM backend registers itself.
-            installation = installationId;
-            canister = createdCanister;
-            packageManager = createdCanister;
-            moduleName = "backend";
-        });
-        // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
-        await ic.update_settings({canister_id = createdCanister; sender_canister_version = null; settings = {
-            controllers = ?[createdCanister, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
-            freezing_threshold = null;
-            memory_allocation = null;
-            compute_allocation = null;
-            reserved_cycles_limit = null;
-        }});
+        // FIXME: Uncomment.
+        // await pm.registerNamedModule({
+        //     installation = installationId;
+        //     canister = Principal.fromActor(indirectCaller);
+        //     packageManager = createdCanister;
+        //     moduleName = "indirect"; // TODO: a better name?
+        // });
+        // // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
+        // await ic.update_settings({canister_id = Principal.fromActor(indirectCaller); sender_canister_version = null; settings = {
+        //     controllers = ?[createdCanister, Principal.fromActor(indirectCaller)];
+        //     freezing_threshold = null;
+        //     memory_allocation = null;
+        //     compute_allocation = null;
+        //     reserved_cycles_limit = null;
+        // }});
+        // await pm.registerNamedModule({ // PM backend registers itself.
+        //     installation = installationId;
+        //     canister = createdCanister;
+        //     packageManager = createdCanister;
+        //     moduleName = "backend";
+        // });
+        // // FIXME: Isn't `update_settings` unsafe? https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553/9
+        // await ic.update_settings({canister_id = createdCanister; sender_canister_version = null; settings = {
+        //     controllers = ?[createdCanister, caller]; // self-controlled // FIXME: It seems to be a wrong `caller`.
+        //     freezing_threshold = null;
+        //     memory_allocation = null;
+        //     compute_allocation = null;
+        //     reserved_cycles_limit = null;
+        // }});
         // await pm.setOwner(caller); // FIXME: Put the correct `caller` (`user` instead).
     };
 
