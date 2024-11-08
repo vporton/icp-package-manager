@@ -39,4 +39,4 @@ deploy:
 	dfx ledger fabricate-cycles --t 2000000 --canister cycles_ledger
 	dfx ledger fabricate-cycles --t 2000000 --canister BootstrapperIndirectCaller
 	-dfx canister call RepositoryIndex init "()"
-	# npx ts-node scripts/prepare.ts
+	npx ts-node scripts/prepare.ts
