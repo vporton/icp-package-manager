@@ -14,19 +14,19 @@ import Common "../common";
 import IndirectCaller "indirect_caller";
 import Install "../install";
 
-shared({/*caller = initialOwner*/}) actor class PackageManager({
+shared({caller = initialOwner}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     userArg: Blob;
 }) = this {
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        initialIndirectCaller: Principal; // TODO: Rename.
+        // initialIndirectCaller: Principal; // TODO: Rename.
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (userArgValue.initialIndirectCaller, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
     // TODO: more flexible control of owners
     public shared({caller}) func setOwner(newOwner: Principal): async () {
@@ -299,7 +299,7 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
             getIndirectCaller().installModule({
                 installPackage = whatToInstall == #package; // a little bit hacky
                 moduleName = ?m.0;
-                installArg = ""; // TODO
+                installArg = to_candid({}); // TODO
                 installationId;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
                 preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);

@@ -239,9 +239,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
         await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
-                userArg = installArg;
                 packageManagerOrBootstrapper;
                 user;
+                userArg = installArg;
             });
             wasm_module;
             mode = #install;
@@ -385,7 +385,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
-            installArg = "";
+            installArg = to_candid({});
             packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
@@ -394,7 +394,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await* myInstallCode({
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
-            installArg = "";
+            installArg = to_candid({});
             packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
