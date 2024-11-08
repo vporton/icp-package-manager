@@ -17,7 +17,6 @@ module {
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Principal)];
         };
         installationId: Common.InstallationId;
         packageName: Common.PackageName;

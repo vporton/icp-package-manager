@@ -147,7 +147,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Principal)];
         };
         packageName: Common.PackageName;
         version: Common.Version;
@@ -226,7 +225,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Principal)]; /// Binaries should be already installed, because otherwise we have no `this`.
         };
         installationId: Common.InstallationId;
         user: Principal;
@@ -269,9 +267,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 );
                 (iter, ms.size());  // TODO: efficient?
             };
-            case (#bootstrap _ms) {
-                ([].vals(), 0);
-            };
         };
         let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
 
@@ -311,10 +306,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 user;
                 wasmModule = Common.shareModule(m.1);
                 noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
-                additionalArgs = switch (whatToInstall) {
-                    case (#bootstrap modules) #bootstrap modules;
-                    case _ #regular;
-                };
             });
         };
     };
@@ -454,9 +445,6 @@ shared({/*caller = initialOwner*/}) actor class PackageManager({
                 };
             };
             case (#simplyModules _) {};
-            case (#bootstrap _) {
-                // FIXME: Should do something here?
-            }
         };
         halfInstalledPackages.delete(installationId);
     };

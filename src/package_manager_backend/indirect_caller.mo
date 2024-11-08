@@ -127,7 +127,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         whatToInstall: {
             #package;
             #simplyModules : [(Text, Common.SharedModule)];
-            #bootstrap : [(Text, Principal)];
         };
         repo: Common.RepositoryPartitionRO;
         pmPrincipal: ?Principal;
@@ -158,7 +157,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     whatToInstall: {
                         #package;
                         #simplyModules : [(Text, Common.SharedModule)];
-                        #bootstrap : [(Text, Principal)];
                     };
                     installationId: Common.InstallationId;
                     user: Principal;
@@ -307,7 +305,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         canister_id;
     };
 
-    // TODO: I have several arguments indicating bootstrap: noPMBackendYet, additionalArgs, preinstalledCanisterId.
+    // TODO: I have several arguments indicating bootstrap: noPMBackendYet, preinstalledCanisterId.
     public shared func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -317,11 +315,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
-        noPMBackendYet: Bool; // FIXME: Here and in other places use `#bootstrap` instead.
-        additionalArgs: {
-            #bootstrap : [(Text, Principal)]; /// FIXME: Superfluous /// After finishing no-PM installing, restart installation with given modules.
-            #regular;
-        }
+        noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
@@ -356,34 +350,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         noPMBackendYet;
                     });
                 };
-            };
-            switch (additionalArgs) {
-                case (#bootstrap modules) {
-                    // FIXME: Should be here only for installing `"backend"`, not frontend
-                    let pm = actor(Principal.toText(modules[0].1)) : actor { // TODO: hardcoded module index
-                        installPackageWithPreinstalledModules: shared ({
-                            whatToInstall: {
-                                #package;
-                                #simplyModules : [(Text, Common.SharedModule)];
-                                #bootstrap : [(Text, Principal)];
-                            };
-                            packageName: Common.PackageName;
-                            version: Common.Version;
-                            preinstalledModules: [(Text, Principal)];
-                            repo: Common.RepositoryPartitionRO;
-                            user: Principal;
-                        }) -> async {installationId: Common.InstallationId};
-                    };
-                    ignore await pm.installPackageWithPreinstalledModules({
-                        whatToInstall = #package;
-                        packageName = "icpack"; // TODO: hack
-                        version = "0.0.1"; // FIXME: bad hack
-                        preinstalledModules = modules;
-                        repo = actor("aaaaa-aa"); // hack
-                        user;
-                    });
-                };
-                case (#regular) {};
             };
         }
         catch (e) {
@@ -440,7 +406,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 whatToInstall: {
                     #package;
                     #simplyModules : [(Text, Common.SharedModule)];
-                    #bootstrap : [(Text, Principal)];
                 };
                 packageName: Common.PackageName;
                 version: Common.Version;
