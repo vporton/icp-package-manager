@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
-import { bootstrapper } from '../../declarations/bootstrapper';
+import { createActor as createBootstrapperIndirectCallerActor } from '../../declarations/BootstrapperIndirectCaller';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MainPage from './MainPage';
@@ -14,6 +14,9 @@ import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
 import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 import { MyLink } from './MyNavigate';
+import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
+import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
+import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -45,44 +48,32 @@ function App() {
 
 function GlobalUI() {
   const glob = useContext(GlobalContext);
-  const {isAuthenticated, defaultAgent} = useAuth();
+  const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
+  const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
   if (glob.backend === undefined) {
     async function installBackend() {
-      // TODO: hack
-      const parts = (await RepositoryIndex.getCanistersByPK('main'))
-        .map(s => Principal.fromText(s))
-      const foundParts = await Promise.all(parts.map(part => {
+      // TODO: Duplicate code
+      const repoParts = await repoIndex.getCanistersByPK("main");
+      let pkg: SharedPackageInfo | undefined = undefined;
+      const jobs = repoParts.map(async part => {
+        const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
         try {
-          const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-          part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
-          return part;
+          pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
         }
-        catch(_) { // TODO: Check error.
-          return null;
-        }
-      }));
-      const firstPart = foundParts.filter(v => v !== null)[0];
+        catch (_) {}
+      });
+      await Promise.all(jobs);
+      const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-      const {installationId, backendId} = await bootstrapper.bootstrapBackend(glob.frontend!, firstPart); // TODO: `!`
-      console.log("backendId", backendId); // FIXME: Remove.
-      let backendPrincipal;
-      for (let i = 0; i < 20; ++i) {
-        try {
-          await new Promise<void>((resolve, _reject) => {
-            setTimeout(() => resolve(), 1000);
-          });
-          backendPrincipal = await bootstrapper.getBootstrappedCanister(backendId);
-          console.log("backendPrincipal", backendPrincipal); // FIXME: Remove.
-          break;
-        }
-        catch(e) {}
-      }
-      if (backendPrincipal === undefined) {
-        alert("No backend canister principal found"); // TODO: better dialog
-        return;
-      }
+      const indirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
+      const {backendPrincipal} = await indirectCaller.bootstrapBackend({
+        frontend: glob.frontend!, // TODO: `!`
+        backendWasmModule: pkgReal.modules[1][1][0], // TODO: explicit values
+        indirectWasmModule: pkgReal.modules[2][1][0],
+        user: principal!, // TODO: `!`
+      });
+      console.log("backendPrincipal", backendPrincipal); // FIXME: Remove.
 
-      // const backend_princ = result.canisterIds[0][1]; // FIXME
       const backend_str = backendPrincipal.toString();
       // TODO: busy indicator
       // for (let i = 0;; ++i) { // TODO: Choose the value.

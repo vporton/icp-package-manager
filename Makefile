@@ -6,7 +6,7 @@
 deploy:
 	dfx canister create package_manager
 	# dfx canister create bootstrapper
-	# dfx canister create package_manager_frontend
+	dfx canister create package_manager_frontend
 	dfx canister create bootstrapper_frontend
 	dfx canister create RepositoryIndex
 	dfx canister create bookmark
@@ -28,8 +28,8 @@ deploy:
 	# dfx generate bootstrapper
 	# dfx canister install -m auto bootstrapper
 	dfx generate bookmark
-	# dfx build package_manager_frontend
-	# dfx canister install -m auto package_manager_frontend
+	dfx build package_manager_frontend
+	dfx canister install -m auto package_manager_frontend
 	dfx build bootstrapper_frontend
 	dfx canister install -m auto bootstrapper_frontend
 	dfx build bookmark

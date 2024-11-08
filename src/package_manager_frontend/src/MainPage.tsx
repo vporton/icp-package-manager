@@ -42,7 +42,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { defaultAgent } = useAuth();
+    const { defaultAgent, principal } = useAuth();
     const glob = useContext(GlobalContext);
 
     const navigate = myUseNavigate();
@@ -92,16 +92,17 @@ export default function MainPage() {
                     repo: firstPart,
                     packageName: p.name,
                     version: p.version,
-                    callback: [],
+                    user: principal!,
                 });
             }
         }
     }
     async function deleteChecked() {
         for (const p of packagesToRepair!) {
-            if (checkedHalfInstalled?.has(p.installationId)) {
-                await glob.package_manager_rw!.uninstallPackage(BigInt(p.installationId));
-            }
+            // TODO
+            // if (checkedHalfInstalled?.has(p.installationId)) {
+            //     await glob.package_manager_rw!.uninstallPackage(BigInt(p.installationId));
+            // }
         }
     }
     async function removeRepository() {

@@ -414,7 +414,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
         user: Principal;
-    }): () {
+    }): async {backendPrincipal: Principal} {
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         await* myInstallCode({
@@ -463,5 +463,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         });
         await backend.init({user; indirectCaller = indirect_canister_id});
         await indirect.setOwner(backend_canister_id);
+
+        {backendPrincipal = backend_canister_id};
     };
 }

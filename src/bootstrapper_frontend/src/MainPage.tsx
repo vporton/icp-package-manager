@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
-import { createActor as createBootstrapperActor } from "../../declarations/BootstrapperIndirectCaller"; // TODO: Rename.
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { createActor as createBootstrapperIndirectActor } from "../../declarations/BootstrapperIndirectCaller";
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
-import { idlFactory as frontendIDL } from "./misc/frontend.did";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
 import { Actor, Agent } from "@dfinity/agent";
@@ -39,6 +38,7 @@ export default function MainPage() {
     }, [props.isAuthenticated, props.principal]);
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
+      // TODO: Duplicate code
       const repoParts = await repoIndex.getCanistersByPK("main");
       let pkg: SharedPackageInfo | undefined = undefined;
       const jobs = repoParts.map(async part => {
@@ -51,8 +51,8 @@ export default function MainPage() {
       await Promise.all(jobs);
       const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
+      const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent: props.agent});
+      const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
         wasmModule: pkgReal.modules[0][1][0],
         installArg: [],
         user: props.principal!,

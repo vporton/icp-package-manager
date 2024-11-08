@@ -3,7 +3,7 @@ import { useAuth } from "./auth/use-auth-client";
 import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
-import { PackageInfo, RealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
+import { SharedPackageInfo, SharedRealPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 
@@ -11,7 +11,7 @@ export default function Installation(props: {}) {
     const { installationId } = useParams();
     const {defaultAgent} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
-    const [pkg2, setPkg2] = useState<PackageInfo | undefined>();
+    const [pkg2, setPkg2] = useState<SharedPackageInfo | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
         if (defaultAgent === undefined) {
@@ -30,7 +30,8 @@ export default function Installation(props: {}) {
 
     // TODO: Ask for confirmation.
     async function uninstall() {
-        let id = await glob.package_manager_rw!.uninstallPackage(BigInt(installationId!));
+        // TODO
+        // let id = await glob.package_manager_rw!.uninstallPackage(BigInt(installationId!));
         // TODO:
         alert("Uninstallation finished");
     }
@@ -43,8 +44,8 @@ export default function Installation(props: {}) {
             <p><strong>Package version:</strong> {pkg?.version}</p>
             <p><strong>Short description:</strong> {pkg2?.base.shortDescription}</p>
             <p><strong>Long description:</strong> {pkg2?.base.longDescription}</p>
-            { pkg2 && (pkg2.specific as { real: RealPackageInfo }).real && 
-                <p><strong>Dependencies:</strong> {(pkg2?.specific as { real: RealPackageInfo }).real.dependencies.join(", ")}</p>
+            { pkg2 && (pkg2.specific as { real: SharedRealPackageInfo }).real && 
+                <p><strong>Dependencies:</strong> {(pkg2?.specific as { real: SharedRealPackageInfo }).real.dependencies.join(", ")}</p>
             }
             <p><Button onClick={uninstall}>Uninstall</Button></p>
         </>

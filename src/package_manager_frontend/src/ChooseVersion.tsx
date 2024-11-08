@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 // import { IndexClient } from "candb-client-typescript/dist/IndexClient";
 // import { ActorClient } from "candb-client-typescript/dist/ActorClient";
 import { /*RepositoryIndex,*/ idlFactory as repositoryIndexIDL } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
-import { FullPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
+import { SharedFullPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 import { useAuth } from "./auth/use-auth-client";
 import { package_manager } from "../../declarations/package_manager";
@@ -24,15 +24,15 @@ export default function ChooseVersion(props: {}) {
     useEffect(() => {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         index.getCanistersByPK("main").then(async pks => {
-            const res: [string, FullPackageInfo][] = await Promise.all(pks.map(async pk => {
+            const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
-                return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
+                return [pk, await part.getSharedFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
             })) as any;
             for (const [pk, fullInfo] of res) {
                 if (fullInfo === undefined) {
                     continue;
                 }
-                // FIXME: Take into account `.versions` map from `FullPackageInfo`.
+                // FIXME: Take into account `.versions` map from `SharedFullPackageInfo`.
                 setVersions(fullInfo.packages.map(pkg => pkg[0]));
                 break;
             }
@@ -66,7 +66,7 @@ export default function ChooseVersion(props: {}) {
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,
-            callback: [],
+            user: principal!,
         });
         navigate(`/installed/show/${id}`);
     }
