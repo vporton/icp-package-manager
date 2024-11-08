@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
-import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
+import { createActor as createBootstrapperActor } from "../../declarations/BootstrapperIndirectCaller"; // TODO: Rename.
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { idlFactory as frontendIDL } from "./misc/frontend.did";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';

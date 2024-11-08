@@ -396,7 +396,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
-        bootstrapper: Principal;
         user: Principal;
     }): () {
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
@@ -404,7 +403,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
-            packageManagerOrBootstrapper = bootstrapper;
+            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
     };
@@ -413,7 +412,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         frontend: Principal;
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
-        bootstrapper: Principal;
         user: Principal;
     }): () {
         // TODO: Create and run two canisters in parallel.
@@ -422,7 +420,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = "";
-            packageManagerOrBootstrapper = bootstrapper;
+            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
 
