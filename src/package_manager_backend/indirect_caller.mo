@@ -320,7 +320,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             // onlyOwner(caller); // FIXME: Uncomment.
 
-            let canister = switch (preinstalledCanisterId) {
+            switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     let preinstalledCanister: Callbacks = actor (Principal.toText(preinstalledCanisterId));
                     await preinstalledCanister.onCreateCanister({
@@ -336,10 +336,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         canister = preinstalledCanisterId;
                         user;
                     });
-                    preinstalledCanisterId;
                 };
                 case null {
-                    await* _installModuleCode({
+                    ignore await* _installModuleCode({
                         installationId;
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
