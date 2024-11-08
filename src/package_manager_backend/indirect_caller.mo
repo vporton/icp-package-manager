@@ -198,8 +198,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         }) -> async ();
     };
 
-    private func myCreateCanister(): async* IC.CreateCanisterResult {
-        await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
+    private func myCreateCanister({packageManagerOrBootstrapper: Principal}): async* {canister_id: Principal} {
+        let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
             amount = 10_000_000_000_000; // FIXME
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             creation_args = ?{
@@ -213,6 +213,15 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
             from_subaccount = null; // FIXME
         });
+        let canister_id = switch (res) {
+            case (#Ok {canister_id}) canister_id;
+            case (#Err err) {
+                let msg = debug_show(err);
+                Debug.print("cannot create canister: " # msg);
+                Debug.trap("cannot create canister: " # msg);
+            };  
+        };
+        {canister_id};
     };
 
     private func myInstallCode({
@@ -264,7 +273,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     }): async* Principal {
         Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let {canister_id} = await* myCreateCanister();
+        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper});
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
             await pm.onCreateCanister({
@@ -390,7 +399,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         bootstrapper: Principal;
         user: Principal;
     }): () {
-        let {canister_id} = await* myCreateCanister();
+        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
         await* myInstallCode({
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
@@ -408,7 +417,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
     }): () {
         // TODO: Create and run two canisters in parallel.
-        let {canister_id = backend_canister_id} = await* myCreateCanister();
+        let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
@@ -417,7 +426,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             user;
         });
 
-        let {canister_id = indirect_canister_id} = await* myCreateCanister();
+        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = bootstrapper});
         await* myInstallCode({
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
@@ -426,7 +435,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             user;
         });
 
-        // TODO: Make init() functions conforming to the specs.
+            // TODO: Make init() functions conforming to the specs and call init() automatically.
         let backend = actor(Principal.toText(backend_canister_id)): actor {
             installPackageWithPreinstalledModules: shared ({
                 whatToInstall: {
@@ -443,7 +452,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             init: shared ({user: Principal; indirectCaller: Principal}) -> async ();
         };
         let indirect = actor(Principal.toText(indirect_canister_id)): actor {
-            init: shared ({user: Principal; owner: Principal}) -> async ();
+            setOwner: shared (newOwner: Principal) -> async ();
         };
         ignore await backend.installPackageWithPreinstalledModules({
             whatToInstall = #package;
