@@ -137,8 +137,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         noPMBackendYet: Bool;
     }): () {
         try {
-            Debug.print("installPackageWrapper"); // TODO: Remove.
-
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
