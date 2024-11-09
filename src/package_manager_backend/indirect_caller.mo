@@ -20,15 +20,14 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     stable var owner = initialOwner;
 
     /// We check owner, for only owner to be able to control Asset canisters
-    private func onlyOwner(caller: Principal) {
+    private func onlyOwner(caller: Principal, msg: Text) {
         if (caller != owner and caller != Principal.fromActor(this)) { // TODO: Comparison with this is necessary for call of `copyAssets` from `callAllOneWay`.
-            Debug.print("only owner");
-            Debug.trap("only owner");
+            Debug.trap("not the owner: " # msg);
         };
     };
 
     public shared({caller}) func setOwner(newOwner: Principal): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "setOwner");
 
         owner := newOwner;
     };
@@ -73,20 +72,20 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
     /// TODO: We don't need this function.
     public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
-        onlyOwner(caller);
+        onlyOwner(caller, "callIgnoringMissingOneWay");
 
         await* callIgnoringMissingOneWayImpl(methods)
     };
 
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
-        onlyOwner(caller);
+        onlyOwner(caller, "callAllOneWay");
 
         await* callAllOneWayImpl(methods);
     };
 
     /// TODO: We don't need this function.
     public shared({caller}) func callIgnoringMissing(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller);
+        onlyOwner(caller, "callIgnoringMissing");
 
         try {
             return await ICE.call(method.canister, method.name, method.data); 
@@ -99,7 +98,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func call(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller);
+        onlyOwner(caller, "call");
 
         try {
             return await ICE.call(method.canister, method.name, method.data);
@@ -112,7 +111,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
-        onlyOwner(caller);
+        onlyOwner(caller, "copyAll");
 
         try {
             return await* CopyAssets.copyAll({from; to});
@@ -140,7 +139,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             Debug.print("installPackageWrapper"); // TODO: Remove.
 
-            onlyOwner(caller);
+            onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
@@ -318,7 +317,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
-            // onlyOwner(caller); // FIXME: Uncomment.
+            // onlyOwner(caller, "installModule"); // FIXME: Uncomment.
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
@@ -411,8 +410,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 preinstalledModules: [(Text, Principal)];
                 repo: Common.RepositoryPartitionRO;
                 user: Principal;
+                indirectCaller: Principal;
             }) -> async {installationId: Common.InstallationId};
-            init: shared ({user: Principal; indirectCaller: Principal}) -> async ();
+            init: shared ({user: Principal; indirect_caller: Principal}) -> async ();
         };
         let indirect = actor(Principal.toText(indirect_canister_id)): actor {
             setOwner: shared (newOwner: Principal) -> async ();
@@ -424,8 +424,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
             repo = actor("aaaaa-aa"); // TODO: Does this hack work?
             user;
+            indirectCaller = indirect_canister_id;
         });
-        await backend.init({user; indirectCaller = indirect_canister_id});
+        await backend.init({user; indirect_caller = indirect_canister_id});
         await indirect.setOwner(backend_canister_id);
 
         {backendPrincipal = backend_canister_id};

@@ -142,7 +142,6 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     /// Internal used for bootstrapping.
-    // FIXME: Remove this function?
     public shared({caller}) func installPackageWithPreinstalledModules({
         whatToInstall: {
             #package;
@@ -153,6 +152,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         preinstalledModules: [(Text, Principal)];
         repo: Common.RepositoryPartitionRO;
         user: Principal;
+        indirectCaller: Principal;
     })
         : async {installationId: Common.InstallationId}
     {
@@ -162,7 +162,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         nextInstallationId += 1;
 
         await* Install._installModulesGroup({
-            indirectCaller = getIndirectCaller();
+            indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
             installationId;
             packageName;
