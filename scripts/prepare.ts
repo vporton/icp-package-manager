@@ -71,8 +71,9 @@ async function main() {
     const real: SharedRealPackageInfo = {
         modules: [
             ['frontend', [pmFrontendModule, true]],
-            ['backend', [pmBackendModule, false]],
-            ['indirect', [pmIndirectModule, false]],
+            // HACK: `true` for the next two is a hack, isn't it?
+            ['backend', [pmBackendModule, true]],
+            ['indirect', [pmIndirectModule, true]],
         ],
         dependencies: [],
         functions: [],

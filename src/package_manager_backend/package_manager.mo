@@ -120,6 +120,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
+        Debug.print("installPackage"); // FIXME: Remove.
         onlyOwner(caller, "installPackage");
 
         let installationId = nextInstallationId;
@@ -156,6 +157,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
+        Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove.
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         let installationId = nextInstallationId;
@@ -189,6 +191,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         user: Principal;
         preinstalledModules: [(Text, Principal)];
     }): async {installationId: Common.InstallationId} {
+        Debug.print("installNamedModules"); // FIXME: Remove.
         onlyOwner(caller, "installNamedModule");
 
         let ?inst = installedPackages.get(installationId) else {
@@ -233,6 +236,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         preinstalledModules: [(Text, Principal)];
         noPMBackendYet: Bool;
     }): async () {
+        Debug.print("installationWorkCallback"); // FIXME: Remove.
         onlyIndirectCaller(caller, "installationWorkCallback");
 
         let #real realPackage = package.specific else {
@@ -269,6 +273,9 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
         };
         let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
+        Debug.print("realModulesToInstall2 = " # debug_show( // FIXME: Remove.
+            Iter.toArray(Iter.map<(Text, Common.Module), Text>(realModulesToInstall2.vals(), func ((k,v): (Text, Common.Module)): Text = k)),
+        ));
 
         let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
             preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
@@ -396,6 +403,9 @@ shared({caller = initialOwner}) actor class PackageManager({
                 // FIXME: Register unnamed module
             };
         };
+        // FIXME: Remove Debug:
+        Debug.print("inst.installedModules.size() = " # debug_show(inst.installedModules.size()) #
+            " inst.numberOfModulesToInstall = " # debug_show(inst.numberOfModulesToInstall));
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {

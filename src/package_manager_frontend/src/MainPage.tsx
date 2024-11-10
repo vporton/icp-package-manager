@@ -70,7 +70,7 @@ export default function MainPage() {
     useEffect(reloadDistros, []);
 
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
-        async function installChecked() {
+    async function installChecked() {
         // TODO: hack
         const parts = (await RepositoryIndex.getCanistersByPK('main'))
             .map(s => Principal.fromText(s))
