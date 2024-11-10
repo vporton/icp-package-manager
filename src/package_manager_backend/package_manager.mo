@@ -60,8 +60,8 @@ shared({caller = initialOwner}) actor class PackageManager({
     }) : async () {
         Debug.print("initializing package manager");
 
-        indirect_caller_ := ?actor(Principal.toText(indirect_caller));
-        owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
+        indirect_caller_ := ?actor(Principal.toText(indirect_caller)); // TODO: Move its initialization to the constructor code.
+        // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
 
         initialized := true;
     };
