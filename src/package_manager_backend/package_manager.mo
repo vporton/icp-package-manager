@@ -151,7 +151,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         packageName: Common.PackageName;
         version: Common.Version;
         preinstalledModules: [(Text, Principal)];
-        repo: Common.RepositoryPartitionRO;
+        repo: Common.RepositoryPartitionRO; // FIXME: Different modules may be in different repos.
         user: Principal;
         indirectCaller: Principal;
     })
