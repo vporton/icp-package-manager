@@ -19,20 +19,30 @@ shared({caller = initialOwner}) actor class PackageManager({
     userArg: Blob;
 }) = this {
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        // initialIndirectCaller: Principal; // TODO: Rename.
+        initialIndirectCaller: Principal;
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter([(packageManagerOrBootstrapper, ()), (initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+        HashMap.fromIter(
+            [(packageManagerOrBootstrapper, ()), (initialOwner, ()), (userArgValue.initialIndirectCaller, ())].vals(),
+            1,
+            Principal.equal,
+            Principal.hash);
 
-    // TODO: more flexible control of owners
+    // TODO: more flexible control of owners // FIXME: Remove.
     public shared({caller}) func setOwner(newOwner: Principal): async () {
         onlyOwner(caller, "setOwner");
 
         owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+    };
+
+    public shared({caller}) func removeOwner(oldOwner: Principal): async () {
+        onlyOwner(caller, "setOwner");
+
+        owners.delete(oldOwner);
     };
 
     // TODO: Remove.

@@ -397,7 +397,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
-            installArg = to_candid({});
+            installArg = to_candid({
+                initialIndirectCaller = Principal.fromActor(this);
+            });
             packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
@@ -429,6 +431,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 indirectCaller: Principal;
             }) -> async {installationId: Common.InstallationId};
             init: shared ({user: Principal; indirect_caller: Principal}) -> async ();
+            removeOwner: shared (oldOwner: Principal) -> async ();
         };
         Debug.print("Z5"); // FIXME: Remove.
         let indirect = actor(Principal.toText(indirect_canister_id)): actor {
@@ -444,10 +447,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             user;
             indirectCaller = indirect_canister_id;
         });
+        // TODO: Run the below in parallel:
         Debug.print("Z7"); // FIXME: Remove.
         await backend.init({user; indirect_caller = indirect_canister_id});
         Debug.print("Z8"); // FIXME: Remove.
         await indirect.setOwner(backend_canister_id);
+        await backend.removeOwner(Principal.fromActor(this));
         Debug.print("Z9"); // FIXME: Remove.
 
         {backendPrincipal = backend_canister_id};
