@@ -15,6 +15,8 @@ Remaining things to do:
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
 
+- Installation from several repos.
+
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
 
 - Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
