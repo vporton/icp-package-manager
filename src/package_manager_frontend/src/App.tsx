@@ -17,6 +17,7 @@ import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
+import { RepositoryPartitionRO } from '../../declarations/BootstrapperIndirectCaller/BootstrapperIndirectCaller.did';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -55,10 +56,12 @@ function GlobalUI() {
       // TODO: Duplicate code
       const repoParts = await repoIndex.getCanistersByPK("main");
       let pkg: SharedPackageInfo | undefined = undefined;
+      let repo: RepositoryPartitionRO | undefined;
       const jobs = repoParts.map(async part => {
         const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
         try {
           pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+          repo = obj;
         }
         catch (_) {}
       });
@@ -71,6 +74,7 @@ function GlobalUI() {
         backendWasmModule: pkgReal.modules[1][1][0], // TODO: explicit values
         indirectWasmModule: pkgReal.modules[2][1][0],
         user: principal!, // TODO: `!`
+        repo: Principal.from(repo!), // TODO: `!`
       });
       console.log("backendPrincipal", backendPrincipal); // FIXME: Remove.
 

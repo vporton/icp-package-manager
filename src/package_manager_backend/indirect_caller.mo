@@ -389,6 +389,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
         user: Principal;
+        repo: Common.RepositoryPartitionRO;
     }): async {backendPrincipal: Principal} {
         Debug.print("bootstrapBackend"); // FIXME: Remove.
         // TODO: Create and run two canisters in parallel.
@@ -440,7 +441,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageName = "icpack";
             version = "0.0.1"; // TODO: should be `stable`.
             preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
-            repo = actor("aaaaa-aa"); // TODO: Does this hack work?
+            repo;
             user;
             indirectCaller = indirect_canister_id;
         });
