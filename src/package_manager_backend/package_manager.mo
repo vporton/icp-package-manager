@@ -28,7 +28,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             [(packageManagerOrBootstrapper, ()), (initialOwner, ()), (userArgValue.initialIndirectCaller, ())].vals(),
-            1,
+            3,
             Principal.equal,
             Principal.hash);
 
@@ -113,13 +113,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     func onlyOwner(caller: Principal, msg: Text) {
         if (owners.get(caller) == null) {
             Debug.trap("not the owner: " # msg);
-        }
-    };
-
-    func onlyIndirectCaller(caller: Principal, msg: Text) {
-        if (caller == Principal.fromActor(getIndirectCaller())) {
-            Debug.trap("not from indirectCaller: " # msg);
-        }
+        };
     };
 
     public shared({caller}) func installPackage({
@@ -247,7 +241,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         noPMBackendYet: Bool;
     }): async () {
         Debug.print("installationWorkCallback"); // FIXME: Remove.
-        onlyIndirectCaller(caller, "installationWorkCallback");
+        onlyOwner(caller, "installationWorkCallback");
 
         let #real realPackage = package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -335,7 +329,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         canister: Principal;
         user: Principal;
     }): async () {
-        onlyIndirectCaller(caller, "onCreateCanister");
+        onlyOwner(caller, "onCreateCanister");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
@@ -384,7 +378,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
-        onlyIndirectCaller(caller, "onInstallCode");
+        onlyOwner(caller, "onInstallCode");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message

@@ -393,19 +393,20 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         Debug.print("bootstrapBackend"); // FIXME: Remove.
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
+        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
+
         Debug.print("Z1"); // FIXME: Remove.
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
-                initialIndirectCaller = Principal.fromActor(this);
+                initialIndirectCaller = indirect_canister_id;
             });
             packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
             user;
         });
         Debug.print("Z2"); // FIXME: Remove.
 
-        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         Debug.print("Z3"); // FIXME: Remove.
         await* myInstallCode({
             canister_id = indirect_canister_id;
