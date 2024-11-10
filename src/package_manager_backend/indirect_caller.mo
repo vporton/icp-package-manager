@@ -169,7 +169,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             };
 
             Debug.print("PRE installationWorkCallback"); // FIXME: Remove.
-            await pm.installationWorkCallback({
+            await pm.installationWorkCallback({ // FIXME: We have no permission in `pm` because we are `BootstrapperIndirectCaller`.
                 whatToInstall; /// install package or named modules.
                 installationId;
                 user;
