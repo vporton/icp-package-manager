@@ -35,6 +35,7 @@ deploy:
 	dfx build bookmark
 	dfx canister install -m auto bookmark
 	dfx deploy internet_identity
+	dfx deploy cycles_ledger
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister cycles_ledger
 	dfx ledger fabricate-cycles --t 2000000 --canister BootstrapperIndirectCaller
