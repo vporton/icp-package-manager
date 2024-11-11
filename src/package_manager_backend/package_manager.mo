@@ -304,21 +304,22 @@ shared({caller = initialOwner}) actor class PackageManager({
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-        for (m in realModulesToInstall2.vals()) {
-            // FIXME: correct indirect caller?
-            // Starting installation of all modules in parallel:
-            getIndirectCaller().installModule({
-                installPackage = whatToInstall == #package; // a little bit hacky
-                moduleName = ?m.0;
-                installArg = to_candid({}); // TODO
-                installationId;
-                packageManagerOrBootstrapper = Principal.fromActor(this);
-                preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
-                user;
-                wasmModule = Common.shareModule(m.1);
-                noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
-            });
-        };
+        // This takes too much cycles. Run a similar code from frontend, instead:
+        // for (m in realModulesToInstall2.vals()) {
+        //     // Correct indirect caller?
+        //     // Starting installation of all modules in parallel:
+        //     getIndirectCaller().installModule({
+        //         installPackage = whatToInstall == #package; // a little bit hacky
+        //         moduleName = ?m.0;
+        //         installArg = to_candid({}); // TODO
+        //         installationId;
+        //         packageManagerOrBootstrapper = Principal.fromActor(this);
+        //         preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
+        //         user;
+        //         wasmModule = Common.shareModule(m.1);
+        //         noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
+        //     });
+        // };
     };
 
     /// Internal
