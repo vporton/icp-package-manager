@@ -222,6 +222,12 @@ module {
             }
         };
 
+    public type SharedHalfInstalledPackageInfo = {
+        packageName: Text;
+        version: Version;
+        package: SharedPackageInfo;
+    };
+
     public type InstallationId = Nat;
 
     public type RepositoryIndexRO = actor {

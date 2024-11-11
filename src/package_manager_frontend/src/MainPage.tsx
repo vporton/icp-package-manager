@@ -77,7 +77,7 @@ export default function MainPage() {
         const foundParts = await Promise.all(parts.map(part => {
             try {
                 const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
+                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode. // FIXME: Here we install an arbitrary package, not icpack!
                 return part;
             }
             catch(_) { // TODO: Check error.

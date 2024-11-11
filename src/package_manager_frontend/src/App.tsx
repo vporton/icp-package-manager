@@ -16,9 +16,12 @@ import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
+// import { createActor as createBackendActor } from "../../declarations/package_manager";
+import { createActor as createIndirectActor } from "../../declarations/BootstrapperIndirectCaller";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
-import { RepositoryPartitionRO } from '../../declarations/BootstrapperIndirectCaller/BootstrapperIndirectCaller.did';
-import { PackageManager } from '../../declarations/package_manager/package_manager.did';
+import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/BootstrapperIndirectCaller/BootstrapperIndirectCaller.did';
+// import { PackageManager, SharedHalfInstalledPackageInfo } from '../../declarations/package_manager/package_manager.did';
+import { IDL } from '@dfinity/candid';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -73,18 +76,50 @@ function GlobalUI() {
       // const installedInfo = await backend.getInstalledPackage(glob.packageInstallationId);
       // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
 
-      const indirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
-      const {backendPrincipal} = await indirectCaller.bootstrapBackend({
+      const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
+      // TODO: Are here modules needed? They are installed below, instead?
+      const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
       // const {backendPrincipal} = await indirectCaller.bootstrapBackend({
         frontend: glob.frontend!, // TODO: `!`
         backendWasmModule: pkgReal.modules[1][1][0], // TODO: explicit values
         indirectWasmModule: pkgReal.modules[2][1][0],
         user: principal!, // TODO: `!`
         repo: repoPart!, // TODO: `!`
+        packageManagerOrBootstrapper: ??,
       });
-      console.log("backendPrincipal", backendPrincipal); // FIXME: Remove.
+      const installationId = 0n; // FIXME
+      // const backend = createBackendActor(backendPrincipal, {agent});
+      const indirect = createIndirectActor(indirectPrincipal, {agent});
+      // const p2: SharedHalfInstalledPackageInfo = await backend.getHalfInstalledPackageById(installationId);
+      for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
+        if (!dfn) {
+          continue;
+        }
+        // Starting installation of all modules in parallel:
+        indirect/*bootstrapperIndirectCaller*/.installModule({ // FIXME: Why not our `indirectCaller`?
+          installPackage: true,
+          moduleName: [name],
+          installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
+          installationId,
+          packageManagerOrBootstrapper: backendPrincipal,
+          preinstalledCanisterId: [{"frontend": glob.frontend, "backend": glob.backend, "indirect": indirectPrincipal}[name]!],
+          user: principal!, // TODO: `!`
+          wasmModule: m,
+          noPMBackendYet: name === "backend", // HACK
+        });
+      };
+      // await backend.installPackageWithPreinstalledModules({
+      //     whatToInstall: { package: null },
+      //     packageName: "icpack",
+      //     version: "0.0.1", // TODO: should be `stable`.
+      //     preinstalledModules: [["frontend", glob.frontend], ["backend", glob.backend], ["indirect", indirect_canister_id]],
+      //     repo: repoPart,
+      //     user = principal!; // TODO: `!`
+      //     indirectCaller = indirect_canister_id;
+      // });
 
       const backend_str = backendPrincipal.toString();
+      // FIXME: Do wait.
       // TODO: busy indicator
       // for (let i = 0;; ++i) { // TODO: Choose the value.
       //   if (i == 20) {

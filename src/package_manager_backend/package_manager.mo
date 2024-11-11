@@ -238,7 +238,6 @@ shared({caller = initialOwner}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         repo: Common.RepositoryPartitionRO;
         preinstalledModules: [(Text, Principal)];
-        noPMBackendYet: Bool;
     }): async () {
         Debug.print("installationWorkCallback"); // FIXME: Remove.
         onlyOwner(caller, "installationWorkCallback");
@@ -685,16 +684,12 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getHalfInstalledPackageById(installationId: Common.InstallationId): async {
-        packageName: Text;
-        version: Common.Version;
-        package: Common.SharedPackageInfo;
-    } {
-        let ?res = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package")
-        };
-        {packageName = res.packageName; version = res.package.base.version; package = Common.sharePackageInfo(res.package)};
-    };
+    // public query func getHalfInstalledPackageModuleesById(installationId: Common.InstallationId): async [(Text, Principal)] {
+    //     let ?res = halfInstalledPackages.get(installationId) else {
+    //         Debug.trap("no such package")
+    //     };
+    //     res.
+    // };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 

@@ -53,7 +53,7 @@ export default function ChooseVersion(props: {}) {
         const foundParts = await Promise.all(parts.map(part => {
             try {
                 const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode.
+                part2.getPackage("icpack", "0.0.1"); // TODO: Don't hardcode. // FIXME: Here we install an arbitrary package, not icpack!
                 return part;
             }
             catch(_) { // TODO: Check error.
@@ -68,6 +68,17 @@ export default function ChooseVersion(props: {}) {
             repo: firstPart,
             user: principal!,
         });
+        // getIndirectCaller().installModule({
+        //     installPackage = whatToInstall == #package; // a little bit hacky
+        //     moduleName = ?m.0;
+        //     installArg = to_candid({}); // TODO
+        //     installationId;
+        //     packageManagerOrBootstrapper = Principal.fromActor(this);
+        //     preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
+        //     user;
+        //     wasmModule = Common.shareModule(m.1);
+        //     noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
+        // });
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {

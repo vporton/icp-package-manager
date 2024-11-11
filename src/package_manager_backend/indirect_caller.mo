@@ -134,7 +134,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         installationId: Common.InstallationId;
         preinstalledModules: [(Text, Principal)];
         user: Principal;
-        noPMBackendYet: Bool;
     }): () {
         try {
             Debug.print("installPackageWrapper"); // FIXME: Remove.
@@ -164,7 +163,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryPartitionRO;
                     preinstalledModules: [(Text, Principal)];
-                    noPMBackendYet: Bool;
                 }) -> async ();
             };
 
@@ -175,7 +173,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 package;
                 repo;
                 preinstalledModules;
-                noPMBackendYet;
             });
             Debug.print("D"); // FIXME: Remove.
         }
@@ -294,7 +291,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageManagerOrBootstrapper;
             user;
         });
-        Debug.print("noPMBackendYet = " # debug_show(noPMBackendYet)); // FIXME: Remove.
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
             await pm.onInstallCode({
@@ -317,7 +313,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        preinstalledCanisterId: ?Principal;
+        preinstalledCanisterId: ?Principal; // FIXME: I messed current canister and PM canister in this variable.
         installArg: Blob;
         noPMBackendYet: Bool; // TODO: used?
     }): () {
@@ -389,7 +385,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         indirectWasmModule: Common.SharedModule;
         user: Principal;
         repo: Common.RepositoryPartitionRO;
-    }): async {backendPrincipal: Principal} {
+        packageManagerOrBootstrapper: Principal;
+    }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         Debug.print("bootstrapBackend"); // FIXME: Remove.
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
@@ -402,7 +399,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             installArg = to_candid({
                 initialIndirectCaller = indirect_canister_id;
             });
-            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
+            packageManagerOrBootstrapper;
             user;
         });
         Debug.print("Z2"); // FIXME: Remove.
@@ -439,23 +436,19 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             setOwner: shared (newOwner: Principal) -> async ();
         };
         Debug.print("Z6"); // FIXME: Remove.
-        ignore await backend.installPackageWithPreinstalledModules({
-            whatToInstall = #package;
-            packageName = "icpack";
-            version = "0.0.1"; // TODO: should be `stable`.
-            preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
-            repo;
-            user;
-            indirectCaller = indirect_canister_id;
-        });
-        // TODO: Run the below in parallel:
-        Debug.print("Z7"); // FIXME: Remove.
-        await backend.init({user; indirect_caller = indirect_canister_id});
-        Debug.print("Z8"); // FIXME: Remove.
-        await indirect.setOwner(backend_canister_id);
-        await backend.removeOwner(Principal.fromActor(this));
-        Debug.print("Z9"); // FIXME: Remove.
+        // ignore await backend.installPackageWithPreinstalledModules({
+        //     whatToInstall = #package;
+        //     packageName = "icpack";
+        //     version = "0.0.1"; // TODO: should be `stable`.
+        //     preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
+        //     repo;
+        //     user;
+        //     indirectCaller = indirect_canister_id;
+        // });
+        // await backend.init({user; indirect_caller = indirect_canister_id});
+        // await indirect.setOwner(backend_canister_id);
+        // await backend.removeOwner(Principal.fromActor(this));
 
-        {backendPrincipal = backend_canister_id};
+        {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
 }
