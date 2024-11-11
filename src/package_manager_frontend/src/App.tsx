@@ -88,17 +88,20 @@ function GlobalUI() {
         repo: repoPart!, // TODO: `!`
         packageManagerOrBootstrapper: principal!,
       });
-      const installationId = 0n; // FIXME
-      const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
+      const installationId = 1n; // FIXME
+      const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
       for (let i = 0; ; ++i) {
         try {
           const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
+          console.log("UUU", p2); // FIXME: Remove.
           if (p2 && p2.length == 3) { // TODO: Improve code reliability.
             break;
           }
         }
-        catch (e) {}
+        catch (e) {
+          console.log("RRR", e);
+        }
         if (i == 30) {
           alert("Cannot get installation info"); // TODO
           return;
