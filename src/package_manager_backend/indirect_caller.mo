@@ -322,23 +322,25 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    let packageManagerOrBootstrapper: Callbacks = actor (Principal.toText(preinstalledCanisterId));
-                    Debug.print("A1");
-                    await packageManagerOrBootstrapper.onCreateCanister({
-                        installPackage;
-                        installationId;
-                        moduleName;
-                        canister = preinstalledCanisterId;
-                        user;
-                    });
-                    Debug.print("A2");
-                    await packageManagerOrBootstrapper.onInstallCode({
-                        installPackage;
-                        installationId;
-                        canister = preinstalledCanisterId;
-                        user;
-                    });
-                    Debug.print("A3");
+                    if (not noPMBackendYet) {
+                        let packageManagerOrBootstrapper: Callbacks = actor (Principal.toText(preinstalledCanisterId));
+                        Debug.print("A1");
+                        await packageManagerOrBootstrapper.onCreateCanister({
+                            installPackage;
+                            installationId;
+                            moduleName;
+                            canister = preinstalledCanisterId;
+                            user;
+                        });
+                        Debug.print("A2");
+                        await packageManagerOrBootstrapper.onInstallCode({
+                            installPackage;
+                            installationId;
+                            canister = preinstalledCanisterId;
+                            user;
+                        });
+                        Debug.print("A3");
+                    }
                 };
                 case null {
                     Debug.print("B1");

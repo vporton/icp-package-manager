@@ -16,11 +16,12 @@ import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
-// import { createActor as createBackendActor } from "../../declarations/package_manager";
+import { createActor as createBackendActor } from "../../declarations/package_manager";
 import { createActor as createIndirectActor } from "../../declarations/BootstrapperIndirectCaller";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
 import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/BootstrapperIndirectCaller/BootstrapperIndirectCaller.did';
-// import { PackageManager, SharedHalfInstalledPackageInfo } from '../../declarations/package_manager/package_manager.did';
+import { PackageManager } from '../../declarations/package_manager/package_manager.did';
+// import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
 
 function App() {
@@ -81,16 +82,31 @@ function GlobalUI() {
       const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
       // const {backendPrincipal} = await indirectCaller.bootstrapBackend({
         frontend: glob.frontend!, // TODO: `!`
-        backendWasmModule: pkgReal.modules[1][1][0], // TODO: explicit values
+        backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
         indirectWasmModule: pkgReal.modules[2][1][0],
         user: principal!, // TODO: `!`
         repo: repoPart!, // TODO: `!`
-        packageManagerOrBootstrapper: ??,
+        packageManagerOrBootstrapper: principal!,
       });
       const installationId = 0n; // FIXME
-      // const backend = createBackendActor(backendPrincipal, {agent});
-      const indirect = createIndirectActor(indirectPrincipal, {agent});
-      // const p2: SharedHalfInstalledPackageInfo = await backend.getHalfInstalledPackageById(installationId);
+      const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
+      const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
+      for (let i = 0; ; ++i) {
+        try {
+          const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
+          if (p2 && p2.length == 3) { // TODO: Improve code reliability.
+            break;
+          }
+        }
+        catch (e) {}
+        if (i == 30) {
+          alert("Cannot get installation info"); // TODO
+          return;
+        }
+        await new Promise<void>((resolve, _reject) => {
+          setTimeout(() => resolve(), 1000);
+        });
+      }
       for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
         if (!dfn) {
           continue;
@@ -102,10 +118,11 @@ function GlobalUI() {
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
           installationId,
           packageManagerOrBootstrapper: backendPrincipal,
-          preinstalledCanisterId: [{"frontend": glob.frontend, "backend": glob.backend, "indirect": indirectPrincipal}[name]!],
+          // "backend" goes first, because it stores installation information.
+          preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
           user: principal!, // TODO: `!`
           wasmModule: m,
-          noPMBackendYet: name === "backend", // HACK
+          noPMBackendYet: false, // HACK
         });
       };
       // await backend.installPackageWithPreinstalledModules({

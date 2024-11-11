@@ -70,9 +70,9 @@ async function main() {
     console.log("Creating packages...");
     const real: SharedRealPackageInfo = {
         modules: [
-            ['frontend', [pmFrontendModule, true]],
-            // HACK: `true` for the next two is a hack, isn't it?
+            // "backend" goes first, because it stores installation information.
             ['backend', [pmBackendModule, true]],
+            ['frontend', [pmFrontendModule, true]],
             ['indirect', [pmIndirectModule, true]],
         ],
         dependencies: [],

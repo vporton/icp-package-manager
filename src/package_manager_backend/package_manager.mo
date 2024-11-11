@@ -87,7 +87,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         indirect_caller_ := ?indirect_caller_v;
     };
 
-    stable var nextInstallationId: Nat = 2; // 0, 1 are reserved for bootstrapper (HACK)
+    stable var nextInstallationId: Nat = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
@@ -684,12 +684,12 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    // public query func getHalfInstalledPackageModuleesById(installationId: Common.InstallationId): async [(Text, Principal)] {
-    //     let ?res = halfInstalledPackages.get(installationId) else {
-    //         Debug.trap("no such package")
-    //     };
-    //     res.
-    // };
+    public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
+        let ?res = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such package")
+        };
+        Iter.toArray(res.installedModules.entries());
+    };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 

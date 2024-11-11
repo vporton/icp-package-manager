@@ -12,6 +12,7 @@ import Accordion from "react-bootstrap/Accordion";
 import { Alert, useAccordionButton } from "react-bootstrap";
 import useConfirm from "./useConfirm";
 import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
+import { IDL } from "@dfinity/candid";
 
 export default function MainPage() {
     return (
@@ -53,8 +54,8 @@ export default function MainPage() {
 
       const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent: props.agent});
       const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
-        wasmModule: pkgReal.modules[0][1][0],
-        installArg: [],
+        wasmModule: pkgReal.modules[1][1][0],
+        installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
         user: props.principal!,
       });
       const url = getIsLocal()
