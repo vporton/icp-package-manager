@@ -685,12 +685,10 @@ shared({caller = initialOwner}) actor class PackageManager({
 
     /// TODO: very unstable API.
     public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
-        Debug.print("EE: " # debug_show(halfInstalledPackages.size()));
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package");
         };
-        []; // FIXME
-        // Iter.toArray(res.installedModules.entries());
+        Iter.toArray(res.installedModules.entries());
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.

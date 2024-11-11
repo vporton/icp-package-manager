@@ -16,6 +16,7 @@ module {
         var hash: Nat32 = 0;
         while (v2 != 0) {
             let rem = v2 % (2**32);
+            v2 /= 2**32;
             hash ^= Nat32.fromNat(rem);
         };
         if (value < 0) {
