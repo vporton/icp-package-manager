@@ -313,7 +313,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        preinstalledCanisterId: ?Principal; // FIXME: I messed current canister and PM canister in this variable.
+        preinstalledCanisterId: ?Principal;
         installArg: Blob;
         noPMBackendYet: Bool; // TODO: used?
     }): () {
@@ -322,9 +322,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    let preinstalledCanister: Callbacks = actor (Principal.toText(preinstalledCanisterId));
+                    let packageManagerOrBootstrapper: Callbacks = actor (Principal.toText(preinstalledCanisterId));
                     Debug.print("A1");
-                    await preinstalledCanister.onCreateCanister({
+                    await packageManagerOrBootstrapper.onCreateCanister({
                         installPackage;
                         installationId;
                         moduleName;
@@ -332,7 +332,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         user;
                     });
                     Debug.print("A2");
-                    await preinstalledCanister.onInstallCode({
+                    await packageManagerOrBootstrapper.onInstallCode({
                         installPackage;
                         installationId;
                         canister = preinstalledCanisterId;
