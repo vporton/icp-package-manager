@@ -686,7 +686,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     /// TODO: very unstable API.
     public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
         let ?res = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package")
+            Debug.trap("no such package");
         };
         Iter.toArray(res.installedModules.entries());
     };
