@@ -300,7 +300,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             installedModules = HashMap.HashMap(realModulesToInstallSize, Text.equal, Text.hash); // TODO: efficient?
             whatToInstall;
         };
-        Debug.print("halfInstalledPackages.put(" # debug_show(installationId) # ", ourHalfInstalled)");
+        Debug.print("halfInstalledPackages.put(" # debug_show(installationId) # ", ourHalfInstalled)"); // FIXME: Remove.   
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         // This takes too much cycles. Run a similar code from frontend, instead:
