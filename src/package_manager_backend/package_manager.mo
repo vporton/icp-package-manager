@@ -301,6 +301,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             installedModules = HashMap.HashMap(realModulesToInstallSize, Text.equal, Text.hash); // TODO: efficient?
             whatToInstall;
         };
+        Debug.print("halfInstalledPackages.put(" # debug_show(installationId) # ", ourHalfInstalled)");
         halfInstalledPackages.put(installationId, ourHalfInstalled);
 
         // This takes too much cycles. Run a similar code from frontend, instead:
@@ -427,7 +428,6 @@ shared({caller = initialOwner}) actor class PackageManager({
                 };
                 case null {};
             };
-            halfInstalledPackages.delete(installationId);
             _updateAfterInstall({installationId});
         };
     };
@@ -549,7 +549,57 @@ shared({caller = initialOwner}) actor class PackageManager({
     //     halfInstalledPackages.delete(installationId);
     // };
 
-    //  /// Finish installation of a half-installed package.
+    // FIXME: Uncomment:
+    // public shared({caller}) func finishInstallPackage({
+    //     installationId: Nat;
+    // }): async () {
+    //     onlyOwner(caller, "finishInstallPackage");
+        
+    //     let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
+    //         Debug.trap("package installation has not been started");
+    //     };
+    //     let #real realPackage = ourHalfInstalled.package.specific else {
+    //         Debug.trap("trying to directly install a virtual package");
+    //     };
+    //     await* _finishInstallPackage({
+    //         installationId;
+    //         ourHalfInstalled;
+    //        realPackage;
+    //         caller;
+    //     });
+    // };
+
+    // FIXME: Uncomment:
+    // FIXME: Rewrite
+    // private func _finishInstallPackage({
+    //      installationId: Nat;
+    //      ourHalfInstalled: Common.HalfInstalledPackageInfo;
+    //      realPackage: Common.RealPackageInfo;
+    //      caller: Principal; // TODO: Rename to `user`.
+    //  }): async* () {
+    //     label install for ((moduleName, wasmModule) in realPackage.modules.vals()) {
+    //         let ?state = ourHalfInstalled.modules.get(moduleName) else {
+    //             Debug.trap("_finishInstallPackage: programming error");
+    //         };
+    //         if (state.1 == #installed) {
+    //             continue install;
+    //         };
+    //         let installArg = to_candid({
+    //             arg = to_candid({}); // TODO: correct?
+    //         });
+    //         if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
+    //             // FIXME: `canister` is `()`.
+    //             let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
+    //         }/* else {
+    //             // We don't need to initialize installed module, because it can be only
+    //             // PM's frontend.
+    //         }*/;
+    //     };
+
+    //     _updateAfterInstall({installationId});
+    // };
+
+    //  /// Finish uninstallation of a half-installed package.
     // public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
     //     onlyOwner(caller, "finishUninstallPackage");
         

@@ -87,9 +87,36 @@ function GlobalUI() {
         repo: repoPart!, // TODO: `!`
         packageManagerOrBootstrapper: principal!,
       });
-      const installationId = 0n; // FIXME
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
+      await backend.installPackageWithPreinstalledModules({
+        whatToInstall: { package: null },
+        packageName: "icpack",
+        version: "0.0.1", // TODO: should be `stable`.
+        preinstalledModules: [["frontend", glob.frontend!], ["backend", glob.backend!], ["indirect", indirectPrincipal]],
+        repo: repoPart!,
+        user: principal!, // TODO: `!`
+        indirectCaller: indirectPrincipal,
+      });
+      const installationId = 0n; // FIXME
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
+      for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
+        if (!dfn) {
+          continue;
+        }
+        // Starting installation of all modules in parallel:
+        indirect/*bootstrapperIndirectCaller*/.installModule({
+          installPackage: true,
+          moduleName: [name],
+          installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
+          installationId,
+          packageManagerOrBootstrapper: backendPrincipal,
+          // "backend" goes first, because it stores installation information.
+          preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
+          user: principal!, // TODO: `!`
+          wasmModule: m,
+          noPMBackendYet: false, // HACK
+        });
+      };
       for (let i = 0; ; ++i) {
         try {
           const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
@@ -109,33 +136,6 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      // for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
-      //   if (!dfn) {
-      //     continue;
-      //   }
-      //   // Starting installation of all modules in parallel:
-      //   indirect/*bootstrapperIndirectCaller*/.installModule({ // FIXME: Why not our `indirectCaller`?
-      //     installPackage: true,
-      //     moduleName: [name],
-      //     installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
-      //     installationId,
-      //     packageManagerOrBootstrapper: backendPrincipal,
-      //     // "backend" goes first, because it stores installation information.
-      //     preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
-      //     user: principal!, // TODO: `!`
-      //     wasmModule: m,
-      //     noPMBackendYet: false, // HACK
-      //   });
-      // };
-      // await backend.installPackageWithPreinstalledModules({
-      //     whatToInstall: { package: null },
-      //     packageName: "icpack",
-      //     version: "0.0.1", // TODO: should be `stable`.
-      //     preinstalledModules: [["frontend", glob.frontend], ["backend", glob.backend], ["indirect", indirect_canister_id]],
-      //     repo: repoPart,
-      //     user = principal!; // TODO: `!`
-      //     indirectCaller = indirect_canister_id;
-      // });
 
       const backend_str = backendPrincipal.toString();
       // FIXME: Do wait.

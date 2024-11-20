@@ -318,6 +318,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
+            Debug.print("A0"); // FIXME: Remove.
             // onlyOwner(caller, "installModule"); // FIXME: Uncomment.
 
             switch (preinstalledCanisterId) {
@@ -332,18 +333,18 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                             canister = preinstalledCanisterId;
                             user;
                         });
-                        Debug.print("A2");
+                        Debug.print("A2"); // FIXME: Remove.
                         await packageManagerOrBootstrapper.onInstallCode({
                             installPackage;
                             installationId;
                             canister = preinstalledCanisterId;
                             user;
                         });
-                        Debug.print("A3");
+                        Debug.print("A3"); // FIXME: Remove.
                     }
                 };
                 case null {
-                    Debug.print("B1");
+                    Debug.print("B1"); // FIXME: Remove.
                     ignore await* _installModuleCode({
                         installationId;
                         moduleName;
@@ -354,7 +355,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         user;
                         noPMBackendYet;
                     });
-                    Debug.print("B2");
+                    Debug.print("B2"); // FIXME: Remove.
                 };
             };
         }
@@ -381,6 +382,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         {canister_id};
     };
 
+    // FIXME: Remove?
     public shared func bootstrapBackend({
         frontend: Principal;
         backendWasmModule: Common.SharedModule;
@@ -416,41 +418,42 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         });
         Debug.print("Z4"); // FIXME: Remove.
 
+        // FIXME: Remove?
         // TODO: Make init() functions conforming to the specs and call init() automatically.
-        let backend = actor(Principal.toText(backend_canister_id)): actor {
-            installPackageWithPreinstalledModules: shared ({
-                whatToInstall: {
-                    #package;
-                    #simplyModules : [(Text, Common.SharedModule)];
-                };
-                packageName: Common.PackageName;
-                version: Common.Version;
-                preinstalledModules: [(Text, Principal)];
-                repo: Common.RepositoryPartitionRO;
-                user: Principal;
-                indirectCaller: Principal;
-            }) -> async {installationId: Common.InstallationId};
-            init: shared ({user: Principal; indirect_caller: Principal}) -> async ();
-            removeOwner: shared (oldOwner: Principal) -> async ();
-        };
-        Debug.print("Z5"); // FIXME: Remove.
-        let indirect = actor(Principal.toText(indirect_canister_id)): actor {
-            setOwner: shared (newOwner: Principal) -> async ();
-        };
-        Debug.print("Z6"); // FIXME: Remove.
-        ignore await backend.installPackageWithPreinstalledModules({
-            whatToInstall = #package;
-            packageName = "icpack";
-            version = "0.0.1"; // TODO: should be `stable`.
-            preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
-            repo;
-            user;
-            indirectCaller = indirect_canister_id;
-        });
-        // TODO: Is the following needed?
-        await backend.init({user; indirect_caller = indirect_canister_id});
-        await indirect.setOwner(backend_canister_id);
-        await backend.removeOwner(Principal.fromActor(this));
+        // let backend = actor(Principal.toText(backend_canister_id)): actor {
+        //     installPackageWithPreinstalledModules: shared ({
+        //         whatToInstall: {
+        //             #package;
+        //             #simplyModules : [(Text, Common.SharedModule)];
+        //         };
+        //         packageName: Common.PackageName;
+        //         version: Common.Version;
+        //         preinstalledModules: [(Text, Principal)];
+        //         repo: Common.RepositoryPartitionRO;
+        //         user: Principal;
+        //         indirectCaller: Principal;
+        //     }) -> async {installationId: Common.InstallationId};
+        //     init: shared ({user: Principal; indirect_caller: Principal}) -> async ();
+        //     removeOwner: shared (oldOwner: Principal) -> async ();
+        // };
+        // Debug.print("Z5"); // FIXME: Remove.
+        // let indirect = actor(Principal.toText(indirect_canister_id)): actor {
+        //     setOwner: shared (newOwner: Principal) -> async ();
+        // };
+        // Debug.print("Z6"); // FIXME: Remove.
+        // ignore await backend.installPackageWithPreinstalledModules({
+        //     whatToInstall = #package;
+        //     packageName = "icpack";
+        //     version = "0.0.1"; // TODO: should be `stable`.
+        //     preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
+        //     repo;
+        //     user;
+        //     indirectCaller = indirect_canister_id;
+        // });
+        // // TODO: Is the following needed?
+        // await backend.init({user; indirect_caller = indirect_canister_id});
+        // await indirect.setOwner(backend_canister_id);
+        // await backend.removeOwner(Principal.fromActor(this));
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
