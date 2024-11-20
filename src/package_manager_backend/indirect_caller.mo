@@ -19,6 +19,10 @@ import cycles_ledger "canister:cycles_ledger";
 shared({caller = initialOwner}) actor class IndirectCaller() = this {
     stable var owner = initialOwner;
 
+    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
+        true;
+    };
+
     /// We check owner, for only owner to be able to control Asset canisters
     private func onlyOwner(caller: Principal, msg: Text) {
         if (caller != owner and caller != Principal.fromActor(this)) { // TODO: Comparison with this is necessary for call of `copyAssets` from `callAllOneWay`.
@@ -274,6 +278,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper});
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+            Debug.print("onCreateCanister on " # debug_show(packageManagerOrBootstrapper));
             await pm.onCreateCanister({
                 installPackage; // Bool
                 moduleName;
@@ -324,7 +329,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     if (not noPMBackendYet) {
-                        let packageManagerOrBootstrapper: Callbacks = actor (Principal.toText(preinstalledCanisterId));
+                        let packageManagerOrBootstrapper: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                         Debug.print("A1");
                         await packageManagerOrBootstrapper.onCreateCanister({
                             installPackage;
@@ -455,6 +460,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         // await indirect.setOwner(backend_canister_id);
         // await backend.removeOwner(Principal.fromActor(this));
 
+        Debug.print("(created) backendPrincipal = " # debug_show(backend_canister_id));
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
 }

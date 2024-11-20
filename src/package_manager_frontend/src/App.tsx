@@ -23,6 +23,7 @@ import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/Bootst
 import { PackageManager } from '../../declarations/package_manager/package_manager.did';
 // import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
+// import { canister_status } from "@dfinity/ic-management";
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
@@ -87,22 +88,51 @@ function GlobalUI() {
         repo: repoPart!, // TODO: `!`
         packageManagerOrBootstrapper: principal!,
       });
+      console.log(`backendPrincipal = ${backendPrincipal}`);
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
       await backend.installPackageWithPreinstalledModules({
         whatToInstall: { package: null },
         packageName: "icpack",
         version: "0.0.1", // TODO: should be `stable`.
-        preinstalledModules: [["frontend", glob.frontend!], ["backend", glob.backend!], ["indirect", indirectPrincipal]],
+        preinstalledModules: [["backend", backendPrincipal], ["frontend", glob.frontend!], ["indirect", indirectPrincipal]],
         repo: repoPart!,
         user: principal!, // TODO: `!`
         indirectCaller: indirectPrincipal,
       });
       const installationId = 0n; // FIXME
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
+      console.log("P1");
+      for (let i = 0; ; ++i) {
+        try {
+          // const p2: [string, Principal][] = await canister_status({
+          //   canister_id: backendPrincipal,
+          // });
+          console.log("P2");
+          /*const r = */await Promise.all([
+            backend.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
+            indirect.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
+          ]);
+          // console.log("PX:", r);
+          console.log("P3");
+          break;
+        }
+        catch (e) {
+          console.log("RRR", e); // FIXME: Remove.
+        }
+        if (i == 30) {
+          alert("Cannot initilize canisters"); // TODO
+          return;
+        }
+        await new Promise<void>((resolve, _reject) => {
+          setTimeout(() => resolve(), 1000);
+        });
+      }
+      console.log("P4");
       for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
         if (!dfn) {
           continue;
         }
+        console.log(`backendPrincipal2 = ${backendPrincipal}`);
         // Starting installation of all modules in parallel:
         indirect/*bootstrapperIndirectCaller*/.installModule({
           installPackage: true,
@@ -111,17 +141,21 @@ function GlobalUI() {
           installationId,
           packageManagerOrBootstrapper: backendPrincipal,
           // "backend" goes first, because it stores installation information.
-          preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
+          preinstalledCanisterId: [{"backend": backendPrincipal, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
           user: principal!, // TODO: `!`
           wasmModule: m,
           noPMBackendYet: false, // HACK
         });
       };
+      console.log("P5");
       for (let i = 0; ; ++i) {
         try {
+          console.log("P6");
           const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
+          console.log("P7");
           console.log("UUU", p2); // FIXME: Remove.
           if (p2 && p2.length == 3) { // TODO: Improve code reliability.
+            console.log("P8");
             break;
           }
         }
@@ -136,6 +170,7 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
+      console.log("P4 ");
 
       const backend_str = backendPrincipal.toString();
       // FIXME: Do wait.
