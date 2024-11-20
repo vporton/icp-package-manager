@@ -407,6 +407,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                 // FIXME: Register unnamed module
             };
         };
+        // FIXME: Repeated 3 times: `inst.installedModules.size() = 0 inst.numberOfModulesToInstall = 3`.
         // FIXME: Remove Debug:
         Debug.print("inst.installedModules.size() = " # debug_show(inst.installedModules.size()) #
             " inst.numberOfModulesToInstall = " # debug_show(inst.numberOfModulesToInstall));
