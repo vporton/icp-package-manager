@@ -189,12 +189,15 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         onCreateCanister: shared ({
             installPackage: Bool;
             installationId: Common.InstallationId;
+            module_: Common.SharedModule;
             canister: Principal;
             user: Principal;
         }) -> async ();
         onInstallCode: shared ({
             installPackage: Bool;
             installationId: Common.InstallationId;
+            module_: Common.SharedModule;
+            canister: Principal;
             user: Principal;
         }) -> async ();
     };
@@ -335,6 +338,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                             installPackage;
                             installationId;
                             moduleName;
+                            module_ = wasmModule;
                             canister = preinstalledCanisterId;
                             user;
                         });
@@ -342,6 +346,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         await cb.onInstallCode({
                             installPackage;
                             installationId;
+                            module_ = wasmModule;
                             canister = preinstalledCanisterId;
                             user;
                         });
