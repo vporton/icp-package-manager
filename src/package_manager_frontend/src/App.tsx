@@ -80,7 +80,6 @@ function GlobalUI() {
       const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
       // TODO: Are here modules needed? They are installed below, instead?
       const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
-      // const {backendPrincipal} = await indirectCaller.bootstrapBackend({
         frontend: glob.frontend!, // TODO: `!`
         backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
         indirectWasmModule: pkgReal.modules[2][1][0],
@@ -88,17 +87,20 @@ function GlobalUI() {
         repo: repoPart!, // TODO: `!`
         packageManagerOrBootstrapper: principal!,
       });
-      const installationId = 1n; // FIXME
+      const installationId = 0n; // FIXME
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
       for (let i = 0; ; ++i) {
         try {
           const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
+          console.log("UUU", p2); // FIXME: Remove.
           if (p2 && p2.length == 3) { // TODO: Improve code reliability.
             break;
           }
         }
-        catch (e) {}
+        catch (e) {
+          console.log("RRR", e); // FIXME: Remove.
+        }
         if (i == 30) {
           alert("Cannot get installation info"); // TODO
           return;
@@ -107,24 +109,24 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
-        if (!dfn) {
-          continue;
-        }
-        // Starting installation of all modules in parallel:
-        indirect/*bootstrapperIndirectCaller*/.installModule({ // FIXME: Why not our `indirectCaller`?
-          installPackage: true,
-          moduleName: [name],
-          installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
-          installationId,
-          packageManagerOrBootstrapper: backendPrincipal,
-          // "backend" goes first, because it stores installation information.
-          preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
-          user: principal!, // TODO: `!`
-          wasmModule: m,
-          noPMBackendYet: false, // HACK
-        });
-      };
+      // for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
+      //   if (!dfn) {
+      //     continue;
+      //   }
+      //   // Starting installation of all modules in parallel:
+      //   indirect/*bootstrapperIndirectCaller*/.installModule({ // FIXME: Why not our `indirectCaller`?
+      //     installPackage: true,
+      //     moduleName: [name],
+      //     installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
+      //     installationId,
+      //     packageManagerOrBootstrapper: backendPrincipal,
+      //     // "backend" goes first, because it stores installation information.
+      //     preinstalledCanisterId: [{"backend": glob.backend, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
+      //     user: principal!, // TODO: `!`
+      //     wasmModule: m,
+      //     noPMBackendYet: false, // HACK
+      //   });
+      // };
       // await backend.installPackageWithPreinstalledModules({
       //     whatToInstall: { package: null },
       //     packageName: "icpack",

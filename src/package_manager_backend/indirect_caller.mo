@@ -411,7 +411,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({});
-            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
+            packageManagerOrBootstrapper = indirect_canister_id; // TODO: This is a bug.
             user;
         });
         Debug.print("Z4"); // FIXME: Remove.
@@ -438,18 +438,19 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             setOwner: shared (newOwner: Principal) -> async ();
         };
         Debug.print("Z6"); // FIXME: Remove.
-        // ignore await backend.installPackageWithPreinstalledModules({
-        //     whatToInstall = #package;
-        //     packageName = "icpack";
-        //     version = "0.0.1"; // TODO: should be `stable`.
-        //     preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
-        //     repo;
-        //     user;
-        //     indirectCaller = indirect_canister_id;
-        // });
-        // await backend.init({user; indirect_caller = indirect_canister_id});
-        // await indirect.setOwner(backend_canister_id);
-        // await backend.removeOwner(Principal.fromActor(this));
+        ignore await backend.installPackageWithPreinstalledModules({
+            whatToInstall = #package;
+            packageName = "icpack";
+            version = "0.0.1"; // TODO: should be `stable`.
+            preinstalledModules = [("frontend", frontend), ("backend", backend_canister_id), ("indirect", indirect_canister_id)];
+            repo;
+            user;
+            indirectCaller = indirect_canister_id;
+        });
+        // TODO: Is the following needed?
+        await backend.init({user; indirect_caller = indirect_canister_id});
+        await indirect.setOwner(backend_canister_id);
+        await backend.removeOwner(Principal.fromActor(this));
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
