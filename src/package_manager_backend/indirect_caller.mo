@@ -189,6 +189,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         onCreateCanister: shared ({
             installPackage: Bool;
             installationId: Common.InstallationId;
+            moduleName: ?Text;
             module_: Common.SharedModule;
             canister: Principal;
             user: Principal;
@@ -196,6 +197,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         onInstallCode: shared ({
             installPackage: Bool;
             installationId: Common.InstallationId;
+            moduleName: ?Text;
             module_: Common.SharedModule;
             canister: Principal;
             user: Principal;
@@ -282,6 +284,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
             Debug.print("onCreateCanister on " # debug_show(packageManagerOrBootstrapper));
+            Debug.print("moduleName2 " # debug_show(moduleName));
             await pm.onCreateCanister({
                 installPackage; // Bool
                 moduleName;
@@ -334,6 +337,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     if (not noPMBackendYet) {
                         let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                         Debug.print("A1");
+                        Debug.print("moduleName3 " # debug_show(moduleName));
                         await cb.onCreateCanister({
                             installPackage;
                             installationId;

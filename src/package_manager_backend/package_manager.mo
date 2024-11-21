@@ -330,6 +330,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         user: Principal;
     }): async () {
         onlyOwner(caller, "onCreateCanister");
+        Debug.print("moduleName1 " # debug_show(moduleName));
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
@@ -350,6 +351,18 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
+        Debug.print("MODULE " # debug_show(moduleName));
+        switch (moduleName) { // FIXME: both inst.modulesWithoutCode and inst.installedModules
+            case (?moduleName) {
+                Debug.print("MODULE1");
+                inst.installedModules.put(moduleName, canister);
+            };
+            case null {
+                Debug.print("MODULE2");
+                // FIXME
+            };
+        };
+        Debug.print("SIZE: " # debug_show(inst.modulesWithoutCode.size() + inst.installedModules.size()));
         // TODO: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
         if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
             switch (module2.callbacks.get(#AllCanistersCreated)) {

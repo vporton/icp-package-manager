@@ -132,7 +132,6 @@ function GlobalUI() {
         if (!dfn) {
           continue;
         }
-        console.log(`backendPrincipal2 = ${backendPrincipal}`);
         // Starting installation of all modules in parallel:
         indirect/*bootstrapperIndirectCaller*/.installModule({
           installPackage: true,
