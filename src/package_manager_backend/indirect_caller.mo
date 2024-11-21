@@ -350,6 +350,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         await cb.onInstallCode({
                             installPackage;
                             installationId;
+                            moduleName;
                             module_ = wasmModule;
                             canister = preinstalledCanisterId;
                             user;
