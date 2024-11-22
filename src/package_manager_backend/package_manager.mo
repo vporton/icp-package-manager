@@ -9,6 +9,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
+import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
@@ -352,13 +353,12 @@ shared({caller = initialOwner}) actor class PackageManager({
             case null {};
         };
         Debug.print("MODULE " # debug_show(moduleName));
-        switch (moduleName) { // FIXME: both inst.modulesWithoutCode and inst.installedModules
+        switch (moduleName) {
             case (?moduleName) {
-                Debug.print("MODULE1");
-                inst.installedModules.put(moduleName, canister);
+                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
+                inst.modulesWithoutCode.put(moduleName, canister);
             };
             case null {
-                Debug.print("MODULE2");
                 // FIXME
             };
         };
@@ -410,6 +410,11 @@ shared({caller = initialOwner}) actor class PackageManager({
         };
         switch (moduleName) {
             case (?moduleName) {
+                // FIXME: on repeating interrupted installation?
+                // assert Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
+                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName));
+                inst.installedModules.delete(moduleName);
+                inst.modulesWithoutCode.put(moduleName, canister);
                 await* _registerNamedModule({
                     installation = installationId;
                     canister;
@@ -417,7 +422,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                 });
             };
             case null {
-                // FIXME: Register unnamed module
+                // FIXME
             };
         };
         // FIXME: Repeated 3 times: `inst.installedModules.size() = 0 inst.numberOfModulesToInstall = 3`.
