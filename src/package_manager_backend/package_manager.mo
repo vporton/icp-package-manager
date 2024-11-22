@@ -199,7 +199,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         onlyOwner(caller, "installNamedModule");
 
         let ?inst = installedPackages.get(installationId) else {
-            Debug.trap("non such package");
+            Debug.trap("no such package");
         };
         await* Install._installModulesGroup({
             indirectCaller = getIndirectCaller();
