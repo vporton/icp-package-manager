@@ -421,13 +421,8 @@ shared({caller = initialOwner}) actor class PackageManager({
                 assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
                 Debug.print("X6");
                 inst.installedModules.delete(moduleName);
-                inst.modulesWithoutCode.put(moduleName, canister);
+                inst.modulesWithoutCode.put(moduleName, canister); // FIXME: What's about unnamed modules?
                 Debug.print("X7");
-                await* _registerNamedModule({
-                    installation = installationId;
-                    canister;
-                    moduleName;
-                });
             };
             case null {
                 Debug.print("X9");
@@ -441,6 +436,27 @@ shared({caller = initialOwner}) actor class PackageManager({
             " inst.numberOfModulesToInstall = " # debug_show(inst.numberOfModulesToInstall));
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
+            _updateAfterInstall({installationId});
+            switch (inst.whatToInstall) {
+                case (#simplyModules _) {
+                    let ?inst2 = installedPackages.get(installationId) else {
+                        Debug.trap("no such installationId: " # debug_show(installationId));
+                    };
+                    inst2.allModules.add(canister);
+                    switch (moduleName) {
+                        case (?moduleName) {
+                            inst2.allModules.add(canister);
+                            inst2.modules.put(moduleName, canister);
+                        };
+                        case null {};
+                    };
+                };
+                case (#package) {
+                    // Package modules are updated after installation of all modules.
+                    // TODO: Do it here instead.
+                }
+            };
+            Debug.print("Y7");
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
                     Debug.print("X11");
@@ -498,9 +514,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                     };
                 };
             };
-            case (#simplyModules modules) {
-                Debug.print("Y7");
-            };
+            case (#simplyModules _) {};
         };
         Debug.print("Y8");
         halfInstalledPackages.delete(installationId);
@@ -824,26 +838,26 @@ shared({caller = initialOwner}) actor class PackageManager({
     // };
 
     // FIXME: It works only for fully installed package.
-    private func _registerModule({
-        installation: Common.InstallationId;
-        canister: Principal;
-    }): async* () {
-        let ?inst = installedPackages.get(installation) else {
-            Debug.trap("no such installationId: " # debug_show(installation));
-        };
-        inst.allModules.add(canister);
-    };
+    // private func _registerModule({
+    //     installation: Common.InstallationId;
+    //     canister: Principal;
+    // }): async* () {
+    //     let ?inst = installedPackages.get(installation) else {
+    //         Debug.trap("no such installationId: " # debug_show(installation));
+    //     };
+    //     inst.allModules.add(canister);
+    // };
 
     // FIXME: It works only for fully installed package.
-    private func _registerNamedModule({
-        installation: Common.InstallationId;
-        canister: Principal;
-        moduleName: Text;
-    }): async* () {
-        await* _registerModule({installation; canister});
-        let ?inst = installedPackages.get(installation) else {
-            Debug.trap("no such installationId: " # debug_show(installation));
-        };
-        inst.modules.put(moduleName, canister);
-    };
+    // private func _registerNamedModule({
+    //     installation: Common.InstallationId;
+    //     canister: Principal;
+    //     moduleName: Text;
+    // }): async* () {
+    //     inst.allModules.add(canister);
+    //     let ?inst = installedPackages.get(installation) else {
+    //         Debug.trap("no such installationId: " # debug_show(installation));
+    //     };
+    //     inst.modules.put(moduleName, canister);
+    // };
 }
