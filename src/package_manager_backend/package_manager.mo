@@ -420,8 +420,8 @@ shared({caller = initialOwner}) actor class PackageManager({
                 assert Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
                 assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
                 Debug.print("X6");
-                inst.installedModules.delete(moduleName);
-                inst.modulesWithoutCode.put(moduleName, canister); // FIXME: What's about unnamed modules?
+                inst.modulesWithoutCode.delete(moduleName);
+                inst.installedModules.put(moduleName, canister); // FIXME: What's about unnamed modules?
                 Debug.print("X7");
             };
             case null {
@@ -517,7 +517,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             case (#simplyModules _) {};
         };
         Debug.print("Y8");
-        halfInstalledPackages.delete(installationId);
+        // halfInstalledPackages.delete(installationId); // FIXME: need to restore, after fixing the bug
     };
 
     // TODO: Uncomment.
