@@ -456,6 +456,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
+            halfInstalledPackages.delete(installationId);
             Debug.print("Y7");
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
@@ -517,7 +518,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             case (#simplyModules _) {};
         };
         Debug.print("Y8");
-        // halfInstalledPackages.delete(installationId); // FIXME: need to restore, after fixing the bug
     };
 
     // TODO: Uncomment.
