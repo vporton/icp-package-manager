@@ -411,8 +411,8 @@ shared({caller = initialOwner}) actor class PackageManager({
         switch (moduleName) {
             case (?moduleName) {
                 // FIXME: on repeating interrupted installation?
-                // assert Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
-                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName));
+                assert Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
+                assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
                 inst.installedModules.delete(moduleName);
                 inst.modulesWithoutCode.put(moduleName, canister);
                 await* _registerNamedModule({

@@ -304,6 +304,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         });
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+            switch (moduleName) { // FIXME: Remove.
+                case (?moduleName) Debug.print("NRM " # moduleName);
+                case null {}
+            };
             await pm.onInstallCode({
                 installPackage; // Bool
                 moduleName;
@@ -346,7 +350,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                             canister = preinstalledCanisterId;
                             user;
                         });
-                        Debug.print("A2"); // FIXME: Remove.
+                        switch (moduleName) { // FIXME: Remove.
+                            case (?moduleName) Debug.print("NRM " # moduleName);
+                            case null {}
+                        };
                         await cb.onInstallCode({
                             installPackage;
                             installationId;
