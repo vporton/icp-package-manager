@@ -1,4 +1,4 @@
-Remaining things to do:
+Remaining things TODO:
 
 - FIXME: Motoko bindings: https://github.com/dfinity/motoko/issues/4753#issuecomment-2457831146
 
@@ -14,6 +14,8 @@ Remaining things to do:
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
+
+- Disallow packages of zero modules.
 
 - Installation from several repos.
 
