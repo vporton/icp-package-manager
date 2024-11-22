@@ -428,7 +428,6 @@ shared({caller = initialOwner}) actor class PackageManager({
                     canister;
                     moduleName;
                 });
-                Debug.print("X8");
             };
             case null {
                 Debug.print("X9");
@@ -462,8 +461,6 @@ shared({caller = initialOwner}) actor class PackageManager({
                 };
             };
             Debug.print("X14");
-            _updateAfterInstall({installationId});
-            Debug.print("X15");
         };
     };
 
@@ -501,7 +498,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                     };
                 };
             };
-            case (#simplyModules _) {
+            case (#simplyModules modules) {
                 Debug.print("Y7");
             };
         };
@@ -826,6 +823,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     //     });
     // };
 
+    // FIXME: It works only for fully installed package.
     private func _registerModule({
         installation: Common.InstallationId;
         canister: Principal;
@@ -836,13 +834,14 @@ shared({caller = initialOwner}) actor class PackageManager({
         inst.allModules.add(canister);
     };
 
+    // FIXME: It works only for fully installed package.
     private func _registerNamedModule({
         installation: Common.InstallationId;
         canister: Principal;
         moduleName: Text;
     }): async* () {
         await* _registerModule({installation; canister});
-        let ?inst = installedPackages.get(installation) else { // FIXME: It does not work during package installation.
+        let ?inst = installedPackages.get(installation) else {
             Debug.trap("no such installationId: " # debug_show(installation));
         };
         inst.modules.put(moduleName, canister);
