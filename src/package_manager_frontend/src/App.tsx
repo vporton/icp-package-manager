@@ -150,13 +150,8 @@ function GlobalUI() {
       for (let i = 0; ; ++i) {
         try {
           console.log("P6");
-          const p2: [string, Principal][] = await backend.getHalfInstalledPackageModulesById(installationId);
-          console.log("P7");
-          console.log("UUU", p2); // FIXME: Remove.
-          if (p2 && p2.length == 3) { // TODO: Improve code reliability.
-            console.log("P8");
-            break;
-          }
+          await backend.getInstalledPackage(installationId);
+          break;
         }
         catch (e) {
           console.log("RRR", e); // FIXME: Remove.
