@@ -381,6 +381,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                 case null {};
             };
         };
+        Debug.print("END"); // FIXME: Remove.
     };
 
     /// Internal
@@ -392,11 +393,14 @@ shared({caller = initialOwner}) actor class PackageManager({
         module_: Common.SharedModule;
     }): async () {
         onlyOwner(caller, "onInstallCode");
+        Debug.print("X1");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
+        Debug.print("X2");
         let module2 = Common.unshareModule(module_); // TODO: necessary?
+        Debug.print("X3");
         // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
         switch (module2.callbacks.get(#CodeInstalled)) {
             case (?callbackName) {
@@ -408,31 +412,39 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
+        Debug.print("X4");
         switch (moduleName) {
             case (?moduleName) {
+                Debug.print("X5");
                 // FIXME: on repeating interrupted installation?
                 assert Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
                 assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
+                Debug.print("X6");
                 inst.installedModules.delete(moduleName);
                 inst.modulesWithoutCode.put(moduleName, canister);
+                Debug.print("X7");
                 await* _registerNamedModule({
                     installation = installationId;
                     canister;
                     moduleName;
                 });
+                Debug.print("X8");
             };
             case null {
+                Debug.print("X9");
                 // FIXME
             };
         };
         // FIXME: Repeated 3 times: `inst.installedModules.size() = 0 inst.numberOfModulesToInstall = 3`.
         // FIXME: Remove Debug:
+        Debug.print("X10");
         Debug.print("inst.installedModules.size() = " # debug_show(inst.installedModules.size()) #
             " inst.numberOfModulesToInstall = " # debug_show(inst.numberOfModulesToInstall));
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
+                    Debug.print("X11");
                     getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                         canister;
                         name = callbackName;
@@ -443,20 +455,28 @@ shared({caller = initialOwner}) actor class PackageManager({
                             user;
                         });
                     }]);
+                    Debug.print("X12");
                 };
-                case null {};
+                case null {
+                    Debug.print("X13");
+                };
             };
+            Debug.print("X14");
             _updateAfterInstall({installationId});
+            Debug.print("X15");
         };
     };
 
     // TODO: Keep registry of ALL installed modules.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
+        Debug.print("Y1");
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
+        Debug.print("Y2");
         switch (ourHalfInstalled.whatToInstall) {
             case (#package _) {
+                Debug.print("Y3");
                 installedPackages.put(installationId, {
                     id = installationId;
                     name = ourHalfInstalled.packageName;
@@ -467,17 +487,25 @@ shared({caller = initialOwner}) actor class PackageManager({
                     packageRepoCanister = ourHalfInstalled.packageRepoCanister;
                     allModules = Buffer.Buffer<Principal>(0);
                 });
+                Debug.print("Y4");
                 switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
                     case (?ids) {
+                        Debug.print("Y5");
                         installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
+                        Debug.print("Y5.1");
                     };
                     case null {
+                        Debug.print("Y6");
                         installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
+                        Debug.print("Y6.1");
                     };
                 };
             };
-            case (#simplyModules _) {};
+            case (#simplyModules _) {
+                Debug.print("Y7");
+            };
         };
+        Debug.print("Y8");
         halfInstalledPackages.delete(installationId);
     };
 
@@ -814,7 +842,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         moduleName: Text;
     }): async* () {
         await* _registerModule({installation; canister});
-        let ?inst = installedPackages.get(installation) else {
+        let ?inst = installedPackages.get(installation) else { // FIXME: It does not work during package installation.
             Debug.trap("no such installationId: " # debug_show(installation));
         };
         inst.modules.put(moduleName, canister);
