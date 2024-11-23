@@ -301,7 +301,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         let module2 = Common.unshareModule(module_); // TODO: necessary? or unshare only callbacks?
         switch (module2.callbacks.get(#CanisterCreated)) {
             case (?callbackName) {
-                getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
+                getIndirectCaller().callAllOneWay([{
                     canister;
                     name = callbackName;
                     data = to_candid({ // TODO
