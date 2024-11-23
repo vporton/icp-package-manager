@@ -55,22 +55,6 @@ shared({caller = initialOwner}) actor class PackageManager({
         Iter.toArray(owners.keys());
     };
 
-    // var initialized: Bool = false; // intentionally non-stable // TODO: separate variable for signaling upgrading?
-
-    // TODO: needed? // FIXME: `onlyOwner`
-    // TODO: indirectCaller set at an earlier stage with `setIndirectCaller()`
-    public shared func init({
-        user: Principal;
-        indirect_caller: Principal;
-    }) : async () {
-        Debug.print("initializing package manager");
-
-        indirect_caller_ := ?actor(Principal.toText(indirect_caller)); // TODO: Move its initialization to the constructor code.
-        // owners := HashMap.fromIter([(user, ())].vals(), 1, Principal.equal, Principal.hash);
-
-        // initialized := true;
-    };
-
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
         true;
     };
