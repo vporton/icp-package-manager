@@ -411,7 +411,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         {canister_id};
     };
 
-    // FIXME: Remove?
     public shared func bootstrapBackend({
         frontend: Principal;
         backendWasmModule: Common.SharedModule;
