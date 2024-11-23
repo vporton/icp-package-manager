@@ -751,45 +751,4 @@ shared({caller = initialOwner}) actor class PackageManager({
     public query func getRepositories(): async [{canister: Principal; name: Text}] {
         repositories;
     };
-
-    // public shared({caller}) func registerNamedModule({
-    //     installation: Common.InstallationId;
-    //     canister: Principal;
-    //     packageManager: Principal;
-    //     moduleName: Text;
-    // }): async () {
-    //     onlyOwner(caller, "registerNamedModule");
-
-    //     await* Install._registerNamedModule({
-    //         installation;
-    //         canister;
-    //         packageManager;
-    //         moduleName;
-    //         installedPackages; // TODO: not here
-    //     });
-    // };
-
-    // FIXME: It works only for fully installed package.
-    // private func _registerModule({
-    //     installation: Common.InstallationId;
-    //     canister: Principal;
-    // }): async* () {
-    //     let ?inst = installedPackages.get(installation) else {
-    //         Debug.trap("no such installationId: " # debug_show(installation));
-    //     };
-    //     inst.allModules.add(canister);
-    // };
-
-    // FIXME: It works only for fully installed package.
-    // private func _registerNamedModule({
-    //     installation: Common.InstallationId;
-    //     canister: Principal;
-    //     moduleName: Text;
-    // }): async* () {
-    //     inst.allModules.add(canister);
-    //     let ?inst = installedPackages.get(installation) else {
-    //         Debug.trap("no such installationId: " # debug_show(installation));
-    //     };
-    //     inst.modules.put(moduleName, canister);
-    // };
 }
