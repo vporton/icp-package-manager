@@ -77,7 +77,7 @@ export default function MainPage() {
         const foundParts = await Promise.all(parts.map(part => {
             try {
                 const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                part2.getPackage(packageName, "0.0.1");
+                part2.getPackage(packageName, "0.0.1"); // FIXME: version
                 return part;
             }
             catch(_) { // TODO: Check error.
