@@ -41,7 +41,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
-        onlyOwner(caller, "setOwner");
+        onlyOwner(caller, "removeOwner");
 
         owners.delete(oldOwner);
     };
