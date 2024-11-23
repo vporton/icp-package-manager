@@ -151,23 +151,6 @@ function GlobalUI() {
       }
 
       const backend_str = backendPrincipal.toString();
-      // FIXME: Do wait.
-      // TODO: busy indicator
-      // for (let i = 0;; ++i) { // TODO: Choose the value.
-      //   if (i == 20) {
-      //     alert("Module failed to initialize"); // TODO: better dialog
-      //     return;
-      //   }
-      //   try {
-      //     const initialized = await backendRO.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-      //     if (initialized) {
-      //       break;
-      //     }
-      //   }
-      //   catch (e) {
-      //     // TODO: more detailed error check
-      //   }
-      // }
       const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
       open(`${base}backend=${backend_str}`, '_self');
     }
