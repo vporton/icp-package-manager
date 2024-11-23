@@ -10,6 +10,9 @@ import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Text "mo:base/Text";
+import HashMap "mo:base/HashMap";
+import Iter "mo:base/Iter";
+import Array "mo:base/Array";
 import Asset "mo:assets-api";
 import IC "mo:ic";
 import Common "../common";
@@ -23,17 +26,41 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         true;
     };
 
-    /// We check owner, for only owner to be able to control Asset canisters
-    private func onlyOwner(caller: Principal, msg: Text) {
-        if (caller != owner and caller != Principal.fromActor(this)) { // TODO: Comparison with this is necessary for call of `copyAssets` from `callAllOneWay`.
-            Debug.trap("not the owner: " # msg);
-        };
+    // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
+    var owners: HashMap.HashMap<Principal, ()> =
+        HashMap.fromIter(
+            [(initialOwner, ())].vals(),
+            1,
+            Principal.equal,
+            Principal.hash);
+
+    public shared({caller}) func setOwners(newOwners: [Principal]): async () {
+        onlyOwner(caller, "setOwners");
+
+        owners := HashMap.fromIter(
+            Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
+            Array.size(newOwners),
+            Principal.equal,
+            Principal.hash,
+        );
     };
 
-    public shared({caller}) func setOwner(newOwner: Principal): async () {
-        onlyOwner(caller, "setOwner");
+    public shared({caller}) func addOwner(newOwner: Principal): async () {
+        onlyOwner(caller, "addOwner");
 
-        owner := newOwner;
+        owners.put(newOwner, ());
+    };
+
+    public shared({caller}) func removeOwner(oldOwner: Principal): async () {
+        onlyOwner(caller, "removeOwner");
+
+        owners.delete(oldOwner);
+    };
+
+    func onlyOwner(caller: Principal, msg: Text) {
+        if (owners.get(caller) == null) {
+            Debug.trap("not the owner: " # msg);
+        };
     };
 
     /// Call methods in the given order and don't return.
@@ -114,17 +141,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
-    public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
-        onlyOwner(caller, "copyAll");
+    // public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
+    //     onlyOwner(caller, "copyAll");
 
-        try {
-            return await* CopyAssets.copyAll({from; to});
-        }
-        catch (e) {
-            Debug.print("Indirect caller copyAll: " # Error.message(e));
-            Debug.trap("Indirect caller copyAll: " # Error.message(e));
-        };
-    };
+    //     try {
+    //         return await* CopyAssets.copyAll({from; to});
+    //     }
+    //     catch (e) {
+    //         Debug.print("Indirect caller copyAll: " # Error.message(e));
+    //         Debug.trap("Indirect caller copyAll: " # Error.message(e));
+    //     };
+    // };
 
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
         whatToInstall: {
@@ -140,7 +167,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
     }): () {
         try {
-            // onlyOwner(caller, "installPackageWrapper"); // FIXME: Uncomment.
+            onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
@@ -254,7 +281,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
-                await this.copyAll({ // TODO: Don't call shared.
+                await* CopyAssets.copyAll({ // TODO: Don't call shared.
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
             };
@@ -311,7 +338,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     // TODO: I have several arguments indicating bootstrap: noPMBackendYet, preinstalledCanisterId.
-    public shared func installModule({
+    public shared({caller}) func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
         moduleName: ?Text;
@@ -323,7 +350,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
-            // onlyOwner(caller, "installModule"); // FIXME: Uncomment.
+            onlyOwner(caller, "installModule");
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
@@ -415,10 +442,23 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             user;
         });
 
-        // // TODO: Is the following needed?
+        let indirect = actor (Principal.toText(indirect_canister_id)) : actor {
+            addOwner: (newOwner: Principal) -> async (); 
+        };
+
+        let backend = actor (Principal.toText(backend_canister_id)) : actor {
+            // setOwners: (newOwners: [Principal]) -> async (); 
+            removeOwner: (oldOwner: Principal) -> async (); 
+        };
+
+        // // TODO: Is the commented out line needed?
         // await backend.init({user; indirect_caller = indirect_canister_id});
-        // await indirect.setOwner(backend_canister_id);
-        // await backend.removeOwner(Principal.fromActor(this));
+        // TODO: Do this during code initilization:
+        // TODO: Run in parallel:
+        // TODO: Are all the following user additions needed?
+        await indirect.addOwner(user);
+        await indirect.addOwner(backend_canister_id);
+        await backend.removeOwner(Principal.fromActor(this));
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
