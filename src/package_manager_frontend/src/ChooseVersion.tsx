@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-// TODO; Delete "candb-client-typescript/dist/IndexClient"
-// import { IndexClient } from "candb-client-typescript/dist/IndexClient";
-// import { ActorClient } from "candb-client-typescript/dist/ActorClient";
-import { /*RepositoryIndex,*/ idlFactory as repositoryIndexIDL } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
-import { SharedFullPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
+import { useParams } from "react-router-dom";
+import { SharedFullPackageInfo, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
@@ -12,10 +8,10 @@ import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
-import { createActor as createPMActor } from '../../declarations/package_manager';
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
+import { installPackageWithModules } from "../../lib/install";
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
@@ -66,24 +62,13 @@ export default function ChooseVersion(props: {}) {
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
 
-        // FIXME: Install modules.
-        let {installationId: id} = await package_manager.installPackage({
+        const {installationId: id} = await installPackageWithModules({
+            package_manager_principal: glob.backend!,
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,
             user: principal!,
         });
-        // getIndirectCaller().installModule({
-        //     installPackage = whatToInstall == #package; // a little bit hacky
-        //     moduleName = ?m.0;
-        //     installArg = to_candid({}); // TODO
-        //     installationId;
-        //     packageManagerOrBootstrapper = Principal.fromActor(this);
-        //     preinstalledCanisterId = ourHalfInstalled.preinstalledModules.get(m.0);
-        //     user;
-        //     wasmModule = Common.shareModule(m.1);
-        //     noPMBackendYet = noPMBackendYet and m.0 == "backend"; // HACK
-        // });
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
