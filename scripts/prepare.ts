@@ -17,7 +17,7 @@ dotenv_config({ path: '.env' });
 
 global.fetch = node_fetch as any;
 
-if (process.env.DFX_NETWORK == 'local') {
+if (process.env.DFX_NETWORK === 'local') {
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister BootstrapperIndirectCaller");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
