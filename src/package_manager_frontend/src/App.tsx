@@ -98,7 +98,7 @@ function GlobalUI() {
         user: principal!, // TODO: `!`
         indirectCaller: indirectPrincipal,
       });
-      const installationId = 0n; // FIXME
+      const installationId = 0n; // TODO
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
       for (let i = 0; ; ++i) {
         try {
@@ -117,7 +117,7 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
+      for (const [name, [m, dfn]] of pkgReal.modules) {
         if (!dfn) {
           continue;
         }
