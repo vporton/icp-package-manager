@@ -448,6 +448,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         let backend = actor (Principal.toText(backend_canister_id)) : actor {
             // setOwners: (newOwners: [Principal]) -> async ();
             setIndirectCaller: (indirect_caller: IndirectCaller) -> async (); 
+            addOwner: (newOwner: Principal) -> async (); 
             removeOwner: (oldOwner: Principal) -> async (); 
         };
 
@@ -459,8 +460,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await indirect.addOwner(user);
         await indirect.addOwner(backend_canister_id);
         await backend.setIndirectCaller(actor(Principal.toText(indirect_canister_id)));
+        Debug.print("backend owner " # debug_show(user)); // FIXME: Remove.
+        await backend.addOwner(user);
         await backend.removeOwner(Principal.fromActor(this));
-
+ 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
 }

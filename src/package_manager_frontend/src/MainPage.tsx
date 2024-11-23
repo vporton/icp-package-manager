@@ -72,6 +72,7 @@ export default function MainPage() {
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
     async function installChecked() {
         // TODO: hack
+        // FIXME: (here and in other places) use current repository, not the main one.
         const parts = (await RepositoryIndex.getCanistersByPK('main'))
             .map(s => Principal.fromText(s))
         const foundParts = await Promise.all(parts.map(part => {

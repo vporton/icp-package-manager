@@ -16,6 +16,8 @@ export async function installPackageWithModules({
 }): Promise<{
     installationId: InstallationId;
 }> {
+    const package_manager: PackageManager = createPM(package_manager_principal);
+    console.log(`installPackage with ${user}`);
     const {installationId} = await package_manager.installPackage({
         packageName: packageName!,
         version,
@@ -25,7 +27,6 @@ export async function installPackageWithModules({
     const part = createRepositoryPartition(repo);
     const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
     const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-    const package_manager: PackageManager = createPM(package_manager_principal);
     const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // FIXME: hard-coded package ID
     const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
     const indirect = createIndirectCaller(indirectPrincipal);
