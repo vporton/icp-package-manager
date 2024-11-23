@@ -33,11 +33,15 @@ shared({caller = initialOwner}) actor class PackageManager({
             Principal.equal,
             Principal.hash);
 
-    // TODO: more flexible control of owners // FIXME: Remove.
-    public shared({caller}) func setOwner(newOwner: Principal): async () {
-        onlyOwner(caller, "setOwner");
+    public shared({caller}) func setOwners(newOwners: [Principal]): async () {
+        onlyOwner(caller, "setOwners");
 
-        owners := HashMap.fromIter([(newOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+        owners := HashMap.fromIter(
+            Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
+            Array.size(newOwners),
+            Principal.equal,
+            Principal.hash,
+        );
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {

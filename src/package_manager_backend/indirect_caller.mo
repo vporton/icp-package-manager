@@ -140,12 +140,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
     }): () {
         try {
-            Debug.print("installPackageWrapper"); // FIXME: Remove.
             // onlyOwner(caller, "installPackageWrapper"); // FIXME: Uncomment.
-            Debug.print("Y1"); // FIXME: Remove.
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
-            Debug.print("Y2"); // FIXME: Remove.
 
             let realPMPrincipal = switch (pmPrincipal) {
                 case (?pmPrincipal) {
@@ -155,7 +152,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     preinstalledModules[0].1;
                 };
             };
-            Debug.print("Y3"); // FIXME: Remove.
             let pm = actor (Principal.toText(realPMPrincipal)) : actor {
                 installationWorkCallback: ({
                     whatToInstall: {
@@ -178,7 +174,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 repo;
                 preinstalledModules;
             });
-            Debug.print("D"); // FIXME: Remove.
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
@@ -277,7 +272,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
         noPMBackendYet: Bool; // Don't call callbacks
     }): async* Principal {
-        Debug.print("_installModuleCode"); // FIXME: Remove.
         Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper});
@@ -304,10 +298,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         });
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-            switch (moduleName) { // FIXME: Remove.
-                case (?moduleName) Debug.print("NRM " # moduleName);
-                case null {}
-            };
             await pm.onInstallCode({
                 installPackage; // Bool
                 moduleName;
@@ -333,14 +323,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
-            Debug.print("A0"); // FIXME: Remove.
             // onlyOwner(caller, "installModule"); // FIXME: Uncomment.
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     if (not noPMBackendYet) {
                         let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
-                        Debug.print("A1");
                         await cb.onCreateCanister({
                             installPackage;
                             installationId;
@@ -349,7 +337,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                             canister = preinstalledCanisterId;
                             user;
                         });
-                        Debug.print("A2");
                         await cb.onInstallCode({
                             installPackage;
                             installationId;
@@ -358,11 +345,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                             canister = preinstalledCanisterId;
                             user;
                         });
-                        Debug.print("A3"); // FIXME: Remove.
                     }
                 };
                 case null {
-                    Debug.print("B1"); // FIXME: Remove.
                     ignore await* _installModuleCode({
                         installationId;
                         moduleName;
@@ -373,7 +358,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         user;
                         noPMBackendYet;
                     });
-                    Debug.print("B2"); // FIXME: Remove.
                 };
             };
         }
@@ -409,12 +393,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         repo: Common.RepositoryPartitionRO;
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
-        Debug.print("bootstrapBackend"); // FIXME: Remove.
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
         let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this)}); // TODO: This is a bug.
 
-        Debug.print("Z1"); // FIXME: Remove.
         await* myInstallCode({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
@@ -424,9 +406,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageManagerOrBootstrapper;
             user;
         });
-        Debug.print("Z2"); // FIXME: Remove.
 
-        Debug.print("Z3"); // FIXME: Remove.
         await* myInstallCode({
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
@@ -434,7 +414,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageManagerOrBootstrapper = indirect_canister_id; // TODO: This is a bug.
             user;
         });
-        Debug.print("Z4"); // FIXME: Remove.
 
         // FIXME: Remove?
         // TODO: Make init() functions conforming to the specs and call init() automatically.
@@ -454,11 +433,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         //     init: shared ({user: Principal; indirect_caller: Principal}) -> async ();
         //     removeOwner: shared (oldOwner: Principal) -> async ();
         // };
-        // Debug.print("Z5"); // FIXME: Remove.
         // let indirect = actor(Principal.toText(indirect_canister_id)): actor {
         //     setOwner: shared (newOwner: Principal) -> async ();
         // };
-        // Debug.print("Z6"); // FIXME: Remove.
         // ignore await backend.installPackageWithPreinstalledModules({
         //     whatToInstall = #package;
         //     packageName = "icpack";
@@ -473,7 +450,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         // await indirect.setOwner(backend_canister_id);
         // await backend.removeOwner(Principal.fromActor(this));
 
-        Debug.print("(created) backendPrincipal = " # debug_show(backend_canister_id));
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
 }
