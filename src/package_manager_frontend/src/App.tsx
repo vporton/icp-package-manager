@@ -88,7 +88,6 @@ function GlobalUI() {
         repo: repoPart!, // TODO: `!`
         packageManagerOrBootstrapper: principal!,
       });
-      console.log(`backendPrincipal = ${backendPrincipal}`);
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
       await backend.installPackageWithPreinstalledModules({
         whatToInstall: { package: null },
@@ -101,24 +100,15 @@ function GlobalUI() {
       });
       const installationId = 0n; // FIXME
       const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
-      console.log("P1");
       for (let i = 0; ; ++i) {
         try {
-          // const p2: [string, Principal][] = await canister_status({
-          //   canister_id: backendPrincipal,
-          // });
-          console.log("P2");
-          /*const r = */await Promise.all([
+          await Promise.all([
             backend.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
             indirect.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
           ]);
-          // console.log("PX:", r);
-          console.log("P3");
           break;
         }
-        catch (e) {
-          console.log("RRR", e); // FIXME: Remove.
-        }
+        catch (e) {}
         if (i == 30) {
           alert("Cannot initilize canisters"); // TODO
           return;
@@ -127,7 +117,6 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      console.log("P4");
       for (const [name, [m, dfn]] of pkgReal.modules) { // FIXME
         if (!dfn) {
           continue;
@@ -146,16 +135,12 @@ function GlobalUI() {
           noPMBackendYet: false, // HACK
         });
       };
-      console.log("P5");
       for (let i = 0; ; ++i) {
         try {
-          console.log("P6");
           await backend.getInstalledPackage(installationId);
           break;
         }
-        catch (e) {
-          console.log("RRR", e); // FIXME: Remove.
-        }
+        catch (e) {}
         if (i == 30) {
           alert("Cannot get installation info"); // TODO
           return;
@@ -164,7 +149,6 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      console.log("P4 ");
 
       const backend_str = backendPrincipal.toString();
       // FIXME: Do wait.
