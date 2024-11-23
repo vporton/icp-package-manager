@@ -122,7 +122,7 @@ function GlobalUI() {
           continue;
         }
         // Starting installation of all modules in parallel:
-        indirect/*bootstrapperIndirectCaller*/.installModule({
+        indirect.installModule({
           installPackage: true,
           moduleName: [name],
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
