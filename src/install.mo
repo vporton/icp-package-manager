@@ -28,7 +28,6 @@ module {
     })
         : async* {installationId: Common.InstallationId}
     {
-        Debug.print("_installModulesGroup"); // FIXME: Remove.
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;
