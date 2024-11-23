@@ -6,27 +6,31 @@ import { useNavigate, useParams } from "react-router-dom";
 import { /*RepositoryIndex,*/ idlFactory as repositoryIndexIDL } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { SharedFullPackageInfo, RepositoryPartition, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
+import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
-import { package_manager } from "../../declarations/package_manager";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
+import { createActor as createPMActor } from '../../declarations/package_manager';
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { myUseNavigate } from "./MyNavigate";
+import { GlobalContext } from "./state";
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
+    const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
     const {principal, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
+    const package_manager = glob.package_manager_rw!;
     useEffect(() => {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         index.getCanistersByPK("main").then(async pks => {
             const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
                 const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
-                return [pk, await part.getSharedFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
+                return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
             })) as any;
             for (const [pk, fullInfo] of res) {
                 if (fullInfo === undefined) {
@@ -62,7 +66,7 @@ export default function ChooseVersion(props: {}) {
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
     
-        let id = await package_manager.installPackage({
+        let {installationId: id} = await package_manager.installPackage({
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,
