@@ -65,7 +65,8 @@ export default function ChooseVersion(props: {}) {
             }
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
-    
+
+        // FIXME: Install modules.
         let {installationId: id} = await package_manager.installPackage({
             packageName: packageName!,
             version: chosenVersion!,
