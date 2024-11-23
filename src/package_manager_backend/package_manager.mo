@@ -306,7 +306,6 @@ shared({caller = initialOwner}) actor class PackageManager({
         user: Principal;
     }): async () {
         onlyOwner(caller, "onCreateCanister");
-        Debug.print("moduleName1 " # debug_show(moduleName));
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
@@ -327,7 +326,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        Debug.print("MODULE " # debug_show(moduleName));
         switch (moduleName) {
             case (?moduleName) {
                 assert not Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
@@ -337,7 +335,6 @@ shared({caller = initialOwner}) actor class PackageManager({
                 // FIXME
             };
         };
-        Debug.print("SIZE: " # debug_show(inst.modulesWithoutCode.size() + inst.installedModules.size()));
         // TODO: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
         if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
             switch (module2.callbacks.get(#AllCanistersCreated)) {
@@ -367,14 +364,11 @@ shared({caller = initialOwner}) actor class PackageManager({
         module_: Common.SharedModule;
     }): async () {
         onlyOwner(caller, "onInstallCode");
-        Debug.print("X1");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        Debug.print("X2");
         let module2 = Common.unshareModule(module_); // TODO: necessary?
-        Debug.print("X3");
         // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
         switch (module2.callbacks.get(#CodeInstalled)) {
             case (?callbackName) {
@@ -386,28 +380,18 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        Debug.print("X4");
         switch (moduleName) {
             case (?moduleName) {
-                Debug.print("X5");
                 // FIXME: on repeating interrupted installation?
                 assert Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
                 assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
-                Debug.print("X6");
                 inst.modulesWithoutCode.delete(moduleName);
                 inst.installedModules.put(moduleName, canister); // FIXME: What's about unnamed modules?
-                Debug.print("X7");
             };
             case null {
-                Debug.print("X9");
                 // FIXME
             };
         };
-        // FIXME: Repeated 3 times: `inst.installedModules.size() = 0 inst.numberOfModulesToInstall = 3`.
-        // FIXME: Remove Debug:
-        Debug.print("X10");
-        Debug.print("inst.installedModules.size() = " # debug_show(inst.installedModules.size()) #
-            " inst.numberOfModulesToInstall = " # debug_show(inst.numberOfModulesToInstall));
         if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             _updateAfterInstall({installationId});
@@ -431,10 +415,8 @@ shared({caller = initialOwner}) actor class PackageManager({
                 }
             };
             halfInstalledPackages.delete(installationId);
-            Debug.print("Y7");
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
-                    Debug.print("X11");
                     getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
                         canister;
                         name = callbackName;
@@ -445,26 +427,20 @@ shared({caller = initialOwner}) actor class PackageManager({
                             user;
                         });
                     }]);
-                    Debug.print("X12");
                 };
                 case null {
-                    Debug.print("X13");
                 };
             };
-            Debug.print("X14");
         };
     };
 
     // TODO: Keep registry of ALL installed modules.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
-        Debug.print("Y1");
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
-        Debug.print("Y2");
         switch (ourHalfInstalled.whatToInstall) {
             case (#package _) {
-                Debug.print("Y3");
                 installedPackages.put(installationId, {
                     id = installationId;
                     name = ourHalfInstalled.packageName;
@@ -475,23 +451,17 @@ shared({caller = initialOwner}) actor class PackageManager({
                     packageRepoCanister = ourHalfInstalled.packageRepoCanister;
                     allModules = Buffer.Buffer<Principal>(0);
                 });
-                Debug.print("Y4");
                 switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
                     case (?ids) {
-                        Debug.print("Y5");
                         installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
-                        Debug.print("Y5.1");
                     };
                     case null {
-                        Debug.print("Y6");
                         installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
-                        Debug.print("Y6.1");
                     };
                 };
             };
             case (#simplyModules _) {};
         };
-        Debug.print("Y8");
     };
 
     // TODO: Uncomment.
