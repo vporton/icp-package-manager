@@ -17,7 +17,7 @@ export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
-    const {principal, defaultAgent} = useAuth();
+    const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<string[]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     const package_manager = glob.package_manager_rw!;
@@ -62,12 +62,14 @@ export default function ChooseVersion(props: {}) {
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
 
+        // TODO: `!`
         const {installationId: id} = await installPackageWithModules({
             package_manager_principal: glob.backend!,
             packageName: packageName!,
             version: chosenVersion!,
             repo: firstPart,
             user: principal!,
+            agent: agent!,
         });
         navigate(`/installed/show/${id}`);
     }

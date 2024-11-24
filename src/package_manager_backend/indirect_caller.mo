@@ -460,7 +460,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await indirect.addOwner(user);
         await indirect.addOwner(backend_canister_id);
         await backend.setIndirectCaller(actor(Principal.toText(indirect_canister_id)));
-        Debug.print("backend owner " # debug_show(user)); // FIXME: Remove.
+        Debug.print("backend " # debug_show(backend_canister_id) # " owner " # debug_show(user)); // FIXME: Remove.
         await backend.addOwner(user);
         await backend.removeOwner(Principal.fromActor(this));
  

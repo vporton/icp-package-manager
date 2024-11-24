@@ -2,22 +2,24 @@ import { Principal } from '@dfinity/principal';
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo } from '../declarations/package_manager/package_manager.did';
 import { createActor as createRepositoryPartition } from '../declarations/RepositoryPartition';
 import { createActor as createIndirectCaller } from '../declarations/BootstrapperIndirectCaller';
-import { createActor as createPM } from '../declarations/package_manager';
+import { createActor as createPackageManager } from '../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
+import { Agent } from '@dfinity/agent';
 
 export async function installPackageWithModules({
-    package_manager_principal, packageName, repo, user, version
+    package_manager_principal, packageName, repo, user, version, agent
 }: {
     package_manager_principal: Principal,
     packageName: PackageName,
     repo: Principal,
     user: Principal,
     version: Version,
+    agent: Agent,
 }): Promise<{
     installationId: InstallationId;
 }> {
-    const package_manager: PackageManager = createPM(package_manager_principal);
-    console.log(`installPackage with ${user}`);
+    const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
+    console.log(`installPackage ${package_manager_principal} with ${user}`);
     const {installationId} = await package_manager.installPackage({
         packageName: packageName!,
         version,
