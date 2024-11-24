@@ -118,7 +118,6 @@ shared({caller = initialOwner}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
-        Debug.print("user=" # debug_show(user) # " caller= # " # debug_show(caller)); // FIXME: Remove.
         onlyOwner(caller, "installPackage");
 
         let installationId = nextInstallationId;
