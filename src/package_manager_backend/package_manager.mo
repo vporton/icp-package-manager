@@ -135,7 +135,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules = [];
-            noPMBackendYet = false;
+            noPMBackendYet = false; // TODO: It seems that this argument is never true. Remove it?
         });
     };
 
