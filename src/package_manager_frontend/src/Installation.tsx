@@ -17,6 +17,7 @@ export default function Installation(props: {}) {
         if (defaultAgent === undefined) {
             return;
         }
+        // FIXME: Next line throws.
         glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageRepoCanister!, agent: defaultAgent});
