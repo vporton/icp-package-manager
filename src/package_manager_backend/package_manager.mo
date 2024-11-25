@@ -738,6 +738,16 @@ shared({caller = initialOwner}) actor class PackageManager({
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
+    // Adjustable values //
+
+    // TODO: a way to set.
+
+    stable var newCanisterCycles = 400_000_000_000; // 4 times more, than creating a canister
+
+    public query func getNewCanisterCycles(): async Nat {
+        newCanisterCycles
+    };
+
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {

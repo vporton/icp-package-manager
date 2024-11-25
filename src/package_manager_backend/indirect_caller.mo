@@ -63,6 +63,18 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         };
     };
 
+    type OurPMType = actor {
+        getNewCanisterCycles: () -> async Nat;
+    };
+
+    /*stable*/ var ourPM: OurPMType = actor("aaaaa-aa");
+
+    public shared({caller}) func setOurPM(pm: Principal): async () {
+        onlyOwner(caller, "setOurPM");
+
+        ourPM := actor(Principal.toText(pm));
+    };
+
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
@@ -220,8 +232,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     };
 
     private func myCreateCanister({packageManagerOrBootstrapper: Principal}): async* {canister_id: Principal} {
+        // Cycles.add<system>(await ourPM.getNewCanisterCycles());
         let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-            amount = 10_000_000_000_000; // FIXME
+            amount = await ourPM.getNewCanisterCycles();
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             creation_args = ?{
                 settings = ?{
@@ -292,7 +305,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         user: Principal;
         noPMBackendYet: Bool; // Don't call callbacks
     }): async* Principal {
-        Cycles.add<system>(10_000_000_000_000);
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper});
         if (not noPMBackendYet) {
@@ -435,7 +447,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         });
 
         let indirect = actor (Principal.toText(indirect_canister_id)) : actor {
-            addOwner: (newOwner: Principal) -> async (); 
+            addOwner: (newOwner: Principal) -> async ();
+            setOurPM: (pm: Principal) -> async ();
         };
 
         let backend = actor (Principal.toText(backend_canister_id)) : actor {
@@ -452,6 +465,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         // TODO: Are all the following user additions needed?
         await indirect.addOwner(user);
         await indirect.addOwner(backend_canister_id);
+        await indirect.setOurPM(backend_canister_id);
         await backend.setIndirectCaller(actor(Principal.toText(indirect_canister_id)));
         await backend.addOwner(user);
         await backend.removeOwner(Principal.fromActor(this));
