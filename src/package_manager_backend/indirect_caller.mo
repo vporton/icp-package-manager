@@ -185,7 +185,8 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 }) -> async ();
             };
 
-            await pm.installationWorkCallback({ // FIXME: We have no permission in `pm` because we are `BootstrapperIndirectCaller`.
+            // TODO: The following can't work during bootstrapping, because we are `BootstrapperIndirectCaller`. But bootstrapping succeeds.
+            await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
                 installationId;
                 user;
