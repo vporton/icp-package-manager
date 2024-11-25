@@ -126,7 +126,7 @@ function GlobalUI() {
         // Starting installation of all modules in parallel:
         indirect.installModule({
           installPackage: true,
-          moduleNumber,
+          moduleNumber: BigInt(moduleNumber),
           moduleName: [name],
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
           installationId,
