@@ -226,7 +226,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             creation_args = ?{
                 settings = ?{
                     freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper];
+                    controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper]; // TODO: Needs to be self-invokable?
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };
