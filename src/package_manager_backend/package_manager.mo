@@ -338,7 +338,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         if (not missingCanister) { // All cansters have been created. // TODO: efficient?
             switch (module2.callbacks.get(#AllCanistersCreated)) {
                 case (?callbackName) {
-                    getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
+                    getIndirectCaller().callAllOneWay([{
                         canister;
                         name = callbackName;
                         data = to_candid({ // TODO
@@ -373,7 +373,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
         switch (module2.callbacks.get(#CodeInstalled)) {
             case (?callbackName) {
-                getIndirectCaller().callAllOneWay([{ // FIXME: this indirect caller?
+                getIndirectCaller().callAllOneWay([{
                     canister;
                     name = callbackName;
                     data = to_candid(); // TODO 
@@ -381,7 +381,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        // FIXME: on repeating interrupted installation?
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber)); // FIXME: on repeating interrupted installation?
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
