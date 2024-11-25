@@ -328,8 +328,11 @@ shared({caller = initialOwner}) actor class PackageManager({
         var missingCanister = false; // There is a module for which canister wasn't created yet.
         assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
         var i = 0;
-        while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
-            if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i)))
+        label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
+            if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
+                missingCanister := true;
+                break searchMissing;
+            };
             i += 1;
         };
         if (not missingCanister) { // All cansters have been created. // TODO: efficient?
