@@ -87,7 +87,6 @@ export default function ChooseVersion(props: {}) {
                 </select>
             </p>
             <p>
-                
                 {/* TODO: Disable the button when executing it. */}
                 {installedVersions.size == 0
                     ? <Button onClick={install} disabled={installing}>Install new package</Button>
