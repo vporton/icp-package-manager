@@ -42,7 +42,7 @@ export async function installPackageWithModules({
           moduleName: [name],
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
           installationId,
-          packageManagerOrBootstrapper: package_manager_principal, // FIXME: correct?
+          packageManagerOrBootstrapper: package_manager_principal,
           // "backend" goes first, because it stores installation information.
           preinstalledCanisterId: [],
           user, // TODO: This argument seems superfluous for `installModule`.
