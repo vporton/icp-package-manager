@@ -322,7 +322,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         };
         switch (moduleName) {
             case (?moduleName) {
-                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
+                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName));
                 inst.modulesWithoutCode.put(moduleName, canister);
             };
             case null {
