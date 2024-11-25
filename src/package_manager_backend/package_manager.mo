@@ -323,7 +323,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        assert not Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
+        assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
         var missingCanister = false; // There is a module for which canister wasn't created yet.
         assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
@@ -383,7 +383,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         };
         // FIXME: on repeating interrupted installation?
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber)); // FIXME: on repeating interrupted installation?
-        assert not Option.isSome(inst.installedModules.get(moduleNumber));
+        assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
