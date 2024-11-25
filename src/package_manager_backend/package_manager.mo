@@ -600,8 +600,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     //             arg = to_candid({}); // TODO: correct?
     //         });
     //         if (Option.isNull(ourHalfInstalled.preinstalledModules)) {
-    //             // FIXME: `canister` is `()`.
-    //             let canister = await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
+    //             await* _installModule(wasmModule, to_candid(()), ?installArg, getIndirectCaller(), Principal.fromActor(this), installationId, installedPackages, caller);
     //         }/* else {
     //             // We don't need to initialize installed module, because it can be only
     //             // PM's frontend.
