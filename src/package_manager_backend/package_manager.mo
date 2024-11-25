@@ -440,7 +440,6 @@ shared({caller = initialOwner}) actor class PackageManager({
                     name = ourHalfInstalled.packageName;
                     package = ourHalfInstalled.package;
                     version = ourHalfInstalled.package.base.version; // TODO: needed?
-                    // FIXME: Need deep copy for `modules`?
                     modules = HashMap.fromIter(
                         Iter.map<?(?Text, Principal), (Text, Principal)>(
                             ourHalfInstalled.installedModules.vals(),
