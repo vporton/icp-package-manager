@@ -11,6 +11,7 @@ import Common "common";
 import RepositoryPartition "repository_backend/RepositoryPartition";
 import IndirectCaller "package_manager_backend/indirect_caller";
 
+// TODO: Huh, module of just one function?
 module {
     public func _installModulesGroup({
         indirectCaller: IndirectCaller.IndirectCaller;
