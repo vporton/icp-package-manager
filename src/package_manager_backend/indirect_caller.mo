@@ -159,7 +159,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             #simplyModules : [(Text, Common.SharedModule)];
         };
         repo: Common.RepositoryPartitionRO;
-        pmPrincipal: ?Principal;
+        pmPrincipal: Principal;
         packageName: Common.PackageName;
         version: Common.Version;
         installationId: Common.InstallationId;
@@ -171,15 +171,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
 
-            let realPMPrincipal = switch (pmPrincipal) {
-                case (?pmPrincipal) {
-                    pmPrincipal;
-                };
-                case null {
-                    preinstalledModules[0].1;
-                };
-            };
-            let pm = actor (Principal.toText(realPMPrincipal)) : actor {
+            let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installationWorkCallback: ({
                     whatToInstall: {
                         #package;
