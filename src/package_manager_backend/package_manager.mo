@@ -357,7 +357,6 @@ shared({caller = initialOwner}) actor class PackageManager({
         canister: Principal;
         moduleNumber: Nat;
         moduleName: ?Text;
-        moduleNumber: Nat;
         user: Principal;
         module_: Common.SharedModule;
     }): async () {

@@ -33,12 +33,14 @@ export async function installPackageWithModules({
     const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
     const indirect = createIndirectCaller(indirectPrincipal);
     // Starting installation of all modules in parallel:
+    let moduleNumber = 0;
     for (const [name, [m, dfn]] of pkgReal.modules) {
         if (!dfn) {
           continue;
         }
         indirect.installModule({
           installPackage: true,
+          moduleNumber: BigInt(moduleNumber),
           moduleName: [name],
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
           installationId,
@@ -49,6 +51,7 @@ export async function installPackageWithModules({
           wasmModule: m,
           noPMBackendYet: false, // HACK
         });
+        ++moduleNumber;
     };
     return {installationId};
 }
