@@ -130,7 +130,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             packageName;
             packageVersion = version;
             installPackage = true;
-            pmPrincipal = ?Principal.fromActor(this);
+            pmPrincipal = Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName; version};
             user;
@@ -166,7 +166,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             packageName;
             packageVersion = version;
             installPackage = true;
-            pmPrincipal = ?Principal.fromActor(this);
+            pmPrincipal = Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName; version};
             user;
@@ -198,7 +198,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             installationId;
             packageName = inst.package.base.name;
             packageVersion = inst.package.base.version;
-            pmPrincipal = ?Principal.fromActor(this);
+            pmPrincipal = Principal.fromActor(this);
             repo;
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
             user;
