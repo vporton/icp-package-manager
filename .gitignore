@@ -22,7 +22,8 @@ node_modules/
 dist/
 .svelte-kit/
 
-# environment variables
+# settings
 .env
+src/Settings.mo
 
 .mops
