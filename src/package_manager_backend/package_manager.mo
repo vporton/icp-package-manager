@@ -381,7 +381,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber)); // FIXME: on repeating interrupted installation?
+        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
