@@ -262,7 +262,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                     ms.vals(),
                     func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
                 );
-                (iter, ms.size());  // TODO: efficient?
+                (iter, ms.size()); // TODO: efficient?
             };
         };
         let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
