@@ -326,6 +326,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
         var missingCanister = false; // There is a module for which canister wasn't created yet.
+        // FIXME: #AllCanistersCreated may be mistakedly fired more than once by the below code:
         assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
         var i = 0;
         label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
