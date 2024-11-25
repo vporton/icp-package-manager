@@ -37,7 +37,7 @@ export default function MainPage() {
         setInstallations(list);
       });
     }, [props.isAuthenticated, props.principal]);
-    // FIXME: (here and in other places) use current repository, not the main one.
+    // TODO: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
       // TODO: Duplicate code
