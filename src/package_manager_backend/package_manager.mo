@@ -284,8 +284,8 @@ shared({caller = initialOwner}) actor class PackageManager({
                 realModulesToInstallSize,
                 Text.equal,
                 Text.hash);
-            modulesWithoutCode = HashMap.HashMap(realModulesToInstallSize, Text.equal, Text.hash); // TODO: efficient?
-            installedModules = HashMap.HashMap(realModulesToInstallSize, Text.equal, Text.hash); // TODO: efficient?
+            modulesWithoutCode = Buffer.Buffer(realModulesToInstallSize);
+            installedModules = Buffer.Buffer(realModulesToInstallSize);
             whatToInstall;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
@@ -295,7 +295,9 @@ shared({caller = initialOwner}) actor class PackageManager({
     public shared({caller}) func onCreateCanister({
         installationId: Common.InstallationId;
         module_: Common.SharedModule;
+        moduleNumber: Nat;
         moduleName: ?Text;
+        moduleNumber: Nat;
         canister: Principal;
         user: Principal;
     }): async () {
@@ -312,6 +314,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                     name = callbackName;
                     data = to_candid({ // TODO
                         installationId;
+                        moduleNumber;
                         moduleName;
                         canister;
                         user;
@@ -320,17 +323,16 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        switch (moduleName) {
-            case (?moduleName) {
-                assert not Option.isSome(inst.modulesWithoutCode.get(moduleName));
-                inst.modulesWithoutCode.put(moduleName, canister);
-            };
-            case null {
-                // FIXME
-            };
+        assert not Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
+        inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
+        var missingCanister = false; // There is a module for which canister wasn't created yet.
+        assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
+        var i = 0;
+        while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
+            if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i)))
+            i += 1;
         };
-        // TODO: `inst.modulesWithoutCode.size()` or need to prevent races `inst.modulesWithoutCode.size() + inst.installedModules.size()`?
-        if (inst.modulesWithoutCode.size() + inst.installedModules.size() == inst.numberOfModulesToInstall) { // All cansters have been created. // TODO: efficient?
+        if (not missingCanister) { // All cansters have been created. // TODO: efficient?
             switch (module2.callbacks.get(#AllCanistersCreated)) {
                 case (?callbackName) {
                     getIndirectCaller().callAllOneWay([{ // FIXME: which indirect_caller I use?
@@ -338,6 +340,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                         name = callbackName;
                         data = to_candid({ // TODO
                             installationId;
+                            moduleNumber;
                             moduleName;
                             canister;
                             user;
@@ -353,7 +356,9 @@ shared({caller = initialOwner}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;
         canister: Principal;
+        moduleNumber: Nat;
         moduleName: ?Text;
+        moduleNumber: Nat;
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
@@ -374,19 +379,12 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        switch (moduleName) {
-            case (?moduleName) {
-                // FIXME: on repeating interrupted installation?
-                assert Option.isSome(inst.modulesWithoutCode.get(moduleName)); // FIXME: on repeating interrupted installation?
-                assert not Option.isSome(inst.installedModules.get(moduleName)); // FIXME: It fails for an unknown reason
-                inst.modulesWithoutCode.delete(moduleName);
-                inst.installedModules.put(moduleName, canister); // FIXME: What's about unnamed modules?
-            };
-            case null {
-                // FIXME
-            };
-        };
-        if (inst.installedModules.size() == inst.numberOfModulesToInstall) { // All module have been installed. // TODO: efficient?
+        // FIXME: on repeating interrupted installation?
+        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber)); // FIXME: on repeating interrupted installation?
+        assert not Option.isSome(inst.installedModules.get(moduleNumber));
+        inst.modulesWithoutCode.put(moduleNumber, null);
+        inst.installedModules.put(moduleNumber, ?(moduleName, canister));
+        if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             _updateAfterInstall({installationId});
             switch (inst.whatToInstall) {
@@ -416,6 +414,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                         name = callbackName;
                         data = to_candid({ // TODO
                             installationId;
+                            moduleNumber;
                             moduleName;
                             canister;
                             user;

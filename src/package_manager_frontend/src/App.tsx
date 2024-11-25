@@ -118,6 +118,7 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
+      let moduleNumber = 0;
       for (const [name, [m, dfn]] of pkgReal.modules) {
         if (!dfn) {
           continue;
@@ -125,6 +126,7 @@ function GlobalUI() {
         // Starting installation of all modules in parallel:
         indirect.installModule({
           installPackage: true,
+          moduleNumber,
           moduleName: [name],
           installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
           installationId,
@@ -135,6 +137,7 @@ function GlobalUI() {
           wasmModule: m,
           noPMBackendYet: false, // HACK
         });
+        ++moduleNumber;
       };
       for (let i = 0; ; ++i) {
         try {

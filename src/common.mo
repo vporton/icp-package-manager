@@ -344,8 +344,8 @@ module {
             #package;
             #simplyModules : [(Text, SharedModule)];
         };
-        modulesWithoutCode: HashMap.HashMap<Text, Principal>;
-        installedModules: HashMap.HashMap<Text, Principal>;
+        modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
+        installedModules: Buffer.Buffer<?(?Text, Principal)>;
         package: PackageInfo;
         preinstalledModules: HashMap.HashMap<Text, Principal>;
     };
