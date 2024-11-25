@@ -269,6 +269,7 @@ shared({caller = initialOwner}) actor class PackageManager({
 
         let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
             preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
+        let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (i: Nat): ?(?Text, Principal) = null);
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
@@ -284,8 +285,8 @@ shared({caller = initialOwner}) actor class PackageManager({
                 realModulesToInstallSize,
                 Text.equal,
                 Text.hash);
-            modulesWithoutCode = Buffer.Buffer(realModulesToInstallSize);
-            installedModules = Buffer.Buffer(realModulesToInstallSize);
+            modulesWithoutCode = Buffer.fromArray(arrayOfEmpty);
+            installedModules = Buffer.fromArray(arrayOfEmpty);
             whatToInstall;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
