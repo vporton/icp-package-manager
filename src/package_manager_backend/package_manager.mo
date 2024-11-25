@@ -269,7 +269,7 @@ shared({caller = initialOwner}) actor class PackageManager({
 
         let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
             preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
-        let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (i: Nat): ?(?Text, Principal) = null);
+        let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
