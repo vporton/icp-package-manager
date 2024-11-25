@@ -258,7 +258,7 @@ module {
         package: PackageInfo;
         packageRepoCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
-        modules: HashMap.HashMap<Text, Principal>;
+        modules: HashMap.HashMap<Text, Principal>; // TODO: Rename to `namedModules`.
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
     };
 

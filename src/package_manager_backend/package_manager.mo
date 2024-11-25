@@ -438,7 +438,23 @@ shared({caller = initialOwner}) actor class PackageManager({
                     package = ourHalfInstalled.package;
                     version = ourHalfInstalled.package.base.version; // TODO: needed?
                     // FIXME: Need deep copy for `modules`?
-                    modules = ourHalfInstalled.installedModules;
+                    modules = HashMap.fromIter(
+                        Iter.map<?(?Text, Principal), (Text, Principal)>(
+                            ourHalfInstalled.installedModules.vals(),
+                            func (x: ?(?Text, Principal)) {
+                                let ?s = x else {
+                                    Debug.trap("programming error");
+                                };
+                                let ?n = s.0 else {
+                                    Debug.trap("programming error");
+                                };
+                                (n, s.1);
+                            }
+                        ),
+                        ourHalfInstalled.installedModules.size(),
+                        Text.equal,
+                        Text.hash,
+                    );
                     packageRepoCanister = ourHalfInstalled.packageRepoCanister;
                     allModules = Buffer.Buffer<Principal>(0);
                 });
@@ -726,11 +742,27 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
+    public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(?Text, Principal)] {
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package");
         };
-        Iter.toArray(res.installedModules.entries());
+        // TODO: May be a little bit slow.
+        Iter.toArray(
+            Iter.map<?(?Text, Principal), (?Text, Principal)>(
+                Iter.filter<?(?Text, Principal)>(
+                    res.installedModules.vals(),
+                    func (x: ?(?Text, Principal)): Bool {
+                        Option.isSome(x);
+                    },
+                ),
+                func (x: ?(?Text, Principal)): (?Text, Principal) {
+                    let ?y = x else {
+                        Debug.trap("programming error");
+                    };
+                    y;
+                },
+            ),
+        );
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
