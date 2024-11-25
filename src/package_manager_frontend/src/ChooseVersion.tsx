@@ -80,7 +80,7 @@ export default function ChooseVersion(props: {}) {
         <>
             <h2>Choose package version for installation</h2>
             <p>Package: {packageName}</p>
-            <p>Version:
+            <p>Version:{" "}
                 <select>
                     {Array.from(versions.entries()).map(([i, v]) =>
                         <option onSelect={() => setChosenVersion(v)} key={i} value={v}>{v}</option>)}
