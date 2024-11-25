@@ -82,7 +82,7 @@ export default function ChooseVersion(props: {}) {
             <p>Package: {packageName}</p>
             <p>Version:
                 <select>
-                    {versions.map((v: string) => <option onSelect={() => setChosenVersion(v)} key={v} value={v}>{v}</option>)} {/* FIXME: v may be non unique. */}
+                    {versions.entries().map(([i, v]) => <option onSelect={() => setChosenVersion(v)} key={i} value={v}>{v}</option>)}
                 </select>
             </p>
             <p>
