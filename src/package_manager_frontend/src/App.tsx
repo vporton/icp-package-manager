@@ -56,10 +56,9 @@ function App() {
 function GlobalUI() {
   const glob = useContext(GlobalContext);
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
-  // FIXME: (here and in other places) use current repository, not the main one.
-  const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
   if (glob.backend === undefined) {
     async function installBackend() {
+      const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
       // TODO: Duplicate code
       const repoParts = await repoIndex.getCanistersByPK("main");
       let pkg: SharedPackageInfo | undefined = undefined;
