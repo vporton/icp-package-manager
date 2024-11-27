@@ -11,6 +11,8 @@ Remaining things TODO:
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
 
+- FIXME: `Install an additional copy of this version` for `icpack` fails.
+
 - Disallow packages of zero modules.
 
 - Installation from several repos.
