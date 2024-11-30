@@ -324,7 +324,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         Debug.print("_installModuleCode(): should be false: " # debug_show(noPMBackendYet));
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-            Debug.print("onCreateCanister on " # debug_show(packageManagerOrBootstrapper)); // FIXME: Remove.
             await pm.onCreateCanister({
                 installPackage; // Bool
                 moduleNumber;
@@ -374,12 +373,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             onlyOwner(caller, "installModule");
 
-            Debug.print("_installModuleCode(): " # debug_show(preinstalledCanisterId)); // FIXME: Remove.
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    Debug.print("preinstalledCanisterId positive"); // FIXME: Remove.
                     if (not noPMBackendYet) {
-                        Debug.print("preinstalledCanisterId positive2"); // FIXME: Remove.
                         let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                         await cb.onCreateCanister({
                             installPackage;
@@ -402,7 +398,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     }
                 };
                 case null {
-                    Debug.print("preinstalledCanisterId negative"); // FIXME: Remove.
                     ignore await* _installModuleCode({
                         installationId;
                         moduleNumber;
