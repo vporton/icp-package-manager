@@ -23,6 +23,7 @@ import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/Bootst
 import { PackageManager } from '../../declarations/package_manager/package_manager.did';
 // import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
+import { ErrorBoundary } from "./ErrorBoundary";
 // import { canister_status } from "@dfinity/ic-management";
 
 function App() {
@@ -46,7 +47,9 @@ function App() {
             {" "}
             Package Manager
           </h1>
-          <GlobalUI/>
+          <ErrorBoundary>
+            <GlobalUI/>
+          </ErrorBoundary>
         </GlobalContextProvider>
       </AuthProvider>
     </BrowserRouter>
