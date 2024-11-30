@@ -25,7 +25,6 @@ export default function Installation(props: {}) {
                 const pi = fullInfo.packages.filter(([version, _]) => version == pkg.version).map(([_, pkg]) => pkg)[0]; // TODO: undefined
                 setPkg2(pi);
             });
-
         });
     }, [defaultAgent]);
 
