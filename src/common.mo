@@ -348,6 +348,7 @@ module {
         installedModules: Buffer.Buffer<?(?Text, Principal)>;
         package: PackageInfo;
         preinstalledModules: HashMap.HashMap<Text, Principal>;
+        var alreadyCalledAllCanistersCreated: Bool;
     };
 
     public type canister_settings = {

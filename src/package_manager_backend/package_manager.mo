@@ -288,6 +288,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             modulesWithoutCode = Buffer.fromArray(arrayOfEmpty);
             installedModules = Buffer.fromArray(arrayOfEmpty);
             whatToInstall;
+            var alreadyCalledAllCanistersCreated = false;
         };
         halfInstalledPackages.put(installationId, ourHalfInstalled);
     };
@@ -323,36 +324,38 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
-        inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
-        var missingCanister = false; // There is a module for which canister wasn't created yet.
-        // FIXME: #AllCanistersCreated may be mistakedly fired more than once by the below code:
-        assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
-        var i = 0;
-        label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
-            if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
-                missingCanister := true;
-                break searchMissing;
-            };
-            i += 1;
-        };
-        if (not missingCanister) { // All cansters have been created. // TODO: efficient?
-            switch (module2.callbacks.get(#AllCanistersCreated)) {
-                case (?callbackName) {
-                    getIndirectCaller().callAllOneWay([{
-                        canister;
-                        name = callbackName;
-                        data = to_candid({ // TODO
-                            installationId;
-                            moduleNumber;
-                            moduleName;
-                            canister;
-                            user;
-                        });
-                    }]);
+        if (not inst.alreadyCalledAllCanistersCreated) {
+            assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
+            inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
+            var missingCanister = false; // There is a module for which canister wasn't created yet.
+            assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
+            var i = 0;
+            label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
+                if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
+                    missingCanister := true;
+                    break searchMissing;
                 };
-                case null {};
+                i += 1;
             };
+            if (not missingCanister) { // All cansters have been created. // TODO: efficient?
+                switch (module2.callbacks.get(#AllCanistersCreated)) {
+                    case (?callbackName) {
+                        getIndirectCaller().callAllOneWay([{
+                            canister;
+                            name = callbackName;
+                            data = to_candid({ // TODO
+                                installationId;
+                                moduleNumber;
+                                moduleName;
+                                canister;
+                                user;
+                            });
+                        }]);
+                    };
+                    case null {};
+                };
+            };
+            inst.alreadyCalledAllCanistersCreated := true;
         };
     };
 
