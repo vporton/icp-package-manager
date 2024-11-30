@@ -18,7 +18,7 @@ export default function ChooseVersion(props: {}) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
     const {principal, agent, defaultAgent} = useAuth();
-    const [versions, setVersions] = useState<string[]>([]);
+    const [versions, setVersions] = useState<[string, string][]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     const package_manager = glob.package_manager_rw!;
     useEffect(() => {
@@ -32,8 +32,9 @@ export default function ChooseVersion(props: {}) {
                 if (fullInfo === undefined) {
                     continue;
                 }
-                // FIXME: Take into account `.versions` map from `SharedFullPackageInfo`.
-                setVersions(fullInfo.packages.map(pkg => pkg[0]));
+                const versionsMap = new Map(fullInfo.versionsMap);
+                const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
+                setVersions(fullInfo.versionsMap.concat(p2));
                 break;
             }
         });
@@ -74,7 +75,7 @@ export default function ChooseVersion(props: {}) {
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
-        setChosenVersion(versions[0]); // If there are zero versions, sets `undefined`.
+        setChosenVersion(versions[0][0]); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>
@@ -82,8 +83,8 @@ export default function ChooseVersion(props: {}) {
             <p>Package: {packageName}</p>
             <p>Version:{" "}
                 <select>
-                    {Array.from(versions.entries()).map(([i, v]) =>
-                        <option onSelect={() => setChosenVersion(v)} key={i} value={v}>{v}</option>)}
+                    {Array.from(versions.entries()).map(([i, [k, v]]) =>
+                        <option onSelect={() => setChosenVersion(v)} key={i} value={k}>{v}</option>)}
                 </select>
             </p>
             <p>

@@ -321,10 +321,10 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper; user});
+        Debug.print("_installModuleCode(): should be false: " # debug_show(noPMBackendYet));
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-            Debug.print("onCreateCanister on " # debug_show(packageManagerOrBootstrapper));
-            Debug.print("moduleName2 " # debug_show(moduleName));
+            Debug.print("onCreateCanister on " # debug_show(packageManagerOrBootstrapper)); // FIXME: Remove.
             await pm.onCreateCanister({
                 installPackage; // Bool
                 moduleNumber;
@@ -374,9 +374,12 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         try {
             onlyOwner(caller, "installModule");
 
+            Debug.print("_installModuleCode(): " # debug_show(preinstalledCanisterId)); // FIXME: Remove.
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
+                    Debug.print("preinstalledCanisterId positive"); // FIXME: Remove.
                     if (not noPMBackendYet) {
+                        Debug.print("preinstalledCanisterId positive2"); // FIXME: Remove.
                         let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                         await cb.onCreateCanister({
                             installPackage;
@@ -399,6 +402,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                     }
                 };
                 case null {
+                    Debug.print("preinstalledCanisterId negative"); // FIXME: Remove.
                     ignore await* _installModuleCode({
                         installationId;
                         moduleNumber;

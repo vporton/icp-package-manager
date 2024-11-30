@@ -94,7 +94,7 @@ async function main() {
     };
     const pmFullInfo: SharedFullPackageInfo = {
         packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
-        versionsMap: [],
+        versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.createPackage("icpack", pmFullInfo);
 }

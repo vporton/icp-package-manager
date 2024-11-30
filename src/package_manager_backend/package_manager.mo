@@ -304,6 +304,8 @@ shared({caller = initialOwner}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "onCreateCanister");
 
+        Debug.print("onCreateCanister " # debug_show(moduleNumber) # " " # debug_show(canister));
+
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
@@ -370,6 +372,8 @@ shared({caller = initialOwner}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "onInstallCode");
 
+        Debug.print("onInstallCode " # debug_show(moduleNumber) # " " # debug_show(canister));
+
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
@@ -385,7 +389,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             };
             case null {};
         };
-        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
+        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber)); // FIXME: sometimes fails
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
