@@ -19,7 +19,6 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
     const handleSave = async () => {
         // TODO: Don't allow to add the same repo twice.
         props.handleClose();
-        console.log("FF", principal);
         await glob.package_manager_rw!.addRepository(Principal.fromText(principal), name);
         props.handleReload();
     };
