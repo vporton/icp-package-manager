@@ -12,6 +12,7 @@ import { createActor as repoPartitionCreateActor } from '../../declarations/Repo
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { installPackageWithModules } from "../../lib/install";
+import { ErrorContext } from "./ErrorContext.js";
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
@@ -22,28 +23,34 @@ export default function ChooseVersion(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     const package_manager = glob.package_manager_rw!;
     useEffect(() => {
-        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-        index.getCanistersByPK("main").then(async pks => {
-            const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
-                const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
-                return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
-            })) as any;
-            for (const [pk, fullInfo] of res) {
-                if (fullInfo === undefined) {
-                    continue;
+        try {
+            const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
+            index.getCanistersByPK("main").then(async pks => {
+                const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
+                    const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
+                    return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
+                })) as any;
+                for (const [pk, fullInfo] of res) {
+                    if (fullInfo === undefined) {
+                        continue;
+                    }
+                    const versionsMap = new Map(fullInfo.versionsMap);
+                    const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
+                    setVersions(fullInfo.versionsMap.concat(p2));
+                    break;
                 }
-                const versionsMap = new Map(fullInfo.versionsMap);
-                const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                setVersions(fullInfo.versionsMap.concat(p2));
-                break;
-            }
-        });
-        package_manager.getInstalledPackagesInfoByName(packageName!).then(installed => {
-            setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
-        });
+            });
+            package_manager.getInstalledPackagesInfoByName(packageName!).then(installed => {
+                setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
+            });
+        }
+        catch(_) { // TODO: Check error.
+            setInstalledVersions(new Map());
+        }
     }, []);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
+    let errorContext = useContext(ErrorContext);
     async function install() {
         setInstalling(true);
 
@@ -51,17 +58,21 @@ export default function ChooseVersion(props: {}) {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         const parts = (await index.getCanistersByPK('main'))
             .map(s => Principal.fromText(s))
-        const foundParts = await Promise.all(parts.map(part => {
+        const foundParts = await Promise.all(parts.map(async part => {
             try {
                 const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                part2.getFullPackageInfo(packageName!); // TODO: `!`
+                await part2.getFullPackageInfo(packageName!); // TODO: `!`
                 return part;
             }
             catch(_) { // TODO: Check error.
                 return null;
             }
         }));
-        const firstPart = foundParts.filter(v => v !== null)[0];
+        const firstPart = foundParts ? foundParts.filter(v => v !== null)[0] : null;
+        if (firstPart === null) {
+            errorContext?.setError("no such package");
+            return null;
+        }
 
         // TODO: `!`
         const {installationId: id} = await installPackageWithModules({

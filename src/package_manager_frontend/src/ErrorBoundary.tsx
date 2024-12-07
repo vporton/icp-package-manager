@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode, useContext } from "react";
-import { ErrorContext } from "../ErrorContext";
+import { ErrorContext } from "./ErrorContext";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
@@ -10,7 +10,7 @@ interface ErrorBoundaryProps {
 
 class ErrorBoundary extends Component<ErrorBoundaryProps> {
   static contextType = ErrorContext;
-  context: React.ContextType<typeof ErrorContext> = undefined;
+  declare context: React.ContextType<typeof ErrorContext>;
 
   public static getDerivedStateFromError(error: Error): null {
     return null;

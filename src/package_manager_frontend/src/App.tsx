@@ -23,7 +23,8 @@ import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/Bootst
 import { PackageManager } from '../../declarations/package_manager/package_manager.did';
 // import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
-import { ErrorBoundary } from "./ErrorBoundary";
+import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
+import { ErrorProvider } from './ErrorContext';
 // import { canister_status } from "@dfinity/ic-management";
 
 function App() {
@@ -47,9 +48,11 @@ function App() {
             {" "}
             Package Manager
           </h1>
-          <ErrorBoundary>
-            <GlobalUI/>
-          </ErrorBoundary>
+          <ErrorProvider>
+            <ErrorBoundary>
+              <GlobalUI/>
+            </ErrorBoundary>
+          </ErrorProvider>
         </GlobalContextProvider>
       </AuthProvider>
     </BrowserRouter>
@@ -198,6 +201,7 @@ function App2() {
             <Route path="/choose-version/:repo/:packageName" element={<ChooseVersion/>}/>
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<Installation/>}/>
+            <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>
       </div>
