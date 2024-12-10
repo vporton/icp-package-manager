@@ -27,8 +27,13 @@ export default function ChooseVersion(props: {}) {
             const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
             index.getCanistersByPK("main").then(async pks => {
                 const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
-                    const part = Actor.createActor(repositoryPartitionIDL, {canisterId: pk, agent: defaultAgent});
-                    return [pk, await part.getFullPackageInfo(packageName)]; // TODO: If package does not exist, this throws.
+                    const part = repoPartitionCreateActor(pk, {agent: defaultAgent});
+                    let fullInfo = undefined;
+                    try {
+                        fullInfo = await part.getFullPackageInfo(packageName!); // TODO: `!`
+                    }
+                    catch(_) {} // TODO: Handle exception type.
+                    return [pk, fullInfo];
                 })) as any;
                 for (const [pk, fullInfo] of res) {
                     if (fullInfo === undefined) {
@@ -86,7 +91,7 @@ export default function ChooseVersion(props: {}) {
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
-        setChosenVersion(versions[0][0]); // If there are zero versions, sets `undefined`.
+        setChosenVersion(versions[0] ? versions[0][0] : undefined); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>
@@ -101,10 +106,10 @@ export default function ChooseVersion(props: {}) {
             <p>
                 {/* TODO: Disable the button when executing it. */}
                 {installedVersions.size == 0
-                    ? <Button onClick={install} disabled={installing}>Install new package</Button>
+                    ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                     : installedVersions.has(chosenVersion ?? "")
-                    ? <>Already installed. <Button onClick={install} disabled={installing}>Install an additional copy of this version</Button></>
-                    : <>Already installed. <Button onClick={install} disabled={installing}>Install it in addition to other versions of this package</Button></>
+                    ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
+                    : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined    }>Install it in addition to other versions of this package</Button></>
                 }
             </p>
         </>
