@@ -129,7 +129,7 @@ function GlobalUI() {
           continue;
         }
         // Starting installation of all modules in parallel:
-        indirect.installModule({
+        await indirect.installModule({
           installPackage: true,
           moduleNumber: BigInt(moduleNumber),
           moduleName: [name],

@@ -38,7 +38,7 @@ export async function installPackageWithModules({
           continue;
         }
         console.log("INSTALLING ", name); // FIXME: Remove.
-        indirect.installModule({
+        await indirect.installModule({
           installPackage: true,
           moduleNumber: BigInt(moduleNumber),
           moduleName: [name],
