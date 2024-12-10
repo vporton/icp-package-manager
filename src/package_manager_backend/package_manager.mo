@@ -304,8 +304,6 @@ shared({caller = initialOwner}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "onCreateCanister");
 
-        Debug.print("onCreateCanister " # debug_show(moduleNumber) # " " # debug_show(canister));
-
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
