@@ -30,7 +30,7 @@ export async function installPackageWithModules({
     const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
     const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
     const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
-    const indirect = createIndirectCaller(indirectPrincipal);
+    const indirect = createIndirectCaller(indirectPrincipal, {agent});
     // Starting installation of all modules in parallel:
     let moduleNumber = 0;
     for (const [name, [m, dfn]] of pkgReal.modules) {
