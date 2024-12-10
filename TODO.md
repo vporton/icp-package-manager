@@ -21,6 +21,8 @@ Remaining things TODO:
 
 - Wait curtains.
 
+- When user adds a new repository canister, check that it is an index canister.
+
 - Bootstrapping the PM together with any other package(s).
 
 - Prevent browser window to close during bootstrap.
