@@ -427,8 +427,7 @@ shared({caller = initialOwner}) actor class PackageManager({
                         });
                     }]);
                 };
-                case null {
-                };
+                case null {};
             };
         };
     };
