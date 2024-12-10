@@ -21,7 +21,6 @@ export default function ChooseVersion(props: {}) {
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
-    const package_manager = glob.package_manager_ro!;
     useEffect(() => {
         try {
             const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
@@ -45,7 +44,7 @@ export default function ChooseVersion(props: {}) {
                     break;
                 }
             });
-            package_manager.getInstalledPackagesInfoByName(packageName!).then(installed => {
+            glob.package_manager_ro!.getInstalledPackagesInfoByName(packageName!).then(installed => {
                 setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
             });
         }
@@ -91,7 +90,7 @@ export default function ChooseVersion(props: {}) {
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {
-        setChosenVersion(versions[0] ? versions[0][0] : undefined); // If there are zero versions, sets `undefined`.
+        setChosenVersion(versions[0] ? versions[0][1] : undefined); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>
