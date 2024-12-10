@@ -487,8 +487,9 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         await indirect.setOurPM(backend_canister_id);
         await backend.setIndirectCaller(actor(Principal.toText(indirect_canister_id)));
         await backend.addOwner(user);
-        await backend.removeOwner(Principal.fromActor(this));
- 
+        await backend.addOwner(indirect_canister_id);
+        await backend.removeOwner(Principal.fromActor(this)); // the last owner operation, not to interfere with others
+
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id};
     };
 }
