@@ -88,17 +88,17 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
     // Initialize AuthClient
     const baseOptions = props.options?.createOptions ?? defaultOptions.createOptions;
     AuthClient.create({...baseOptions, idleOptions: {
-        // Prevent page reload on timeout, not to lose form data:
-        disableIdle: false,
-        disableDefaultIdleCallback: true,
-        // onIdle: () => logout(), // TODO: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
-        // idleTimeout: 1000, // 1 sec
-      }}).then(async (client) => {
+      // Prevent page reload on timeout, not to lose form data:
+      disableIdle: false,
+      disableDefaultIdleCallback: true,
+      // onIdle: () => logout(), // TODO: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
+      // idleTimeout: 1000, // 1 sec
+    }}).then(async (client) => {
       updateClient(client);
     });
   }, []);
 
-  return <AuthContext.Provider value={{...auth, login, logout, defaultAgent}}>{props.children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{...auth, login, logout, agent: auth.agent, defaultAgent}}>{props.children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

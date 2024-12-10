@@ -21,7 +21,7 @@ export default function ChooseVersion(props: {}) {
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][]>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
-    const package_manager = glob.package_manager_rw!;
+    const package_manager = glob.package_manager_ro!;
     useEffect(() => {
         try {
             const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
@@ -100,7 +100,7 @@ export default function ChooseVersion(props: {}) {
             <p>Version:{" "}
                 <select>
                     {Array.from(versions.entries()).map(([i, [k, v]]) =>
-                        <option onSelect={() => setChosenVersion(k)} key={i} value={v}>{k}</option>)}
+                        <option onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)} key={i} value={v}>{k}</option>)}
                 </select>
             </p>
             <p>
