@@ -19,7 +19,6 @@ export async function installPackageWithModules({
     installationId: InstallationId;
 }> {
     const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
-    console.log(`installPackage ${package_manager_principal} with ${user}`);
     const {installationId} = await package_manager.installPackage({
         packageName: packageName!,
         version,
