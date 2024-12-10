@@ -13,7 +13,9 @@ Remaining things TODO:
 
 - Disallow packages of zero modules.
 
-- Installation from several repos.
+- Bootstrapping from several repos.
+
+- Instead of showing zero versions for an non-existent package, show a dialog "No such package."
 
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
 
