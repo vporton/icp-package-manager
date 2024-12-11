@@ -14,14 +14,16 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
     return (
         <li>
             <code>{props.packageName}</code>{" "}
+            {/* TODO: Sort. */}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (
                     <span key={version}>
                         {packages.length === 1 ?
                             <MyLink to={'/installed/show/'+packages[0][0].toString()}>{version}</MyLink> :
-                            <span>{version} ({packages.map(([k, _]) =>
+                            <span>{version} ({Array.from(packages.entries()).map(([index, [k, _]]) =>
                                 <span key={k}>
-                                    <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>{" "}
+                                    <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>
+                                    {index === packages.length - 1 ? "" : " "}
                                 </span>
                             )})</span>
                         }
