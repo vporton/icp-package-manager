@@ -47,7 +47,6 @@ export async function installPackageWithModules({
           preinstalledCanisterId: [],
           user, // TODO: This argument seems superfluous for `installModule`.
           wasmModule: m,
-          noPMBackendYet: false, // HACK
         });
         ++moduleNumber;
     };

@@ -400,7 +400,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                         installArg;
                         packageManagerOrBootstrapper;
                         user;
-                        noPMBackendYet;
                     });
                 };
             };

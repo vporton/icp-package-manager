@@ -135,7 +135,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules = [];
-            noPMBackendYet = false; // TODO: It seems that this argument is never true. Remove it?
         });
     };
 
@@ -171,7 +170,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
-            noPMBackendYet = false; // TODO: check this
         });
     };
 
@@ -203,7 +201,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
             user;
             preinstalledModules;
-            noPMBackendYet = false;
         });
     };
 

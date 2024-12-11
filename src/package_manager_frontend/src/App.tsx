@@ -140,7 +140,6 @@ function GlobalUI() {
           preinstalledCanisterId: [{"backend": backendPrincipal, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
           user: principal!, // TODO: `!`
           wasmModule: m,
-          noPMBackendYet: false, // HACK
         });
         ++moduleNumber;
       };
