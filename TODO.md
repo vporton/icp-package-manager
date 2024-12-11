@@ -17,6 +17,8 @@ Remaining things TODO:
 
 - Bootstrapping from several repos.
 
+- Paid soft.
+
 - Instead of showing zero versions for an non-existent package, show a dialog "No such package."
 
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
