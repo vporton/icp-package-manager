@@ -321,7 +321,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper; user});
-        Debug.print("_installModuleCode(): should be false: " # debug_show(noPMBackendYet));
         if (not noPMBackendYet) {
             let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
             await pm.onCreateCanister({
