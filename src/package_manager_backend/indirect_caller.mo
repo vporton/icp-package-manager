@@ -317,22 +317,20 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         installArg: Blob;
         user: Principal;
-        noPMBackendYet: Bool; // Don't call callbacks
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper; user});
-        if (not noPMBackendYet) {
-            let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-            await pm.onCreateCanister({
-                installPackage; // Bool
-                moduleNumber;
-                moduleName;
-                module_ = Common.shareModule(wasmModule);
-                installationId;
-                canister = canister_id;
-                user;
-            });
-        };
+
+        let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+        await pm.onCreateCanister({
+            installPackage; // Bool
+            moduleNumber;
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
+            installationId;
+            canister = canister_id;
+            user;
+        });
 
         await* myInstallCode({
             canister_id;
@@ -341,18 +339,17 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
             packageManagerOrBootstrapper;
             user;
         });
-        if (not noPMBackendYet) {
-            let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-            await pm.onInstallCode({
-                installPackage; // Bool
-                moduleNumber;
-                moduleName;
-                module_ = Common.shareModule(wasmModule);
-                canister = canister_id;
-                installationId;
-                user;
-            });
-        };
+        
+        await pm.onInstallCode({
+            installPackage; // Bool
+            moduleNumber;
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
+            canister = canister_id;
+            installationId;
+            user;
+        });
+
         canister_id;
     };
 
@@ -367,34 +364,31 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         packageManagerOrBootstrapper: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
-        noPMBackendYet: Bool; // TODO: used?
     }): () {
         try {
             onlyOwner(caller, "installModule");
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    if (not noPMBackendYet) {
-                        let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
-                        await cb.onCreateCanister({
-                            installPackage;
-                            installationId;
-                            moduleNumber;
-                            moduleName;
-                            module_ = wasmModule;
-                            canister = preinstalledCanisterId;
-                            user;
-                        });
-                        await cb.onInstallCode({
-                            installPackage;
-                            installationId;
-                            moduleNumber;
-                            moduleName;
-                            module_ = wasmModule;
-                            canister = preinstalledCanisterId;
-                            user;
-                        });
-                    }
+                    let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
+                    await cb.onCreateCanister({
+                        installPackage;
+                        installationId;
+                        moduleNumber;
+                        moduleName;
+                        module_ = wasmModule;
+                        canister = preinstalledCanisterId;
+                        user;
+                    });
+                    await cb.onInstallCode({
+                        installPackage;
+                        installationId;
+                        moduleNumber;
+                        moduleName;
+                        module_ = wasmModule;
+                        canister = preinstalledCanisterId;
+                        user;
+                    });
                 };
                 case null {
                     ignore await* _installModuleCode({
