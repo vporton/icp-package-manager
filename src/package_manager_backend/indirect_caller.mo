@@ -353,7 +353,6 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         canister_id;
     };
 
-    // TODO: I have several arguments indicating bootstrap: noPMBackendYet, preinstalledCanisterId.
     public shared({caller}) func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
