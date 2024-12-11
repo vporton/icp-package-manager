@@ -20,7 +20,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     userArg: Blob;
 }) = this {
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        initialIndirectCaller: Principal;
+        // initialIndirectCaller: Principal;
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
@@ -28,8 +28,8 @@ shared({caller = initialOwner}) actor class PackageManager({
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            [(packageManagerOrBootstrapper, ()), (initialOwner, ()), (userArgValue.initialIndirectCaller, ())].vals(),
-            3,
+            [(packageManagerOrBootstrapper, ()), (initialOwner, ())/*, (userArgValue.initialIndirectCaller, ())*/].vals(),
+            2,
             Principal.equal,
             Principal.hash);
 
