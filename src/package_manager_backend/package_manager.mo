@@ -171,7 +171,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
-            noPMBackendYet = true; // TODO: check this
+            noPMBackendYet = false; // TODO: check this
         });
     };
 
