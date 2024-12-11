@@ -1,5 +1,8 @@
 Remaining things TODO:
 
+- Call `installModule` from Motoko not frontend (gas of one-way function is not counted towards the caller,
+  so it won't overflow 30B limit).
+
 - https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
 
 - FIXME: installModule: Error from Canister 3b5bm-k4aaa-aaaaa-qafka-cai: Canister called `ic0.trap` with message: argument userArg is wrong.
