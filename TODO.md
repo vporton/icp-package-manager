@@ -5,8 +5,6 @@ Remaining things TODO:
 
 - https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
 
-- FIXME: installModule: Error from Canister 3b5bm-k4aaa-aaaaa-qafka-cai: Canister called `ic0.trap` with message: argument userArg is wrong.
-
 - FIXME: Check that all occurrences of  `actor {` match the actual APIs.
 
 - Use remaining dev's cycles to store URLs of PMs.
