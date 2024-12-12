@@ -14,10 +14,9 @@ export default function Installation(props: {}) {
     const [pkg2, setPkg2] = useState<SharedPackageInfo | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
-        if (defaultAgent === undefined) {
+        if (defaultAgent === undefined || glob.package_manager_ro === undefined) {
             return;
         }
-        // FIXME: Next line throws.
         glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             const part: RepositoryPartition = Actor.createActor(repositoryPartitionIDL, {canisterId: pkg.packageRepoCanister!, agent: defaultAgent});

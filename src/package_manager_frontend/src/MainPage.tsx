@@ -7,7 +7,7 @@ import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { InstallationId } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
-import { RepositoryIndex } from "../../declarations/RepositoryIndex";
+import { createActor as createRepoIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { myUseNavigate } from "./MyNavigate";
@@ -42,7 +42,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { defaultAgent, principal } = useAuth();
+    const { agent, defaultAgent, principal } = useAuth();
     const glob = useContext(GlobalContext);
 
     const navigate = myUseNavigate();
@@ -72,8 +72,8 @@ export default function MainPage() {
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
     async function installChecked() {
         // TODO: hack
-        // FIXME: (here and in other places) use current repository, not the main one.
-        const parts = (await RepositoryIndex.getCanistersByPK('main'))
+        let repo = createRepoIndexActor(curDistro!, {agent}); // TODO: `!`
+        const parts = (await repo.getCanistersByPK('main'))
             .map(s => Principal.fromText(s))
         const foundParts = await Promise.all(parts.map(part => {
             try {
@@ -89,7 +89,7 @@ export default function MainPage() {
 
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                await glob.package_manager_rw!.installPackage({
+                await glob.package_manager_rw!.installPackage({ // FIXME: Also install modules.
                     repo: firstPart,
                     packageName: p.name,
                     version: p.version,
