@@ -290,71 +290,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         halfInstalledPackages.put(installationId, ourHalfInstalled);
     };
 
-    /// Internal
-    public shared({caller}) func onCreateCanister({
-        installationId: Common.InstallationId;
-        module_: Common.SharedModule;
-        moduleNumber: Nat;
-        moduleName: ?Text;
-        canister: Principal;
-        user: Principal;
-    }): async () {
-        onlyOwner(caller, "onCreateCanister");
-
-        let ?inst = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package"); // better message
-        };
-        let module2 = Common.unshareModule(module_); // TODO: necessary? or unshare only callbacks?
-        switch (module2.callbacks.get(#CanisterCreated)) {
-            case (?callbackName) {
-                getIndirectCaller().callAllOneWay([{
-                    canister; // FIXME: wrong canister
-                    name = callbackName.method;
-                    data = to_candid({ // TODO
-                        installationId;
-                        moduleNumber;
-                        moduleName;
-                        canister;
-                        user;
-                    }); 
-                }]);
-            };
-            case null {};
-        };
-        if (not inst.alreadyCalledAllCanistersCreated) {
-            assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
-            inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
-            var missingCanister = false; // There is a module for which canister wasn't created yet.
-            assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
-            var i = 0;
-            label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
-                if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
-                    missingCanister := true;
-                    break searchMissing;
-                };
-                i += 1;
-            };
-            if (not missingCanister) { // All cansters have been created. // TODO: efficient?
-                switch (module2.callbacks.get(#AllCanistersCreated)) {
-                    case (?callbackName) {
-                        getIndirectCaller().callAllOneWay([{
-                            canister; // FIXME: wrong canister
-                            name = callbackName.method;
-                            data = to_candid({ // TODO
-                                installationId;
-                                canister;
-                                user;
-                            });
-                        }]);
-                    };
-                    case null {};
-                };
-            };
-            inst.alreadyCalledAllCanistersCreated := true;
-        };
-        inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister));
-    };
-
+    /// 
     /// Internal
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;
@@ -370,23 +306,6 @@ shared({caller = initialOwner}) actor class PackageManager({
             Debug.trap("no such package"); // better message
         };
         let module2 = Common.unshareModule(module_); // TODO: necessary?
-        // TODO: first `#CodeInstalled` or first `_registerNamedModule`?
-        switch (module2.callbacks.get(#CodeInstalled)) {
-            case (?callbackName) {
-                getIndirectCaller().callAllOneWay([{
-                    canister; // FIXME: wrong canister
-                    name = callbackName.method;
-                    data = to_candid({ // TODO
-                        installationId;
-                        moduleNumber;
-                        moduleName;
-                        canister;
-                        user;
-                    });
-                }]);
-            };
-            case null {};
-        };
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
@@ -416,8 +335,14 @@ shared({caller = initialOwner}) actor class PackageManager({
             halfInstalledPackages.delete(installationId);
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
+                    let ?inst2 = installedPackages.get(installationId) else {
+                        Debug.trap("no such installed package");
+                    };
+                    let ?cbPrincipal = inst2.modules.get(callbackName.moduleName) else {
+                        Debug.trap("programming error");
+                    };
                     getIndirectCaller().callAllOneWay([{
-                        canister; // FIXME: wrong canister
+                        canister = cbPrincipal;
                         name = callbackName.method;
                         data = to_candid({ // TODO
                             installationId;
