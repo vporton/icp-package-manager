@@ -37,6 +37,7 @@ async function main() {
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
     const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
     const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/BootstrapperIndirectCaller/BootstrapperIndirectCaller.wasm"));
+    const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     agent.fetchRootKey(); // TODO: should not be used in production.
@@ -70,6 +71,11 @@ async function main() {
         forceReinstall: true,
         callbacks: [],
     });
+    const pmExampleFrontend = await repositoryIndex.uploadModule({
+        code: {Wasm: pmExampleFrontendBlob},
+        forceReinstall: false,
+        callbacks: [],
+    });
 
     console.log("Creating packages...");
     const real: SharedRealPackageInfo = {
@@ -97,6 +103,29 @@ async function main() {
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.createPackage("icpack", pmFullInfo);
+
+    const efReal: SharedRealPackageInfo = {
+        modules: [
+            ['example', [pmExampleFrontend, true]],
+        ],
+        dependencies: [],
+        functions: [],
+        permissions: [],
+    };
+    const pmEFInfo: SharedPackageInfo = {
+        base: {
+            name: "example",
+            version: "0.0.1",
+            shortDescription: "Example package",
+            longDescription: "Used as an example",
+        },
+        specific: {efReal},
+    };
+    const pmEFFullInfo: SharedFullPackageInfo = {
+        packages: [["0.0.1", pmEFInfo]], // TODO: Change to "stable"
+        versionsMap: [["stable", "0.0.1"]],
+    };
+    await repositoryIndex.createPackage("example", pmEFFullInfo);
 }
 
 // TODO: Remove?

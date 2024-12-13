@@ -11,6 +11,7 @@ deploy:
 	dfx canister create RepositoryIndex
 	dfx canister create bookmark
 	dfx canister create BootstrapperIndirectCaller
+	dfx canister create example_frontend
 	dfx canister create internet_identity
 	# TODO: What does it do with cycles_ledger on mainnet?
 	dfx canister create cycles_ledger
@@ -34,6 +35,8 @@ deploy:
 	dfx canister install -m auto bootstrapper_frontend
 	dfx build bookmark
 	dfx canister install -m auto bookmark
+	dfx build example_frontend
+	dfx canister install -m auto example_frontend
 	dfx deploy internet_identity
 	dfx deploy cycles_ledger
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
