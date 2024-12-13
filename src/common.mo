@@ -59,7 +59,7 @@ module {
         };
 
     /// Shared/query method name.
-    public type MethodName = Text;
+    public type MethodName = {moduleName: Text; method: Text};
 
     public type ModuleCode = {
         #Wasm : Location;
@@ -124,7 +124,7 @@ module {
         // TODO: Introduce dependencies between modules.
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
-        permissions: [(Text, [(Principal, MethodName)])];
+        permissions: [(Text, [MethodName])];
     };
 
     public type RealPackageInfo = {
@@ -137,7 +137,7 @@ module {
         // TODO: Introduce dependencies between modules.
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
-        permissions: [(Text, [(Principal, MethodName)])];
+        permissions: [(Text, [MethodName])];
     };
 
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
@@ -179,7 +179,7 @@ module {
         // TODO: Introduce dependencies between modules.
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
-        permissions: [(Text, [(Principal, MethodName)])];
+        permissions: [(Text, [MethodName])];
     };
 
     public type VirtualPackageInfo = {

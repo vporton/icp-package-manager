@@ -308,8 +308,8 @@ shared({caller = initialOwner}) actor class PackageManager({
         switch (module2.callbacks.get(#CanisterCreated)) {
             case (?callbackName) {
                 getIndirectCaller().callAllOneWay([{
-                    canister;
-                    name = callbackName;
+                    canister; // FIXME: wrong canister
+                    name = callbackName.method;
                     data = to_candid({ // TODO
                         installationId;
                         moduleNumber;
@@ -338,12 +338,10 @@ shared({caller = initialOwner}) actor class PackageManager({
                 switch (module2.callbacks.get(#AllCanistersCreated)) {
                     case (?callbackName) {
                         getIndirectCaller().callAllOneWay([{
-                            canister;
-                            name = callbackName;
+                            canister; // FIXME: wrong canister
+                            name = callbackName.method;
                             data = to_candid({ // TODO
                                 installationId;
-                                moduleNumber;
-                                moduleName;
                                 canister;
                                 user;
                             });
@@ -376,9 +374,15 @@ shared({caller = initialOwner}) actor class PackageManager({
         switch (module2.callbacks.get(#CodeInstalled)) {
             case (?callbackName) {
                 getIndirectCaller().callAllOneWay([{
-                    canister;
-                    name = callbackName;
-                    data = to_candid(); // TODO 
+                    canister; // FIXME: wrong canister
+                    name = callbackName.method;
+                    data = to_candid({ // TODO
+                        installationId;
+                        moduleNumber;
+                        moduleName;
+                        canister;
+                        user;
+                    });
                 }]);
             };
             case null {};
@@ -414,11 +418,9 @@ shared({caller = initialOwner}) actor class PackageManager({
                 case (?callbackName) {
                     getIndirectCaller().callAllOneWay([{
                         canister; // FIXME: wrong canister
-                        name = callbackName;
+                        name = callbackName.method;
                         data = to_candid({ // TODO
                             installationId;
-                            moduleNumber;
-                            moduleName;
                             canister;
                             user;
                         });
