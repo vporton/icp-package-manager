@@ -119,7 +119,7 @@ async function main() {
             shortDescription: "Example package",
             longDescription: "Used as an example",
         },
-        specific: {efReal},
+        specific: {real: efReal},
     };
     const pmEFFullInfo: SharedFullPackageInfo = {
         packages: [["0.0.1", pmEFInfo]], // TODO: Change to "stable"

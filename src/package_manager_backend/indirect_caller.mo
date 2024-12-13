@@ -208,6 +208,51 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
                 repo;
                 preinstalledModules;
             });
+
+            let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
+                case (#simplyModules m) {
+                    Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                        m.vals(),
+                        func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
+                    );
+                };
+                case (#package) {
+                    let pkg = await repo.getPackage(packageName, version); // TODO: should be not here.
+                    switch (pkg.specific) {
+                        case (#real pkgReal) {
+                            Iter.map<(Text, (Common.SharedModule, Bool)), (Text, Common.Module)>(
+                                Iter.filter<(Text, (Common.SharedModule, Bool))>(
+                                    pkgReal.modules.vals(),
+                                    func (p: (Text, (Common.SharedModule, Bool))) = p.1.1,
+                                ),
+                                func (p: (Text, (Common.SharedModule, Bool))) = (p.0, Common.unshareModule(p.1.0)),
+                            );
+                        };
+                        case (#virtual _) [].vals();
+                    };
+                }
+            };
+
+            let preinstalled2 = HashMap.fromIter<Text, Principal>(
+                preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
+            var moduleNumber = 0;
+            // The following (typically) does not overflow cycles limit, because we use an one-way function.
+            for ((name, m): (Text, Common.Module) in modules) {
+                // Starting installation of all modules in parallel:
+                this.installModule({
+                    installPackage = whatToInstall == #package; // TODO: correct?
+                    moduleNumber;
+                    moduleName = ?name;
+                    installArg = to_candid({});
+                    installationId;
+                    packageManagerOrBootstrapper = Principal.fromActor(ourPM); // TODO: Rename this argument.
+                    preinstalledCanisterId = preinstalled2.get(packageName);
+                    user; // TODO: `!`
+                    wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
+                });
+                moduleNumber += 1;
+            };
+
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
@@ -473,6 +518,7 @@ shared({caller = initialOwner}) actor class IndirectCaller() = this {
         // TODO: Do this during code initilization:
         // TODO: Run in parallel:
         // TODO: Are all the following user additions needed?
+        await indirect.addOwner(Principal.fromActor(indirect)); // self-usage to call `this.installModule`.
         await indirect.addOwner(user);
         await indirect.addOwner(backend_canister_id);
         await indirect.setOurPM(backend_canister_id);

@@ -31,24 +31,5 @@ export async function installPackageWithModules({
     const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
     const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
     const indirect = createIndirectCaller(indirectPrincipal, {agent});
-    // Starting installation of all modules in parallel:
-    let moduleNumber = 0;
-    for (const [name, [m, dfn]] of pkgReal.modules) {
-        if (!dfn) {
-          continue;
-        }
-        await indirect.installModule({
-          installPackage: true,
-          moduleNumber: BigInt(moduleNumber),
-          moduleName: [name],
-          installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
-          installationId,
-          packageManagerOrBootstrapper: package_manager_principal,
-          preinstalledCanisterId: [],
-          user, // TODO: This argument seems superfluous for `installModule`.
-          wasmModule: m,
-        });
-        ++moduleNumber;
-    };
     return {installationId};
 }

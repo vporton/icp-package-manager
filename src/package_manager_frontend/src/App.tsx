@@ -123,26 +123,6 @@ function GlobalUI() {
           setTimeout(() => resolve(), 1000);
         });
       }
-      let moduleNumber = 0;
-      for (const [name, [m, dfn]] of pkgReal.modules) {
-        if (!dfn) {
-          continue;
-        }
-        // Starting installation of all modules in parallel:
-        await indirect.installModule({
-          installPackage: true,
-          moduleNumber: BigInt(moduleNumber),
-          moduleName: [name],
-          installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
-          installationId,
-          packageManagerOrBootstrapper: backendPrincipal,
-          // "backend" goes first, because it stores installation information.
-          preinstalledCanisterId: [{"backend": backendPrincipal, "frontend": glob.frontend, "indirect": indirectPrincipal}[name]!],
-          user: principal!, // TODO: `!`
-          wasmModule: m,
-        });
-        ++moduleNumber;
-      };
       for (let i = 0; ; ++i) {
         try {
           await backend.getInstalledPackage(installationId);
