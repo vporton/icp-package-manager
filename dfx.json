@@ -23,13 +23,8 @@
       "type": "motoko",
       "main": "src/repository_backend/RepositoryPartition.mo"
     },
-    "counter": {
-      "type": "motoko",
-      "main": "src/example/counter.mo"
-    },
     "package_manager_frontend": {
       "dependencies": [
-        "package_manager",
         "internet_identity"
       ],
       "source": [
