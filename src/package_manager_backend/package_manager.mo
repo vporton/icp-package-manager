@@ -413,7 +413,7 @@ shared({caller = initialOwner}) actor class PackageManager({
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
                     getIndirectCaller().callAllOneWay([{
-                        canister;
+                        canister; // FIXME: wrong canister
                         name = callbackName;
                         data = to_candid({ // TODO
                             installationId;
