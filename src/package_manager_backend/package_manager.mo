@@ -22,7 +22,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
         installationId: Common.InstallationId; // TODO: superfluous
         user: Principal;
-        initialOwners: [Principal];
+        initialOwner: Principal;
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
@@ -49,9 +49,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         // owners.delete(initialCaller);
         // owners.delete(initialOwner);
         owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwners[0], ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwners[1], ()); // self-usage to call `this.installModule`.
-        indirect_caller_ := ?actor(Principal.toText(indirect_canister_id));
+        owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
+        indirect_caller_ := ?actor(Principal.toText(userArgValue.initialOwner)); // FIXME
         owners.put(userArgValue.user, ());
         owners.put(indirect_canister_id, ());
         Debug.print("PM owners added: " # debug_show(userArgValue.user) # " " # debug_show(indirect_canister_id));
@@ -63,7 +62,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             // FIXME
-            [(packageManagerOrBootstrapper, ()), (initialCaller, ()), (userArgValue.initialOwners[0], ()), (userArgValue.initialOwners[1], ())].vals(), // TODO: Are all required?
+            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ())].vals(), // TODO: Are all required?
             3,
             Principal.equal,
             Principal.hash);
@@ -381,7 +380,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             Debug.print("A10: " # debug_show(Iter.toArray(module2.callbacks.entries())));
             halfInstalledPackages.delete(installationId);
-            switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
+            switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) { // FIXME: wrong module, need list all modules
                 case (?callbackName) {
                     Debug.print("A11: " # debug_show(callbackName));
                     let ?inst2 = installedPackages.get(installationId) else {
@@ -393,7 +392,17 @@ shared({caller = initialCaller}) actor class PackageManager({
                     };
                     Debug.print("A13");
                     Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
-                    getIndirectCaller().callAllOneWay([{
+                    var indirect: IndirectCaller.IndirectCaller = actor("aaaaa-aa"); // hack
+                    try { // not yet initialized
+                        indirect := getIndirectCaller();
+                    }
+                    catch(_) { // TODO: process error
+                        let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
+                            Debug.trap("programming error");
+                        };
+                        indirect := actor(Principal.toText(v));
+                    };
+                    indirect.callAllOneWay([{
                         canister = cbPrincipal;
                         name = callbackName.method;
                         data = to_candid({ // TODO

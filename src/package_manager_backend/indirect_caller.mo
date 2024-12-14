@@ -30,7 +30,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
         installationId: Common.InstallationId; // FIXME: Can we remove this?
         user: Principal;
-        initialOwners: [Principal];
+        initialOwner: Principal;
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
@@ -46,8 +46,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         // owners.delete(initialCaller);
         // owners.delete(initialOwner);
         owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwners[0], ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwners[1], ()); // self-usage to call `this.installModule`.
+        owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
         owners.put(userArgValue.user, ());
         owners.put(packageManagerOrBootstrapper, ());
@@ -63,7 +62,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             // FIXME
-            [(userArgValue.initialOwners[0], ()), (userArgValue.initialOwners[1], ()), (initialCaller, ())].vals(), // TODO: Are both required?
+            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ())].vals(),
             3,
             Principal.equal,
             Principal.hash);
@@ -292,7 +291,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
                     moduleName = ?name;
-                    installArg = to_candid({installationId; user; initialOwners = [backend, indirect]}); // FIXME // TODO: Add more arguments.
+                    installArg = to_candid({installationId; user; initialOwner = indirect}); // FIXME // TODO: Add more arguments.
                     installationId;
                     packageManagerOrBootstrapper = backend; // TODO: Rename this argument. // FIXME
                     preinstalledCanisterId = preinstalled2.get(packageName);
@@ -556,7 +555,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installArg = to_candid({
                 user;
                 installationId = 0; // TODO
-                initialOwners = [indirect_canister_id, backend_canister_id]; // FIXME: Correct?
+                initialOwner = indirect_canister_id; // FIXME: Correct?
             });
             packageManagerOrBootstrapper;
             user;
@@ -569,7 +568,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installArg = to_candid({
                 user;
                 installationId = 0; // TODO
-                initialOwners = [indirect_canister_id, backend_canister_id]; // FIXME: Correct?
+                initialOwner = indirect_canister_id; // FIXME: Correct?
             });
             packageManagerOrBootstrapper = backend_canister_id;
             user;
