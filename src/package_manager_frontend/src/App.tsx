@@ -93,10 +93,10 @@ function GlobalUI() {
         indirectWasmModule: pkgReal.modules[2][1][0],
         user: principal!, // TODO: `!`
         repo: repoPart!, // TODO: `!`
-        packageManagerOrBootstrapper: principal!,
+        packageManagerOrBootstrapper: principal!, // FIXME
       });
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
-      console.log("Z1"); // FIXME: Remove.
+      console.log("Z1:", [["backend", backendPrincipal], ["frontend", glob.frontend!], ["indirect", indirectPrincipal]]); // FIXME: Remove.
       await backend.installPackageWithPreinstalledModules({
         whatToInstall: { package: null },
         packageName: "icpack",

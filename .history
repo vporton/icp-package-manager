@@ -12,3 +12,4 @@ encode(record {user = principal "aaaaa-aa"; initialOwner = vec{principal "aaaaa-
 encode(record {user = principal "aaaaa-aa"; initialOwners = vec{principal "aaaaa-aa"}; installationId = 0: nat})
 encode(record {user = principal "aaaaa-aa"; initialOwners = vec{principal "aaaaa-aa", principal "aaaaa-aa"}; installationId = 0: nat})
 encode(record {user = principal "aaaaa-aa"; initialOwners = vec{principal "aaaaa-aa"; principal "aaaaa-aa"}; installationId = 0: nat})
+encode(record {user = principal "aaaaa-aa"; initialOwner = principal "aaaaa-aa"; installationId = 0: nat})

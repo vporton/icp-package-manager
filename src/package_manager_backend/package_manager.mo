@@ -16,6 +16,7 @@ import IndirectCaller "indirect_caller";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
+    initialIndirect: Principal; // TODO: Rename.
     userArg: Blob;
 }) = this {
     Debug.print("INIT PM");
@@ -62,8 +63,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             // FIXME
-            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ())].vals(), // TODO: Are all required?
-            3,
+            // FIXME: Remove BootrapperIndirectCaller later.
+            // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
+            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ()), (initialIndirect, ())].vals(), // TODO: Are all required?
+            4,
             Principal.equal,
             Principal.hash);
 
@@ -157,6 +160,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
+        Debug.print("SHOULD NOT BE HERE.");
         await* _installModulesGroup({
             indirectCaller = getIndirectCaller();
             whatToInstall = #package;
@@ -194,7 +198,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        Debug.print("E3");
+        Debug.print("E3: " # debug_show(preinstalledModules));
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
@@ -408,19 +412,19 @@ shared({caller = initialCaller}) actor class PackageManager({
                         };
                         Debug.print("A13");
                         Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
-                        var indirect: IndirectCaller.IndirectCaller = actor("aaaaa-aa"); // hack
-                        try { // not yet initialized // TODO: duplicate code
-                            indirect := getIndirectCaller();
-                        }
-                        catch(_) { // TODO: process error
-                            let ?inst2 = installedPackages.get(installationId) else {
-                                Debug.trap("no such installationId: " # debug_show(installationId));
+                        let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
+                            case (?v) v;
+                            case null {
+                                let ?inst2 = installedPackages.get(installationId) else {
+                                    Debug.trap("no such installationId: " # debug_show(installationId));
+                                };
+                                let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
+                                    Debug.trap("programming error");
+                                };
+                                actor(Principal.toText(v));
                             };
-                            let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
-                                Debug.trap("programming error");
-                            };
-                            indirect := actor(Principal.toText(v));
                         };
+                        Debug.print("FAILED INDIRECT = " # debug_show(Principal.fromActor(indirect)));
                         indirect.callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
@@ -806,7 +810,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
-        Debug.print("F1");
+        Debug.print("F1: " # debug_show(preinstalledModules));
         // FIXME: It is created by bootstrapper's indirectCaller, no permission for our indirectCaller!
         indirectCaller.installPackageWrapper({
             whatToInstall;

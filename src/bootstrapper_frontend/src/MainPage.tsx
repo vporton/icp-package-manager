@@ -58,9 +58,10 @@ export default function MainPage() {
         wasmModule: pkgReal.modules[1][1][0],
         installArg: new Uint8Array(IDL.encode(
           [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
-          [{user: props.principal!, installationId: 0 /* TODO */,}],
+          [{user: props.principal!, installationId: 0 /* TODO */}],
         )),
         user: props.principal!,
+        initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!),
       });
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
