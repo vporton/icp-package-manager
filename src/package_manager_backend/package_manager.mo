@@ -13,23 +13,58 @@ import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
-import Install "../install";
 
-shared({caller = initialOwner}) actor class PackageManager({
+shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     userArg: Blob;
 }) = this {
+    Debug.print("INIT PM");
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        // initialIndirectCaller: Principal;
+        installationId: Common.InstallationId; // TODO: superfluous
+        user: Principal;
+        initialOwners: [Principal];
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
+    Debug.print("PM " # debug_show(userArgValue));
+
+    stable var initialized = false;
+
+    public shared({caller}) func init(p: {
+        installationId: Common.InstallationId;
+        canister: Principal;
+        user: Principal;
+    }) {
+        Debug.print("PM>INIT"); // FIXME: Remove.
+        onlyOwner(caller, "init");
+
+        let ?pkg = installedPackages.get(p.installationId) else {
+            Debug.trap("PackageManager: programming error");
+        };
+        let ?indirect_canister_id = pkg.modules.get("indirect") else {
+            Debug.trap("PackageManager: programming error");
+        };
+
+        // FIXME
+        // owners.delete(initialCaller);
+        // owners.delete(initialOwner);
+        owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
+        owners.put(userArgValue.initialOwners[0], ()); // self-usage to call `this.installModule`.
+        owners.put(userArgValue.initialOwners[1], ()); // self-usage to call `this.installModule`.
+        indirect_caller_ := ?actor(Principal.toText(indirect_canister_id));
+        owners.put(userArgValue.user, ());
+        owners.put(indirect_canister_id, ());
+        Debug.print("PM owners added: " # debug_show(userArgValue.user) # " " # debug_show(indirect_canister_id));
+
+        initialized := true;
+     };
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            [(packageManagerOrBootstrapper, ()), (initialOwner, ())/*, (userArgValue.initialIndirectCaller, ())*/].vals(),
-            2,
+            // FIXME
+            [(packageManagerOrBootstrapper, ()), (initialCaller, ()), (userArgValue.initialOwners[0], ()), (userArgValue.initialOwners[1], ())].vals(), // TODO: Are all required?
+            3,
             Principal.equal,
             Principal.hash);
 
@@ -62,7 +97,7 @@ shared({caller = initialOwner}) actor class PackageManager({
     };
 
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        true;
+        initialized;
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;
@@ -123,8 +158,8 @@ shared({caller = initialOwner}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        await* Install._installModulesGroup({
-            indirectCaller = getIndirectCaller();
+        await* _installModulesGroup({
+            indirectCaller = getIndirectCaller(); // TODO: superfluous argument
             whatToInstall = #package;
             installationId;
             packageName;
@@ -153,12 +188,15 @@ shared({caller = initialOwner}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
+        Debug.print("E1");
         onlyOwner(caller, "installPackageWithPreinstalledModules");
+        Debug.print("E2");
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        await* Install._installModulesGroup({
+        Debug.print("E3");
+        await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
             installationId;
@@ -190,7 +228,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         let ?inst = installedPackages.get(installationId) else {
             Debug.trap("no such package");
         };
-        await* Install._installModulesGroup({
+        await* _installModulesGroup({
             indirectCaller = getIndirectCaller();
             whatToInstall = #simplyModules modules;
             installationId;
@@ -211,7 +249,7 @@ shared({caller = initialOwner}) actor class PackageManager({
         };
         #namedModules : {
             dest: Common.InstallationId;
-            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg
+            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg // FIXME
         };
     };
 
@@ -300,19 +338,28 @@ shared({caller = initialOwner}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
+        Debug.print("A1");
         onlyOwner(caller, "onInstallCode");
 
+        Debug.print("A2");
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
+        Debug.print("A3");
         let module2 = Common.unshareModule(module_); // TODO: necessary?
+        Debug.print("A4");
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
+        Debug.print("A5");
         assert Option.isNull(inst.installedModules.get(moduleNumber));
+        Debug.print("A6: " # debug_show((moduleName, canister)));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
+        Debug.print("A7");
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
+            Debug.print("A8");
             // TODO: order of this code
             _updateAfterInstall({installationId});
+            Debug.print("A9");
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
                     let ?inst2 = installedPackages.get(installationId) else {
@@ -332,15 +379,20 @@ shared({caller = initialOwner}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
+            Debug.print("A10: " # debug_show(Iter.toArray(module2.callbacks.entries())));
             halfInstalledPackages.delete(installationId);
             switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) {
                 case (?callbackName) {
+                    Debug.print("A11: " # debug_show(callbackName));
                     let ?inst2 = installedPackages.get(installationId) else {
                         Debug.trap("no such installed package");
                     };
+                    Debug.print("A12");
                     let ?cbPrincipal = inst2.modules.get(callbackName.moduleName) else {
                         Debug.trap("programming error");
                     };
+                    Debug.print("A13");
+                    Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
                     getIndirectCaller().callAllOneWay([{
                         canister = cbPrincipal;
                         name = callbackName.method;
@@ -354,6 +406,71 @@ shared({caller = initialOwner}) actor class PackageManager({
                 case null {};
             };
         };
+    };
+
+    // TODO: probably superfluous
+    public shared({caller}) func onCreateCanister({
+        installationId: Common.InstallationId;
+        module_: Common.SharedModule;
+        moduleNumber: Nat;
+        moduleName: ?Text;
+        canister: Principal;
+        user: Principal;
+    }): async () {
+        onlyOwner(caller, "onCreateCanister");
+
+        let ?inst = halfInstalledPackages.get(installationId) else {
+            Debug.trap("no such package"); // better message
+        };
+        // let module2 = Common.unshareModule(module_); // TODO: necessary? or unshare only callbacks?
+        // switch (module2.callbacks.get(#CanisterCreated)) {
+        //     case (?callbackName) {
+        //         getIndirectCaller().callAllOneWay([{
+        //             canister; // FIXME: wrong canister
+        //             name = callbackName.method;
+        //             data = to_candid({ // TODO
+        //                 installationId;
+        //                 moduleNumber;
+        //                 moduleName;
+        //                 canister;
+        //                 user;
+        //             }); 
+        //         }]);
+        //     };
+        //     case null {};
+        // };
+        if (not inst.alreadyCalledAllCanistersCreated) {
+            assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
+            inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with below
+            var missingCanister = false; // There is a module for which canister wasn't created yet.
+            assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
+            var i = 0;
+            label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
+                if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
+                    missingCanister := true;
+                    break searchMissing;
+                };
+                i += 1;
+            };
+            // if (not missingCanister) { // All cansters have been created. // TODO: efficient?
+            //     switch (module2.callbacks.get(#AllCanistersCreated)) {
+            //         case (?callbackName) {
+            //             getIndirectCaller().callAllOneWay([{
+            //                 canister; // FIXME: wrong canister
+            //                 name = callbackName.method;
+            //                 data = to_candid({ // TODO
+            //                     installationId;
+            //                     canister;
+            //                     user;
+            //                 });
+            //             }]);
+            //         };
+            //         case null {};
+            //     };
+            // };
+            inst.alreadyCalledAllCanistersCreated := true;
+        };
+        inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with above
     };
 
     // TODO: Keep registry of ALL installed modules.
@@ -642,6 +759,39 @@ shared({caller = initialOwner}) actor class PackageManager({
                 },
             ),
         );
+    };
+
+    private func _installModulesGroup({
+        indirectCaller: IndirectCaller.IndirectCaller;
+        whatToInstall: {
+            #package;
+            #simplyModules : [(Text, Common.SharedModule)];
+        };
+        installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        packageVersion: Common.Version;
+        pmPrincipal: Principal;
+        repo: Common.RepositoryPartitionRO;
+        user: Principal;
+        preinstalledModules: [(Text, Principal)];
+    })
+        : async* {installationId: Common.InstallationId}
+    {
+        Debug.print("F1");
+        // FIXME: It is created by bootstrapper's indirectCaller, no permission for our indirectCaller!
+        indirectCaller.installPackageWrapper({
+            whatToInstall;
+            installationId;
+            packageName;
+            version = packageVersion;
+            pmPrincipal;
+            repo;
+            user;
+            preinstalledModules;
+        });
+        Debug.print("F2");
+
+        {installationId};
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.

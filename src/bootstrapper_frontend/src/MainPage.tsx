@@ -56,7 +56,10 @@ export default function MainPage() {
       const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent: props.agent});
       const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
         wasmModule: pkgReal.modules[1][1][0],
-        installArg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])),
+        installArg: new Uint8Array(IDL.encode(
+          [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
+          [{user: props.principal!, installationId: 0 /* TODO */,}],
+        )),
         user: props.principal!,
       });
       const url = getIsLocal()

@@ -64,12 +64,12 @@ async function main() {
     const pmBackendModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBackendBlob},
         forceReinstall: false,
-        callbacks: [],
+        callbacks: [[{CodeInstalledForAllCanisters: null}, {moduleName: "backend", method: "init"}]], // TODO: I specify the canister twice: here and by var name.
     });
     const pmIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmIndirectBlob},
         forceReinstall: true,
-        callbacks: [],
+        callbacks: [[{CodeInstalledForAllCanisters: null}, {moduleName: "indirect", method: "init"}]], // TODO: I specify the canister twice: here and by var name.
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleFrontendBlob},
@@ -81,7 +81,7 @@ async function main() {
     const real: SharedRealPackageInfo = {
         modules: [
             // "backend" goes first, because it stores installation information.
-            ['backend', [pmBackendModule, true]],
+            ['backend', [pmBackendModule, true]], // TODO: Make this boolean a named parameter instead.
             ['frontend', [pmFrontendModule, true]],
             ['indirect', [pmIndirectModule, true]],
         ],

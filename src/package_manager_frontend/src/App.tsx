@@ -86,6 +86,7 @@ function GlobalUI() {
 
       const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
       // TODO: Are here modules needed? They are installed below, instead?
+      console.log("bootstrapBackend"); // FIXME: Remove
       const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
         frontend: glob.frontend!, // TODO: `!`
         backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
@@ -95,6 +96,7 @@ function GlobalUI() {
         packageManagerOrBootstrapper: principal!,
       });
       const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
+      console.log("Z1"); // FIXME: Remove.
       await backend.installPackageWithPreinstalledModules({
         whatToInstall: { package: null },
         packageName: "icpack",

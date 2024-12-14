@@ -44,6 +44,7 @@ module {
 
     public type ModuleEvent = {
         // TODO: The following events could be delivered to a not yet installed or uploaded canister, KISS.
+        // TODO: Add thefollowing events by first creating all the canisters and THEN installing code.
         // #CanisterCreated;
         // #CodeInstalled;
         // #AllCanistersCreated;
@@ -248,7 +249,7 @@ module {
         ///
         /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
-        getPackage: query (name: Text, version: Version) -> async SharedPackageInfo;
+        getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
         getAttribute: query (sk: Text, subkey: Text) -> async ?Entity.AttributeValue; // TODO: Probably shouldn't be here.
     };

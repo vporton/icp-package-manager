@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+USER = $(shell dfx identity get-principal)
+
 .PHONY: deploy
 
 .PHONY: deploy
@@ -17,7 +19,8 @@ deploy:
 	dfx canister create cycles_ledger
 	dfx build BootstrapperIndirectCaller
 	dfx generate BootstrapperIndirectCaller
-	dfx canister install -m auto BootstrapperIndirectCaller
+	dfx canister install -m auto BootstrapperIndirectCaller --argument \
+	  'record {packageManagerOrBootstrapper = principal "aaaaa-aa"; userArg = blob "\44\49\44\4c\02\6c\03\cb\a4\b6\ed\04\68\b5\fc\e3\e5\09\7d\84\a9\fd\c9\0f\01\6d\68\01\00\01\00\00\02\01\00\01\00"}'
 	dfx build package_manager
 #	dfx canister install -m auto package_manager
 	# dfx build bootstrapper
