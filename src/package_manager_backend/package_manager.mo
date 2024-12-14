@@ -158,7 +158,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         nextInstallationId += 1;
 
         await* _installModulesGroup({
-            indirectCaller = getIndirectCaller(); // TODO: superfluous argument
+            indirectCaller = getIndirectCaller();
             whatToInstall = #package;
             installationId;
             packageName;
@@ -361,6 +361,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.print("A9");
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
+                    // FIXME: Is `installedPackages` already filled?
                     let ?inst2 = installedPackages.get(installationId) else {
                         Debug.trap("no such installationId: " # debug_show(installationId));
                     };
@@ -379,40 +380,59 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }
             };
             Debug.print("A10: " # debug_show(Iter.toArray(module2.callbacks.entries())));
+            let ?pkg = halfInstalledPackages.get(installationId) else {
+                Debug.trap("PackageManager: programming error");
+            };
             halfInstalledPackages.delete(installationId);
-            switch (module2.callbacks.get(#CodeInstalledForAllCanisters)) { // FIXME: wrong module, need list all modules
-                case (?callbackName) {
-                    Debug.print("A11: " # debug_show(callbackName));
-                    let ?inst2 = installedPackages.get(installationId) else {
-                        Debug.trap("no such installed package");
+            let #real realPackage = pkg.package.specific else { // FIXME: fails with virtual packages
+                Debug.trap("trying to directly install a virtual installation");
+            };
+            let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(pkg.installedModules.size(), Text.equal, Text.hash);
+            for (m in pkg.installedModules.vals()) {
+                switch (m) {
+                    case (?(?n, p)) {
+                        inst3.put(n, p);
                     };
-                    Debug.print("A12");
-                    let ?cbPrincipal = inst2.modules.get(callbackName.moduleName) else {
-                        Debug.trap("programming error");
-                    };
-                    Debug.print("A13");
-                    Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
-                    var indirect: IndirectCaller.IndirectCaller = actor("aaaaa-aa"); // hack
-                    try { // not yet initialized
-                        indirect := getIndirectCaller();
-                    }
-                    catch(_) { // TODO: process error
-                        let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
+                    case _ {};
+                };
+            };
+            for (module3 in realPackage.modules.entries()) {
+                let (moduleName2, (module4, _: Bool)) = module3 else {
+                    Debug.trap("programming error")
+                };
+                switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
+                    case (?callbackName) {
+                        Debug.print("A11: " # debug_show(callbackName));
+                        let ?cbPrincipal = inst3.get(moduleName2) else { // FIXME: works only with named modules
                             Debug.trap("programming error");
                         };
-                        indirect := actor(Principal.toText(v));
+                        Debug.print("A13");
+                        Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
+                        var indirect: IndirectCaller.IndirectCaller = actor("aaaaa-aa"); // hack
+                        try { // not yet initialized // TODO: duplicate code
+                            indirect := getIndirectCaller();
+                        }
+                        catch(_) { // TODO: process error
+                            let ?inst2 = installedPackages.get(installationId) else {
+                                Debug.trap("no such installationId: " # debug_show(installationId));
+                            };
+                            let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
+                                Debug.trap("programming error");
+                            };
+                            indirect := actor(Principal.toText(v));
+                        };
+                        indirect.callAllOneWay([{
+                            canister = cbPrincipal;
+                            name = callbackName.method;
+                            data = to_candid({ // TODO
+                                installationId;
+                                canister;
+                                user;
+                            });
+                        }]);
                     };
-                    indirect.callAllOneWay([{
-                        canister = cbPrincipal;
-                        name = callbackName.method;
-                        data = to_candid({ // TODO
-                            installationId;
-                            canister;
-                            user;
-                        });
-                    }]);
+                    case null {};
                 };
-                case null {};
             };
         };
     };
