@@ -19,7 +19,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     initialIndirect: Principal; // TODO: Rename.
     userArg: Blob;
 }) = this {
-    Debug.print("INIT PM: " # debug_show(initialIndirect));
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
         installationId: Common.InstallationId; // TODO: superfluous
         user: Principal;
@@ -27,7 +26,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
-    Debug.print("PM " # debug_show(userArgValue));
 
     stable var initialized = false;
 
@@ -36,7 +34,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         canister: Principal;
         user: Principal;
     }) {
-        Debug.print("PM>INIT"); // FIXME: Remove.
         onlyOwner(caller, "init");
 
         // FIXME
@@ -151,7 +148,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        Debug.print("SHOULD NOT BE HERE.");
         await* _installModulesGroup({
             indirectCaller = getIndirectCaller();
             whatToInstall = #package;
@@ -182,14 +178,11 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
-        Debug.print("E1");
         onlyOwner(caller, "installPackageWithPreinstalledModules");
-        Debug.print("E2");
 
         let installationId = nextInstallationId;
         nextInstallationId += 1;
 
-        Debug.print("E3: " # debug_show(preinstalledModules));
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
@@ -332,28 +325,19 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
-        Debug.print("A1: CALLED on " # debug_show(Principal.fromActor(this)));
         onlyOwner(caller, "onInstallCode");
 
-        Debug.print("A2");
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        Debug.print("A3");
         let module2 = Common.unshareModule(module_); // TODO: necessary?
-        Debug.print("A4");
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
-        Debug.print("A5");
         assert Option.isNull(inst.installedModules.get(moduleNumber));
-        Debug.print("A6: " # debug_show((moduleName, canister)));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
-        Debug.print("A7");
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
-            Debug.print("A8");
             // TODO: order of this code
             _updateAfterInstall({installationId});
-            Debug.print("A9");
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
                     // FIXME: Is `installedPackages` already filled?
@@ -374,7 +358,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
-            Debug.print("A10: " # debug_show(Iter.toArray(module2.callbacks.entries())));
             let ?pkg = halfInstalledPackages.get(installationId) else {
                 Debug.trap("PackageManager: programming error");
             };
@@ -397,12 +380,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        Debug.print("A11: " # debug_show(callbackName));
                         let ?cbPrincipal = inst3.get(moduleName2) else { // FIXME: works only with named modules
                             Debug.trap("programming error");
                         };
-                        Debug.print("A13");
-                        Debug.print("CALLING " # "/" # callbackName.method);
                         // let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
                         //     case (?v) v;
                         //     case null {
@@ -415,14 +395,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                         //         actor(Principal.toText(v));
                         //     };
                         // };
-                        Debug.print("initialIndirect = " # debug_show(initialIndirect));
                         let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
                             case (?v) v;
                             case null {
                                 Debug.trap("programming error");
                             };
                         };
-                        Debug.print("FAILED INDIRECT = " # debug_show(Principal.fromActor(indirect))); // FIXME: Wrong `indirect` value here.
                         indirect.callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
@@ -808,7 +786,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
-        Debug.print("F1: " # debug_show(preinstalledModules));
         // FIXME: It is created by bootstrapper's indirectCaller, no permission for our indirectCaller!
         indirectCaller.installPackageWrapper({
             whatToInstall;
@@ -820,7 +797,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             user;
             preinstalledModules;
         });
-        Debug.print("F2");
 
         {installationId};
     };

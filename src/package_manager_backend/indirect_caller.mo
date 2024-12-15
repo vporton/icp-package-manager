@@ -27,7 +27,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     initialIndirect: Principal; // TODO: Rename.
     userArg: Blob;
 }) = this {
-    Debug.print("INIT Indirect");
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
         installationId: Common.InstallationId; // FIXME: Can we remove this?
         user: Principal;
@@ -35,12 +34,10 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     } = from_candid(userArg) else {
         Debug.trap("argument userArg is wrong");
     };
-    Debug.print("Indirect " # debug_show(userArgValue));
 
     stable var initialized = false;
 
     public shared({caller}) func init() {
-        Debug.print("INDIRECT>INIT");
         onlyOwner(caller, "init");
 
         // FIXME:
@@ -215,13 +212,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
-            Debug.print("U0: " # debug_show(preinstalledModules));
-            Debug.print("D0: " # debug_show(Principal.fromActor(this)));
             onlyOwner(caller, "installPackageWrapper");
-            Debug.print("D0.5");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
-            Debug.print("D1: " # packageName # "/" # version);
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installationWorkCallback: ({
@@ -237,7 +230,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }) -> async ();
             };
 
-            Debug.print("D2");
             // TODO: The following can't work during bootstrapping, because we are `BootstrapperIndirectCaller`. But bootstrapping succeeds.
             await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
@@ -247,7 +239,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 repo;
                 preinstalledModules;
             });
-            Debug.print("D3");
 
             let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
                 case (#simplyModules m) {
@@ -257,12 +248,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     );
                 };
                 case (#package) {
-                    Debug.print("D4");
                     let pkg = await repo.getPackage(packageName, version); // TODO: should be not here.
-                    Debug.print("D5");
                     switch (pkg.specific) {
                         case (#real pkgReal) {
-                            Debug.print("D6");
                             Iter.map<(Text, (Common.SharedModule, Bool)), (Text, Common.Module)>(
                                 Iter.filter<(Text, (Common.SharedModule, Bool))>(
                                     pkgReal.modules.vals(),
@@ -276,11 +264,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }
             };
 
-            Debug.print("D7: " # debug_show(preinstalledModules));
             let preinstalled2 = HashMap.fromIter<Text, Principal>(
                 preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
-            Debug.print("D8");
             // FIXME: Below is wrong for non-bootstrapping
             let ?backend = preinstalled2.get("backend") else { // FIXME
                 Debug.trap("error 1");
@@ -288,12 +274,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             let ?indirect = preinstalled2.get("indirect") else { // FIXME
                 Debug.trap("error 1");
             };
-            Debug.print("initialIndirect2 = " # debug_show(indirect));
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
-                Debug.print("D9: " # name);
                 // Starting installation of all modules in parallel:
-                Debug.print("PREINST: " # debug_show(preinstalled2.get(name)));
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
@@ -308,7 +291,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 });
                 moduleNumber += 1;
             };
-            Debug.print("D10");
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
@@ -389,7 +371,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             Debug.trap("package WASM code is not available");
         };
 
-        Debug.print("S1: We are " # debug_show(Principal.fromActor(this)));
         await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManagerOrBootstrapper;
@@ -402,7 +383,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister_id;
             sender_canister_version = null; // TODO
         });
-        Debug.print("S2");
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
@@ -426,11 +406,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        Debug.print("B1");
         let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper; user; initialIndirect});
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-        Debug.print("B2");
         await pm.onCreateCanister({
             installPackage; // Bool
             moduleNumber;
@@ -440,7 +418,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister = canister_id;
             user;
         });
-        Debug.print("B3");
 
         await* myInstallCode({
             canister_id;
@@ -450,7 +427,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             initialIndirect;
             user;
         });
-        Debug.print("B4");
 
         await pm.onInstallCode({
             installPackage; // Bool
@@ -461,7 +437,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installationId;
             user;
         });
-        Debug.print("B5");
 
         canister_id;
     };
@@ -479,15 +454,11 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
     }): () {
         try {
-            Debug.print("C0");
             onlyOwner(caller, "installModule");
 
-            Debug.print("C1");
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    Debug.print("C2");
                     let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
-                    Debug.print("C3");
                     await cb.onCreateCanister({
                         installPackage;
                         installationId;
@@ -497,7 +468,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         canister = preinstalledCanisterId;
                         user;
                     });
-                    Debug.print("C4");
                     await cb.onInstallCode({
                         installPackage;
                         installationId;
@@ -507,10 +477,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         canister = preinstalledCanisterId;
                         user;
                     });
-                    Debug.print("C5");
                 };
                 case null {
-                    Debug.print("C6");
                     ignore await* _installModuleCode({
                         installationId;
                         moduleNumber;
@@ -522,7 +490,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         initialIndirect;
                         user;
                     });
-                    Debug.print("C7");
                 };
             };
         }
@@ -559,11 +526,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         repo: Common.RepositoryPartitionRO;
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
-        Debug.print("R1");
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this); user}); // TODO: This is a bug.
         let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = backend_canister_id; user}); // TODO: This is a bug.
-        Debug.print("R2");
 
         await* myInstallCode({
             canister_id = backend_canister_id;
@@ -577,7 +542,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             initialIndirect = indirect_canister_id;
             user;
         });
-        Debug.print("R3");
 
         await* myInstallCode({
             canister_id = indirect_canister_id;
@@ -591,7 +555,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             initialIndirect;
             user;
         });
-        Debug.print("R4");
 
         // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
         //     addOwner: (newOwner: Principal) -> async ();
