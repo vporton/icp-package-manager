@@ -28,6 +28,8 @@ Remaining things TODO:
 
 - Wait curtains.
 
+- Extract bootstrapping code from IndirectCaller to a separate canister.
+
 - When user adds a new repository canister, check that it is an index canister.
 
 - Bootstrapping the PM together with any other package(s).
