@@ -276,7 +276,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }
             };
 
-            Debug.print("D7");
+            Debug.print("D7: " # debug_show(preinstalledModules));
             let preinstalled2 = HashMap.fromIter<Text, Principal>(
                 preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
@@ -288,7 +288,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             let ?indirect = preinstalled2.get("indirect") else { // FIXME
                 Debug.trap("error 1");
             };
-            Debug.print("initialIndirect = " # debug_show(indirect));
+            Debug.print("initialIndirect2 = " # debug_show(indirect));
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
                 Debug.print("D9: " # name);
@@ -574,7 +574,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 initialOwner = indirect_canister_id; // FIXME: Correct?
             });
             packageManagerOrBootstrapper;
-            initialIndirect;
+            initialIndirect = indirect_canister_id;
             user;
         });
         Debug.print("R3");

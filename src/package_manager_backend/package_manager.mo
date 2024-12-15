@@ -19,7 +19,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     initialIndirect: Principal; // TODO: Rename.
     userArg: Blob;
 }) = this {
-    Debug.print("INIT PM");
+    Debug.print("INIT PM: " # debug_show(initialIndirect));
     let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
         installationId: Common.InstallationId; // TODO: superfluous
         user: Principal;
@@ -39,22 +39,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         Debug.print("PM>INIT"); // FIXME: Remove.
         onlyOwner(caller, "init");
 
-        let ?pkg = installedPackages.get(p.installationId) else {
-            Debug.trap("PackageManager: programming error");
-        };
-        let ?indirect_canister_id = pkg.modules.get("indirect") else {
-            Debug.trap("PackageManager: programming error");
-        };
-
         // FIXME
         // owners.delete(initialCaller);
         // owners.delete(initialOwner);
         owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
         owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
-        indirect_caller_ := ?actor(Principal.toText(userArgValue.initialOwner)); // FIXME
         owners.put(userArgValue.user, ());
-        owners.put(indirect_canister_id, ());
-        Debug.print("PM owners added: " # debug_show(userArgValue.user) # " " # debug_show(indirect_canister_id));
+        owners.put(initialIndirect, ());
 
         initialized := true;
      };
@@ -102,7 +93,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         initialized;
     };
 
-    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = null;
+    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
         let ?indirect_caller_2 = indirect_caller_ else {
@@ -341,7 +332,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
     }): async () {
-        Debug.print("A1");
+        Debug.print("A1: CALLED on " # debug_show(Principal.fromActor(this)));
         onlyOwner(caller, "onInstallCode");
 
         Debug.print("A2");
@@ -411,20 +402,27 @@ shared({caller = initialCaller}) actor class PackageManager({
                             Debug.trap("programming error");
                         };
                         Debug.print("A13");
-                        Debug.print("CALLING " # debug_show(canister) # "/" # callbackName.method);
+                        Debug.print("CALLING " # "/" # callbackName.method);
+                        // let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
+                        //     case (?v) v;
+                        //     case null {
+                        //         let ?inst2 = installedPackages.get(installationId) else {
+                        //             Debug.trap("no such installationId: " # debug_show(installationId));
+                        //         };
+                        //         let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
+                        //             Debug.trap("programming error");
+                        //         };
+                        //         actor(Principal.toText(v));
+                        //     };
+                        // };
+                        Debug.print("initialIndirect = " # debug_show(initialIndirect));
                         let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
                             case (?v) v;
                             case null {
-                                let ?inst2 = installedPackages.get(installationId) else {
-                                    Debug.trap("no such installationId: " # debug_show(installationId));
-                                };
-                                let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
-                                    Debug.trap("programming error");
-                                };
-                                actor(Principal.toText(v));
+                                Debug.trap("programming error");
                             };
                         };
-                        Debug.print("FAILED INDIRECT = " # debug_show(Principal.fromActor(indirect)));
+                        Debug.print("FAILED INDIRECT = " # debug_show(Principal.fromActor(indirect))); // FIXME: Wrong `indirect` value here.
                         indirect.callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
