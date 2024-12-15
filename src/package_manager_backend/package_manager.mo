@@ -330,7 +330,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        let module2 = Common.unshareModule(module_); // TODO: necessary?
         assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
