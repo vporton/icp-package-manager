@@ -7,6 +7,8 @@ Remaining things TODO:
 
 - FIXME: Check that all occurrences of  `actor {` match the actual APIs.
 
+- FIXME: (apparently during bootstrapping frontend) `installModule: IC0536: Management canister has no method 'onCreateCanister'`.
+
 - Use remaining dev's cycles to store URLs of PMs.
 
 - FIXME: future compaitibility in package format.

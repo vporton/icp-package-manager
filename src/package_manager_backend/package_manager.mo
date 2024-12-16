@@ -324,6 +324,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
+        packageManagerOrBootstrapper: Principal;
     }): async () {
         onlyOwner(caller, "onInstallCode");
         Debug.print("INSTALL CODE: " # debug_show(moduleNumber) # "/" # debug_show(moduleName) # "/" # debug_show(canister));
@@ -414,6 +415,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 installationId;
                                 canister;
                                 user;
+                                packageManagerOrBootstrapper;
                             });
                         }]);
                     };

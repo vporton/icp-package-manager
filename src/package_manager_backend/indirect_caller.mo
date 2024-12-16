@@ -37,7 +37,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
 
     stable var initialized = false;
 
-    public shared({caller}) func init() {
+    public shared({caller}) func init({ // TODO
+        installationId: Common.InstallationId;
+        canister: Principal;
+        user: Principal;
+        packageManagerOrBootstrapper: Principal;
+    }): async () {
         onlyOwner(caller, "init");
 
         // FIXME:
@@ -47,7 +52,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
         owners.put(userArgValue.user, ());
-        owners.put(packageManagerOrBootstrapper, ());
+        owners.put(packageManagerOrBootstrapper, ()); // This is `aaaaa-aa` in bootstrapping.
         ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
     };
@@ -212,6 +217,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
+            Debug.print("R1");
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
@@ -264,14 +270,20 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }
             };
 
-            let preinstalled2 = HashMap.fromIter<Text, Principal>(
-                preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
+            Debug.print("THIS " # debug_show([("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this))]));
+            let bi = if (preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
+                [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this))];
+            } else {
+                preinstalledModules;
+            };
+            let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
-            // FIXME: Below is wrong for non-bootstrapping
-            let ?backend = preinstalled2.get("backend") else { // FIXME
+            Debug.print("R2: " # debug_show(Iter.toArray(coreModules.entries())));
+            let ?backend = coreModules.get("backend") else {
                 Debug.trap("error 1");
             };
-            let ?indirect = preinstalled2.get("indirect") else { // FIXME
+            Debug.print("R3");
+            let ?indirect = coreModules.get("indirect") else {
                 Debug.trap("error 1");
             };
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
@@ -281,11 +293,11 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
                     moduleName = ?name;
-                    installArg = to_candid({installationId; user; initialOwner = indirect}); // FIXME // TODO: Add more arguments.
+                    installArg = to_candid({installationId; user; initialOwner = indirect; packageManagerOrBootstrapper = Principal.fromActor(ourPM)}); // FIXME // TODO: Add more arguments.
                     installationId;
                     packageManagerOrBootstrapper = backend; // TODO: Rename this argument. // FIXME
                     initialIndirect = indirect;
-                    preinstalledCanisterId = preinstalled2.get(packageName);
+                    preinstalledCanisterId = coreModules.get(packageName);
                     user; // TODO: `!`
                     wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
                 });
@@ -543,6 +555,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 user;
                 installationId = 0; // TODO
                 initialOwner = indirect_canister_id; // FIXME: Correct?
+                packageManagerOrBootstrapper = Principal.fromActor(ourPM);
             });
             packageManagerOrBootstrapper;
             initialIndirect = indirect_canister_id;
@@ -556,6 +569,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 user;
                 installationId = 0; // TODO
                 initialOwner = indirect_canister_id; // FIXME: Correct?
+                packageManagerOrBootstrapper = Principal.fromActor(ourPM); // FIXME: All code with `packageManagerOrBootstrapper = ` is a hack.
             });
             packageManagerOrBootstrapper = backend_canister_id;
             initialIndirect;
