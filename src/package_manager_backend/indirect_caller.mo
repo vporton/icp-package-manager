@@ -22,41 +22,16 @@ import cycles_ledger "canister:cycles_ledger";
 shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
+    user: Principal;
+    installationId: Common.InstallationId; // FIXME: Can we remove this?
     userArg: Blob;
 }) = this {
-    let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        installationId: Common.InstallationId; // FIXME: Can we remove this?
-        user: Principal;
-        initialOwner: Principal;
-    } = from_candid(userArg) else {
-        Debug.trap("argument userArg is wrong");
-    };
+    // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
+    // } = from_candid(userArg) else {
+    //     Debug.trap("argument userArg is wrong");
+    // };
 
     stable var initialized = false;
-
-    public shared({caller}) func init({ // TODO
-        installationId: Common.InstallationId;
-        canister: Principal;
-        user: Principal;
-        // packageManagerOrBootstrapper: Principal;
-    }): async () {
-        onlyOwner(caller, "init");
-
-        // FIXME:
-        // owners.delete(initialCaller);
-        // owners.delete(initialOwner);
-        owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.user, ());
-        owners.put(packageManagerOrBootstrapper, ()); // This is `aaaaa-aa` in bootstrapping.
-        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
-        initialized := true;
-    };
-
-    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        initialized;
-    };
 
     // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
     var owners: HashMap.HashMap<Principal, ()> =
@@ -64,10 +39,32 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             // FIXME
             // FIXME: Remove BootrapperIndirectCaller later.
             // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
-            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ()), (initialIndirect, ())].vals(),
-            4,
+            [
+                (initialCaller, ()),
+                (initialIndirect, ()),
+                (Principal.fromActor(this), ()), // self-usage to call `this.installModule`.
+                (user, ()),
+                (packageManagerOrBootstrapper, ()),
+            ].vals(),
+            5,
             Principal.equal,
             Principal.hash);
+
+    // public shared({caller}) func init({ // TODO
+    //     // installationId: Common.InstallationId;
+    //     // canister: Principal;
+    //     // user: Principal;
+    //     // packageManagerOrBootstrapper: Principal;
+    // }): async () {
+    //     onlyOwner(caller, "init");
+
+    //     // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+    //     initialized := true;
+    // };
+
+    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
+        initialized;
+    };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         onlyOwner(caller, "setOwners");
@@ -288,8 +285,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     moduleName = ?name;
                     installArg = to_candid({
                         installationId;
-                        user;
-                        initialOwner = indirect;
+                        initialIndirect = indirect;
                         packageManagerOrBootstrapper = backend;
                     }); // TODO: Add more arguments.
                     installationId;
@@ -547,9 +543,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
-                user;
                 installationId = 0; // TODO
-                initialOwner = indirect_canister_id; // FIXME: Correct?
+                initialIndirect = indirect_canister_id; // FIXME: Correct?
             });
             packageManagerOrBootstrapper;
             initialIndirect = indirect_canister_id;
@@ -560,9 +555,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({
-                user;
                 installationId = 0; // TODO
-                initialOwner = indirect_canister_id; // FIXME: Correct?
+                initialIndirect = indirect_canister_id; // FIXME: Correct?
             });
             packageManagerOrBootstrapper = backend_canister_id;
             initialIndirect;

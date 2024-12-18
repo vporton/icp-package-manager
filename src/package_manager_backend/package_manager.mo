@@ -17,35 +17,16 @@ import IndirectCaller "indirect_caller";
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
+    user: Principal;
+    installationId: Common.InstallationId; // TODO: superfluous
     userArg: Blob;
 }) = this {
-    let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
-        installationId: Common.InstallationId; // TODO: superfluous
-        user: Principal;
-        initialOwner: Principal;
-    } = from_candid(userArg) else {
-        Debug.trap("argument userArg is wrong");
-    };
+    // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
+    // } = from_candid(userArg) else {
+    //     Debug.trap("argument userArg is wrong");
+    // };
 
     stable var initialized = false;
-
-    public shared({caller}) func init(p: {
-        installationId: Common.InstallationId;
-        canister: Principal;
-        user: Principal;
-    }) {
-        onlyOwner(caller, "init");
-
-        // FIXME
-        // owners.delete(initialCaller);
-        // owners.delete(initialOwner);
-        owners.put(initialCaller, ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.initialOwner, ()); // self-usage to call `this.installModule`.
-        owners.put(userArgValue.user, ());
-        owners.put(initialIndirect, ());
-
-        initialized := true;
-     };
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
@@ -53,10 +34,26 @@ shared({caller = initialCaller}) actor class PackageManager({
             // FIXME
             // FIXME: Remove BootrapperIndirectCaller later.
             // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
-            [(userArgValue.initialOwner, ()), (userArgValue.user, ()), (packageManagerOrBootstrapper, ()), (initialIndirect, ())].vals(), // TODO: Are all required?
+            [
+                (initialCaller, ()),
+                (initialIndirect, ()),
+                (user, ()),
+                (packageManagerOrBootstrapper, ()),
+            ].vals(), // TODO: Are all required?
             4,
             Principal.equal,
             Principal.hash);
+
+    // public shared({caller}) func init(p: {
+    //     // installationId: Common.InstallationId;
+    //     // canister: Principal;
+    //     // user: Principal;
+    //     // packageManagerOrBootstrapper: Principal;
+    // }) {
+    //     onlyOwner(caller, "init");
+
+    //     initialized := true;
+    // };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         onlyOwner(caller, "setOwners");

@@ -64,12 +64,12 @@ async function main() {
     const pmBackendModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBackendBlob},
         forceReinstall: false,
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]], // TODO: I specify the canister twice: here and by var name.
+        callbacks: [], // [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmIndirectBlob},
         forceReinstall: true,
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]], // TODO: I specify the canister twice: here and by var name.
+        callbacks: [], // [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleFrontendBlob},
