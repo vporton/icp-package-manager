@@ -18,6 +18,8 @@ Remaining things TODO:
 
 - Disallow packages of zero modules.
 
+- Backing/restoring state of packages.
+
 - Bootstrapping from several repos.
 
 - Paid soft.
