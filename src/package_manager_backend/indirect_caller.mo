@@ -1,6 +1,4 @@
 /// Canister that takes on itself potentially non-returning calls.
-// import Exp "mo:base/ExperimentalInternetComputer"; // TODO: This or ICE.call for calls?
-import Cycles "mo:base/ExperimentalCycles";
 import ICE "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
@@ -16,7 +14,6 @@ import Array "mo:base/Array";
 import Asset "mo:assets-api";
 import IC "mo:ic";
 import Sha256 "mo:sha2/Sha256";
-import CanDb "mo:candb/CanDB";
 import Settings "../Settings";
 import Common "../common";
 import CopyAssets "../copy_assets";
