@@ -64,84 +64,88 @@ function GlobalUI() {
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   if (glob.backend === undefined) {
     async function installBackend() {
-      const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-      // TODO: Duplicate code
-      const repoParts = await repoIndex.getCanistersByPK("main");
-      let pkg: SharedPackageInfo | undefined = undefined;
-      let repoPart: Principal | undefined;
-      const jobs = repoParts.map(async part => {
-        const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
-        try {
-          pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-          repoPart = Principal.fromText(part);
-        }
-        catch (_) {}
-      });
-      await Promise.all(jobs);
-      const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-
-      // const backend: PackageManager = createPackageManagerActor(glob.backend, {agent: defaultAgent});
-      // const installedInfo = await backend.getInstalledPackage(glob.packageInstallationId);
-      // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
-
-      const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
-      // TODO: Are here modules needed? They are installed below, instead?
-      const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
-        frontend: glob.frontend!, // TODO: `!`
-        backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
-        indirectWasmModule: pkgReal.modules[2][1][0],
-        user: principal!, // TODO: `!`
-        repo: repoPart!, // TODO: `!`
-        packageManagerOrBootstrapper: principal!, // FIXME
-      });
-      const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
-      console.log("Z1:", [["backend", backendPrincipal.toText()], ["frontend", glob.frontend!.toText()], ["indirect", indirectPrincipal.toText()]]); // FIXME: Remove.
-      await backend.installPackageWithPreinstalledModules({
-        whatToInstall: { package: null },
-        packageName: "icpack",
-        version: "0.0.1", // TODO: should be `stable`.
-        preinstalledModules: [["backend", backendPrincipal], ["frontend", glob.frontend!], ["indirect", indirectPrincipal]],
-        repo: repoPart!,
-        user: principal!, // TODO: `!`
-        indirectCaller: indirectPrincipal,
-      });
-      const installationId = 0n; // TODO
-      const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
-      for (let i = 0; ; ++i) {
-        try {
-          await Promise.all([
-            backend.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
-            indirect.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
-          ]);
-          break;
-        }
-        catch (e) {}
-        if (i == 30) {
-          alert("Cannot initilize canisters"); // TODO
-          return;
-        }
-        await new Promise<void>((resolve, _reject) => {
-          setTimeout(() => resolve(), 1000);
+      try {
+        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
+        // TODO: Duplicate code
+        const repoParts = await repoIndex.getCanistersByPK("main");
+        let pkg: SharedPackageInfo | undefined = undefined;
+        let repoPart: Principal | undefined;
+        const jobs = repoParts.map(async part => {
+          const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
+          try {
+            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+            repoPart = Principal.fromText(part);
+          }
+          catch (_) {}
         });
-      }
-      for (let i = 0; ; ++i) {
-        try {
-          await backend.getInstalledPackage(installationId);
-          break;
-        }
-        catch (e) {}
-        if (i == 30) {
-          alert("Cannot get installation info"); // TODO
-          return;
-        }
-        await new Promise<void>((resolve, _reject) => {
-          setTimeout(() => resolve(), 1000);
-        });
-      }
+        await Promise.all(jobs);
+        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-      const backend_str = backendPrincipal.toString();
-      const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
-      open(`${base}backend=${backend_str}`, '_self');
+        // const backend: PackageManager = createPackageManagerActor(glob.backend, {agent: defaultAgent});
+        // const installedInfo = await backend.getInstalledPackage(glob.packageInstallationId);
+        // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
+
+        const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
+        // TODO: Are here modules needed? They are installed below, instead?
+        const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
+          frontend: glob.frontend!, // TODO: `!`
+          backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
+          indirectWasmModule: pkgReal.modules[2][1][0],
+          user: principal!, // TODO: `!`
+          repo: repoPart!, // TODO: `!`
+          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!), // principal!, // FIXME
+        });
+        const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
+        await backend.installPackageWithPreinstalledModules({
+          whatToInstall: { package: null },
+          packageName: "icpack",
+          version: "0.0.1", // TODO: should be `stable`.
+          preinstalledModules: [["backend", backendPrincipal], ["frontend", glob.frontend!], ["indirect", indirectPrincipal]],
+          repo: repoPart!,
+          user: principal!, // TODO: `!`
+          indirectCaller: indirectPrincipal,
+        });
+        const installationId = 0n; // TODO
+        const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
+        for (let i = 0; ; ++i) {
+          try {
+            await Promise.all([
+              backend.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
+              indirect.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
+            ]);
+            break;
+          }
+          catch (e) {}
+          if (i == 30) {
+            alert("Cannot initilize canisters"); // TODO
+            return;
+          }
+          await new Promise<void>((resolve, _reject) => {
+            setTimeout(() => resolve(), 1000);
+          });
+        }
+        for (let i = 0; ; ++i) {
+          try {
+            await backend.getInstalledPackage(installationId);
+            break;
+          }
+          catch (e) {}
+          if (i == 30) {
+            alert("Cannot get installation info"); // TODO
+            return;
+          }
+          await new Promise<void>((resolve, _reject) => {
+            setTimeout(() => resolve(), 1000);
+          });
+        }
+
+        const backend_str = backendPrincipal.toString();
+        const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
+        open(`${base}backend=${backend_str}`, '_self');
+      }
+      catch (e) {
+        console.log(e); // TODO: Return an error.
+      }
     }
     // TODO: Start installation automatically, without clicking a button?
     return (

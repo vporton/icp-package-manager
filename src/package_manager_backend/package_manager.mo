@@ -26,7 +26,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     Debug.trap("argument userArg is wrong");
     // };
 
-    stable var initialized = false;
+    // stable var initialized = false;
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
@@ -39,8 +39,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                 (initialIndirect, ()),
                 (user, ()),
                 (packageManagerOrBootstrapper, ()),
+                (Principal.fromActor(this), ()),
+                // (Principal.fromActor(BootstrapperIndirectCaller), ()),
             ].vals(), // TODO: Are all required?
-            4,
+            5,
             Principal.equal,
             Principal.hash);
 
@@ -84,7 +86,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        initialized;
+        true; // initialized; // TODO
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
@@ -233,7 +235,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         #namedModules : {
             dest: Common.InstallationId;
-            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg // FIXME
+            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg // TODO: Use named fields.
         };
     };
 
@@ -429,23 +431,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        // let module2 = Common.unshareModule(module_); // TODO: necessary? or unshare only callbacks?
-        // switch (module2.callbacks.get(#CanisterCreated)) {
-        //     case (?callbackName) {
-        //         getIndirectCaller().callAllOneWay([{
-        //             canister; // FIXME: wrong canister
-        //             name = callbackName.method;
-        //             data = to_candid({ // TODO
-        //                 installationId;
-        //                 moduleNumber;
-        //                 moduleName;
-        //                 canister;
-        //                 user;
-        //             }); 
-        //         }]);
-        //     };
-        //     case null {};
-        // };
         if (not inst.alreadyCalledAllCanistersCreated) {
             assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
             inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with below
@@ -459,22 +444,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 i += 1;
             };
-            // if (not missingCanister) { // All cansters have been created. // TODO: efficient?
-            //     switch (module2.callbacks.get(#AllCanistersCreated)) {
-            //         case (?callbackName) {
-            //             getIndirectCaller().callAllOneWay([{
-            //                 canister; // FIXME: wrong canister
-            //                 name = callbackName.method;
-            //                 data = to_candid({ // TODO
-            //                     installationId;
-            //                     canister;
-            //                     user;
-            //                 });
-            //             }]);
-            //         };
-            //         case null {};
-            //     };
-            // };
             inst.alreadyCalledAllCanistersCreated := true;
         };
         inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with above
@@ -784,7 +753,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
-        // FIXME: It is created by bootstrapper's indirectCaller, no permission for our indirectCaller!
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;

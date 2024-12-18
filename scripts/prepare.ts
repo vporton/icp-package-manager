@@ -69,7 +69,7 @@ async function main() {
     const pmIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmIndirectBlob},
         forceReinstall: true,
-        callbacks: [], // [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleFrontendBlob},

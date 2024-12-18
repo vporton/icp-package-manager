@@ -23,8 +23,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
     user: Principal;
-    installationId: Common.InstallationId; // FIXME: Can we remove this?
-    userArg: Blob;
+    // installationId: Common.InstallationId;
+    // userArg: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
     // } = from_candid(userArg) else {
@@ -42,25 +42,27 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             [
                 (initialCaller, ()),
                 (initialIndirect, ()),
-                (Principal.fromActor(this), ()), // self-usage to call `this.installModule`.
                 (user, ()),
                 (packageManagerOrBootstrapper, ()),
+                (Principal.fromActor(this), ()),
             ].vals(),
-            5,
+            6,
             Principal.equal,
             Principal.hash);
 
-    // public shared({caller}) func init({ // TODO
-    //     // installationId: Common.InstallationId;
-    //     // canister: Principal;
-    //     // user: Principal;
-    //     // packageManagerOrBootstrapper: Principal;
-    // }): async () {
-    //     onlyOwner(caller, "init");
+    public shared({caller}) func init({ // TODO
+        // installationId: Common.InstallationId;
+        // canister: Principal;
+        // user: Principal;
+        // packageManagerOrBootstrapper: Principal;
+    }): async () {
+        onlyOwner(caller, "init");
 
-    //     // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
-    //     initialized := true;
-    // };
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
+
+        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+        initialized := true;
+    };
 
     public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
         initialized;
@@ -289,7 +291,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         packageManagerOrBootstrapper = backend;
                     }); // TODO: Add more arguments.
                     installationId;
-                    packageManagerOrBootstrapper = backend; // TODO: Rename this argument. // FIXME
+                    packageManagerOrBootstrapper = backend;
                     initialIndirect = indirect;
                     preinstalledCanisterId = coreModules.get(packageName);
                     user; // TODO: `!`
@@ -339,7 +341,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 settings = ?{
                     freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                     // TODO: Should we remove control from `user` to protect against errors?
-                    controllers = ?[mainController, user];
+                    controllers = ?[Principal.fromActor(this), mainController, user];
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };
@@ -363,6 +365,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     };
 
     private func myInstallCode({
+        installationId: Common.InstallationId;
         canister_id: Principal;
         wasmModule: Common.Module;
         installArg: Blob;
@@ -383,6 +386,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 packageManagerOrBootstrapper;
                 initialIndirect;
                 user;
+                installationId;
                 userArg = installArg;
             });
             wasm_module;
@@ -427,6 +431,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         });
 
         await* myInstallCode({
+            installationId;
             canister_id;
             wasmModule;
             installArg;
@@ -517,6 +522,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     }): async {canister_id: Principal} {
         let {canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
         await* myInstallCode({
+            installationId = 0;
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
@@ -536,32 +542,39 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         // TODO: Create and run two canisters in parallel.
+        Debug.print("A1");
         let {canister_id = backend_canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
+        Debug.print("A2");
         let {canister_id = indirect_canister_id} = await* myCreateCanister({mainController = backend_canister_id; user});
+        Debug.print("A3");
 
         await* myInstallCode({
+            installationId = 0;
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                initialIndirect = indirect_canister_id; // FIXME: Correct?
+                initialIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper;
             initialIndirect = indirect_canister_id;
             user;
         });
+        Debug.print("A4");
 
         await* myInstallCode({
+            installationId = 0;
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                initialIndirect = indirect_canister_id; // FIXME: Correct?
+                initialIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
             initialIndirect;
             user;
         });
+        Debug.print("A5");
 
         // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
         //     addOwner: (newOwner: Principal) -> async ();
