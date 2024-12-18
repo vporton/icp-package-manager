@@ -332,7 +332,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         }) -> async ();
     };
 
-    private func myCreateCanister({packageManagerOrBootstrapper: Principal; user: Principal}): async* {canister_id: Principal} {
+    private func myCreateCanister({mainController: Principal; user: Principal}): async* {canister_id: Principal} {
         // a workaround of calling getNewCanisterCycles() before setOurPM() // TODO: hack
         var amount = 600_000_000_000; // TODO
         if (Principal.fromActor(ourPM) != Principal.fromText("aaaaa-aa")) { // FIXME
@@ -345,7 +345,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             creation_args = ?{
                 settings = ?{
                     freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper]; // TODO: Needs to be self-invokable? // FIXME: not aaaaa-aa
+                    // TODO: Should we remove control from `user` to protect against errors?
+                    controllers = ?[mainController, user];
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };
@@ -419,7 +420,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper; user; initialIndirect});
+        let {canister_id} = await* myCreateCanister({mainController = packageManagerOrBootstrapper; user; initialIndirect});
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
         await pm.onCreateCanister({
@@ -521,7 +522,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
         initialIndirect: Principal;
     }): async {canister_id: Principal} {
-        let {canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this); user}); // TODO: This is a bug.
+        let {canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
         await* myInstallCode({
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
@@ -542,8 +543,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         // TODO: Create and run two canisters in parallel.
-        let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this); user}); // TODO: This is a bug.
-        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = backend_canister_id; user});
+        let {canister_id = backend_canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
+        let {canister_id = indirect_canister_id} = await* myCreateCanister({mainController = backend_canister_id; user});
 
         await* myInstallCode({
             canister_id = backend_canister_id;
