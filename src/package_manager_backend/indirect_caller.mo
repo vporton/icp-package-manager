@@ -41,7 +41,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installationId: Common.InstallationId;
         canister: Principal;
         user: Principal;
-        packageManagerOrBootstrapper: Principal;
+        // packageManagerOrBootstrapper: Principal;
     }): async () {
         onlyOwner(caller, "init");
 
@@ -53,7 +53,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
         owners.put(userArgValue.user, ());
         owners.put(packageManagerOrBootstrapper, ()); // This is `aaaaa-aa` in bootstrapping.
-        ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
     };
 
@@ -105,7 +105,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         getNewCanisterCycles: () -> async Nat;
     };
 
-    /*stable*/ var ourPM: OurPMType = actor("aaaaa-aa");
+    /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper)); // actor("aaaaa-aa");
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
         onlyOwner(caller, "setOurPM");
@@ -327,13 +327,14 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             module_: Common.SharedModule;
             canister: Principal;
             user: Principal;
+            packageManagerOrBootstrapper: Principal;
         }) -> async ();
     };
 
     private func myCreateCanister({packageManagerOrBootstrapper: Principal; user: Principal}): async* {canister_id: Principal} {
         // a workaround of calling getNewCanisterCycles() before setOurPM() // TODO: hack
         var amount = 600_000_000_000; // TODO
-        if (Principal.fromActor(ourPM) != Principal.fromText("aaaaa-aa")) {
+        if (Principal.fromActor(ourPM) != Principal.fromText("aaaaa-aa")) { // FIXME
             amount := await ourPM.getNewCanisterCycles();
         };
         // Cycles.add<system>(await ourPM.getNewCanisterCycles());
@@ -343,7 +344,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             creation_args = ?{
                 settings = ?{
                     freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                    controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper]; // TODO: Needs to be self-invokable?
+                    controllers = ?[Principal.fromActor(this), packageManagerOrBootstrapper]; // TODO: Needs to be self-invokable? // FIXME: not aaaaa-aa
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };
@@ -382,6 +383,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             Debug.trap("package WASM code is not available");
         };
 
+        Debug.print("Z1");
         await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManagerOrBootstrapper;
@@ -394,6 +396,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister_id;
             sender_canister_version = null; // TODO
         });
+        Debug.print("Z2");
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
@@ -451,6 +454,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister = canister_id;
             installationId;
             user;
+            packageManagerOrBootstrapper;
         });
 
         canister_id;
@@ -492,6 +496,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         module_ = wasmModule;
                         canister = preinstalledCanisterId;
                         user;
+                        packageManagerOrBootstrapper;
                     });
                 };
                 case null {
@@ -546,7 +551,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         // TODO: Create and run two canisters in parallel.
         let {canister_id = backend_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = Principal.fromActor(this); user}); // TODO: This is a bug.
-        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = backend_canister_id; user}); // TODO: This is a bug.
+        let {canister_id = indirect_canister_id} = await* myCreateCanister({packageManagerOrBootstrapper = backend_canister_id; user});
 
         await* myInstallCode({
             canister_id = backend_canister_id;
@@ -555,7 +560,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 user;
                 installationId = 0; // TODO
                 initialOwner = indirect_canister_id; // FIXME: Correct?
-                packageManagerOrBootstrapper = Principal.fromActor(ourPM);
             });
             packageManagerOrBootstrapper;
             initialIndirect = indirect_canister_id;
@@ -569,7 +573,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 user;
                 installationId = 0; // TODO
                 initialOwner = indirect_canister_id; // FIXME: Correct?
-                packageManagerOrBootstrapper = Principal.fromActor(ourPM); // FIXME: All code with `packageManagerOrBootstrapper = ` is a hack.
             });
             packageManagerOrBootstrapper = backend_canister_id;
             initialIndirect;

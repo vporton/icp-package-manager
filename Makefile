@@ -4,7 +4,9 @@ USER = $(shell dfx identity get-principal)
 
 .PHONY: deploy
 
-INIT_BLOB = $(shell echo 'encode(record {user = principal "aaaaa-aa"; initialOwner = principal "aaaaa-aa"; installationId = 0: nat})' | ic-repl-linux64)
+# TODO:
+# INIT_BLOB = $(shell echo 'encode(record {user = principal "aaaaa-aa"; initialOwner = principal "aaaaa-aa"; installationId = 0: nat})' | ic-repl-linux64)
+INIT_BLOB = blob "\44\49\44\4c\01\6c\03\cb\a4\b6\ed\04\68\b5\fc\e3\e5\09\7d\8f\b2\9a\e4\0f\68\01\00\01\00\00\01\00"
 
 .PHONY: deploy
 deploy:
@@ -22,7 +24,7 @@ deploy:
 	dfx build BootstrapperIndirectCaller
 	dfx generate BootstrapperIndirectCaller
 	dfx canister install -m auto BootstrapperIndirectCaller --argument \
-	  'record {packageManagerOrBootstrapper = principal "aaaaa-aa"; initialIndirect = principal "aaaaa-aa"; userArg = blob $(INIT_BLOB)}'
+	  'record {packageManagerOrBootstrapper = principal "aaaaa-aa"; initialIndirect = principal "aaaaa-aa"; userArg = $(INIT_BLOB)}'
 	dfx build package_manager
 #	dfx canister install -m auto package_manager
 	# dfx build bootstrapper

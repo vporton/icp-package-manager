@@ -415,7 +415,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 installationId;
                                 canister;
                                 user;
-                                packageManagerOrBootstrapper;
+                                packageManagerOrBootstrapper; // TODO: Remove?
                             });
                         }]);
                     };
