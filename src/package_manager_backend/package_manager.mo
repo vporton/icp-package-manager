@@ -327,7 +327,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         packageManagerOrBootstrapper: Principal;
     }): async () {
         onlyOwner(caller, "onInstallCode");
-        Debug.print("INSTALL CODE: " # debug_show(moduleNumber) # "/" # debug_show(moduleName) # "/" # debug_show(canister));
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
@@ -336,10 +335,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
-        Debug.print("B1: " # debug_show(Buffer.toArray(inst.installedModules)));
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
-            Debug.print("B2");
             _updateAfterInstall({installationId});
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
@@ -361,11 +358,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
-            Debug.print("B3");
             let ?pkg = halfInstalledPackages.get(installationId) else {
                 Debug.trap("PackageManager: programming error");
             };
-            Debug.print("B4");
             halfInstalledPackages.delete(installationId);
             let #real realPackage = pkg.package.specific else { // FIXME: fails with virtual packages
                 Debug.trap("trying to directly install a virtual installation");
@@ -379,12 +374,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
-            Debug.print("A1");
             for (module3 in realPackage.modules.entries()) {
                 let (moduleName2, (module4, _: Bool)) = module3 else {
                     Debug.trap("programming error")
                 };
-                Debug.print("A2: " # moduleName2);
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
                         let ?cbPrincipal = inst3.get(moduleName2) else { // FIXME: works only with named modules
@@ -435,7 +428,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
     }): async () {
         onlyOwner(caller, "onCreateCanister");
-        Debug.print("CREATE CANISTER: " # debug_show(moduleNumber) # "/" # debug_show(moduleName) # "/" # debug_show(canister));
 
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
