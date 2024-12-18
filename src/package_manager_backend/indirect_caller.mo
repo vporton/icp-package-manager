@@ -293,7 +293,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
                     moduleName = ?name;
-                    installArg = to_candid({installationId; user; initialOwner = indirect; packageManagerOrBootstrapper = Principal.fromActor(ourPM)}); // FIXME // TODO: Add more arguments.
+                    installArg = to_candid({
+                        installationId;
+                        user;
+                        initialOwner = indirect;
+                        packageManagerOrBootstrapper = backend;
+                    }); // TODO: Add more arguments.
                     installationId;
                     packageManagerOrBootstrapper = backend; // TODO: Rename this argument. // FIXME
                     initialIndirect = indirect;
