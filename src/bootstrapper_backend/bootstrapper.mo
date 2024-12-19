@@ -1,14 +1,19 @@
 import Common "../common";
+import Install "../install";
+import Debug "mo:base/Debug";
+import Principal "mo:base/Principal";
+import cycles_ledger "canister:cycles_ledger";
+import IC "mo:ic";
 
-actor Bootstrapper {
+actor class Bootstrapper() = this {
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
         user: Principal;
         initialIndirect: Principal;
     }): async {canister_id: Principal} {
-        let {canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
-        await* myInstallCode({
+        let {canister_id} = await* Install.myCreateCanister({mainController = [Principal.fromActor(this), user, initialIndirect]; user}); // TODO: This is a bug.
+        await* Install.myInstallCode({
             installationId = 0;
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
@@ -28,14 +33,36 @@ actor Bootstrapper {
         repo: Common.RepositoryPartitionRO;
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
-        // TODO: Create and run two canisters in parallel.
+        // TODO: Create and update settings for two canisters in parallel.
+        // TODO: No need to create many initial controllers.
         Debug.print("A1");
-        let {canister_id = backend_canister_id} = await* myCreateCanister({mainController = Principal.fromActor(this); user}); // TODO: This is a bug.
+        let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
+            mainController = [Principal.fromActor(this), user];
+            user;
+        }); // TODO: This is a bug.
         Debug.print("A2");
-        let {canister_id = indirect_canister_id} = await* myCreateCanister({mainController = backend_canister_id; user});
+        let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
+            mainController = [backend_canister_id, Principal.fromActor(this), user];
+            user;
+        });
         Debug.print("A3");
+        for (canister_id in [backend_canister_id, indirect_canister_id].vals()) {
+            await IC.ic.update_settings({
+                canister_id;
+                sender_canister_version = null;
+                settings = {
+                    compute_allocation = null;
+                    controllers = ?[indirect_canister_id, backend_canister_id, Principal.fromActor(this), user]; // FIXME
+                    freezing_threshold = null;
+                    log_visibility = null;
+                    memory_allocation = null;
+                    reserved_cycles_limit = null;
+                    wasm_memory_limit = null;
+                };
+            });
+        };
 
-        await* myInstallCode({
+        await* Install.myInstallCode({
             installationId = 0;
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
@@ -49,7 +76,7 @@ actor Bootstrapper {
         });
         Debug.print("A4");
 
-        await* myInstallCode({
+        await* Install.myInstallCode({
             installationId = 0;
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
@@ -58,7 +85,7 @@ actor Bootstrapper {
                 initialIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
-            initialIndirect;
+            initialIndirect = indirect_canister_id;
             user;
         });
         Debug.print("A5");

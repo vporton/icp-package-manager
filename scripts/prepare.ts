@@ -19,7 +19,7 @@ global.fetch = node_fetch as any;
 
 if (process.env.DFX_NETWORK === 'local') {
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex");
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister BootstrapperIndirectCaller");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
 } else {
     // TODO
@@ -36,7 +36,7 @@ async function main() {
 
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
     const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
-    const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/BootstrapperIndirectCaller/BootstrapperIndirectCaller.wasm"));
+    const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/indirect_caller/indirect_caller.wasm"));
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})

@@ -4,20 +4,13 @@ import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";
-import Time "mo:base/Time";
-import Nat64 "mo:base/Nat64";
-import Int "mo:base/Int";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
-import Asset "mo:assets-api";
-import IC "mo:ic";
-import Sha256 "mo:sha2/Sha256";
-import Settings "../Settings";
 import Common "../common";
-import CopyAssets "../copy_assets";
-import cycles_ledger "canister:cycles_ledger";
+import Install "../install";
+import Bootstrapper "canister:Bootstrapper";
 
 shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;
@@ -45,6 +38,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 (user, ()),
                 (packageManagerOrBootstrapper, ()),
                 (Principal.fromActor(this), ()),
+                (Principal.fromActor(Bootstrapper), ()), // FIXME
             ].vals(),
             6,
             Principal.equal,
@@ -213,6 +207,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
+            Debug.print("installPackageWrapper"); // FIXME: Remove.
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
@@ -231,7 +226,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }) -> async ();
             };
 
-            // TODO: The following can't work during bootstrapping, because we are `BootstrapperIndirectCaller`. But bootstrapping succeeds.
+            Debug.print("Q1"); // FIXME: Remove.
+            // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
             await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
                 installationId;
@@ -240,6 +236,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 repo;
                 preinstalledModules;
             });
+            Debug.print("Q2"); // FIXME: Remove.
 
             let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
                 case (#simplyModules m) {
@@ -278,8 +275,10 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             let ?indirect = coreModules.get("indirect") else {
                 Debug.trap("error 1");
             };
+            Debug.print("Q3"); // FIXME: Remove.
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
+                Debug.print("Q4: " # debug_show(name) # " | " # debug_show(coreModules.get(packageName))); // FIXME: Remove.
                 // Starting installation of all modules in parallel:
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
@@ -327,84 +326,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         }) -> async ();
     };
 
-    private func myCreateCanister({mainController: Principal; user: Principal}): async* {canister_id: Principal} {
-        // a workaround of calling getNewCanisterCycles() before setOurPM() // TODO: hack
-        var amount = 600_000_000_000; // TODO
-        if (Principal.fromActor(ourPM) != Principal.fromText("aaaaa-aa")) { // FIXME
-            amount := await ourPM.getNewCanisterCycles();
-        };
-        // Cycles.add<system>(await ourPM.getNewCanisterCycles());
-        let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-            amount;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            creation_args = ?{
-                settings = ?{
-                    freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                    // TODO: Should we remove control from `user` to protect against errors?
-                    controllers = ?[Principal.fromActor(this), mainController, user];
-                    compute_allocation = null; // TODO
-                    memory_allocation = null; // TODO (a low priority task)
-                };
-                subnet_selection = null;
-            };
-            from_subaccount = if (Settings.debugFunds) {
-                null;
-            } else {
-                ?Blob.toArray(Sha256.fromBlob(#sha256, to_candid(user))); // TODO: not the most efficient way (but is it standard?)
-            };
-        });
-        let canister_id = switch (res) {
-            case (#Ok {canister_id}) canister_id;
-            case (#Err err) {
-                let msg = debug_show(err);
-                Debug.print("cannot create canister: " # msg);
-                Debug.trap("cannot create canister: " # msg);
-            };  
-        };
-        {canister_id};
-    };
-
-    private func myInstallCode({
-        installationId: Common.InstallationId;
-        canister_id: Principal;
-        wasmModule: Common.Module;
-        installArg: Blob;
-        packageManagerOrBootstrapper: Principal;
-        initialIndirect: Principal;
-        user: Principal;
-    }): async* () {
-        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
-        let ?(#blob wasm_module) =
-            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
-        else {
-            Debug.trap("package WASM code is not available");
-        };
-
-        await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
-            arg = to_candid({
-                packageManagerOrBootstrapper;
-                initialIndirect;
-                user;
-                installationId;
-                userArg = installArg;
-            });
-            wasm_module;
-            mode = #install;
-            canister_id;
-            sender_canister_version = null; // TODO
-        });
-
-        switch (wasmModule.code) {
-            case (#Assets {assets}) {
-                await* CopyAssets.copyAll({ // TODO: Don't call shared.
-                    from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                });
-            };
-            case _ {};
-        };
-    };
-
     private func _installModuleCode({
         moduleNumber: Nat;
         moduleName: ?Text;
@@ -416,8 +337,11 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
         user: Principal;
     }): async* Principal {
+        Debug.print("_installModuleCode: " # debug_show(moduleName));
+
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        let {canister_id} = await* myCreateCanister({mainController = packageManagerOrBootstrapper; user; initialIndirect});
+        // FIXME:
+        let {canister_id} = await* Install.myCreateCanister({mainController = [packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
         await pm.onCreateCanister({
@@ -430,7 +354,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             user;
         });
 
-        await* myInstallCode({
+        await* Install.myInstallCode({
             installationId;
             canister_id;
             wasmModule;
@@ -467,6 +391,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
     }): () {
         try {
+            Debug.print("installModule" # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
+
             onlyOwner(caller, "installModule");
 
             switch (preinstalledCanisterId) {

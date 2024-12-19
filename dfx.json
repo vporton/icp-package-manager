@@ -1,14 +1,19 @@
 {
   "canisters": {
-    "BootstrapperIndirectCaller": {
+    "Bootstrapper": {
+      "type": "motoko",
+      "main": "src/bootstrapper_backend/bootstrapper.mo",
+      "dependencies": ["cycles_ledger"]
+    },
+    "indirect_caller": {
       "type": "motoko",
       "main": "src/package_manager_backend/indirect_caller.mo",
-      "dependencies": ["cycles_ledger"]
+      "dependencies": ["Bootstrapper", "cycles_ledger"]
     },
     "package_manager": {
       "type": "motoko",
       "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": ["cycles_ledger"]
+      "dependencies": ["Bootstrapper", "cycles_ledger"]
     },
     "bookmark": {
       "type": "motoko",

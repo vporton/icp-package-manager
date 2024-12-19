@@ -13,6 +13,7 @@ import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
+import Bootstrapper "canister:Bootstrapper";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
@@ -32,7 +33,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             // FIXME
-            // FIXME: Remove BootrapperIndirectCaller later.
+            // FIXME: Remove Bootrapper later.
             // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
             [
                 (initialCaller, ()),
@@ -40,9 +41,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 (user, ()),
                 (packageManagerOrBootstrapper, ()),
                 (Principal.fromActor(this), ()),
-                // (Principal.fromActor(BootstrapperIndirectCaller), ()),
+                (Principal.fromActor(Bootstrapper), ()), // FIXME
             ].vals(), // TODO: Are all required?
-            5,
+            6,
             Principal.equal,
             Principal.hash);
 
@@ -177,6 +178,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
+        Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         let installationId = nextInstallationId;
@@ -325,6 +327,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         module_: Common.SharedModule;
         packageManagerOrBootstrapper: Principal;
     }): async () {
+        // TODO: Move after `onlyOwner` call:
+        Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
+
         onlyOwner(caller, "onInstallCode");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
@@ -426,6 +431,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         canister: Principal;
         user: Principal;
     }): async () {
+        // TODO: Move after `onlyOwner` call:
+        Debug.print("Called onCreateCanister for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
+
         onlyOwner(caller, "onCreateCanister");
 
         let ?inst = halfInstalledPackages.get(installationId) else {
@@ -753,6 +761,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
+        Debug.print("_installModulesGroup"); // FIXME: Remove
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;

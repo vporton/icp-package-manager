@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
-import { createActor as createBootstrapperIndirectCallerActor } from '../../declarations/BootstrapperIndirectCaller';
+import { createActor as createBootstrapperActor } from '../../declarations/Bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MainPage from './MainPage';
@@ -17,10 +17,10 @@ import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { createActor as createBackendActor } from "../../declarations/package_manager";
-import { createActor as createIndirectActor } from "../../declarations/BootstrapperIndirectCaller";
+import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
-import { IndirectCaller, RepositoryPartitionRO } from '../../declarations/BootstrapperIndirectCaller/BootstrapperIndirectCaller.did';
-import { PackageManager } from '../../declarations/package_manager/package_manager.did';
+import { Bootstrapper, RepositoryPartitionRO } from '../../declarations/Bootstrapper/Bootstrapper.did';
+import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
 // import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
@@ -85,7 +85,7 @@ function GlobalUI() {
         // const installedInfo = await backend.getInstalledPackage(glob.packageInstallationId);
         // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
 
-        const bootstrapperIndirectCaller: IndirectCaller = createBootstrapperIndirectCallerActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent})
+        const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})
         // TODO: Are here modules needed? They are installed below, instead?
         const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           frontend: glob.frontend!, // TODO: `!`
@@ -93,10 +93,10 @@ function GlobalUI() {
           indirectWasmModule: pkgReal.modules[2][1][0],
           user: principal!, // TODO: `!`
           repo: repoPart!, // TODO: `!`
-          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!), // principal!, // FIXME
+          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // principal!, // FIXME
         });
-        const backend: PackageManager = createBackendActor(backendPrincipal, {agent}); // TODO: `defaultAgent` instead?
-        await backend.installPackageWithPreinstalledModules({
+        const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
+        await backend.installPackageWithPreinstalledModules({ // TODO: Move this to backend.
           whatToInstall: { package: null },
           packageName: "icpack",
           version: "0.0.1", // TODO: should be `stable`.

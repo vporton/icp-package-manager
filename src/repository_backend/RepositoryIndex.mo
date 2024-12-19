@@ -92,7 +92,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     await CA.updateCanisterSettings({
       canisterId = newUserCanisterPrincipal;
       settings = {
-        controllers = controllers;
+        controllers;
         compute_allocation = ?0;
         memory_allocation = ?0;
         freezing_threshold = ?2592000; // TODO

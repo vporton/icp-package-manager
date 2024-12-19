@@ -1,7 +1,7 @@
 import { Principal } from '@dfinity/principal';
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo } from '../declarations/package_manager/package_manager.did';
 import { createActor as createRepositoryPartition } from '../declarations/RepositoryPartition';
-import { createActor as createIndirectCaller } from '../declarations/BootstrapperIndirectCaller';
+import { createActor as createIndirectCaller } from '../declarations/Bootstrapper';
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
 import { Agent } from '@dfinity/agent';

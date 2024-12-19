@@ -16,6 +16,8 @@ Remaining things TODO:
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
 
+- Should user be a controller?
+
 - Disallow packages of zero modules.
 
 - Backing/restoring state of packages.

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
-import { createActor as createBootstrapperIndirectActor } from "../../declarations/BootstrapperIndirectCaller";
+import { createActor as createBootstrapperIndirectActor } from "../../declarations/Bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
@@ -53,7 +53,7 @@ export default function MainPage() {
       await Promise.all(jobs);
       const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-      const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!, {agent: props.agent});
+      const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
       const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
         wasmModule: pkgReal.modules[1][1][0],
         installArg: new Uint8Array(IDL.encode(
@@ -61,7 +61,7 @@ export default function MainPage() {
           [{user: props.principal!, installationId: 0 /* TODO */}],
         )),
         user: props.principal!,
-        initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPERINDIRECTCALLER!),
+        initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
       });
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
