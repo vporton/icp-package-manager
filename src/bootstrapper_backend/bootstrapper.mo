@@ -6,7 +6,6 @@ import cycles_ledger "canister:cycles_ledger";
 import IC "mo:ic";
 
 actor class Bootstrapper() = this {
-    // TODO: Make it protected against long running calls.
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
@@ -26,7 +25,6 @@ actor class Bootstrapper() = this {
         {canister_id};
     };
 
-    // TODO: Make it protected against long running calls.
     public shared func bootstrapBackend({
         frontend: Principal;
         backendWasmModule: Common.SharedModule;
