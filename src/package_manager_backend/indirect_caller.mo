@@ -340,6 +340,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         Debug.print("_installModuleCode: " # debug_show(moduleName));
 
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
+        // FIXME: It may DoS due to a malicious subnet.
         // FIXME:
         let {canister_id} = await* Install.myCreateCanister({mainController = [packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});
 
