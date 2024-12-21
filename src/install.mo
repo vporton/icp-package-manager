@@ -14,16 +14,15 @@ import Asset "mo:assets-api";
 
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
-    public func myCreateCanister({mainControllers: ?[Principal]; user: Principal}): async* {canister_id: Principal} {
+    public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
         // a workaround of calling getNewCanisterCycles() before setOurPM() // TODO: hack
-        var amount = 600_000_000_000; // TODO
         // FIXME:
         // if (Principal.fromActor(ourPM) != Principal.fromText("aaaaa-aa")) {
         //     amount := await ourPM.getNewCanisterCycles();
         // };
         // Cycles.add<system>(await ourPM.getNewCanisterCycles());
         let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-            amount;
+            amount = cyclesAmount;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             creation_args = ?{
                 settings = ?{

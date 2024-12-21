@@ -395,7 +395,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     }): async* Principal {
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         // FIXME:
-        let {canister_id} = await* Install.myCreateCanister({mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});
+        let {canister_id} = await* Install.myCreateCanister({
+            mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect];
+            user;
+            initialIndirect;
+            cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
+        });
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
         await pm.onCreateCanister({

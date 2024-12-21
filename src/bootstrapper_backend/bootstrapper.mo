@@ -1,17 +1,22 @@
 import Common "../common";
 import Install "../install";
-import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import IC "mo:ic";
 
 actor class Bootstrapper() = this {
+    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it.
+
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
         user: Principal;
         initialIndirect: Principal;
     }): async {canister_id: Principal} {
-        let {canister_id} = await* Install.myCreateCanister({mainControllers = ?[Principal.fromActor(this), user, initialIndirect]; user}); // TODO: This is a bug.
+        let {canister_id} = await* Install.myCreateCanister({
+            mainControllers = ?[Principal.fromActor(this), user, initialIndirect];
+            user;
+            cyclesAmount = newCanisterCycles;
+        }); // TODO: This is a bug.
         await* Install.myInstallCode({
             installationId = 0;
             canister_id;
@@ -35,10 +40,12 @@ actor class Bootstrapper() = this {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this), user];
             user;
+            cyclesAmount = newCanisterCycles;
         }); // TODO: This is a bug.
         let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[backend_canister_id, Principal.fromActor(this), user];
             user;
+            cyclesAmount = newCanisterCycles;
         });
         for (canister_id in [backend_canister_id, indirect_canister_id].vals()) {
             await IC.ic.update_settings({

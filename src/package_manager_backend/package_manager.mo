@@ -783,7 +783,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var newCanisterCycles = 400_000_000_000; // 4 times more, than creating a canister
 
     public query func getNewCanisterCycles(): async Nat {
-        newCanisterCycles
+        newCanisterCycles;
     };
 
     // Convenience methods //
