@@ -13,7 +13,8 @@ import IC "mo:ic";
 import Asset "mo:assets-api";
 
 module {
-    public func myCreateCanister({mainController: [Principal]; user: Principal}): async* {canister_id: Principal} {
+    // TODO: (Here and in other places) rename `mainControllers`.
+    public func myCreateCanister({mainControllers: ?[Principal]; user: Principal}): async* {canister_id: Principal} {
         // a workaround of calling getNewCanisterCycles() before setOurPM() // TODO: hack
         var amount = 600_000_000_000; // TODO
         // FIXME:
@@ -28,7 +29,7 @@ module {
                 settings = ?{
                     freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                     // TODO: Should we remove control from `user` to protect against errors?
-                    controllers = ?mainController;
+                    controllers = mainControllers;
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };

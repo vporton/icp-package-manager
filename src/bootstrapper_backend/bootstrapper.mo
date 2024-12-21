@@ -11,7 +11,7 @@ actor class Bootstrapper() = this {
         user: Principal;
         initialIndirect: Principal;
     }): async {canister_id: Principal} {
-        let {canister_id} = await* Install.myCreateCanister({mainController = [Principal.fromActor(this), user, initialIndirect]; user}); // TODO: This is a bug.
+        let {canister_id} = await* Install.myCreateCanister({mainControllers = ?[Principal.fromActor(this), user, initialIndirect]; user}); // TODO: This is a bug.
         await* Install.myInstallCode({
             installationId = 0;
             canister_id;
@@ -34,12 +34,12 @@ actor class Bootstrapper() = this {
         // TODO: No need to create many initial controllers.
         Debug.print("A1");
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
-            mainController = [Principal.fromActor(this), user];
+            mainControllers = ?[Principal.fromActor(this), user];
             user;
         }); // TODO: This is a bug.
         Debug.print("A2");
         let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
-            mainController = [backend_canister_id, Principal.fromActor(this), user];
+            mainControllers = ?[backend_canister_id, Principal.fromActor(this), user];
             user;
         });
         Debug.print("A3");
