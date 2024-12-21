@@ -325,59 +325,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         }) -> async ();
     };
 
-    private func _installModuleCode({
-        moduleNumber: Nat;
-        moduleName: ?Text;
-        installPackage: Bool;
-        installationId: Common.InstallationId;
-        wasmModule: Common.Module;
-        packageManagerOrBootstrapper: Principal;
-        initialIndirect: Principal;
-        installArg: Blob;
-        user: Principal;
-    }): async* Principal {
-        Debug.print("_installModuleCode: " # debug_show(moduleName));
-
-        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        // FIXME: It may DoS due to a malicious subnet.
-        // FIXME:
-        let {canister_id} = await* Install.myCreateCanister({mainController = [packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});
-
-        let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-        await pm.onCreateCanister({
-            installPackage; // Bool
-            moduleNumber;
-            moduleName;
-            // module_ = Common.shareModule(wasmModule);
-            installationId;
-            canister = canister_id;
-            user;
-        });
-
-        await* Install.myInstallCode({
-            installationId;
-            canister_id;
-            wasmModule;
-            installArg;
-            packageManagerOrBootstrapper;
-            initialIndirect;
-            user;
-        });
-
-        await pm.onInstallCode({
-            installPackage; // Bool
-            moduleNumber;
-            moduleName;
-            module_ = Common.shareModule(wasmModule);
-            canister = canister_id;
-            installationId;
-            user;
-            packageManagerOrBootstrapper;
-        });
-
-        canister_id;
-    };
-
     public shared({caller}) func installModule({
         installPackage: Bool;
         installationId: Common.InstallationId;
@@ -438,5 +385,57 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             Debug.print(msg);
             Debug.trap(msg);
         };
+    };
+
+    private func _installModuleCode({
+        moduleNumber: Nat;
+        moduleName: ?Text;
+        installPackage: Bool;
+        installationId: Common.InstallationId;
+        wasmModule: Common.Module;
+        packageManagerOrBootstrapper: Principal;
+        initialIndirect: Principal;
+        installArg: Blob;
+        user: Principal;
+    }): async* Principal {
+        Debug.print("_installModuleCode: " # debug_show(moduleName));
+
+        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
+        // FIXME:
+        let {canister_id} = await* Install.myCreateCanister({mainController = [packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});
+
+        let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+        await pm.onCreateCanister({
+            installPackage; // Bool
+            moduleNumber;
+            moduleName;
+            // module_ = Common.shareModule(wasmModule);
+            installationId;
+            canister = canister_id;
+            user;
+        });
+
+        await* Install.myInstallCode({
+            installationId;
+            canister_id;
+            wasmModule;
+            installArg;
+            packageManagerOrBootstrapper;
+            initialIndirect;
+            user;
+        });
+
+        await pm.onInstallCode({
+            installPackage; // Bool
+            moduleNumber;
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
+            canister = canister_id;
+            installationId;
+            user;
+            packageManagerOrBootstrapper;
+        });
+
+        canister_id;
     };
 }
