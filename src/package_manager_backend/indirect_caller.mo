@@ -207,7 +207,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
-            Debug.print("installPackageWrapper"); // FIXME: Remove.
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
@@ -226,7 +225,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }) -> async ();
             };
 
-            Debug.print("Q1"); // FIXME: Remove.
             // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
             await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
@@ -236,7 +234,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 repo;
                 preinstalledModules;
             });
-            Debug.print("Q2"); // FIXME: Remove.
 
             let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
                 case (#simplyModules m) {
@@ -275,10 +272,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             let ?indirect = coreModules.get("indirect") else {
                 Debug.trap("error 1");
             };
-            Debug.print("Q3"); // FIXME: Remove.
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
-                Debug.print("Q4: " # debug_show(name) # " | " # debug_show(coreModules.get(packageName))); // FIXME: Remove.
                 // Starting installation of all modules in parallel:
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
@@ -398,8 +393,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
         user: Principal;
     }): async* Principal {
-        Debug.print("_installModuleCode: " # debug_show(moduleName));
-
         // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
         // FIXME:
         let {canister_id} = await* Install.myCreateCanister({mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect]; user; initialIndirect});

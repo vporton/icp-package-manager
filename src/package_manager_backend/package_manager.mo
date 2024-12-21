@@ -178,7 +178,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {installationId: Common.InstallationId}
     {
-        Debug.print("installPackageWithPreinstalledModules"); // FIXME: Remove
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         let installationId = nextInstallationId;
@@ -761,7 +760,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
-        Debug.print("_installModulesGroup"); // FIXME: Remove
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;

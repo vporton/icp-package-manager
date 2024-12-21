@@ -32,17 +32,14 @@ actor class Bootstrapper() = this {
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         // TODO: Create and update settings for two canisters in parallel.
         // TODO: No need to create many initial controllers.
-        Debug.print("A1");
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this), user];
             user;
         }); // TODO: This is a bug.
-        Debug.print("A2");
         let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[backend_canister_id, Principal.fromActor(this), user];
             user;
         });
-        Debug.print("A3");
         for (canister_id in [backend_canister_id, indirect_canister_id].vals()) {
             await IC.ic.update_settings({
                 canister_id;
@@ -71,7 +68,6 @@ actor class Bootstrapper() = this {
             initialIndirect = indirect_canister_id;
             user;
         });
-        Debug.print("A4");
 
         await* Install.myInstallCode({
             installationId = 0;
@@ -85,7 +81,6 @@ actor class Bootstrapper() = this {
             initialIndirect = indirect_canister_id;
             user;
         });
-        Debug.print("A5");
 
         // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
         //     addOwner: (newOwner: Principal) -> async ();
