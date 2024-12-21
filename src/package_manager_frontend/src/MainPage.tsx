@@ -139,15 +139,15 @@ export default function MainPage() {
             <h2>Distribution</h2>
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
-            Distro:{" "}
-            <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
-                {distros.map((entry: {canister: Principal, name: string}) =>
-                    <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
-                )}
-            </select>{" "}
-            <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
+                Distro:{" "}
+                <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
+                    {distros.map((entry: {canister: Principal, name: string}) =>
+                        <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
+                    )}
+                </select>{" "}
+                <Button onClick={() => setDistroAddShow(true)}>Add distro</Button>{" "}
+                <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
             </p>
-            <p><Button onClick={() => setDistroAddShow(true)}>Add distro</Button></p>
             <h2>Install</h2>
             <label htmlFor="name">Enter package name to install:</label>{" "}
             <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
