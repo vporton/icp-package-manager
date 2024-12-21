@@ -19,7 +19,7 @@ import { createActor as createRepositoryPartitionActor } from "../../declaration
 import { createActor as createBackendActor } from "../../declarations/package_manager";
 import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
-import { Bootstrapper, RepositoryPartitionRO } from '../../declarations/Bootstrapper/Bootstrapper.did';
+import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
 // import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
 import { IDL } from '@dfinity/candid';
@@ -88,11 +88,9 @@ function GlobalUI() {
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})
         // TODO: Are here modules needed? They are installed below, instead?
         const {backendPrincipal, indirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
-          frontend: glob.frontend!, // TODO: `!`
           backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
           indirectWasmModule: pkgReal.modules[2][1][0],
           user: principal!, // TODO: `!`
-          repo: repoPart!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // principal!, // FIXME
         });
         const backend: PackageManager = createBackendActor(backendPrincipal, {agent});

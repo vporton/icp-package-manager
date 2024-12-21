@@ -19,8 +19,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
     user: Principal;
-    installationId: Common.InstallationId; // TODO: superfluous
-    userArg: Blob;
+    // installationId: Common.InstallationId; // TODO: superfluous
+    // userArg: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
     // } = from_candid(userArg) else {
@@ -413,6 +413,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 canister;
                                 user;
                                 packageManagerOrBootstrapper; // TODO: Remove?
+                                module_;
                             });
                         }]);
                     };
@@ -425,7 +426,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO: probably superfluous
     public shared({caller}) func onCreateCanister({
         installationId: Common.InstallationId;
-        module_: Common.SharedModule;
         moduleNumber: Nat;
         moduleName: ?Text;
         canister: Principal;

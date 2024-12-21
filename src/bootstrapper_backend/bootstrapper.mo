@@ -2,7 +2,6 @@ import Common "../common";
 import Install "../install";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
-import cycles_ledger "canister:cycles_ledger";
 import IC "mo:ic";
 
 actor class Bootstrapper() = this {
@@ -26,11 +25,9 @@ actor class Bootstrapper() = this {
     };
 
     public shared func bootstrapBackend({
-        frontend: Principal;
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
         user: Principal;
-        repo: Common.RepositoryPartitionRO;
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         // TODO: Create and update settings for two canisters in parallel.

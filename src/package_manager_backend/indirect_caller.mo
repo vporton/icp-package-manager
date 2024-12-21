@@ -310,7 +310,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installationId: Common.InstallationId;
             moduleNumber: Nat;
             moduleName: ?Text;
-            module_: Common.SharedModule;
             canister: Principal;
             user: Principal;
         }) -> async ();
@@ -349,7 +348,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installPackage; // Bool
             moduleNumber;
             moduleName;
-            module_ = Common.shareModule(wasmModule);
+            // module_ = Common.shareModule(wasmModule);
             installationId;
             canister = canister_id;
             user;
@@ -404,7 +403,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         installationId;
                         moduleNumber;
                         moduleName;
-                        module_ = wasmModule;
+                        // module_ = wasmModule;
                         canister = preinstalledCanisterId;
                         user;
                     });
