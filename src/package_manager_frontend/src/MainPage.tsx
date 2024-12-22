@@ -151,9 +151,11 @@ export default function MainPage() {
                 <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
             </p>
             <h2>Install</h2>
-            <label htmlFor="name">Enter package name to install:</label>{" "}
-            <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
-            <Button disabled={!curDistro || packageName === ''} onClick={() => navigate(`/choose-version/${curDistro!.toString()}/${packageName}`)}>Start installation</Button>
+            <p>
+                <label htmlFor="name">Enter package name to install:</label>{" "}
+                <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
+                <Button disabled={!curDistro || packageName === ''} onClick={() => navigate(`/choose-version/${curDistro!.toString()}/${packageName}`)}>Start installation</Button>
+            </p>
             {packagesToRepair !== undefined && packagesToRepair.length !== 0 ?
             <>
                 <h2>Partially Installed</h2>
