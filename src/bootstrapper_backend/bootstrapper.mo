@@ -12,7 +12,6 @@ import Install "../install";
 actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it.
 
-    // FIXME: Legible to DoS attack.
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
