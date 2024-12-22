@@ -37,6 +37,7 @@ async function main() {
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
     const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
     const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/indirect_caller/indirect_caller.wasm"));
+    const pmSimpleIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/simple_indirect/simple_indirect.wasm"));
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
@@ -71,6 +72,11 @@ async function main() {
         forceReinstall: true,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
+    const pmSimpleIndirectModule = await repositoryIndex.uploadModule({
+        code: {Wasm: pmIndirectBlob},
+        forceReinstall: true,
+        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+    });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleFrontendBlob},
         forceReinstall: false,
@@ -84,6 +90,7 @@ async function main() {
             ['backend', [pmBackendModule, true]], // TODO: Make this boolean a named parameter instead.
             ['frontend', [pmFrontendModule, true]],
             ['indirect', [pmIndirectModule, true]],
+            ['simple_indirect', [pmSimpleIndirectModule, true]],
         ],
         dependencies: [],
         functions: [],

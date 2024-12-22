@@ -62,6 +62,7 @@ export default function MainPage() {
         )),
         user: props.principal!,
         initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+        simpleIndirect: Principal.fromText("aaaaa-aa"), // FIXME?
       });
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`

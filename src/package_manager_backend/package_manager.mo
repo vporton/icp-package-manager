@@ -13,10 +13,12 @@ import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
+import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
+    simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId; // TODO: superfluous
     // userArg: Blob;
@@ -84,6 +86,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
+    stable var simple_indirect_: ?SimpleIndirect.SimpleIndirect = ?actor(Principal.toText(simpleIndirect)); // TODO: Remove `?`.
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
         let ?indirect_caller_2 = indirect_caller_ else {
@@ -381,22 +384,16 @@ shared({caller = initialCaller}) actor class PackageManager({
                         // let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
                         //     case (?v) v;
                         //     case null {
-                        //         let ?inst2 = installedPackages.get(installationId) else {
-                        //             Debug.trap("no such installationId: " # debug_show(installationId));
-                        //         };
-                        //         let ?v = inst2.modules.get("indirect") else { // TODO: crude hack
-                        //             Debug.trap("programming error");
-                        //         };
-                        //         actor(Principal.toText(v));
+                        //         Debug.trap("programming error");
                         //     };
                         // };
-                        let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
+                        let simpleIndirect: SimpleIndirect.SimpleIndirect = switch (simple_indirect_) { // hack
                             case (?v) v;
                             case null {
                                 Debug.trap("programming error");
                             };
                         };
-                        indirect.callAllOneWay([{
+                        simpleIndirect.callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO

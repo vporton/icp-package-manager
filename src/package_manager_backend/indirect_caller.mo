@@ -1,5 +1,4 @@
 /// Canister that takes on itself potentially non-returning calls.
-import ICE "mo:base/ExperimentalInternetComputer";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
@@ -14,6 +13,7 @@ import Install "../install";
 shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
+    simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
     // userArg: Blob;
@@ -89,102 +89,13 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     };
 
     /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper)); // actor("aaaaa-aa");
+    /*stable*/ var ourSimpleIndirect = simpleIndirect;
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
         onlyOwner(caller, "setOurPM");
 
         ourPM := actor(Principal.toText(pm));
     };
-
-    /// Call methods in the given order and don't return.
-    ///
-    /// If a method is missing, stop.
-    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        label cycle for (method in methods.vals()) {
-            try {
-                ignore await ICE.call(method.canister, method.name, method.data); 
-            }
-            catch (e) {
-                let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-                Debug.print(msg);
-                Debug.trap(msg);
-                break cycle;
-            };
-        };
-    };
-
-    /// Call methods in the given order and don't return.
-    ///
-    /// If a method is missing, keep calling other methods.
-    ///
-    /// TODO: We don't need this function.
-    private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
-        for (method in methods.vals()) {
-            try {
-                ignore await ICE.call(method.canister, method.name, method.data);
-            }
-            catch (e) {
-                let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-                Debug.print(msg);
-                Debug.trap(msg);
-                if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
-                    throw e; // Other error cause interruption.
-                }
-            };
-        };
-    };
-
-    /// TODO: We don't need this function.
-    public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
-        onlyOwner(caller, "callIgnoringMissingOneWay");
-
-        await* callIgnoringMissingOneWayImpl(methods)
-    };
-
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
-        onlyOwner(caller, "callAllOneWay");
-
-        await* callAllOneWayImpl(methods);
-    };
-
-    /// TODO: We don't need this function.
-    public shared({caller}) func callIgnoringMissing(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller, "callIgnoringMissing");
-
-        try {
-            return await ICE.call(method.canister, method.name, method.data); 
-        }
-        catch (e) {
-            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-            Debug.print(msg);
-            Debug.trap(msg);
-        };
-    };
-
-    public shared({caller}) func call(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller, "call");
-
-        try {
-            return await ICE.call(method.canister, method.name, method.data);
-        }
-        catch (e) {
-            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-            Debug.print(msg);
-            Debug.trap(msg);
-        };
-    };
-
-    // public shared({caller}) func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async () {
-    //     onlyOwner(caller, "copyAll");
-
-    //     try {
-    //         return await* CopyAssets.copyAll({from; to});
-    //     }
-    //     catch (e) {
-    //         Debug.print("Indirect caller copyAll: " # Error.message(e));
-    //         Debug.trap("Indirect caller copyAll: " # Error.message(e));
-    //     };
-    // };
 
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
         whatToInstall: {
@@ -200,9 +111,11 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
+            Debug.print("A1");
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
+            Debug.print("A2");
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installationWorkCallback: ({
@@ -227,6 +140,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 repo;
                 preinstalledModules;
             });
+            Debug.print("A3");
 
             let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
                 case (#simplyModules m) {
@@ -251,41 +165,49 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     };
                 }
             };
+            Debug.print("A4");
 
             let bi = if (preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
-                [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this))];
+                [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this)), ("simple_indirect", ourSimpleIndirect)];
             } else {
                 preinstalledModules;
             };
             let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
+            Debug.print("A5: " # debug_show(Iter.toArray(coreModules.entries())));
             let ?backend = coreModules.get("backend") else {
                 Debug.trap("error 1");
             };
             let ?indirect = coreModules.get("indirect") else {
                 Debug.trap("error 1");
             };
+            let ?simple_indirect = coreModules.get("simple_indirect") else {
+                Debug.trap("error 1");
+            };
+            Debug.print("A6");
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
                 // Starting installation of all modules in parallel:
+                Debug.print("A7");
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
                     moduleName = ?name;
                     installArg = to_candid({
                         installationId;
-                        initialIndirect = indirect;
                         packageManagerOrBootstrapper = backend;
                     }); // TODO: Add more arguments.
                     installationId;
                     packageManagerOrBootstrapper = backend;
                     initialIndirect = indirect;
+                    simpleIndirect = simple_indirect;
                     preinstalledCanisterId = coreModules.get(packageName);
                     user; // TODO: `!`
                     wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
                 });
                 moduleNumber += 1;
             };
+            Debug.print("A8");
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
@@ -322,6 +244,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
         packageManagerOrBootstrapper: Principal;
         initialIndirect: Principal;
+        simpleIndirect: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
     }): () {
@@ -363,6 +286,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         installArg;
                         packageManagerOrBootstrapper;
                         initialIndirect;
+                        simpleIndirect;
                         user;
                     });
                 };
@@ -383,11 +307,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
         initialIndirect: Principal;
+        simpleIndirect: Principal;
         installArg: Blob;
         user: Principal;
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect];
+            mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect, simpleIndirect];
             user;
             initialIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
@@ -411,6 +336,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installArg;
             packageManagerOrBootstrapper;
             initialIndirect;
+            simpleIndirect;
             user;
         });
 

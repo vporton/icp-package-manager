@@ -52,6 +52,7 @@ module {
         installArg: Blob;
         packageManagerOrBootstrapper: Principal;
         initialIndirect: Principal;
+        simpleIndirect: Principal;
         user: Principal;
     }): async* () {
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
@@ -67,6 +68,7 @@ module {
             arg = to_candid({
                 packageManagerOrBootstrapper;
                 initialIndirect;
+                simpleIndirect;
                 user;
                 installationId;
                 userArg = installArg;
