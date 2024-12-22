@@ -312,7 +312,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect, simpleIndirect];
+            mainControllers = ?[user, initialIndirect, simpleIndirect];
             user;
             initialIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.

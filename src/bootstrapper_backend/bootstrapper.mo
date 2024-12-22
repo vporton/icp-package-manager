@@ -128,7 +128,7 @@ actor class Bootstrapper() = this {
                 settings = {
                     compute_allocation = null;
                     // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
-                    controllers = ?[backend_canister_id, simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
+                    controllers = ?[simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
@@ -182,7 +182,7 @@ actor class Bootstrapper() = this {
                 compute_allocation = null;
                 // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
                 // FIXME: Should exclude `backend` here and in other places?
-                controllers = ?[backend_canister_id, simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
+                controllers = ?[simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
                 freezing_threshold = null;
                 log_visibility = null;
                 memory_allocation = null;
