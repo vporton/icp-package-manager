@@ -53,10 +53,12 @@ export default function MainPage() {
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
-        glob.package_manager_ro!.getHalfInstalledPackages().then(h => {
-            setPackagesToRepair(h);
-        });
-    });
+        if (glob.package_manager_ro != undefined) {
+            glob.package_manager_ro!.getHalfInstalledPackages().then(h => {
+                setPackagesToRepair(h);
+            });
+        }
+    }, [glob.package_manager_ro]);
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
