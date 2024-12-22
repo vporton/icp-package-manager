@@ -36,12 +36,12 @@ actor class Bootstrapper() = this {
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)];
+            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
             user;
             cyclesAmount = newCanisterCycles;
         });
         let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)];
+            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
             user;
             cyclesAmount = newCanisterCycles;
         });
