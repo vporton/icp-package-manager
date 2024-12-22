@@ -91,7 +91,7 @@ function GlobalUI() {
           backendWasmModule: pkgReal.modules[0][1][0], // TODO: explicit values
           indirectWasmModule: pkgReal.modules[2][1][0],
           user: principal!, // TODO: `!`
-          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // principal!, // FIXME
+          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
         });
         const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
         await backend.installPackageWithPreinstalledModules({ // TODO: Move this to backend.

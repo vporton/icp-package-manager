@@ -28,9 +28,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            // FIXME: Remove Bootrapper later.
             [
-                // (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),
@@ -388,8 +386,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
         user: Principal;
     }): async* Principal {
-        // Later bootstrapper transfers control to the PM's `indirect_caller` and removes being controlled by bootstrapper.
-        // FIXME:
         let {canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[packageManagerOrBootstrapper, user, initialIndirect];
             user;

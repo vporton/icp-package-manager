@@ -31,9 +31,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            // FIXME: Remove Bootrapper later.
             [
-                // (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),
@@ -338,7 +336,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             _updateAfterInstall({installationId});
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
-                    // FIXME: Is `installedPackages` already filled?
                     let ?inst2 = installedPackages.get(installationId) else {
                         Debug.trap("no such installationId: " # debug_show(installationId));
                     };
@@ -360,7 +357,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("PackageManager: programming error");
             };
             halfInstalledPackages.delete(installationId);
-            let #real realPackage = pkg.package.specific else { // FIXME: fails with virtual packages
+            let #real realPackage = pkg.package.specific else { // TODO: fails with virtual packages
                 Debug.trap("trying to directly install a virtual installation");
             };
             let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(pkg.installedModules.size(), Text.equal, Text.hash);

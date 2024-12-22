@@ -9,7 +9,7 @@ Remaining things TODO:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
-- FIXME: future compaitibility in package format.
+- TODO: future compaitibility in package format.
 
 - FIXME: If `indirect_caller` is a controller, it breaks on `indirect_caller` upgrade, because it creates a new package.
   Workaround: Create a `buffer` non-upgradeable at all canister with minimum functionality.
