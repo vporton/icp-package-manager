@@ -35,33 +35,16 @@ actor class Bootstrapper() = this {
         user: Principal;
         packageManagerOrBootstrapper: Principal;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal} {
-        // TODO: Create and update settings for two canisters in parallel.
-        // TODO: No need to create many initial controllers.
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this), user];
-            user;
-            cyclesAmount = newCanisterCycles;
-        }); // TODO: This is a bug.
-        let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[backend_canister_id, Principal.fromActor(this), user];
+            mainControllers = ?[Principal.fromActor(this)];
             user;
             cyclesAmount = newCanisterCycles;
         });
-        for (canister_id in [backend_canister_id, indirect_canister_id].vals()) {
-            await IC.ic.update_settings({
-                canister_id;
-                sender_canister_version = null;
-                settings = {
-                    compute_allocation = null;
-                    controllers = ?[indirect_canister_id, backend_canister_id, Principal.fromActor(this), user]; // FIXME
-                    freezing_threshold = null;
-                    log_visibility = null;
-                    memory_allocation = null;
-                    reserved_cycles_limit = null;
-                    wasm_memory_limit = null;
-                };
-            });
-        };
+        let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
+            mainControllers = ?[Principal.fromActor(this)];
+            user;
+            cyclesAmount = newCanisterCycles;
+        });
 
         await* Install.myInstallCode({
             installationId = 0;
@@ -88,6 +71,23 @@ actor class Bootstrapper() = this {
             initialIndirect = indirect_canister_id;
             user;
         });
+
+        for (canister_id in [backend_canister_id, indirect_canister_id].vals()) {
+            // TODO: We can provide these setting initially and thus update just one canister.
+            await IC.ic.update_settings({
+                canister_id;
+                sender_canister_version = null;
+                settings = {
+                    compute_allocation = null;
+                    controllers = ?[indirect_canister_id, backend_canister_id, user]; // TODO: Should `user` be among controllers?    
+                    freezing_threshold = null;
+                    log_visibility = null;
+                    memory_allocation = null;
+                    reserved_cycles_limit = null;
+                    wasm_memory_limit = null;
+                };
+            });
+        };
 
         // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
         //     addOwner: (newOwner: Principal) -> async ();
