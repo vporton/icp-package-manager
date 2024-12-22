@@ -10,7 +10,6 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Common "../common";
 import Install "../install";
-import Bootstrapper "canister:Bootstrapper";
 
 shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;

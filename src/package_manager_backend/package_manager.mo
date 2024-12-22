@@ -13,7 +13,6 @@ import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
-import Bootstrapper "canister:Bootstrapper";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
