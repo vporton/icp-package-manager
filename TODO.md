@@ -25,6 +25,8 @@ Remaining things TODO:
 
 - Remove `initialIndirect` (remain only `simpleIndirect`) as controller.
 
+- `inspect` incoming calls.
+
 - Resist to drain cycles attack.
 
 - Should user be a controller?

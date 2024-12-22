@@ -81,7 +81,7 @@ module {
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
-                await* CopyAssets.copyAll({ // TODO: Don't call shared.
+                await* CopyAssets.copyAll({
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
             };

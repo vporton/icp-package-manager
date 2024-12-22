@@ -14,6 +14,15 @@ import useConfirm from "./useConfirm";
 import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
 import { IDL } from "@dfinity/candid";
 
+function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
+  const binaryString = String.fromCharCode(...uint8Array);
+  const base64String = btoa(binaryString);
+  return base64String
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+}
+
 export default function MainPage() {
     return (
       <AuthContext.Consumer>{
@@ -54,6 +63,8 @@ export default function MainPage() {
       const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
       const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+      const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
+      const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
       const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
         wasmModule: pkgReal.modules[1][1][0],
         installArg: new Uint8Array(IDL.encode(
@@ -63,11 +74,14 @@ export default function MainPage() {
         user: props.principal!,
         initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
         simpleIndirect: Principal.fromText("aaaaa-aa"), // FIXME?
+        frontendTweakPubKey,
       });
       const url = getIsLocal()
         ? `http://${frontendPrincipal}.localhost:4943`
         : `https://${frontendPrincipal}.icp0.io`;
-      open(url, '_self');
+      // gives the right to set frontend owner and controller to backend:
+      const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
+      open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",

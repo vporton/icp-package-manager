@@ -93,6 +93,8 @@ function GlobalUI() {
           simpleIndirectWasmModule: pkgReal.modules[3][1][0],
           user: principal!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+          frontendTweakPrivKey: glob.frontendTweakPrivKey!,
+          frontend: glob.frontend!,
         });
         const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
         await backend.installPackageWithPreinstalledModules({ // TODO: Move this to backend.
