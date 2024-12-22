@@ -1,11 +1,13 @@
 import Common "../common";
 import Install "../install";
 import Principal "mo:base/Principal";
+import HashMap "mo:base/HashMap";
 import IC "mo:ic";
 
 actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it.
 
+    // FIXME: Legible to DoS attack.
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
@@ -31,6 +33,7 @@ actor class Bootstrapper() = this {
         {canister_id};
     };
 
+    // FIXME: Legible to DoS attack.
     public shared func bootstrapBackend({
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
@@ -127,4 +130,9 @@ actor class Bootstrapper() = this {
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
     };
+
+    type PubKey = Blob;
+
+    /// Frontend canisters belong to this canister. We move them to new owners.
+    let frontendTweakers = HashMap.HashMap<Principal, PubKey>(1, Principal.equal, Principal.hash);
 }
