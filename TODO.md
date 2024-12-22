@@ -12,6 +12,7 @@ Remaining things TODO:
 - FIXME: future compaitibility in package format.
 
 - FIXME: If `indirect_caller` is a controller, it breaks on `indirect_caller` upgrade, because it creates a new package.
+  Workaround: Create a `buffer` non-upgradeable at all canister with minimum functionality.
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
