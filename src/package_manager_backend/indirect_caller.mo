@@ -31,7 +31,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         HashMap.fromIter(
             // FIXME: Remove Bootrapper later.
             [
-                (initialCaller, ()), // for bootstrapper
+                // (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),

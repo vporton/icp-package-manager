@@ -34,7 +34,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.fromIter(
             // FIXME: Remove Bootrapper later.
             [
-                (initialCaller, ()), // for bootstrapper
+                // (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),
