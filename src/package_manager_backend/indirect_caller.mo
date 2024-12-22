@@ -29,9 +29,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            // FIXME
-            // FIXME: Remove BootrapperIndirectCaller later.
-            // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
+            // FIXME: Remove Bootrapper later.
             [
                 (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),

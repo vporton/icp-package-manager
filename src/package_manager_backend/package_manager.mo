@@ -32,9 +32,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            // FIXME
             // FIXME: Remove Bootrapper later.
-            // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
             [
                 (initialCaller, ()), // for bootstrapper
                 (packageManagerOrBootstrapper, ()),
