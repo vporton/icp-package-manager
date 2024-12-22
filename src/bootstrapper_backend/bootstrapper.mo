@@ -181,7 +181,6 @@ actor class Bootstrapper() = this {
             settings = {
                 compute_allocation = null;
                 // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
-                // FIXME: Should exclude `backend` here and in other places?
                 controllers = ?[simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
                 freezing_threshold = null;
                 log_visibility = null;
