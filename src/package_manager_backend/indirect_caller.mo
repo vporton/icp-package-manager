@@ -34,13 +34,11 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
             [
                 (initialCaller, ()), // for bootstrapper
-                (initialIndirect, ()),
                 (packageManagerOrBootstrapper, ()),
+                (initialIndirect, ()),
                 (user, ()),
-                (Principal.fromActor(this), ()),
-                // (Principal.fromActor(Bootstrapper), ()), // FIXME
             ].vals(),
-            6,
+            4,
             Principal.equal,
             Principal.hash);
 

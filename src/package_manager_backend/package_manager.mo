@@ -36,14 +36,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             // FIXME: Remove Bootrapper later.
             // FIXME: Reliance on BootrapperIndirectCaller in additional copies of package manager.
             [
-                (initialCaller, ()),
+                (initialCaller, ()), // for bootstrapper
+                (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),
-                (packageManagerOrBootstrapper, ()),
-                (Principal.fromActor(this), ()),
-                (Principal.fromActor(Bootstrapper), ()), // FIXME
             ].vals(), // TODO: Are all required?
-            6,
+            4,
             Principal.equal,
             Principal.hash);
 
