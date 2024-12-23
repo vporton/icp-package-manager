@@ -5,7 +5,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
-import {ic} "mo:IC";
+import {ic} "mo:ic";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
@@ -233,7 +233,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     //     onlyOwner(caller, "call");
     // };
 
-	public shared({caller}) func take_canister_snapshot(args: TakeCanisterSnapshotArgs): async () {
+	public shared({caller}) func take_canister_snapshot(args: TakeCanisterSnapshotArgs): () {
         onlyOwner(caller, "call");
 
         ignore ic.take_canister_snapshot(args);
@@ -251,7 +251,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         update_settings(args);
     };
 
-	public shared({caller}) func upload_chunk(args: UploadChunkArgs): async UploadChunkResultasync () {
+	public shared({caller}) func upload_chunk(args: UploadChunkArgs): () {
         onlyOwner(caller, "call");
 
         upload_chunk(args);
