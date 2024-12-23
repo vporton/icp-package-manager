@@ -6,7 +6,7 @@ import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
 import Debug "mo:base/Debug";
 import Sha256 "mo:sha2/Sha256";
-import IC "mo:ic";
+import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 
@@ -126,7 +126,7 @@ actor class Bootstrapper() = this {
 
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
-            await IC.ic.update_settings({
+            await ic.update_settings({
                 canister_id;
                 sender_canister_version = null;
                 settings = {
@@ -195,7 +195,7 @@ actor class Bootstrapper() = this {
                 permission;
             });
         };
-        await IC.ic.update_settings({
+        await ic.update_settings({
             canister_id = frontend;
             sender_canister_version = null;
             settings = {
