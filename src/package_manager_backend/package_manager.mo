@@ -378,7 +378,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        let ?cbPrincipal = inst3.get(moduleName2) else { // FIXME: works only with named modules
+                        let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
                         // let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
