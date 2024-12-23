@@ -60,6 +60,8 @@ Remaining things TODO:
 
 - Error handling in frontend.
 
+- Optionally, create user's repository and copy there installed packages.
+
 - Bootstrapping package manager partly done (depends on installing frontend canisters).
 
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
