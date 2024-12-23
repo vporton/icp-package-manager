@@ -73,7 +73,7 @@ export default function MainPage() {
         )),
         user: props.principal!,
         initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        simpleIndirect: Principal.fromText("aaaaa-aa"), // FIXME?
+        simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
         frontendTweakPubKey,
       });
       const url = getIsLocal()
