@@ -5,7 +5,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
-import {ic} "mo:ic";
+import IC "mo:ic";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
@@ -166,22 +166,22 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     //     onlyOwner(caller, "call");
     // };
 
-	public shared({caller}) func delete_canister(args: DeleteCanisterArgs): () {
+	public shared({caller}) func delete_canister(args: IC.DeleteCanisterArgs): () {
         onlyOwner(caller, "call");
 
-        ic.delete_canister(args);
+        await IC.ic.delete_canister(args);
     };
 
-	public shared({caller}) func delete_canister_snapshot(args: DeleteCanisterSnapshotArgs): () {
+	public shared({caller}) func delete_canister_snapshot(args: IC.DeleteCanisterSnapshotArgs): () {
         onlyOwner(caller, "call");
 
-        ic.delete_canister_snapshot(args);
+        await IC.ic.delete_canister_snapshot(args);
     };
 
-	public shared({caller}) func deposit_cycles(args: DepositCyclesArgs): () {
+	public shared({caller}) func deposit_cycles(args: IC.DepositCyclesArgs): () {
         onlyOwner(caller, "call");
 
-        ic.deposit_cycles(args);
+        await IC.ic.deposit_cycles(args);
     };
 
 	// TODO: https://forum.dfinity.org/t/can-a-query-be-dosed-by-nn-returning-function
@@ -189,13 +189,13 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     //     onlyOwner(caller, "call");
     // };
 
-	public shared({caller}) func install_chunked_code(args: InstallChunkedCodeArgs): () {
+	public shared({caller}) func install_chunked_code(args: IC.InstallChunkedCodeArgs): () {
         onlyOwner(caller, "call");
 
         install_chunked_code(args);
     };
 
-	public shared({caller}) func install_code(args: InstallCodeArgs): () {
+	public shared({caller}) func install_code(args: IC.InstallCodeArgs): () {
         onlyOwner(caller, "call");
 
         install_code(args);
@@ -205,25 +205,25 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     //     onlyOwner(caller, "call");
     // };
 
-	public shared({caller}) func load_canister_snapshot(args: LoadCanisterSnapshotArgs): () {
+	public shared({caller}) func load_canister_snapshot(args: IC.LoadCanisterSnapshotArgs): () {
         onlyOwner(caller, "call");
 
         load_canister_snapshot(args);
     };
 
-	public shared({caller}) func provisional_top_up_canister(args: ProvisionalTopUpCanisterArgs): () {
+	public shared({caller}) func provisional_top_up_canister(args: IC.ProvisionalTopUpCanisterArgs): () {
         onlyOwner(caller, "call");
 
         provisional_top_up_canister(args);
     };
 
-	public shared({caller}) func start_canister(args: StartCanisterArgs): () {
+	public shared({caller}) func start_canister(args: IC.StartCanisterArgs): () {
         onlyOwner(caller, "call");
 
         start_canister(args);
     };
 
-	public shared({caller}) func stop_canister(args: StopCanisterArgs): () {
+	public shared({caller}) func stop_canister(args: IC.StopCanisterArgs): () {
         onlyOwner(caller, "call");
 
         stop_canister(args);
@@ -233,25 +233,25 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     //     onlyOwner(caller, "call");
     // };
 
-	public shared({caller}) func take_canister_snapshot(args: TakeCanisterSnapshotArgs): () {
+	public shared({caller}) func take_canister_snapshot(args: IC.TakeCanisterSnapshotArgs): () {
         onlyOwner(caller, "call");
 
-        ignore ic.take_canister_snapshot(args);
+        ignore await IC.ic.take_canister_snapshot(args);
     };
 
-	public shared({caller}) func uninstall_code(args: uninstall_code_args): () {
+	public shared({caller}) func uninstall_code(args: IC.uninstall_code_args): () {
         onlyOwner(caller, "call");
 
         uninstall_code(args);
     };
 
-	public shared({caller}) func update_settings(args: UpdateSettingsArgs): () {
+	public shared({caller}) func update_settings(args: IC.UpdateSettingsArgs): () {
         onlyOwner(caller, "call");
 
         update_settings(args);
     };
 
-	public shared({caller}) func upload_chunk(args: UploadChunkArgs): () {
+	public shared({caller}) func upload_chunk(args: IC.UploadChunkArgs): () {
         onlyOwner(caller, "call");
 
         upload_chunk(args);
