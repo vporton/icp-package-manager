@@ -201,7 +201,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     packageManagerOrBootstrapper = backend;
                     initialIndirect = indirect;
                     simpleIndirect = simple_indirect;
-                    preinstalledCanisterId = coreModules.get(packageName);
+                    preinstalledCanisterId = coreModules.get(name);
                     user; // TODO: `!`
                     wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
                 });
