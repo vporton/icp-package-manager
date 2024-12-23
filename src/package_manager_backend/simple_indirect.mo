@@ -158,6 +158,8 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         };
     };
 
+    // TODO: Are the following methods necessary? Can't we use `callAll` with management canister?
+
     // public shared({caller}) func canister_info(args: CanisterInfoArgs): async CanisterInfoResult {
     //     onlyOwner(caller, "call");
     // };
