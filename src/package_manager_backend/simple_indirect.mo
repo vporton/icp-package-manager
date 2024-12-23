@@ -5,6 +5,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
+import {ic} "mo:IC";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
@@ -156,4 +157,103 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
             Debug.trap(msg);
         };
     };
-}
+
+    // public shared({caller}) func canister_info(args: CanisterInfoArgs): async CanisterInfoResult {
+    //     onlyOwner(caller, "call");
+    // };
+
+	// public shared({caller}) func canister_status(args: CanisterStatusArgs): async CanisterStatusResult {
+    //     onlyOwner(caller, "call");
+    // };
+
+	public shared({caller}) func delete_canister(args: DeleteCanisterArgs): () {
+        onlyOwner(caller, "call");
+
+        ic.delete_canister(args);
+    };
+
+	public shared({caller}) func delete_canister_snapshot(args: DeleteCanisterSnapshotArgs): () {
+        onlyOwner(caller, "call");
+
+        ic.delete_canister_snapshot(args);
+    };
+
+	public shared({caller}) func deposit_cycles(args: DepositCyclesArgs): () {
+        onlyOwner(caller, "call");
+
+        ic.deposit_cycles(args);
+    };
+
+	// TODO: https://forum.dfinity.org/t/can-a-query-be-dosed-by-nn-returning-function
+    // public query({caller}) func fetch_canister_logs(args: FetchCanisterLogsArgs): async FetchCanisterLogsResultasync {
+    //     onlyOwner(caller, "call");
+    // };
+
+	public shared({caller}) func install_chunked_code(args: InstallChunkedCodeArgs): () {
+        onlyOwner(caller, "call");
+
+        install_chunked_code(args);
+    };
+
+	public shared({caller}) func install_code(args: InstallCodeArgs): () {
+        onlyOwner(caller, "call");
+
+        install_code(args);
+    };
+
+	// public shared({caller}) func list_canister_snapshots(args: ListCanisterSnapshotsArgs): async ListCanisterSnapshotsResult {
+    //     onlyOwner(caller, "call");
+    // };
+
+	public shared({caller}) func load_canister_snapshot(args: LoadCanisterSnapshotArgs): () {
+        onlyOwner(caller, "call");
+
+        load_canister_snapshot(args);
+    };
+
+	public shared({caller}) func provisional_top_up_canister(args: ProvisionalTopUpCanisterArgs): () {
+        onlyOwner(caller, "call");
+
+        provisional_top_up_canister(args);
+    };
+
+	public shared({caller}) func start_canister(args: StartCanisterArgs): () {
+        onlyOwner(caller, "call");
+
+        start_canister(args);
+    };
+
+	public shared({caller}) func stop_canister(args: StopCanisterArgs): () {
+        onlyOwner(caller, "call");
+
+        stop_canister(args);
+    };
+
+	// public shared({caller}) func stored_chunks(args: StoredChunksArgs): async StoredChunksResult {
+    //     onlyOwner(caller, "call");
+    // };
+
+	public shared({caller}) func take_canister_snapshot(args: TakeCanisterSnapshotArgs): async () {
+        onlyOwner(caller, "call");
+
+        ignore ic.take_canister_snapshot(args);
+    };
+
+	public shared({caller}) func uninstall_code(args: uninstall_code_args): () {
+        onlyOwner(caller, "call");
+
+        uninstall_code(args);
+    };
+
+	public shared({caller}) func update_settings(args: UpdateSettingsArgs): () {
+        onlyOwner(caller, "call");
+
+        update_settings(args);
+    };
+
+	public shared({caller}) func upload_chunk(args: UploadChunkArgs): async UploadChunkResultasync () {
+        onlyOwner(caller, "call");
+
+        upload_chunk(args);
+    };
+};
