@@ -183,7 +183,6 @@ actor class Bootstrapper() = this {
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
             Debug.trap("access denied");
         };
-        // FIXME: Make `simple_indirect_canister_id` able to use it.
         let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             await assets.grant_permission({
