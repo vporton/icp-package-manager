@@ -13,7 +13,7 @@ Remaining things TODO:
 
 - TODO: future compaitibility in package format.
 
-- FIXME: Cgeck that simpleIndirectCaller is permitted to update controllers of installed modules.
+- FIXME: Check that simpleIndirectCaller is permitted to update controllers of installed modules.
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
   (It to be done by checking in writing a result that it has not been not yet written.)
