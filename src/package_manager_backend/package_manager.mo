@@ -311,7 +311,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         halfInstalledPackages.put(installationId, ourHalfInstalled);
     };
 
-    /// 
     /// Internal
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;

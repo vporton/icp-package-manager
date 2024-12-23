@@ -216,7 +216,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
 
     private type Callbacks = actor {
         onCreateCanister: shared ({
-            installPackage: Bool;
             installationId: Common.InstallationId;
             moduleNumber: Nat;
             moduleName: ?Text;
@@ -224,13 +223,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             user: Principal;
         }) -> async ();
         onInstallCode: shared ({
-            installPackage: Bool;
             installationId: Common.InstallationId;
+            canister: Principal;
             moduleNumber: Nat;
             moduleName: ?Text;
-            module_: Common.SharedModule;
-            canister: Principal;
             user: Principal;
+            module_: Common.SharedModule;
             packageManagerOrBootstrapper: Principal;
         }) -> async ();
     };
