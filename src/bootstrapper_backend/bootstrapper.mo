@@ -145,6 +145,8 @@ actor class Bootstrapper() = this {
     public type PrivKey = Blob;
 
     /// Frontend canisters belong to this canister. We move them to new owners.
+    ///
+    /// FIXME: Remove old entries.
     let frontendTweakers = HashMap.HashMap<Principal, PubKey>(1, Principal.equal, Principal.hash); // TODO: Make it stable?
 
     /// Internal. Updates controllers and owners of the frontend.
