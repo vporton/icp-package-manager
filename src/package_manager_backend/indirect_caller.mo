@@ -247,9 +247,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installArg: Blob;
     }): () {
         try {
-            Debug.print("installModule" # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
-
             onlyOwner(caller, "installModule");
+
+            Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {

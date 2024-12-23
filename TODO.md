@@ -5,8 +5,6 @@ Remaining things TODO:
 
 - https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
 
-- FIXME: Check that all occurrences of  `actor {` match the actual APIs.
-
 - Use remaining dev's cycles to store URLs of PMs.
 
 - TODO: Should `backend` be a controller or an owner? Shouldn't we lay aside it for `simpleIndirectCaller`?
