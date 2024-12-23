@@ -9,7 +9,7 @@ import Sha256 "mo:sha2/Sha256";
 import Settings "Settings";
 import Common "common";
 import CopyAssets "copy_assets";
-import IC "mo:ic";
+import {ic} "mo:ic";
 import Asset "mo:assets-api";
 
 module {
@@ -64,7 +64,7 @@ module {
         };
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
-        await IC.ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManagerOrBootstrapper;
                 initialIndirect;
