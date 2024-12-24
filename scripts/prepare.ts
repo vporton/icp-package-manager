@@ -59,26 +59,31 @@ async function main() {
     console.log("Uploading WASM code...");
     const pmFrontendModule = await repositoryIndex.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
+        installByDefault: true,
         forceReinstall: false,
         callbacks: [],
     });
     const pmBackendModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBackendBlob},
+        installByDefault: true,
         forceReinstall: false,
         callbacks: [], // [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmIndirectBlob},
+        installByDefault: true,
         forceReinstall: true,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmSimpleIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmIndirectBlob},
+        installByDefault: true,
         forceReinstall: true,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleFrontendBlob},
+        installByDefault: true,
         forceReinstall: false,
         callbacks: [],
     });
@@ -87,10 +92,10 @@ async function main() {
     const real: SharedRealPackageInfo = {
         modules: [
             // "backend" goes first, because it stores installation information.
-            ['backend', [pmBackendModule, true]], // TODO: Make this boolean a named parameter instead.
-            ['frontend', [pmFrontendModule, true]],
-            ['indirect', [pmIndirectModule, true]],
-            ['simple_indirect', [pmSimpleIndirectModule, true]],
+            ['backend', pmBackendModule],
+            ['frontend', pmFrontendModule],
+            ['indirect', pmIndirectModule],
+            ['simple_indirect', pmSimpleIndirectModule],
         ],
         dependencies: [],
         functions: [],

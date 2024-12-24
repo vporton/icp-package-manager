@@ -153,12 +153,12 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     let pkg = await repo.getPackage(packageName, version); // TODO: should be not here.
                     switch (pkg.specific) {
                         case (#real pkgReal) {
-                            Iter.map<(Text, (Common.SharedModule, Bool)), (Text, Common.Module)>(
-                                Iter.filter<(Text, (Common.SharedModule, Bool))>(
+                            Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                                Iter.filter<(Text, Common.SharedModule)>(
                                     pkgReal.modules.vals(),
-                                    func (p: (Text, (Common.SharedModule, Bool))) = p.1.1,
+                                    func (p: (Text, Common.SharedModule)) = p.1.installByDefault,
                                 ),
-                                func (p: (Text, (Common.SharedModule, Bool))) = (p.0, Common.unshareModule(p.1.0)),
+                                func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
                             );
                         };
                         case (#virtual _) [].vals();

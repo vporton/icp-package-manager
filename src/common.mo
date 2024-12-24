@@ -73,12 +73,14 @@ module {
 
     public type SharedModule = {
         code: ModuleCode;
+        installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
     };
 
     public type Module = {
         code: ModuleCode;
+        installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
@@ -86,6 +88,7 @@ module {
     public func shareModule(m: Module): SharedModule =
         {
             code = m.code;
+            installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             callbacks = Iter.toArray(m.callbacks.entries());
         };
@@ -93,6 +96,7 @@ module {
     public func unshareModule(m: SharedModule): Module =
         {
             code = m.code;
+            installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             callbacks = HashMap.fromIter(
                 m.callbacks.vals(),
@@ -112,13 +116,14 @@ module {
 
     public type ModuleUpload = {
         code: ModuleUploadCode;
+        installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
     };
 
     public type SharedRealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, (SharedModule, Bool))]; // Modules are named for correct upgrades. `Bool` means "install by default".
+        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -131,7 +136,7 @@ module {
 
     public type RealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: HashMap.HashMap<Text, (Module, Bool)>; // Modules are named for correct upgrades. `Bool` means "install by default".
+        modules: HashMap.HashMap<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
@@ -145,9 +150,9 @@ module {
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
         {
             modules = Iter.toArray(
-                Iter.map<(Text, (Module, Bool)), (Text, (SharedModule, Bool))>(
+                Iter.map<(Text, Module), (Text, SharedModule)>(
                     package.modules.entries(),
-                    func ((k, (m, b)): (Text, (Module, Bool))): (Text, (SharedModule, Bool)) = (k, (shareModule(m), b)),
+                    func ((k, m): (Text, Module)): (Text, SharedModule) = (k, shareModule(m)),
                 ),
             );
             dependencies = package.dependencies;
@@ -158,9 +163,9 @@ module {
     public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
         {
             modules = HashMap.fromIter(
-                Iter.map<(Text, (SharedModule, Bool)), (Text, (Module, Bool))>(
+                Iter.map<(Text, SharedModule), (Text, Module)>(
                     package.modules.vals(),
-                    func ((k, (m, b)): (Text, (SharedModule, Bool))): (Text, (Module, Bool)) = (k, (unshareModule(m), b)),
+                    func ((k, m): (Text, SharedModule)): (Text, Module) = (k, unshareModule(m)),
                 ),
                 package.modules.size(),
                 Text.equal,
@@ -173,7 +178,7 @@ module {
 
     public type RealPackageInfoUpload = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, (ModuleUpload, Bool))]; // Modules are named for correct upgrades.
+        modules: [(Text, ModuleUpload)]; // Modules are named for correct upgrades.
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.

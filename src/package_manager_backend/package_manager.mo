@@ -371,10 +371,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
-            for (module3 in realPackage.modules.entries()) {
-                let (moduleName2, (module4, _: Bool)) = module3 else {
-                    Debug.trap("programming error")
-                };
+            for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
                         let ?cbPrincipal = inst3.get(moduleName2) else {
