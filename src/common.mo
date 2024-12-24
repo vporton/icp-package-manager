@@ -76,6 +76,10 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
+        checkInstalledCallback: ?{
+            moduleName: Text;
+            method: Text;
+        };
     };
 
     public type Module = {
@@ -83,6 +87,10 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
+        checkInstalledCallback: ?{
+            moduleName: Text;
+            method: Text;
+        };
     };
 
     public func shareModule(m: Module): SharedModule =
@@ -91,6 +99,7 @@ module {
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             callbacks = Iter.toArray(m.callbacks.entries());
+            checkInstalledCallback = m.checkInstalledCallback;
         };
 
     public func unshareModule(m: SharedModule): Module =
@@ -104,6 +113,7 @@ module {
                 func (a: ModuleEvent, b: ModuleEvent): Bool = a == b,
                 moduleEventHash,
             );
+            checkInstalledCallback = m.checkInstalledCallback;
         };
 
     public type ModuleUploadCode = {
@@ -119,6 +129,10 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
+        checkInstalledCallback: ?{
+            moduleName: Text;
+            method: Text;
+        };
     };
 
     public type SharedRealPackageInfo = {

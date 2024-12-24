@@ -100,6 +100,7 @@ async function main() {
         dependencies: [],
         functions: [],
         permissions: [],
+        checkInstalledCallback: undefined,
     };
     const pmInfo: SharedPackageInfo = {
         base: {
@@ -118,11 +119,12 @@ async function main() {
 
     const efReal: SharedRealPackageInfo = {
         modules: [
-            ['example', [pmExampleFrontend, true]],
+            ['example', pmExampleFrontend],
         ],
         dependencies: [],
         functions: [],
         permissions: [],
+        checkInstalledCallback: undefined,
     };
     const pmEFInfo: SharedPackageInfo = {
         base: {

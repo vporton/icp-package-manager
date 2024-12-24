@@ -266,12 +266,9 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         let (realModulesToInstall, realModulesToInstallSize): (Iter.Iter<(Text, Common.Module)>, Nat) = switch (whatToInstall) {
             case (#package) {
-                let iter = Iter.map<(Text, (Common.Module, Bool)), (Text, Common.Module)>(
-                    Iter.filter<(Text, (Common.Module, Bool))>(
-                        package3.modules.entries(),
-                        func ((_k, (_m, b)): (Text, (Common.Module, Bool))): Bool = b,
-                    ),
-                    func ((k, (m, _b)): (Text, (Common.Module, Bool))): (Text, Common.Module) = (k, m),
+                let iter = Iter.filter<(Text, Common.Module)>(
+                    package3.modules.entries(),
+                    func ((_k, m): (Text, Common.Module)): Bool = m.installByDefault,
                 );
                 (iter, package3.modules.size()); // TODO: efficient?
             };
