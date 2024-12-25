@@ -76,10 +76,6 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
-        checkInitializedCallback: ?{
-            moduleName: Text;
-            method: Text;
-        };
     };
 
     public type Module = {
@@ -87,10 +83,6 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
-        checkInitializedCallback: ?{
-            moduleName: Text;
-            method: Text;
-        };
     };
 
     public func shareModule(m: Module): SharedModule =
@@ -99,7 +91,6 @@ module {
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             callbacks = Iter.toArray(m.callbacks.entries());
-            checkInitializedCallback = m.checkInitializedCallback;
         };
 
     public func unshareModule(m: SharedModule): Module =
@@ -113,7 +104,6 @@ module {
                 func (a: ModuleEvent, b: ModuleEvent): Bool = a == b,
                 moduleEventHash,
             );
-            checkInitializedCallback = m.checkInitializedCallback;
         };
 
     public type ModuleUploadCode = {
@@ -129,9 +119,13 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
-        checkInitializedCallback: ?{
-            moduleName: Text;
-            method: Text;
+    };
+
+    public type CheckInitializedCallback = ?{
+        moduleName: Text;
+        how: {
+            #methodName : Text;
+            #urlPath : Text;
         };
     };
 
@@ -146,6 +140,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
+        checkInitializedCallback: CheckInitializedCallback;
     };
 
     public type RealPackageInfo = {
@@ -159,6 +154,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
+        checkInitializedCallback: CheckInitializedCallback;
     };
 
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
@@ -172,6 +168,7 @@ module {
             dependencies = package.dependencies;
             functions = package.functions;
             permissions = package.permissions;
+            checkInitializedCallback = package.checkInitializedCallback;
         };
 
     public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
@@ -188,6 +185,7 @@ module {
             dependencies = package.dependencies;
             functions = package.functions;
             permissions = package.permissions;
+            checkInitializedCallback = package.checkInitializedCallback;
         };
 
     public type RealPackageInfoUpload = {
@@ -201,6 +199,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
+        checkInitializedCallback: CheckInitializedCallback;
     };
 
     public type VirtualPackageInfo = {

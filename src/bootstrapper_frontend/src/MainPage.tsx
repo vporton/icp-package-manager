@@ -66,7 +66,7 @@ export default function MainPage() {
       const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
       const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
       const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
-        wasmModule: pkgReal.modules[1][1][0],
+        wasmModule: pkgReal.modules[1][1],
         installArg: new Uint8Array(IDL.encode(
           [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
           [{user: props.principal!, installationId: 0 /* TODO */}],
