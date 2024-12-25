@@ -11,7 +11,7 @@ import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryI
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
-import { installPackageWithModules } from "../../lib/install";
+import { InitializedChecker, installPackageWithModules } from "../../lib/install";
 import { ErrorContext } from "./ErrorContext.js";
 
 export default function ChooseVersion(props: {}) {
@@ -87,6 +87,19 @@ export default function ChooseVersion(props: {}) {
             user: principal!,
             agent: agent!,
         });
+        const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent: defaultAgent!});
+        for (let i = 0; ; ++i) {
+            if (await checker.check()) {
+                break;
+            }
+            if (i == 30) {
+                alert("Cannot initilize canisters"); // TODO
+                return;
+            }
+            await new Promise<void>((resolve, _reject) => {
+                setTimeout(() => resolve(), 1000);
+            });
+        }
         navigate(`/installed/show/${id}`);
     }
     useEffect(() => {

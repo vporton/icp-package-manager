@@ -38,7 +38,7 @@ export async function installPackageWithModules({
 }
 
 /// Note that this can be checked only from frontend, because calling from backend hacker can hang.
-class InitializedChecker {
+export class InitializedChecker {
     private canister: Principal | undefined;
     private cb: CheckInitializedCallback | undefined;
     private defaultAgent: Agent;
@@ -81,7 +81,7 @@ class InitializedChecker {
                 };
                 const actor = Actor.createActor(idlFactory, {
                     agent: this.defaultAgent,
-                    canisterId: this.canister,
+                    canisterId: this.canister!,
                 });
                 await actor[methodName](); // throws or doesn't
                 return true;
@@ -91,9 +91,9 @@ class InitializedChecker {
             }
         }
 
-        const urlPath: string | undefined = (this.cb[0].how as any).urlPath;
+        const urlPath: string | undefined = (this.cb.how as any).urlPath;
         if (urlPath !== undefined) {
-            const frontend = createFrontendActor(this.canister, {agent: this.defaultAgent});
+            const frontend = createFrontendActor(this.canister!, {agent: this.defaultAgent});
             try {
                 const res = await frontend.http_request({method: "GET", url: urlPath, headers: [], body: [], certificate_version: [2]});
                 return res.status_code - res.status_code % 100 === 200;

@@ -25,6 +25,7 @@ import { IndirectCaller, PackageManager } from '../../declarations/package_manag
 import { IDL } from '@dfinity/candid';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
+import { InitializedChecker } from '../../lib/install';
 // import { canister_status } from "@dfinity/ic-management";
 
 function App() {
@@ -113,31 +114,13 @@ function GlobalUI() {
         });
         const installationId = 0n; // TODO
         const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
+        const checker = await InitializedChecker.create({package_manager: backendPrincipal, installationId, defaultAgent: defaultAgent!});
         for (let i = 0; ; ++i) {
-          try {
-            await Promise.all([
-              backend.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
-              indirect.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(),
-            ]);
+          if (await checker.check()) {
             break;
           }
-          catch (e) {}
           if (i == 30) {
             alert("Cannot initilize canisters"); // TODO
-            return;
-          }
-          await new Promise<void>((resolve, _reject) => {
-            setTimeout(() => resolve(), 1000);
-          });
-        }
-        for (let i = 0; ; ++i) {
-          try {
-            await backend.getInstalledPackage(installationId);
-            break;
-          }
-          catch (e) {}
-          if (i == 30) {
-            alert("Cannot get installation info"); // TODO
             return;
           }
           await new Promise<void>((resolve, _reject) => {
