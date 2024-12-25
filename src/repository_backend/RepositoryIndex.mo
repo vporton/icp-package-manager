@@ -302,7 +302,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
           #Assets {wasm = (canister, id); assets};
         };
       };
-      checkInstalledCallback = module_.checkInstalledCallback;
+      checkInitializedCallback = module_.checkInitializedCallback;
     };
   };
 

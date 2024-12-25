@@ -76,7 +76,7 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
-        checkInstalledCallback: ?{
+        checkInitializedCallback: ?{
             moduleName: Text;
             method: Text;
         };
@@ -87,7 +87,7 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
-        checkInstalledCallback: ?{
+        checkInitializedCallback: ?{
             moduleName: Text;
             method: Text;
         };
@@ -99,7 +99,7 @@ module {
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             callbacks = Iter.toArray(m.callbacks.entries());
-            checkInstalledCallback = m.checkInstalledCallback;
+            checkInitializedCallback = m.checkInitializedCallback;
         };
 
     public func unshareModule(m: SharedModule): Module =
@@ -113,7 +113,7 @@ module {
                 func (a: ModuleEvent, b: ModuleEvent): Bool = a == b,
                 moduleEventHash,
             );
-            checkInstalledCallback = m.checkInstalledCallback;
+            checkInitializedCallback = m.checkInitializedCallback;
         };
 
     public type ModuleUploadCode = {
@@ -129,7 +129,7 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool;
         callbacks: [(ModuleEvent, MethodName)];
-        checkInstalledCallback: ?{
+        checkInitializedCallback: ?{
             moduleName: Text;
             method: Text;
         };

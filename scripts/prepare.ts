@@ -100,7 +100,7 @@ async function main() {
         dependencies: [],
         functions: [],
         permissions: [],
-        checkInstalledCallback: undefined,
+        checkInitializedCallback: undefined,
     };
     const pmInfo: SharedPackageInfo = {
         base: {
@@ -124,7 +124,7 @@ async function main() {
         dependencies: [],
         functions: [],
         permissions: [],
-        checkInstalledCallback: undefined,
+        checkInitializedCallback: undefined,
     };
     const pmEFInfo: SharedPackageInfo = {
         base: {
