@@ -20,7 +20,7 @@ Remaining things TODO:
 
 - Should we use 32-bit hash as the ID of WASM value instead of number?
 
-- `inspect` incoming calls.
+- `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
 - Resist to drain cycles attack.
 
