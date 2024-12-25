@@ -86,7 +86,8 @@ export class InitializedChecker {
                 await actor[methodName](); // throws or doesn't
                 return true;
             }
-            catch (_) {
+            catch (e) {
+                console.log(e);
                 return false;
             }
         }

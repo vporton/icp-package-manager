@@ -89,6 +89,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         ignore [await a, await b]; // run in parallel
+        // FIXME: Also check frontend.
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
