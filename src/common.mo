@@ -131,7 +131,7 @@ module {
 
     public type SharedRealPackageInfo = {
         /// it's an array, because may contain several canisters.
-        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades. `Bool` means "install by default".
+        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
         /// Empty versions list means any version.
         ///
         /// TODO: Suggests/recommends akin Debian.
