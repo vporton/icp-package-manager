@@ -87,7 +87,7 @@ export default function ChooseVersion(props: {}) {
             user: principal!,
             agent: agent!,
         });
-        const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent!});
+        const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent: defaultAgent!});
         for (let i = 0; ; ++i) {
             if (await checker.check()) {
                 break;
