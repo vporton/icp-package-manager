@@ -18,6 +18,8 @@ Remaining things TODO:
 
 - Remove `initialIndirect` (remain only `simpleIndirect`) as controller.
 
+- Should we use 32-bit hash as the ID of WASM value instead of number?
+
 - `inspect` incoming calls.
 
 - Resist to drain cycles attack.
