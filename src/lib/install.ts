@@ -60,7 +60,7 @@ class InitializedChecker {
 
         return new InitializedChecker(canister, cb, arg.defaultAgent);
     }
-    private constructor(canister: Principal, cb: CheckInitializedCallback | undefined, defaultAgent: Agent) {
+    private constructor(canister: Principal | undefined, cb: CheckInitializedCallback | undefined, defaultAgent: Agent) {
         this.canister = canister;
         this.cb = cb;
         this.defaultAgent = defaultAgent;
@@ -71,7 +71,7 @@ class InitializedChecker {
                           // Note that it is easier to do here, in frontend.
         }
 
-        const methodName: string | undefined = (this.cb[0].how as any).methodName;
+        const methodName: string | undefined = (this.cb.how as any).methodName;
         if (methodName !== undefined) {
             try {
                 const idlFactory = ({ IDL }: { IDL: any }) => {
