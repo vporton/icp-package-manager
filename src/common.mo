@@ -121,10 +121,12 @@ module {
         callbacks: [(ModuleEvent, MethodName)];
     };
 
-    public type CheckInitializedCallback = ?{
+    public type CheckInitializedCallback = {
         moduleName: Text;
         how: {
+            /// Considered initialized, when doesn't throw.
             #methodName : Text;
+            /// Considered initialized, when the URL path (starting with /) exists.
             #urlPath : Text;
         };
     };
@@ -140,7 +142,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
-        checkInitializedCallback: CheckInitializedCallback;
+        checkInitializedCallback: ?CheckInitializedCallback;
     };
 
     public type RealPackageInfo = {
@@ -154,7 +156,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
-        checkInitializedCallback: CheckInitializedCallback;
+        checkInitializedCallback: ?CheckInitializedCallback;
     };
 
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
@@ -199,7 +201,7 @@ module {
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
-        checkInitializedCallback: CheckInitializedCallback;
+        checkInitializedCallback: ?CheckInitializedCallback;
     };
 
     public type VirtualPackageInfo = {

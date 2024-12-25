@@ -48,8 +48,10 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         initialized := true;
     };
 
-    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        initialized;
+    public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
+        if (not initialized) {
+            Debug.trap("simple_indirect: not initialized");
+        };
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {

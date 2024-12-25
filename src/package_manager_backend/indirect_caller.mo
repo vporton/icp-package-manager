@@ -7,6 +7,8 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
+import IC "mo:ic";
+import ArrayMut "mo:itertools/Utils/ArrayMut";
 import Common "../common";
 import Install "../install";
 
@@ -51,8 +53,10 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         initialized := true;
     };
 
-    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        initialized;
+    public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
+        if (not initialized) {
+            Debug.trap("indirect_caller: not initialized");
+        };
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
@@ -351,4 +355,37 @@ shared({caller = initialCaller}) actor class IndirectCaller({
 
         canister_id;
     };
+
+//     public composite query({caller}) func checkCodeInstalled({
+//         canister_ids: [Principal];
+//     }): async Bool {
+//         try {
+//             onlyOwner(caller, "checkCodeInstalled");
+
+//             type Callee = {
+//                 b44c4a9beec74e1c8a7acbe46256f92f_isInitialized: query () -> async ();
+//             };
+
+//             let threads : [var async()] = Array.tabulateVar(Array.size(canister_ids), func (i: Nat) = func(i: Nat): async () {
+//                 let a: Callee = actor(Principal.toText(canister_ids[i]));
+//                 a.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+//             });
+//             // let threads : [var ?(async())] = Array.init(Array.size()canister_ids, null);
+//             // for (i in threads.keys()) {
+//             //     threads[i] := ?runThread();
+//             // };     
+//             // for (topt in threads.vals()) {
+//             //     let ?t = topt;
+//             //     await t;
+//             // }
+
+//             // let status = await IC.ic.canister_status({ canister_id });
+//             // Option.isSome(status.module_hash);
+//         }
+//         catch (e) {
+//             let msg = "checkCodeInstalled: " # Error.message(e);
+//             Debug.print(msg);
+//             Debug.trap(msg);
+//         };
+//    };
 }

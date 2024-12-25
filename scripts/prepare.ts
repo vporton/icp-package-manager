@@ -100,7 +100,7 @@ async function main() {
         dependencies: [],
         functions: [],
         permissions: [],
-        checkInitializedCallback: [],
+        checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}],
     };
     const pmInfo: SharedPackageInfo = {
         base: {
@@ -119,12 +119,12 @@ async function main() {
 
     const efReal: SharedRealPackageInfo = {
         modules: [
-            ['example', pmExampleFrontend],
+            ['example1', pmExampleFrontend],
         ],
         dependencies: [],
         functions: [],
         permissions: [],
-        checkInitializedCallback: [],
+        checkInitializedCallback: [{moduleName: 'example1', how: {urlPath: '/index.html'}}],
     };
     const pmEFInfo: SharedPackageInfo = {
         base: {

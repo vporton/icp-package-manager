@@ -81,8 +81,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         Iter.toArray(owners.keys());
     };
 
-    public shared func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async Bool {
-        true; // initialized; // TODO
+    public composite query func isAllInitialized(): async () {
+        // if (not initialized) {
+        //     Debug.trap("package_manager: not initialized");
+        // };
+        // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
+        let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+        let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+        ignore [await a, await b]; // run in parallel
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
@@ -93,6 +99,13 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("indirect_caller_ not initialized");
         };
         indirect_caller_2;
+    };
+
+    private func getSimpleIndirect(): SimpleIndirect.SimpleIndirect {
+        let ?simple_indirect_2 = simple_indirect_ else {
+            Debug.trap("simple_indirect_ not initialized");
+        };
+        simple_indirect_2;
     };
 
     // TODO: too low-level?

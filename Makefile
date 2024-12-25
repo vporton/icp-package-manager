@@ -27,6 +27,7 @@ deploy:
 	dfx generate RepositoryPartition
 	dfx generate package_manager
 	dfx generate bookmark
+	dfx generate package_manager_frontend
 	# TODO: What does it do with cycles_ledger on mainnet?
 	dfx canister create simple_indirect
 	dfx canister create cycles_ledger
