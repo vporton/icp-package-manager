@@ -81,6 +81,7 @@ module {
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
+                Debug.print("COPY " # debug_show(assets) # " -> " # debug_show(canister_id));
                 await* CopyAssets.copyAll({
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
