@@ -87,7 +87,6 @@ function GlobalUI() {
         // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
-        console.log("H0", pkgReal.modules);
         // TODO: Are here modules needed? They are installed below, instead?
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           backendWasmModule: pkgReal.modules[0][1], // TODO: explicit values

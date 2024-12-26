@@ -58,51 +58,57 @@ export default function ChooseVersion(props: {}) {
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
     async function install() {
-        setInstalling(true);
+        try {
+            setInstalling(true);
 
-        // TODO: hack
-        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-        const parts = (await index.getCanistersByPK('main'))
-            .map(s => Principal.fromText(s))
-        const foundParts = await Promise.all(parts.map(async part => {
-            try {
-                const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                await part2.getFullPackageInfo(packageName!); // TODO: `!`
-                return part;
-            }
-            catch(_) { // TODO: Check error.
+            // TODO: hack
+            const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
+            const parts = (await index.getCanistersByPK('main'))
+                .map(s => Principal.fromText(s))
+            const foundParts = await Promise.all(parts.map(async part => {
+                try {
+                    const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
+                    await part2.getFullPackageInfo(packageName!); // TODO: `!`
+                    return part;
+                }
+                catch(_) { // TODO: Check error.
+                    return null;
+                }
+            }));
+            const firstPart = foundParts ? foundParts.filter(v => v !== null)[0] : null;
+            if (firstPart === null) {
+                errorContext?.setError("no such package");
                 return null;
             }
-        }));
-        const firstPart = foundParts ? foundParts.filter(v => v !== null)[0] : null;
-        if (firstPart === null) {
-            errorContext?.setError("no such package");
-            return null;
-        }
 
-        // TODO: `!`
-        const {installationId: id} = await installPackageWithModules({
-            package_manager_principal: glob.backend!,
-            packageName: packageName!,
-            version: chosenVersion!,
-            repo: firstPart,
-            user: principal!,
-            agent: agent!,
-        });
-        const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent: defaultAgent!});
-        for (let i = 0; ; ++i) {
-            if (await checker.check()) {
-                break;
-            }
-            if (i == 30) {
-                alert("Cannot initilize canisters"); // TODO
-                return;
-            }
-            await new Promise<void>((resolve, _reject) => {
-                setTimeout(() => resolve(), 1000);
+            // TODO: `!`
+            const {installationId: id} = await installPackageWithModules({
+                package_manager_principal: glob.backend!,
+                packageName: packageName!,
+                version: chosenVersion!,
+                repo: firstPart,
+                user: principal!,
+                agent: agent!,
             });
+            const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent: defaultAgent!});
+            for (let i = 0; ; ++i) {
+                if (await checker.check()) {
+                    break;
+                }
+                if (i == 30) {
+                    alert("Cannot initilize canisters"); // TODO
+                    return;
+                }
+                await new Promise<void>((resolve, _reject) => {
+                    setTimeout(() => resolve(), 1000);
+                });
+            }
+            navigate(`/installed/show/${id}`);
         }
-        navigate(`/installed/show/${id}`);
+        catch(e) {
+            console.log(e);
+            throw e; // TODO
+        }
     }
     useEffect(() => {
         setChosenVersion(versions[0] ? versions[0][1] : undefined); // If there are zero versions, sets `undefined`.

@@ -82,7 +82,7 @@ async function main() {
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
-        code: {Wasm: pmExampleFrontendBlob},
+        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
         callbacks: [],
