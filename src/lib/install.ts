@@ -100,7 +100,9 @@ export class InitializedChecker {
             const frontend = createFrontendActor(this.canister!, {agent: this.defaultAgent});
             try {
                 const res = await frontend.http_request({method: "GET", url: urlPath, headers: [], body: [], certificate_version: [2]});
-                return res.status_code - res.status_code % 100 === 200;
+                console.log('res', res);
+                const status_code = parseInt(res.status_code.toString());
+                return status_code - status_code % 100 === 200;
             }
             catch (e) {
                 console.log(e);
