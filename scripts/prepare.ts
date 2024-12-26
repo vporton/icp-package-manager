@@ -89,7 +89,7 @@ async function main() {
     });
 
     console.log("Creating packages...");
-    const real: SharedRealPackageInfo = {
+    const pmReal: SharedRealPackageInfo = {
         modules: [
             // "backend" goes first, because it stores installation information.
             ['backend', pmBackendModule],
@@ -109,7 +109,7 @@ async function main() {
             shortDescription: "Package manager",
             longDescription: "Manager for installing ICP app to user's subnet",
         },
-        specific: {real},
+        specific: {real: pmReal},
     };
     const pmFullInfo: SharedFullPackageInfo = {
         packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
