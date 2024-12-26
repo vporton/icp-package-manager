@@ -5,7 +5,7 @@ import { InstallationId, PackageName, PackageManager, Version, SharedRealPackage
 import { createActor as createRepositoryPartition } from '../declarations/RepositoryPartition';
 import { createActor as createIndirectCaller } from '../declarations/Bootstrapper';
 import { createActor as createPackageManager } from '../declarations/package_manager';
-import { createActor as createFrontendActor } from '../declarations/package_manager_frontend';
+import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
 import { IDL } from '@dfinity/candid';
 import { Actor, Agent } from '@dfinity/agent';
 

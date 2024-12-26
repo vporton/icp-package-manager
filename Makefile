@@ -20,6 +20,14 @@ deploy:
 	dfx canister create example_frontend
 	dfx canister create internet_identity
 # `generate` erases `.env`.
+	dfx build internet_identity
+	dfx build bootstrapper_frontend
+	dfx canister install -m auto bootstrapper_frontend
+	dfx generate bootstrapper_frontend
+	dfx build package_manager_frontend
+	dfx canister install -m auto internet_identity
+	dfx generate package_manager_frontend
+	dfx generate internet_identity
 	dfx generate Bootstrapper
 	dfx generate indirect_caller
 	dfx generate RepositoryIndex
@@ -27,7 +35,6 @@ deploy:
 	dfx generate RepositoryPartition
 	dfx generate package_manager
 	dfx generate bookmark
-	dfx generate package_manager_frontend
 	# TODO: What does it do with cycles_ledger on mainnet?
 	dfx canister create simple_indirect
 	dfx canister create cycles_ledger
@@ -41,16 +48,10 @@ deploy:
 	dfx build RepositoryIndex
 	dfx canister install -m auto RepositoryIndex
 	dfx build simple_indirect
-	dfx build package_manager_frontend
-	dfx canister install -m auto package_manager_frontend
-	dfx build bootstrapper_frontend
-	dfx canister install -m auto bootstrapper_frontend
 	dfx build bookmark
 	dfx canister install -m auto bookmark
 	dfx build example_frontend
 	dfx canister install -m auto example_frontend
-	dfx build internet_identity
-	dfx canister install -m auto internet_identity
 	dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	dfx ledger fabricate-cycles --t 2000000 --canister cycles_ledger
 	dfx ledger fabricate-cycles --t 2000000 --canister Bootstrapper
