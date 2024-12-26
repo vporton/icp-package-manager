@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { SharedFullPackageInfo, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
-import { Actor } from "@dfinity/agent";
+import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
 import Button from "react-bootstrap/Button";
@@ -9,10 +9,12 @@ import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
+import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
-import { InitializedChecker, installPackageWithModules } from "../../lib/install";
+import { InitializedChecker } from "../../lib/install";
 import { ErrorContext } from "./ErrorContext.js";
+import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
@@ -126,4 +128,32 @@ export default function ChooseVersion(props: {}) {
             </p>
         </>
     );
+}
+
+export async function installPackageWithModules({
+    package_manager_principal, packageName, repo, user, version, agent
+}: {
+    package_manager_principal: Principal,
+    packageName: PackageName,
+    repo: Principal,
+    user: Principal,
+    version: Version,
+    agent: Agent,
+}): Promise<{
+    installationId: InstallationId;
+}> {
+    const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
+    const {installationId} = await package_manager.installPackage({
+        packageName,
+        version,
+        repo,
+        user,
+    });
+    // const part = createRepositoryPartition(repo);
+    // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
+    // const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+    // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
+    // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
+    // const indirect = createIndirectCaller(indirectPrincipal, {agent});
+    return {installationId};
 }

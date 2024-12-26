@@ -12,12 +12,12 @@
     },
     "simple_indirect": {
       "type": "motoko",
-      "main": "src/package_manager_backend/indirect_caller.mo",
+      "main": "src/package_manager_backend/simple_indirect.mo",
       "dependencies": ["cycles_ledger"]
     },
     "package_manager": {
       "type": "motoko",
-      "main": "src/package_manager_backend/simple_indirect.mo",
+      "main": "src/package_manager_backend/package_manager.mo",
       "dependencies": ["Bootstrapper", "cycles_ledger"]
     },
     "bookmark": {
