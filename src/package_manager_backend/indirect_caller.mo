@@ -52,7 +52,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
-        Debug.print("indirect_caller.init initialized"); // FIXME: Remove
     };
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {

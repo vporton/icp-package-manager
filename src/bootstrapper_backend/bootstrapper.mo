@@ -69,7 +69,6 @@ actor class Bootstrapper() = this {
             cyclesAmount = newCanisterCycles;
         });
 
-        Debug.print("Q1: " # debug_show(simple_indirect_canister_id)); // FIXME: Remove.
         await* Install.myInstallCode({
             installationId = 0;
             canister_id = backend_canister_id;

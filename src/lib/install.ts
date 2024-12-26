@@ -69,14 +69,12 @@ export class InitializedChecker {
         this.defaultAgent = defaultAgent;
     }
     async check(): Promise<boolean> {
-        console.log("B1", this.cb); // FIXME: Remove.
         if (this.cb === undefined) {
             return false; // TODO: Also check that all modules were installed.
                           // Note that it is easier to do here, in frontend.
         }
 
         const methodName: string | undefined = (this.cb.how as any).methodName;
-        console.log("B2", methodName, this.canister); // FIXME: Remove.
         if (methodName !== undefined) {
             try {
                 const idlFactory = ({ IDL }: { IDL: any }) => {
@@ -88,15 +86,11 @@ export class InitializedChecker {
                     agent: this.defaultAgent,
                     canisterId: this.canister!,
                 });
-                console.log("B3"); // FIXME: Remove.
                 await actor[methodName](); // throws or doesn't
-                console.log("B4"); // FIXME: Remove.
                 return true;
             }
             catch (e) {
-                console.log("B5"); // FIXME: Remove.
                 console.log(e);
-                console.log("B6"); // FIXME: Remove.
                 return false;
             }
         }
