@@ -49,39 +49,44 @@ export default function MainPage() {
     // TODO: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
-      // TODO: Duplicate code
-      const repoParts = await repoIndex.getCanistersByPK("main");
-      let pkg: SharedPackageInfo | undefined = undefined;
-      const jobs = repoParts.map(async part => {
-        const obj = createRepositoryPartitionActor(part, {agent: props.agent});
-        try {
-          pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-        }
-        catch (_) {}
-      });
-      await Promise.all(jobs);
-      const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+      try {// TODO: Duplicate code
+        const repoParts = await repoIndex.getCanistersByPK("main");
+        let pkg: SharedPackageInfo | undefined = undefined;
+        const jobs = repoParts.map(async part => {
+          const obj = createRepositoryPartitionActor(part, {agent: props.agent});
+          try {
+            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+          }
+          catch (_) {}
+        });
+        await Promise.all(jobs);
+        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-      const indirectCaller = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
-      const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
-      const {canister_id: frontendPrincipal} = await indirectCaller.bootstrapFrontend({
-        wasmModule: pkgReal.modules[1][1],
-        installArg: new Uint8Array(IDL.encode(
-          [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
-          [{user: props.principal!, installationId: 0 /* TODO */}],
-        )),
-        user: props.principal!,
-        initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        frontendTweakPubKey,
-      });
-      const url = getIsLocal()
-        ? `http://${frontendPrincipal}.localhost:4943`
-        : `https://${frontendPrincipal}.icp0.io`;
-      // gives the right to set frontend owner and controller to backend:
-      const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
-      open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
+        const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+        const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
+        const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
+        const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
+          wasmModule: pkgReal.modules[1][1],
+          installArg: new Uint8Array(IDL.encode(
+            [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
+            [{user: props.principal!, installationId: 0 /* TODO */}],
+          )),
+          user: props.principal!,
+          initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+          simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+          frontendTweakPubKey,
+        });
+        const url = getIsLocal()
+          ? `http://${frontendPrincipal}.localhost:4943`
+          : `https://${frontendPrincipal}.icp0.io`;
+        // gives the right to set frontend owner and controller to backend:
+        const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
+        open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
+      }
+      catch(e) {
+        console.log(e);
+        throw e; // TODO
+      }
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",

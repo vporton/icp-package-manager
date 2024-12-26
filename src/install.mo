@@ -78,6 +78,7 @@ module {
             canister_id;
             sender_canister_version = null; // TODO
         });
+        Debug.print("A2");
 
         switch (wasmModule.code) {
             case (#Assets {assets}) {
@@ -87,5 +88,6 @@ module {
             };
             case _ {};
         };
+        Debug.print("A3");
     };
 }
