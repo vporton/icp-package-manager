@@ -400,7 +400,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 Debug.trap("programming error");
                             };
                         };
-                        simpleIndirect.callAllOneWay([{
+                        Debug.print("GOING CALL(" # debug_show(Principal.fromActor(simpleIndirect)) # "): " # debug_show(cbPrincipal) # "/" # callbackName.method); // FIXME: Remove.
+                        await simpleIndirect.callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO

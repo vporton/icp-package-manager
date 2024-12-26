@@ -11,10 +11,12 @@ import IC "mo:ic";
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
+    simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
     // userArg: Blob;
 }) = this {
+    Debug.print("T1: " # debug_show(simpleIndirect)); // FIXME: Remove.
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
     // } = from_candid(userArg) else {
     //     Debug.trap("argument userArg is wrong");
@@ -25,12 +27,14 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            [
+            [ // TODO: Remove unneeded:
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (user, ()),
+                (simpleIndirect, ()),
+                (Principal.fromActor(this), ()),
             ].vals(),
-            4,
+            5,
             Principal.equal,
             Principal.hash);
 
@@ -43,7 +47,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         Debug.print("simple_indirect.init"); // FIXME: Remove
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed here?
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
@@ -130,8 +134,11 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await* callIgnoringMissingOneWayImpl(methods)
     };
 
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    // FIXME: Make one-way function
+    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
+        Debug.print("Z1");
         onlyOwner(caller, "callAllOneWay");
+        Debug.print("Z2");
 
         await* callAllOneWayImpl(methods);
     };

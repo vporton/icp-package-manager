@@ -17,7 +17,7 @@
     },
     "package_manager": {
       "type": "motoko",
-      "main": "src/package_manager_backend/package_manager.mo",
+      "main": "src/package_manager_backend/simple_indirect.mo",
       "dependencies": ["Bootstrapper", "cycles_ledger"]
     },
     "bookmark": {

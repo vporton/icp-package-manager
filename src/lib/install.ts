@@ -28,12 +28,12 @@ export async function installPackageWithModules({
         repo,
         user,
     });
-    const part = createRepositoryPartition(repo);
-    const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
-    const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-    const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
-    const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
-    const indirect = createIndirectCaller(indirectPrincipal, {agent});
+    // const part = createRepositoryPartition(repo);
+    // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
+    // const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+    // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
+    // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
+    // const indirect = createIndirectCaller(indirectPrincipal, {agent});
     return {installationId};
 }
 
@@ -58,7 +58,6 @@ export class InitializedChecker {
             return new InitializedChecker(undefined, undefined, arg.defaultAgent);
         }
         const cb = real.checkInitializedCallback[0];
-        console.log("A1", cb); // FIXME: Remove.
 
         const canister = pkg.modules.filter(([name, _m]) => name === cb.moduleName)[0][1];
 
