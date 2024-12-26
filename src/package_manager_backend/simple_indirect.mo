@@ -40,12 +40,14 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         // user: Principal;
         // packageManagerOrBootstrapper: Principal;
     }): async () {
+        Debug.print("simple_indirect.init"); // FIXME: Remove
         onlyOwner(caller, "init");
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
+        Debug.print("simple_indirect.init initialized"); // FIXME: Remove
     };
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {

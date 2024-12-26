@@ -43,12 +43,14 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         // user: Principal;
         // packageManagerOrBootstrapper: Principal;
     }): async () {
+        Debug.print("indirect_caller.init");
         onlyOwner(caller, "init");
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
+        Debug.print("indirect_caller.init initialized"); // FIXME: Remove
     };
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
