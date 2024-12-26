@@ -133,9 +133,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 
     // FIXME: Make one-way function
     public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
-        Debug.print("Z1");
         onlyOwner(caller, "callAllOneWay");
-        Debug.print("Z2");
 
         await* callAllOneWayImpl(methods);
     };
