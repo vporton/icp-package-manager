@@ -49,12 +49,16 @@ export class InitializedChecker {
     }) {
         // TODO: not very efficient
         const pkgMan: PackageManager = createPackageManager(arg.package_manager, {agent: arg.defaultAgent});
+        console.log("arg.installationId", arg.installationId);
         const pkg = await pkgMan.getInstalledPackage(arg.installationId);
+        console.log("pkg", pkg);
         const real = (pkg.package.specific as any).real as SharedRealPackageInfo;
+        console.log("real", real);
         if (real.checkInitializedCallback.length === 0) {
             return new InitializedChecker(undefined, undefined, arg.defaultAgent);
         }
         const cb = real.checkInitializedCallback[0];
+        console.log("A1", cb); // FIXME: Remove.
 
         const canister = pkg.modules.filter(([name, _m]) => name === cb.moduleName)[0][1];
 
@@ -66,12 +70,14 @@ export class InitializedChecker {
         this.defaultAgent = defaultAgent;
     }
     async check(): Promise<boolean> {
+        console.log("B1", this.cb); // FIXME: Remove.
         if (this.cb === undefined) {
             return false; // TODO: Also check that all modules were installed.
                           // Note that it is easier to do here, in frontend.
         }
 
         const methodName: string | undefined = (this.cb.how as any).methodName;
+        console.log("B2", methodName, this.canister); // FIXME: Remove.
         if (methodName !== undefined) {
             try {
                 const idlFactory = ({ IDL }: { IDL: any }) => {
@@ -83,11 +89,15 @@ export class InitializedChecker {
                     agent: this.defaultAgent,
                     canisterId: this.canister!,
                 });
+                console.log("B3"); // FIXME: Remove.
                 await actor[methodName](); // throws or doesn't
+                console.log("B4"); // FIXME: Remove.
                 return true;
             }
             catch (e) {
+                console.log("B5"); // FIXME: Remove.
                 console.log(e);
+                console.log("B6"); // FIXME: Remove.
                 return false;
             }
         }
@@ -99,7 +109,8 @@ export class InitializedChecker {
                 const res = await frontend.http_request({method: "GET", url: urlPath, headers: [], body: [], certificate_version: [2]});
                 return res.status_code - res.status_code % 100 === 200;
             }
-            catch (_) {
+            catch (e) {
+                console.log(e);
                 return false;
             }
         }

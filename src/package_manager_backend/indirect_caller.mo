@@ -7,8 +7,6 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
-import IC "mo:ic";
-import ArrayMut "mo:itertools/Utils/ArrayMut";
 import Common "../common";
 import Install "../install";
 
