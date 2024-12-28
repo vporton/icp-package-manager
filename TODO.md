@@ -2,6 +2,8 @@ Remaining things TODO:
 
 - Check if a given package is fully installed and wait after installation before showing it.
 
+- If the user has several PMs installed, order their order.
+
 - Call `installModule` from Motoko not frontend (gas of one-way function is not counted towards the caller,
   so it won't overflow 30B limit).
 
