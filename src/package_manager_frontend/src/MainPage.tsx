@@ -118,7 +118,7 @@ export default function MainPage() {
     const bookmarkingUrlBase = getIsLocal()
         ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:4943/bookmark?`
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
-    const bookmarkingUrl = `${bookmarkingUrlBase}frontend=${bookmark.frontend}&backend=${bookmark.backend}`;
+    const bookmarkingUrl = `${bookmarkingUrlBase}_pm_pkg0.frontend=${bookmark.frontend}&_pm_pkg0.backend=${bookmark.backend}`;
     useEffect(() => {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
         bookmarks.hasBookmark(bookmark).then((f: boolean) => setBookmarked(f));

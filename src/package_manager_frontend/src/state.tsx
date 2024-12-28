@@ -45,7 +45,7 @@ function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
 export function GlobalContextProvider(props: { children: any }) {
   const params = new URLSearchParams(window.location.search);
 
-  const backend_str = params.get('backend');
+  const backend_str = params.get('_pm_pkg0.backend');
   const backend = backend_str !== null ? Principal.fromText(backend_str) : undefined;
 
   const canisterId = params.get('canisterId');

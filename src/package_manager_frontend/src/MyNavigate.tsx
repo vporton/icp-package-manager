@@ -14,7 +14,7 @@ export function MyLink(props: {to: string, className?: string, children: React.R
 function amendPath(path: string): string {
     const params = new URLSearchParams(window.location.search);
     const canisterId = params.get('canisterId');
-    const backend = params.get('backend');
+    const backend = params.get('_pm_pkg0.backend');
 
     let s = path;
     if (canisterId !== null || backend !== null) {
@@ -24,7 +24,7 @@ function amendPath(path: string): string {
         s += "canisterId=" + canisterId;
     }
     if (backend !== null) {
-        s += "backend=" + backend;
+        s += "_pm_pkg0.backend=" + backend;
     }
     return s;
 }

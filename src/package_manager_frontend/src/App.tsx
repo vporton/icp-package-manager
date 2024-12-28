@@ -130,7 +130,7 @@ function GlobalUI() {
 
         const backend_str = backendPrincipal.toString();
         const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
-        open(`${base}backend=${backend_str}`, '_self');
+        open(`${base}_pm_pkg0.backend=${backend_str}`, '_self');
       }
       catch (e) {
         console.log(e); // TODO: Return an error.

@@ -107,7 +107,7 @@ export default function MainPage() {
           <ul>
             {installations.map(inst => {
               const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
-              const url = base + `backend=${inst.backend.toString()}`;
+              const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
               return <li key={url}><a href={url}>{url}</a></li>;
             })}
           </ul>
