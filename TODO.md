@@ -22,7 +22,7 @@ Remaining things TODO:
 
 - Remove `initialIndirect` (remain only `simpleIndirect`) as controller.
 
-- Should we use 32-bit hash as the ID of WASM value instead of number?
+- Should we use 32-bytes hash as the ID of WASM value instead of number?
 
 - `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
