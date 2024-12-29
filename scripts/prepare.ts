@@ -101,6 +101,7 @@ async function main() {
         functions: [],
         permissions: [],
         checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}],
+        frontendModule: ['frontend'],
     };
     const pmInfo: SharedPackageInfo = {
         base: {
@@ -125,6 +126,7 @@ async function main() {
         functions: [],
         permissions: [],
         checkInitializedCallback: [{moduleName: 'example1', how: {urlPath: '/index.html'}}],
+        frontendModule: ['example1'],
     };
     const pmEFInfo: SharedPackageInfo = {
         base: {

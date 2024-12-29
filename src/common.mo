@@ -143,6 +143,7 @@ module {
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
+        frontendModule: ?Text;
     };
 
     public type RealPackageInfo = {
@@ -157,6 +158,7 @@ module {
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
+        frontendModule: ?Text;
     };
 
     public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
@@ -171,6 +173,7 @@ module {
             functions = package.functions;
             permissions = package.permissions;
             checkInitializedCallback = package.checkInitializedCallback;
+            frontendModule = package.frontendModule;
         };
 
     public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
@@ -188,6 +191,7 @@ module {
             functions = package.functions;
             permissions = package.permissions;
             checkInitializedCallback = package.checkInitializedCallback;
+            frontendModule = package.frontendModule;
         };
 
     public type RealPackageInfoUpload = {
@@ -202,6 +206,7 @@ module {
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
+        frontendModule: ?Text;
     };
 
     public type VirtualPackageInfo = {

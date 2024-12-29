@@ -29,9 +29,7 @@ deploy:
 	dfx build bootstrapper_frontend
 	dfx canister install -m auto bootstrapper_frontend
 	dfx generate bootstrapper_frontend
-	dfx build package_manager_frontend
 	dfx canister install -m auto internet_identity
-	dfx generate package_manager_frontend
 	dfx generate internet_identity
 	dfx generate Bootstrapper
 	dfx generate indirect_caller
@@ -39,6 +37,8 @@ deploy:
 	dfx generate simple_indirect
 	dfx generate RepositoryPartition
 	dfx generate bookmark
+	dfx build package_manager_frontend
+	dfx generate package_manager_frontend
 	dfx canister install -m auto package_manager_frontend # for a template
 	# TODO: What does it do with cycles_ledger on mainnet?
 	dfx canister install -m auto cycles_ledger
