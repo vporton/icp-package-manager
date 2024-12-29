@@ -116,7 +116,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
       Debug.trap("error, called by non-controller=" # debug_show(caller));
     };
   };
-  
+
   /// @required function (Do not delete or change)
   ///
   /// Helper method acting as an interface for returning an empty array if no canisters
