@@ -40,10 +40,10 @@ export default function Installation(props: {}) {
                     let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
                     url += `?_pm_inst=${installationId}`;
                     for (let m of piReal.modules) {
-                        url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`; // FIXME: `!`
+                        url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;
                     }
                     for (let m of piReal0.modules) {
-                        url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`; // FIXME: `!`
+                        url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
                     }
                     setFrontend(url);
                 }
