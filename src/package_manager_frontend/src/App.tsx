@@ -82,10 +82,6 @@ function GlobalUI() {
         await Promise.all(jobs);
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-        // const backend: PackageManager = createPackageManagerActor(glob.backend, {agent: defaultAgent});
-        // const installedInfo = await backend.getInstalledPackage(glob.packageInstallationId);
-        // const indirectCaller = installedInfo.modules[2][1]; // TODO: explicit value
-
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         // TODO: Are here modules needed? They are installed below, instead?
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
