@@ -116,11 +116,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         user: Principal;
     }): () {
         try {
-            Debug.print("A1");
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
-            Debug.print("A2");
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installationWorkCallback: ({
@@ -145,7 +143,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 repo;
                 preinstalledModules;
             });
-            Debug.print("A3");
 
             let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
                 case (#simplyModules m) {
@@ -170,7 +167,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     };
                 }
             };
-            Debug.print("A4");
 
             let bi = if (preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
                 [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this)), ("simple_indirect", ourSimpleIndirect)];
@@ -179,7 +175,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             };
             let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
-            Debug.print("A5: " # debug_show(Iter.toArray(coreModules.entries())));
             let ?backend = coreModules.get("backend") else {
                 Debug.trap("error 1");
             };
@@ -189,11 +184,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             let ?simple_indirect = coreModules.get("simple_indirect") else {
                 Debug.trap("error 1");
             };
-            Debug.print("A6");
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
                 // Starting installation of all modules in parallel:
-                Debug.print("A7");
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
                     moduleNumber;
@@ -212,7 +205,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 });
                 moduleNumber += 1;
             };
-            Debug.print("A8");
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
