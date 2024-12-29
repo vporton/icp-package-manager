@@ -11,6 +11,7 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
+import Asset "mo:assets-api";
 import Common "../common";
 import IndirectCaller "indirect_caller";
 import SimpleIndirect "simple_indirect";
@@ -19,6 +20,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
+    frontend: Principal;
     user: Principal;
     // installationId: Common.InstallationId; // TODO: superfluous
     // userArg: Blob;
@@ -88,8 +90,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
         let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-        ignore [await a, await b]; // run in parallel
-        // FIXME: Also check frontend.
+        let f: Asset.AssetCanister = actor(Principal.toText(frontend));
+        let c = f.get({key = "/index.html"; accept_encodings = ["gzip"]});
+        ignore {{a0 = await a; b0 = await b; c0 = await c}}; // run in parallel
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
