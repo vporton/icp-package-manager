@@ -13,8 +13,6 @@ Remaining things TODO:
 
 - TODO: Should `backend` be a controller or an owner? Shouldn't we lay aside it for `simpleIndirectCaller`?
 
-- FIXME: When logged out, should not show installed packages list. It should be not retrievable.
-
 - TODO: future compaitibility in package format.
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.

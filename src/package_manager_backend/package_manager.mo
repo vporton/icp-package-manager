@@ -668,7 +668,9 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // Accessor method //
 
-    public query func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
+    public query({caller}) func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
+        onlyOwner(caller, "getInstalledPackage");
+
         let ?result = installedPackages.get(id) else {
             Debug.trap("no such installed package");
         };
@@ -676,7 +678,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getInstalledPackagesInfoByName(name: Text): async [Common.SharedInstalledPackageInfo] {
+    public query({caller}) func getInstalledPackagesInfoByName(name: Text): async [Common.SharedInstalledPackageInfo] {
+        onlyOwner(caller, "getInstalledPackagesInfoByName");
+
         let ?ids = installedPackagesByName.get(name) else {
             return [];
         };
@@ -690,7 +694,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
+    public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
+        onlyOwner(caller, "getAllInstalledPackages");
+
         Iter.toArray(
             Iter.map<(Common.InstallationId, Common.InstalledPackageInfo), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(
                 installedPackages.entries(),
@@ -701,12 +707,14 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getHalfInstalledPackages(): async [{
+    public query({caller}) func getHalfInstalledPackages(): async [{
         installationId: Common.InstallationId;
         packageRepoCanister: Principal;
         name: Common.PackageName;
         version: Common.Version;
     }] {
+        onlyOwner(caller, "getHalfInstalledPackages");
+
         Iter.toArray(Iter.map<(Common.InstallationId, Common.HalfInstalledPackageInfo), {
             installationId: Common.InstallationId;
             packageRepoCanister: Principal;
@@ -728,7 +736,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(?Text, Principal)] {
+    public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(?Text, Principal)] {
+        onlyOwner(caller, "getHalfInstalledPackageModulesById");
+
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package");
         };
@@ -789,7 +799,9 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var newCanisterCycles = 400_000_000_000; // 4 times more, than creating a canister
 
-    public query func getNewCanisterCycles(): async Nat {
+    public query({caller}) func getNewCanisterCycles(): async Nat {
+        onlyOwner(caller, "getNewCanisterCycles");
+
         newCanisterCycles;
     };
 
@@ -809,7 +821,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             func (x: {canister: Principal; name: Text}): Bool = x.canister != canister));
     };
 
-    public query func getRepositories(): async [{canister: Principal; name: Text}] {
+    public query({caller}) func getRepositories(): async [{canister: Principal; name: Text}] {
+        onlyOwner(caller, "getRepositories");
+
         repositories;
     };
 }
