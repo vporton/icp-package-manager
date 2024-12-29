@@ -36,7 +36,7 @@ export default function Installation(props: {}) {
                     const piReal0: SharedRealPackageInfo = (pkg0!.package.specific as any).real;
                     const modules0 = new Map(pkg0!.modules);
                     const modules = new Map(pkg!.modules);
-                    const frontendStr = modules.get(piReal.frontendModule[0]!)!.toString(); // FIXME: `!`
+                    const frontendStr = modules.get(piReal.frontendModule[0]!)!.toString();
                     let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
                     url += `?_pm_inst=${installationId}`;
                     for (let m of piReal.modules) {
