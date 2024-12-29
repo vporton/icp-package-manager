@@ -20,9 +20,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     initialIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
-    frontend: Principal;
     user: Principal;
-    // installationId: Common.InstallationId; // TODO: superfluous
+    installationId: Common.InstallationId;
     // userArg: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
@@ -90,9 +89,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
         let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-        let f: Asset.AssetCanister = actor(Principal.toText(frontend));
-        let c = f.get({key = "/index.html"; accept_encodings = ["gzip"]});
-        ignore {{a0 = await a; b0 = await b; c0 = await c}}; // run in parallel
+        let c = do {
+            let ?pkg = installedPackages.get(installationId) else {
+                Debug.trap("package manager is not yet installed");
+            };
+            let ?frontend = pkg.modules.get("frontend") else {
+                Debug.trap("programming error");
+            };
+            let f: Asset.AssetCanister = actor(Principal.toText(frontend));
+            f.get({key = "/index.html"; accept_encodings = ["gzip"]});
+        };
+        // FIXME: https://github.com/dfinity/motoko/issues/4837
+        ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
     stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
