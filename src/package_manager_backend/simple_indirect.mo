@@ -131,8 +131,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await* callIgnoringMissingOneWayImpl(methods)
     };
 
-    // FIXME: Make one-way function
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
+    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
         onlyOwner(caller, "callAllOneWay");
 
         await* callAllOneWayImpl(methods);
