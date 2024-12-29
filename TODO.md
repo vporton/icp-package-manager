@@ -70,13 +70,7 @@ Remaining things TODO:
 
 - Optionally, create user's repository and copy there installed packages.
 
-- Bootstrapping package manager partly done (depends on installing frontend canisters).
-
 - Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
-
-- Installation of frontend canisters with assets.
-  - Specify if package has a frontend canister (or several ones?) to show them
-    in the package manager.
 
 - Managing package repositories.
 
