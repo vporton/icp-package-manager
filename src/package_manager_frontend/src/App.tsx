@@ -2,16 +2,14 @@ import { useContext, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/Bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
 import InstalledPackages from './InstalledPackages';
 import { GlobalContext, GlobalContextProvider } from './state';
-import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
-import { RepositoryIndex } from '../../declarations/RepositoryIndex';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
@@ -20,13 +18,10 @@ import { createActor as createIndirectActor } from "../../declarations/indirect_
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
 import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
-// import { SharedHalfInstalledPackageInfo } from '../../declarations/package_manager';
-import { IDL } from '@dfinity/candid';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
 import { InitializedChecker } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
-// import { canister_status } from "@dfinity/ic-management";
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
