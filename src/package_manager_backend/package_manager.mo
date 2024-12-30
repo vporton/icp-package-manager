@@ -11,7 +11,6 @@ import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import OrderedHashMap "mo:ordered-map";
-import Asset "mo:assets-api";
 import Common "../common";
 import IndirectCaller "indirect_caller";
 import SimpleIndirect "simple_indirect";
@@ -21,7 +20,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     initialIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
-    installationId: Common.InstallationId;
+    // installationId: Common.InstallationId;
     // userArg: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?

@@ -157,7 +157,7 @@ actor class Bootstrapper() = this {
         frontend: Principal,
         privKey: PrivKey,
         {
-            backend_canister_id: Principal;
+            // backend_canister_id: Principal;
             simple_indirect_canister_id: Principal;
             user: Principal;
         },
