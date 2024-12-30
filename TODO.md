@@ -65,6 +65,7 @@ Remaining things TODO:
 - Gzip modules.
 
 - When logged out while showing installing packages, should message that cannot show.
+  Likewise for mainpage,
 
 - Error handling in frontend.
 
