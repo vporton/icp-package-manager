@@ -42,12 +42,12 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { agent, defaultAgent, principal } = useAuth();
+    const { agent, defaultAgent, principal, isAuthenticated } = useAuth();
     const glob = useContext(GlobalContext);
 
     const navigate = myUseNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
-    const [distros, setDistros] = useState<{canister: Principal, name: string}[]>([]);
+    const [distros, setDistros] = useState<{canister: Principal, name: string}[] | undefined>();
     const [curDistro, setCurDistro] = useState<Principal | undefined>();
     const [packageName, setPackageName] = useState("");
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
@@ -62,6 +62,9 @@ export default function MainPage() {
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
+        if (glob.package_manager_rw === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+            setDistros(undefined);
+        }
         glob.package_manager_rw!.getRepositories().then((r) => {
             setDistros(r);
             if (r.length !== 0) {
@@ -69,7 +72,7 @@ export default function MainPage() {
             }
         });
     };
-    useEffect(reloadDistros, []);
+    useEffect(reloadDistros, [glob.package_manager_rw, glob.backend]);
 
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
     async function installChecked() {
@@ -142,12 +145,14 @@ export default function MainPage() {
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
             <p>
                 Distro:{" "}
-                <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
-                    {distros.map((entry: {canister: Principal, name: string}) =>
-                        <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
-                    )}
-                </select>{" "}
-                <Button onClick={() => setDistroAddShow(true)}>Add distro</Button>{" "}
+                {distros === undefined ? <em>(not loaded)</em> :
+                    <select ref={distroSel} onChange={(event: ChangeEvent<HTMLSelectElement>) => setCurDistro(Principal.fromText((event.target as HTMLSelectElement).value))}>
+                        {distros.map((entry: {canister: Principal, name: string}) =>
+                            <option key={entry.canister.toString()} value={entry.canister.toString()} onClick={() => setCurDistro(entry.canister)}>{entry.name}</option>
+                        )}
+                    </select>
+                }{" "}
+                <Button disabled={distros === undefined} onClick={() => setDistroAddShow(true)}>Add distro</Button>{" "}
                 <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
             </p>
             <h2>Install</h2>

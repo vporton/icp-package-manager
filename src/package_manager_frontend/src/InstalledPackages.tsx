@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
+import { useAuth } from "./auth/use-auth-client";
 
 function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, SharedInstalledPackageInfo][]>}) {
     const packages = props.allInstalled.get(props.packageName);
@@ -35,10 +36,12 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
 }
 
 export default function InstalledPackages(props: {}) {
-    const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]>>();
+    const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]> | undefined>();
     const glob = useContext(GlobalContext);
+    const { isAuthenticated } = useAuth();
     useEffect(() => {
-        if (glob.package_manager_rw === undefined) { // Why is this check needed?
+        if (glob.package_manager_rw === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+            setInstalledVersions(undefined);
             return;
         }
         glob.package_manager_rw!.getAllInstalledPackages().then(allPackages => {
@@ -52,17 +55,19 @@ export default function InstalledPackages(props: {}) {
             const byName = new Map(byName0);
             setInstalledVersions(byName);
         });
-    }, [glob.package_manager_rw]);
+    }, [glob.package_manager_rw, glob.backend]);
 
     return (
         <>
             <h2>Installed packages</h2>
-            <ul>
-                {/* <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li> */}
-                {installedVersions && Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
-                    <InstalledPackageLine packageName={name} key={name} allInstalled={installedVersions!}/>
-                )}
-            </ul>
+            {installedVersions === undefined ? <p>No packages list (please, login).</p> :
+                <ul>
+                    {/* <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li> */}
+                    {Array.from(installedVersions!.entries()).map(([name, [id, info]]) =>
+                        <InstalledPackageLine packageName={name} key={name} allInstalled={installedVersions!}/>
+                    )}
+                </ul>
+            }
         </>
     );
 }

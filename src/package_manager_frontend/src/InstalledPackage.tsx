@@ -9,13 +9,13 @@ import { GlobalContext } from "./state";
 
 export default function Installation(props: {}) {
     const { installationId } = useParams();
-    const {agent} = useAuth();
+    const {agent, isAuthenticated} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [pkg2, setPkg2] = useState<SharedPackageInfo | undefined>(); // TODO: superfluous variable
     const [frontend, setFrontend] = useState<string | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
-        if (agent === undefined || glob.package_manager_rw === undefined) { // TODO: `agent` is unused.
+        if (glob.package_manager_rw === undefined) { // TODO: `agent` is unused.
             return;
         }
 
@@ -23,9 +23,10 @@ export default function Installation(props: {}) {
             setPkg(pkg);
             setPkg2(pkg!.package);
         });
-    }, [agent, glob.package_manager_rw]);
+    }, [glob.package_manager_rw]);
     useEffect(() => {
-        if (agent === undefined || glob.package_manager_rw === undefined || pkg2 === undefined) { // TODO: `agent` is unused?
+        // TODO: It seems to work but is a hack:
+        if (glob.package_manager_rw === undefined || !isAuthenticated) { // TODO: `agent` is unused?
             return;
         }
 
@@ -52,7 +53,7 @@ export default function Installation(props: {}) {
                 }
             });
         }
-    }, [agent, glob.package_manager_rw, pkg2]);
+    }, [glob.package_manager_rw, glob.backend, pkg2]);
 
     // TODO: Ask for confirmation.
     async function uninstall() {

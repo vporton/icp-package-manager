@@ -1,7 +1,5 @@
 Remaining things TODO:
 
-- FIXME: When PM frontend Mainpage is load first (or reload by F5), mistakenly always shows empty list of distros.
-
 - If the user has several PMs installed, order their order.
 
 - https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
