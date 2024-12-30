@@ -53,16 +53,16 @@ export default function MainPage() {
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
-        if (glob.package_manager_ro != undefined) {
-            glob.package_manager_ro!.getHalfInstalledPackages().then(h => {
+        if (glob.package_manager_rw != undefined) {
+            glob.package_manager_rw!.getHalfInstalledPackages().then(h => {
                 setPackagesToRepair(h);
             });
         }
-    }, [glob.package_manager_ro]);
+    }, [glob.package_manager_rw]);
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        glob.package_manager_ro!.getRepositories().then((r) => {
+        glob.package_manager_rw!.getRepositories().then((r) => {
             setDistros(r);
             if (r.length !== 0) {
                 setCurDistro(r[0].canister);

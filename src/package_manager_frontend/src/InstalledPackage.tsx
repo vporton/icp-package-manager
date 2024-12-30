@@ -15,23 +15,23 @@ export default function Installation(props: {}) {
     const [frontend, setFrontend] = useState<string | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
-        if (agent === undefined || glob.package_manager_ro === undefined) { // TODO: `agent` is unused.
+        if (agent === undefined || glob.package_manager_rw === undefined) { // TODO: `agent` is unused.
             return;
         }
 
-        glob.package_manager_ro!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
+        glob.package_manager_rw!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             setPkg2(pkg!.package);
         });
-    }, [agent, glob.package_manager_ro]);
+    }, [agent, glob.package_manager_rw]);
     useEffect(() => {
-        if (agent === undefined || glob.package_manager_ro === undefined || pkg2 === undefined) { // TODO: `agent` is unused?
+        if (agent === undefined || glob.package_manager_rw === undefined || pkg2 === undefined) { // TODO: `agent` is unused?
             return;
         }
 
         const piReal: SharedRealPackageInfo = (pkg2!.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) { // There is a frontend module.
-            glob.package_manager_ro!.getInstalledPackage(BigInt(0)).then(pkg0 => {
+            glob.package_manager_rw!.getInstalledPackage(BigInt(0)).then(pkg0 => {
                 try {
                     const piReal0: SharedRealPackageInfo = (pkg0!.package.specific as any).real;
                     const modules0 = new Map(pkg0!.modules);
@@ -52,7 +52,7 @@ export default function Installation(props: {}) {
                 }
             });
         }
-    }, [agent, glob.package_manager_ro, pkg2]);
+    }, [agent, glob.package_manager_rw, pkg2]);
 
     // TODO: Ask for confirmation.
     async function uninstall() {

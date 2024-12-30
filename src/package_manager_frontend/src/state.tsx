@@ -9,13 +9,11 @@ import { Actor } from "@dfinity/agent";
 export const GlobalContext = createContext<{
   frontend: Principal | undefined,
   backend: Principal | undefined,
-  package_manager_ro: PackageManager | undefined,
   package_manager_rw: PackageManager | undefined,
   frontendTweakPrivKey: Uint8Array | undefined,
 }>({
   frontend: undefined,
   backend: undefined,
-  package_manager_ro: undefined,
   package_manager_rw: undefined,
   frontendTweakPrivKey: undefined,
 });
@@ -66,8 +64,7 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
   const {agent, defaultAgent} = useAuth();
-  // TODO: Two identical variables:
-  const package_manager_ro: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
+  // TODO: Rename:
   const package_manager_rw: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
 
   const frontendTweakPrivKeyEncoded = params.get('frontendTweakPrivKey');
@@ -75,7 +72,7 @@ export function GlobalContextProvider(props: { children: any }) {
     frontendTweakPrivKeyEncoded === null ? undefined : urlSafeBase64ToUint8Array(frontendTweakPrivKeyEncoded);
 
   return (
-    <GlobalContext.Provider value={{backend, frontend, package_manager_ro, package_manager_rw, frontendTweakPrivKey}}>
+    <GlobalContext.Provider value={{backend, frontend, package_manager_rw, frontendTweakPrivKey}}>
       {props.children}
     </GlobalContext.Provider>
   );

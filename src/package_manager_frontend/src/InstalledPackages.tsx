@@ -38,10 +38,10 @@ export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]>>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
-        if (glob.package_manager_ro === undefined) { // Why is this check needed?
+        if (glob.package_manager_rw === undefined) { // Why is this check needed?
             return;
         }
-        glob.package_manager_ro!.getAllInstalledPackages().then(allPackages => {
+        glob.package_manager_rw!.getAllInstalledPackages().then(allPackages => {
             const namesSet = new Set(allPackages.map(p => p[1].name));
             const names = Array.from(namesSet);
             names.sort();
@@ -52,7 +52,7 @@ export default function InstalledPackages(props: {}) {
             const byName = new Map(byName0);
             setInstalledVersions(byName);
         });
-    }, [glob.package_manager_ro]);
+    }, [glob.package_manager_rw]);
 
     return (
         <>
