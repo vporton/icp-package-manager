@@ -64,6 +64,8 @@ Remaining things TODO:
 
 - Gzip modules.
 
+- When logged out while showing installing packages, should message that cannot show.
+
 - Error handling in frontend.
 
 - Optionally, create user's repository and copy there installed packages.
