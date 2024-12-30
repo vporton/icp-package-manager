@@ -7,7 +7,6 @@ import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
 import InstalledPackages from './InstalledPackages';
-import Installation from './Installation';
 import { GlobalContext, GlobalContextProvider } from './state';
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { AuthButton } from './AuthButton';
@@ -26,6 +25,7 @@ import { IDL } from '@dfinity/candid';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
 import { InitializedChecker } from '../../lib/install';
+import InstalledPackage from './InstalledPackage';
 // import { canister_status } from "@dfinity/ic-management";
 
 function App() {
@@ -169,7 +169,7 @@ function App2() {
             <Route path="/" element={<MainPage/>}/>
             <Route path="/choose-version/:repo/:packageName" element={<ChooseVersion/>}/>
             <Route path="/installed" element={<InstalledPackages/>}/>
-            <Route path="/installed/show/:installationId" element={<Installation/>}/>
+            <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>
