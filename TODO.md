@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- FIXME: When PM frontend Mainpage is load first (or reload by F5), mistakenly always shows empty list of distros.
+
 - Check if a given package is fully installed and wait after installation before showing it.
 
 - If the user has several PMs installed, order their order.
