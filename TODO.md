@@ -60,10 +60,6 @@ Remaining things TODO:
 
 - use the CMC’s `notify_create_canister`.
 
-- https://www.npmjs.com/package/@dfinity/assets to upload assets.
-
-- Gzip modules.
-
 - When logged out while showing installing packages, should message that cannot show.
   Likewise for mainpage,
 
