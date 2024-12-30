@@ -120,7 +120,7 @@ export default function MainPage() {
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
     const bookmarkingUrl = `${bookmarkingUrlBase}_pm_pkg0.frontend=${bookmark.frontend}&_pm_pkg0.backend=${bookmark.backend}`;
     useEffect(() => {
-        const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: defaultAgent});
+        const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent});
         bookmarks.hasBookmark(bookmark).then((f: boolean) => setBookmarked(f));
         
     }, []);

@@ -90,7 +90,7 @@ export default function ChooseVersion(props: {}) {
                 user: principal!,
                 agent: agent!,
             });
-            const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, defaultAgent: defaultAgent!});
+            const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, agent: agent!});
             for (let i = 0; ; ++i) {
                 if (await checker.check()) {
                     break;

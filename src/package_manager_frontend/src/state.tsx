@@ -66,7 +66,8 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
   const {agent, defaultAgent} = useAuth();
-  const package_manager_ro: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent: defaultAgent});
+  // TODO: Two identical variables:
+  const package_manager_ro: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
   const package_manager_rw: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
 
   const frontendTweakPrivKeyEncoded = params.get('frontendTweakPrivKey');

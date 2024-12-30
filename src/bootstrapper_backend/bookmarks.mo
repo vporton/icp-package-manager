@@ -5,6 +5,7 @@ import Hash "mo:base/Hash";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
 
+// TODO: Allow only the user to see his bookmarks?
 actor Bookmarks {
     public type Bookmark = {
         frontend: Principal;

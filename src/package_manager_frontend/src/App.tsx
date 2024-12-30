@@ -110,7 +110,7 @@ function GlobalUI() {
         });
         const installationId = 0n; // TODO
         const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
-        const checker = await InitializedChecker.create({package_manager: backendPrincipal, installationId, defaultAgent: defaultAgent!});
+        const checker = await InitializedChecker.create({package_manager: backendPrincipal, installationId, agent: agent!});
         for (let i = 0; ; ++i) {
           if (await checker.check()) {
             break;

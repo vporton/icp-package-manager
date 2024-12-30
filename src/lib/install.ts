@@ -39,29 +39,29 @@ export async function installPackageWithModules({
 
 /// Note that this can be checked only from frontend, because calling from backend hacker can hang.
 export class InitializedChecker {
-    private defaultAgent: Agent;
+    private agent: Agent;
     private package_manager: Principal;
     private installationId: InstallationId;
     static async create(arg: {
         package_manager: Principal,
         installationId: InstallationId,
-        defaultAgent: Agent,
+        agent: Agent,
     }) {
-        return new InitializedChecker(arg.package_manager, arg.installationId, arg.defaultAgent);
+        return new InitializedChecker(arg.package_manager, arg.installationId, arg.agent);
     }
     private constructor(
         package_manager: Principal,
         installationId: bigint,
-        defaultAgent: Agent
+        agent: Agent
     ) {
         this.package_manager = package_manager;
         this.installationId = installationId;
-        this.defaultAgent = defaultAgent;
+        this.agent = agent;
     }
     async check(): Promise<boolean> {
         // TODO: very inefficient
         try {
-            const pkgMan: PackageManager = createPackageManager(this.package_manager, {agent: this.defaultAgent});
+            const pkgMan: PackageManager = createPackageManager(this.package_manager, {agent: this.agent});
             const pkg = await pkgMan.getInstalledPackage(this.installationId);
             const real = (pkg.package.specific as any).real as SharedRealPackageInfo;
             if (real.checkInitializedCallback.length === 0) {
@@ -79,7 +79,7 @@ export class InitializedChecker {
                     });
                 };
                 const actor = Actor.createActor(idlFactory, {
-                    agent: this.defaultAgent,
+                    agent: this.agent,
                     canisterId: canister!,
                 });
                 await actor[methodName](); // throws or doesn't
@@ -88,14 +88,14 @@ export class InitializedChecker {
 
             const urlPath: string | undefined = (cb.how as any).urlPath;
             if (urlPath !== undefined) {
-                const frontend = createFrontendActor(canister!, {agent: this.defaultAgent});
+                const frontend = createFrontendActor(canister!, {agent: this.agent});
                 const res = await frontend.http_request({method: "GET", url: urlPath, headers: [], body: [], certificate_version: [2]});
                 const status_code = parseInt(res.status_code.toString());
                 return status_code - status_code % 100 === 200;
             }
         }
         catch (e) {
-            // console.log(e);
+            console.log(e);
             return false;
         }
 

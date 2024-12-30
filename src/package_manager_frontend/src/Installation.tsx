@@ -9,13 +9,13 @@ import { GlobalContext } from "./state";
 
 export default function Installation(props: {}) {
     const { installationId } = useParams();
-    const {defaultAgent} = useAuth();
+    const {agent} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [pkg2, setPkg2] = useState<SharedPackageInfo | undefined>(); // TODO: superfluous variable
     const [frontend, setFrontend] = useState<string | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
-        if (defaultAgent === undefined || glob.package_manager_ro === undefined) {
+        if (agent === undefined || glob.package_manager_ro === undefined) { // TODO: `agent` is unused.
             return;
         }
 
@@ -23,9 +23,9 @@ export default function Installation(props: {}) {
             setPkg(pkg);
             setPkg2(pkg!.package);
         });
-    }, [defaultAgent, glob.package_manager_ro]);
+    }, [agent, glob.package_manager_ro]);
     useEffect(() => {
-        if (defaultAgent === undefined || glob.package_manager_ro === undefined || pkg2 === undefined) {
+        if (agent === undefined || glob.package_manager_ro === undefined || pkg2 === undefined) { // TODO: `agent` is unused?
             return;
         }
 
@@ -52,7 +52,7 @@ export default function Installation(props: {}) {
                 }
             });
         }
-    }, [defaultAgent, glob.package_manager_ro, pkg2]);
+    }, [agent, glob.package_manager_ro, pkg2]);
 
     // TODO: Ask for confirmation.
     async function uninstall() {

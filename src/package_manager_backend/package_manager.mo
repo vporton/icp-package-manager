@@ -1,4 +1,5 @@
 /// TODO: Methods to query for all installed packages.
+import Option "mo:base/Option";
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
@@ -9,7 +10,6 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
-import Option "mo:base/Option";
 import OrderedHashMap "mo:ordered-map";
 import Asset "mo:assets-api";
 import Common "../common";
@@ -37,6 +37,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             [
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
+                (simpleIndirect, ()), // TODO: superfluous?
                 (user, ()),
             ].vals(), // TODO: Are all required?
             4,
@@ -150,9 +151,10 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
+    // TODO: Copy this code to other modules:
     func onlyOwner(caller: Principal, msg: Text) {
-        if (owners.get(caller) == null) {
-            Debug.trap("not the owner: " # msg);
+        if (Option.isNull(owners.get(caller))) {
+            Debug.trap(debug_show(caller) # " is not the owner: " # msg);
         };
     };
 
