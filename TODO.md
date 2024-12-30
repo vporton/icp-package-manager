@@ -75,7 +75,6 @@ Remaining things TODO:
   moves to a different CanDB partition.
 
 - Upgrading.
-  - It's unclear how to do upgrading: The number of modules in a package may change.
 
 - UI:
     - Scanning package dependencies in the UI.
