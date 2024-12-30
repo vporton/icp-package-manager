@@ -41,7 +41,7 @@ deploy:
 	dfx generate package_manager_frontend
 	dfx canister install -m auto package_manager_frontend # for a template
 	# TODO: What does it do with cycles_ledger on mainnet?
-	dfx canister install -m auto cycles_ledger
+	-dfx canister install -m auto cycles_ledger
 	dfx build Bootstrapper
 	dfx canister install -m auto Bootstrapper
 	dfx build indirect_caller
