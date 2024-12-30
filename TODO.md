@@ -6,9 +6,6 @@ Remaining things TODO:
 
 - If the user has several PMs installed, order their order.
 
-- Call `installModule` from Motoko not frontend (gas of one-way function is not counted towards the caller,
-  so it won't overflow 30B limit).
-
 - https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
 
 - Use remaining dev's cycles to store URLs of PMs.
