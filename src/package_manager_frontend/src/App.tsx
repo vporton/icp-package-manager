@@ -83,11 +83,11 @@ function GlobalUI() {
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
-        // TODO: Are here modules needed? They are installed below, instead?
+        const modules = new Map(pkgReal.modules);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
-          backendWasmModule: pkgReal.modules[0][1], // TODO: explicit values
-          indirectWasmModule: pkgReal.modules[2][1],
-          simpleIndirectWasmModule: pkgReal.modules[3][1],
+          backendWasmModule: modules.get("backend")!,
+          indirectWasmModule: modules.get("indirect")!,
+          simpleIndirectWasmModule: modules.get("simple_indirect")!,
           user: principal!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
