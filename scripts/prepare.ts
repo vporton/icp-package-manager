@@ -112,7 +112,7 @@ async function main() {
         specific: {real: pmReal},
     };
     const pmFullInfo: SharedFullPackageInfo = {
-        packages: [["0.0.1", pmInfo]], // TODO: Change to "stable"
+        packages: [["0.0.1", pmInfo]],
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.createPackage("icpack", pmFullInfo);
@@ -137,7 +137,7 @@ async function main() {
         specific: {real: efReal},
     };
     const pmEFFullInfo: SharedFullPackageInfo = {
-        packages: [["0.0.1", pmEFInfo]], // TODO: Change to "stable"
+        packages: [["0.0.1", pmEFInfo]],
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.createPackage("example", pmEFFullInfo);
