@@ -1,11 +1,10 @@
 import { readFileSync } from 'fs';
 import { exec, execSync } from "child_process";
-import { Actor, createAssetCanisterActor, HttpAgent } from "@dfinity/agent";
+import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { SharedRealPackageInfo, _SERVICE as RepositoryPartition } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
-import { idlFactory as repositoryPartitionIdl } from '../src/declarations/RepositoryPartition';
-import { Location, SharedModule, _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
+import { SharedRealPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
 import { SharedPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
 import { SharedFullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
