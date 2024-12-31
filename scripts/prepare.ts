@@ -1,4 +1,3 @@
-/// TODO: unused code?
 import { readFileSync } from 'fs';
 import { exec, execSync } from "child_process";
 import { Actor, createAssetCanisterActor, HttpAgent } from "@dfinity/agent";
