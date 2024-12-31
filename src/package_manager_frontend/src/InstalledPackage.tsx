@@ -24,7 +24,7 @@ export default function Installation(props: {}) {
     }, [glob.package_manager_rw]);
     useEffect(() => {
         // TODO: It seems to work but is a hack:
-        if (glob.package_manager_rw === undefined || !isAuthenticated || pkg === undefined) { // TODO: `agent` is unused?
+        if (glob.package_manager_rw === undefined || !isAuthenticated || pkg === undefined) {
             return;
         }
 

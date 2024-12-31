@@ -55,7 +55,7 @@ export default function InstalledPackages(props: {}) {
             const byName = new Map(byName0);
             setInstalledVersions(byName);
         });
-    }, [glob.package_manager_rw, glob.backend]);
+    }, [glob.package_manager_rw, isAuthenticated]);
 
     return (
         <>
