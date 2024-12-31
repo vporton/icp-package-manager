@@ -4,7 +4,6 @@ USER = $(shell dfx identity get-principal)
 
 .PHONY: deploy
 
-# TODO:
 # INIT_BLOB = $(shell echo 'encode(record {})' | ic-repl-linux64)
 INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"
 
