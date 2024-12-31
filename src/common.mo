@@ -126,10 +126,10 @@ module {
         /// it's an array, because may contain several canisters.
         modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
         /// Empty versions list means any version.
-        ///
-        /// TODO: Suggests/recommends akin Debian.
+        /// Akin Debian:
         dependencies: [(PackageName, [VersionRange])];
-        // TODO: Introduce dependencies between modules.
+        suggests: [(PackageName, [VersionRange])];
+        recommends: [(PackageName, [VersionRange])];
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
