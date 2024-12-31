@@ -36,7 +36,9 @@ async function main() {
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
-    agent.fetchRootKey(); // TODO: should not be used in production.
+    if (process.env.DFX_NETWORK === 'local') {
+        agent.fetchRootKey();
+    }
 
     const repositoryIndex: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
     console.log("Repository init...");
