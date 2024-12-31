@@ -46,7 +46,7 @@ export default function ChooseVersion(props: {}) {
             }
         });
         if (versions !== undefined) {
-            glob.package_manager_rw!.getInstalledPackagesInfoByName(packageName!).then(installed => {
+            glob.packageManager!.getInstalledPackagesInfoByName(packageName!).then(installed => {
                 setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
             });
         }

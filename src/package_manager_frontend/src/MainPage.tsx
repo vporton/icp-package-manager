@@ -19,7 +19,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
     const handleSave = async () => {
         // TODO: Don't allow to add the same repo twice.
         props.handleClose();
-        await glob.package_manager_rw!.addRepository(Principal.fromText(principal), name);
+        await glob.packageManager!.addRepository(Principal.fromText(principal), name);
         props.handleReload();
     };
     return (
@@ -53,26 +53,26 @@ export default function MainPage() {
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
-        if (glob.package_manager_rw != undefined) {
-            glob.package_manager_rw!.getHalfInstalledPackages().then(h => {
+        if (glob.packageManager != undefined) {
+            glob.packageManager!.getHalfInstalledPackages().then(h => {
                 setPackagesToRepair(h);
             });
         }
-    }, [glob.package_manager_rw]);
+    }, [glob.packageManager]);
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        if (glob.package_manager_rw === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
             setDistros(undefined);
         }
-        glob.package_manager_rw!.getRepositories().then((r) => {
+        glob.packageManager!.getRepositories().then((r) => {
             setDistros(r);
             if (r.length !== 0) {
                 setCurDistro(r[0].canister);
             }
         });
     };
-    useEffect(reloadDistros, [glob.package_manager_rw, glob.backend]);
+    useEffect(reloadDistros, [glob.packageManager, glob.backend]);
 
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
     async function installChecked() {
@@ -94,7 +94,7 @@ export default function MainPage() {
 
         for (const p of packagesToRepair!) {
             if (checkedHalfInstalled?.has(p.installationId)) {
-                await glob.package_manager_rw!.installPackage({
+                await glob.packageManager!.installPackage({
                     repo: firstPart,
                     packageName: p.name,
                     version: p.version,
@@ -107,13 +107,13 @@ export default function MainPage() {
         for (const p of packagesToRepair!) {
             // TODO
             // if (checkedHalfInstalled?.has(p.installationId)) {
-            //     await glob.package_manager_rw!.uninstallPackage(BigInt(p.installationId));
+            //     await glob.packageManager!.uninstallPackage(BigInt(p.installationId));
             // }
         }
     }
     async function removeRepository() {
         if (confirm("Remove installation media?")) {
-            await glob.package_manager_rw!.removeRepository(curDistro!);
+            await glob.packageManager!.removeRepository(curDistro!);
             reloadDistros();
         }
     }

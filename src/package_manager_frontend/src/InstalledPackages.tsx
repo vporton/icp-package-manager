@@ -40,11 +40,11 @@ export default function InstalledPackages(props: {}) {
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
-        if (glob.package_manager_rw === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
             setInstalledVersions(undefined);
             return;
         }
-        glob.package_manager_rw!.getAllInstalledPackages().then(allPackages => {
+        glob.packageManager!.getAllInstalledPackages().then(allPackages => {
             const namesSet = new Set(allPackages.map(p => p[1].name));
             const names = Array.from(namesSet);
             names.sort();
@@ -55,7 +55,7 @@ export default function InstalledPackages(props: {}) {
             const byName = new Map(byName0);
             setInstalledVersions(byName);
         });
-    }, [glob.package_manager_rw, isAuthenticated]);
+    }, [glob.packageManager, isAuthenticated]);
 
     return (
         <>

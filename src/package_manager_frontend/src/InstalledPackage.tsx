@@ -15,23 +15,23 @@ export default function Installation(props: {}) {
     const glob = useContext(GlobalContext);
     // TODO: When logged out, show instead that logged out.
     useEffect(() => {
-        if (glob.package_manager_rw === undefined) { // TODO: `agent` is unused.
+        if (glob.packageManager === undefined) { // TODO: `agent` is unused.
             return;
         }
 
-        glob.package_manager_rw!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
+        glob.packageManager!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
         });
-    }, [glob.package_manager_rw]);
+    }, [glob.packageManager]);
     useEffect(() => {
         // TODO: It seems to work but is a hack:
-        if (glob.package_manager_rw === undefined || !isAuthenticated || pkg === undefined) {
+        if (glob.packageManager === undefined || !isAuthenticated || pkg === undefined) {
             return;
         }
 
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) { // There is a frontend module.
-            glob.package_manager_rw!.getInstalledPackage(BigInt(0)).then(pkg0 => {
+            glob.packageManager!.getInstalledPackage(BigInt(0)).then(pkg0 => {
                 const piReal0: SharedRealPackageInfo = (pkg0.package.specific as any).real;
                 const modules0 = new Map(pkg0.modules);
                 const modules = new Map(pkg.modules);
@@ -47,12 +47,12 @@ export default function Installation(props: {}) {
                 setFrontend(url);
             });
         }
-    }, [glob.package_manager_rw, glob.backend, pkg]);
+    }, [glob.packageManager, glob.backend, pkg]);
 
     // TODO: Ask for confirmation.
     async function uninstall() {
         // TODO
-        // let id = await glob.package_manager_rw!.uninstallPackage(BigInt(installationId!));
+        // let id = await glob.packageManager!.uninstallPackage(BigInt(installationId!));
         // TODO:
         alert("Uninstallation finished");
     }
