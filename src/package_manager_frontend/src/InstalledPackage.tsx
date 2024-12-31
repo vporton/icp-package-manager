@@ -13,6 +13,7 @@ export default function Installation(props: {}) {
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
     const glob = useContext(GlobalContext);
+    // TODO: When logged out, show instead that logged out.
     useEffect(() => {
         if (glob.package_manager_rw === undefined) { // TODO: `agent` is unused.
             return;
