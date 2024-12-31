@@ -21,8 +21,9 @@ export default function ChooseVersion(props: {}) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
     const {principal, agent, defaultAgent} = useAuth();
-    const [versions, setVersions] = useState<[string, string][]>([]);
+    const [versions, setVersions] = useState<[string, string][] | undefined>([]);
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
+    // TODO: I doubt performance and consistency in the case if there is no such package.
     useEffect(() => {
         try {
             const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
@@ -111,27 +112,29 @@ export default function ChooseVersion(props: {}) {
         }
     }
     useEffect(() => {
-        setChosenVersion(versions[0] ? versions[0][1] : undefined); // If there are zero versions, sets `undefined`.
+        setChosenVersion(versions !== undefined && versions[0] ? versions[0][1] : undefined); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>
             <h2>Choose package version for installation</h2>
-            <p>Package: {packageName}</p>
-            <p>Version:{" "}
-                <select>
-                    {Array.from(versions.entries()).map(([i, [k, v]]) =>
-                        <option onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)} key={i} value={v}>{k}</option>)}
-                </select>
-            </p>
-            <p>
-                {/* TODO: Disable the button when executing it. */}
-                {installedVersions.size == 0
-                    ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
-                    : installedVersions.has(chosenVersion ?? "")
-                    ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
-                    : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined    }>Install it in addition to other versions of this package</Button></>
-                }
-            </p>
+            <p>Package: {packageName}</p> {/* TODO: no "No such package." message, while the package loads */}
+            {versions === undefined ? <p>No such package.</p> : <>
+                <p>Version:{" "}
+                    <select>
+                        {Array.from(versions!.entries()).map(([i, [k, v]]) =>
+                            <option onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)} key={i} value={v}>{k}</option>)}
+                    </select>
+                </p>
+                <p>
+                    {/* TODO: Disable the button when executing it. */}
+                    {installedVersions.size == 0
+                        ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
+                        : installedVersions.has(chosenVersion ?? "")
+                        ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
+                        : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined    }>Install it in addition to other versions of this package</Button></>
+                    }
+                </p>
+            </>}
         </>
     );
 }
