@@ -141,10 +141,10 @@ module {
         /// it's an array, because may contain several canisters.
         modules: HashMap.HashMap<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
         /// Empty versions list means any version.
-        ///
-        /// TODO: Suggests/recommends akin Debian.
+        /// Akin Debian:
         dependencies: [(PackageName, [VersionRange])];
-        // TODO: Introduce dependencies between modules.
+        suggests: [(PackageName, [VersionRange])];
+        recommends: [(PackageName, [VersionRange])];
         /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
         functions: [(PackageName, [VersionRange])];
         permissions: [(Text, [MethodName])];
@@ -161,6 +161,8 @@ module {
                 ),
             );
             dependencies = package.dependencies;
+            suggests = package.suggests;
+            recommends = package.recommends;
             functions = package.functions;
             permissions = package.permissions;
             checkInitializedCallback = package.checkInitializedCallback;
@@ -179,6 +181,8 @@ module {
                 Text.hash,
             );
             dependencies = package.dependencies;
+            suggests = package.suggests;
+            recommends = package.recommends;
             functions = package.functions;
             permissions = package.permissions;
             checkInitializedCallback = package.checkInitializedCallback;
