@@ -6,6 +6,8 @@ Remaining things TODO:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
+- FIXME: If I login after changing the page between `/` and `/installed` and then reload, then login status is wrong.  
+
 - TODO: Should `backend` be a controller or an owner? Shouldn't we lay aside it for `simpleIndirectCaller`?
 
 - TODO: future compaitibility in package format.
