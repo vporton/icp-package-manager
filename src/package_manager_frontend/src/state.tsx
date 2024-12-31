@@ -71,7 +71,7 @@ export function GlobalContextProvider(props: { children: any }) {
     frontendTweakPrivKeyEncoded === null ? undefined : urlSafeBase64ToUint8Array(frontendTweakPrivKeyEncoded);
 
   return (
-    <GlobalContext.Provider value={{backend, frontend, packageManager: packageManager, frontendTweakPrivKey}}>
+    <GlobalContext.Provider value={{backend, frontend, packageManager, frontendTweakPrivKey}}>
       {props.children}
     </GlobalContext.Provider>
   );
