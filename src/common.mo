@@ -8,7 +8,6 @@ import Hash "mo:base/Hash";
 import Int "mo:base/Int";
 import Nat32 "mo:base/Nat32";
 import Nat "mo:base/Nat";
-import Entity "mo:candb/Entity";
 
 module {
     public func IntHash(value: Int): Hash.Hash {
