@@ -21,38 +21,34 @@ export default function ChooseVersion(props: {}) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
     const {principal, agent, defaultAgent} = useAuth();
-    const [versions, setVersions] = useState<[string, string][] | undefined>([]);
+    const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
-    // TODO: I doubt performance and consistency in the case if there is no such package.
+    // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
-        try {
-            const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-            index.getCanistersByPK("main").then(async pks => {
-                const res: [string, SharedFullPackageInfo][] = await Promise.all(pks.map(async pk => {
-                    const part = repoPartitionCreateActor(pk, {agent: defaultAgent});
-                    let fullInfo = undefined;
-                    try {
-                        fullInfo = await part.getFullPackageInfo(packageName!); // TODO: `!`
-                    }
-                    catch(_) {} // TODO: Handle exception type.
-                    return [pk, fullInfo];
-                })) as any;
-                for (const [pk, fullInfo] of res) {
-                    if (fullInfo === undefined) {
-                        continue;
-                    }
-                    const versionsMap = new Map(fullInfo.versionsMap);
-                    const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                    setVersions(fullInfo.versionsMap.concat(p2));
-                    break;
+        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
+        index.getCanistersByPK("main").then(async pks => {
+            const res: ([string, SharedFullPackageInfo] | undefined)[] = await Promise.all(pks.map(async pk => {
+                const part = repoPartitionCreateActor(pk, {agent: defaultAgent});
+                let fullInfo = undefined;
+                try {
+                    fullInfo = await part.getFullPackageInfo(packageName!); // TODO: `!`
                 }
-            });
+                catch(_) { // TODO: Handle exception type.
+                    return undefined;
+                }
+                return [pk, fullInfo];
+            })) as any;
+            for (const [_pk, fullInfo] of res.filter(x => x !== undefined)) {
+                const versionsMap = new Map(fullInfo.versionsMap);
+                const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
+                setVersions(fullInfo.versionsMap.concat(p2));
+                break;
+            }
+        });
+        if (versions !== undefined) {
             glob.package_manager_rw!.getInstalledPackagesInfoByName(packageName!).then(installed => {
                 setInstalledVersions(new Map(installed.map(e => [e.version, 1])));
             });
-        }
-        catch(_) { // TODO: Check error.
-            setInstalledVersions(new Map());
         }
     }, []);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
