@@ -43,21 +43,12 @@ module {
     public type Location = (canister: Principal, id: Text);
 
     public type ModuleEvent = {
-        // TODO: The following events could be delivered to a not yet installed or uploaded canister, KISS.
-        // TODO: Add thefollowing events by first creating all the canisters and THEN installing code.
-        // #CanisterCreated;
-        // #CodeInstalled;
-        // #AllCanistersCreated;
         #CodeInstalledForAllCanisters;
-        // TODO: Event like `#CodeInstalled` for a particular module, but fired only after all canisters are created.
     };
 
     private func moduleEventHash(e: ModuleEvent): Hash.Hash =
         switch (e) {
-            // case (#CanisterCreated) 0;
-            // case (#CodeInstalled) 1;
-            // case (#AllCanistersCreated) 2;
-            case (#CodeInstalledForAllCanisters) 3; // TODO: value
+            case (#CodeInstalledForAllCanisters) 0;
         };
 
     /// Shared/query method name.
