@@ -19,9 +19,7 @@ if (process.env.DFX_NETWORK === 'local') {
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
-} else {
-    // TODO
-} 
+}
 
 function commandOutput(command: string): Promise<string> {
     return new Promise((resolve) => exec(command, function(error, stdout, stderr){ resolve(stdout); }));
