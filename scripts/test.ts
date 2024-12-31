@@ -41,7 +41,9 @@ async function doIt() {
     const key = await commandOutput("dfx identity export Zon");
     const identity = decodeFile(key);
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
-    agent.fetchRootKey(); // TODO: should not be used in production.
+    if (process.env.DFX_NETWORK === 'local') {
+        agent.fetchRootKey();
+    }
 
     const test = createTestActor(process.env.CANISTER_ID_TEST!, {agent})
     const result = await test.main(pm_blob, frontend_blob, pm_frontend_source_principal, counter_blob)
