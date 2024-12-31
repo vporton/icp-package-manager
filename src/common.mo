@@ -52,7 +52,7 @@ module {
         };
 
     /// Shared/query method name.
-    public type MethodName = {method: Text}; // TODO: simplify?
+    public type MethodName = {method: Text};
 
     public type ModuleCode = {
         #Wasm : Location;
