@@ -11,7 +11,6 @@ export default function Installation(props: {}) {
     const { installationId } = useParams();
     const {agent, isAuthenticated} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
-    const [pkg2, setPkg2] = useState<SharedPackageInfo | undefined>(); // TODO: superfluous variable
     const [frontend, setFrontend] = useState<string | undefined>();
     const glob = useContext(GlobalContext);
     useEffect(() => {
@@ -21,7 +20,6 @@ export default function Installation(props: {}) {
 
         glob.package_manager_rw!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
-            setPkg2(pkg!.package);
         });
     }, [glob.package_manager_rw]);
     useEffect(() => {
@@ -30,30 +28,25 @@ export default function Installation(props: {}) {
             return;
         }
 
-        const piReal: SharedRealPackageInfo = (pkg2!.specific as any).real;
+        const piReal: SharedRealPackageInfo = (pkg!.package!.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) { // There is a frontend module.
             glob.package_manager_rw!.getInstalledPackage(BigInt(0)).then(pkg0 => {
-                try {
-                    const piReal0: SharedRealPackageInfo = (pkg0!.package.specific as any).real;
-                    const modules0 = new Map(pkg0!.modules);
-                    const modules = new Map(pkg!.modules);
-                    const frontendStr = modules.get(piReal.frontendModule[0]!)!.toString();
-                    let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
-                    url += `?_pm_inst=${installationId}`;
-                    for (let m of piReal.modules) {
-                        url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;
-                    }
-                    for (let m of piReal0.modules) {
-                        url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
-                    }
-                    setFrontend(url);
+                const piReal0: SharedRealPackageInfo = (pkg0!.package.specific as any).real;
+                const modules0 = new Map(pkg0!.modules);
+                const modules = new Map(pkg!.modules);
+                const frontendStr = modules.get(piReal.frontendModule[0]!)!.toString();
+                let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
+                url += `?_pm_inst=${installationId}`;
+                for (let m of piReal.modules) {
+                    url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;
                 }
-                catch (e) {
-                    console.log(e);
+                for (let m of piReal0.modules) {
+                    url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
                 }
+                setFrontend(url);
             });
         }
-    }, [glob.package_manager_rw, glob.backend, pkg2]);
+    }, [glob.package_manager_rw, glob.backend, pkg]);
 
     // TODO: Ask for confirmation.
     async function uninstall() {
@@ -70,10 +63,10 @@ export default function Installation(props: {}) {
             <p><strong>Installation ID:</strong> {installationId}</p>
             <p><strong>Package name:</strong> {pkg?.name}</p>
             <p><strong>Package version:</strong> {pkg?.version}</p>
-            <p><strong>Short description:</strong> {pkg2?.base.shortDescription}</p>
-            <p><strong>Long description:</strong> {pkg2?.base.longDescription}</p>
-            { pkg2 && (pkg2.specific as { real: SharedRealPackageInfo }).real && 
-                <p><strong>Dependencies:</strong> {(pkg2?.specific as { real: SharedRealPackageInfo }).real.dependencies.join(", ")}</p>
+            <p><strong>Short description:</strong> {pkg!.package?.base.shortDescription}</p>
+            <p><strong>Long description:</strong> {pkg!.package?.base.longDescription}</p>
+            { pkg!.package && (pkg!.package.specific as { real: SharedRealPackageInfo }).real && 
+                <p><strong>Dependencies:</strong> {(pkg!.package?.specific as { real: SharedRealPackageInfo }).real.dependencies.join(", ")}</p>
             }
             <p><Button onClick={uninstall}>Uninstall</Button></p>
         </>
