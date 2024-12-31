@@ -52,8 +52,15 @@ shared ({ caller = owner }) actor class RepositoryPartition({
     do ? { RBT.get<Text, Entity.AttributeValue>(CanDB.get(db, {sk})!.attributes, Text.compare, subkey)! };
   };
 
-  public query func getAttribute(sk: Text, subkey: Text): async ?Entity.AttributeValue { 
-    _getAttribute(sk, subkey);
+  // public query func getAttribute(sk: Text, subkey: Text): async ?Entity.AttributeValue { 
+  //   _getAttribute(sk, subkey);
+  // };
+
+  public query func getWasmModule(sk: Text): async Blob { 
+    let ?#blob v = _getAttribute(sk, "w") else {
+      Debug.trap("no such module");
+    };
+    v;
   };
 
   public shared({caller}) func put(sk: Text, attributes: [(Entity.AttributeKey, Entity.AttributeValue)]): async () {

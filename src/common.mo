@@ -270,8 +270,8 @@ module {
         /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
+        getWasmModule: query (sk: Text) -> async Blob;
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
-        getAttribute: query (sk: Text, subkey: Text) -> async ?Entity.AttributeValue; // TODO: Probably shouldn't be here.
     };
 
     public type InstalledPackageInfo = {

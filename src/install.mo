@@ -57,11 +57,7 @@ module {
     }): async* () {
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryPartitionRO = actor(Principal.toText(wasmModuleLocation.0));
-        let ?(#blob wasm_module) =
-            await wasmModuleSourcePartition.getAttribute(wasmModuleLocation.1, "w")
-        else {
-            Debug.trap("package WASM code is not available");
-        };
+        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
