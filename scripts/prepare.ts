@@ -141,9 +141,4 @@ async function main() {
     await repositoryIndex.createPackage("example", pmEFFullInfo);
 }
 
-// TODO: Remove?
-// function getModuleLocation(m: SharedModule): Location {
-//     return (m as any).Wasm !== undefined ? (m as any).Wasm : (m as any).Assets.wasm;
-// }
-
 main()
