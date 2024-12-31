@@ -13,7 +13,7 @@ import { createActor as createBookmarkActor } from "../../declarations/bookmark"
 import { myUseNavigate } from "./MyNavigate";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
-    const [name, setName] = useState("TODO");
+    const [name, setName] = useState("(Unnamed)"); // TODO: button to rename it
     const [principal, setPrincipal] = useState(""); // TODO: validate
     const glob = useContext(GlobalContext);
     const handleSave = async () => {
