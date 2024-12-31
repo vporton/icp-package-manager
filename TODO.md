@@ -31,8 +31,6 @@ Remaining things TODO:
 
 - Paid soft.
 
-- Instead of showing zero versions for an non-existent package, show a dialog "No such package."
-
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
 
 - Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
