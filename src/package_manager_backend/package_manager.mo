@@ -200,7 +200,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
     }], user: Principal) {
         try {
-            Debug.print("Y: " # debug_show(packages[0].packageName)); // FIXME: Remove.
             onlyOwner(caller, "installPackageWithPreinstalledModules");
 
             for (pkg in packages.vals()) {
@@ -446,10 +445,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             // FIXME: I put installing additionalPackages into a loop.
             for ((moduleName2, module4) in realPackage.modules.entries()) {
-                Debug.print("X: " # debug_show(module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback)); // FIXME: Remove.
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
                     case (?callbackName, ?afterInstallCallback) {
-                        Debug.print("X1"); // FIXME: Remove.
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
@@ -466,7 +463,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                         }, afterInstallCallback]);
                     };
                     case (?callbackName, null) {
-                        Debug.print("X2"); // FIXME: Remove.
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
@@ -483,7 +479,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                         }]);
                     };
                     case (null, ?afterInstallCallback) {
-                        Debug.print("X3"); // FIXME: Remove.
                         getSimpleIndirect().callAllOneWay([afterInstallCallback]);
                     };
                     case (null, null) {};
