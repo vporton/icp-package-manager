@@ -45,7 +45,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         // user: Principal;
         // packageManagerOrBootstrapper: Principal;
     }): async () {
-        Debug.print("indirect_caller.init");
         onlyOwner(caller, "init");
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
@@ -119,6 +118,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): () {
         try {
+            Debug.print("R2: " # debug_show(afterInstallCallback));
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
@@ -231,6 +231,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             user: Principal;
             module_: Common.SharedModule;
             packageManagerOrBootstrapper: Principal;
+            afterInstallCallback: ?{
+                canister: Principal; name: Text; data: Blob;
+            };
         }) -> async ();
     };
 
@@ -251,6 +254,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): () {
         try {
+            Debug.print("R3: " # debug_show(afterInstallCallback));
             onlyOwner(caller, "installModule");
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));

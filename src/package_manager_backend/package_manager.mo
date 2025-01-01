@@ -10,6 +10,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
+import Error "mo:base/Error";
 import OrderedHashMap "mo:ordered-map";
 import Common "../common";
 import IndirectCaller "indirect_caller";
@@ -195,16 +196,22 @@ shared({caller = initialCaller}) actor class PackageManager({
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
     }], user: Principal) {
-        onlyOwner(caller, "installPackageWithPreinstalledModules");
+        try {
+            Debug.print("Y: " # debug_show(packages[0].packageName)); // FIXME: Remove.
+            onlyOwner(caller, "installPackageWithPreinstalledModules");
 
-        for (pkg in packages.vals()) {
-            ignore installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
-                packageName = pkg.packageName;
-                version = pkg.version;
-                repo = pkg.repo;
-                user;
-                afterInstallCallback = null;
-            });
+            for (pkg in packages.vals()) {
+                ignore installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                    packageName = pkg.packageName;
+                    version = pkg.version;
+                    repo = pkg.repo;
+                    user;
+                    afterInstallCallback = null;
+                });
+            };
+        }
+        catch(e) {
+            Debug.print(Error.message(e));
         }
     };
 
@@ -383,6 +390,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
+        Debug.print("R4: " # debug_show(afterInstallCallback));
         // TODO: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
 
@@ -433,9 +441,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
+            // FIXME: I put installing additionalPackages into a loop.
             for ((moduleName2, module4) in realPackage.modules.entries()) {
+                Debug.print("X: " # debug_show(module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback)); // FIXME: Remove.
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
                     case (?callbackName, ?afterInstallCallback) {
+                        Debug.print("X1"); // FIXME: Remove.
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
@@ -452,6 +463,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         }, afterInstallCallback]);
                     };
                     case (?callbackName, null) {
+                        Debug.print("X2"); // FIXME: Remove.
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
@@ -468,6 +480,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         }]);
                     };
                     case (null, ?afterInstallCallback) {
+                        Debug.print("X3"); // FIXME: Remove.
                         getSimpleIndirect().callAllOneWay([afterInstallCallback]);
                     };
                     case (null, null) {};
@@ -827,6 +840,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
+        Debug.print("R1: " # debug_show(afterInstallCallback));
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;
