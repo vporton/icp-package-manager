@@ -118,7 +118,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): () {
         try {
-            Debug.print("R2: " # debug_show(afterInstallCallback));
             onlyOwner(caller, "installPackageWrapper");
 
             let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
