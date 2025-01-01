@@ -152,6 +152,12 @@ shared({caller = initialCaller}) actor class PackageManager({
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
+    // TODO: Make stable:
+    var additionalInstall: HashMap.HashMap<Common.InstallationId, {
+        var totalNumberOfInstalledAllModulesCallbacksRemaining: Nat;
+    }> =
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
     // TODO: Copy this code to other modules:
@@ -198,12 +204,21 @@ shared({caller = initialCaller}) actor class PackageManager({
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
-    }], user: Principal) {
+    }], user: Principal, installationId: Common.InstallationId) {
         try {
             onlyOwner(caller, "installPackageWithPreinstalledModules");
 
+            let ?inst = additionalInstall.get(installationId) else { // FIXME: already installed, no such installation
+                Debug.trap("no such additional installation");
+            };
+
+            inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
+            if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining != 0) {
+                return; // ensure it's executed only once.
+            };
+
             for (pkg in packages.vals()) {
-                    ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                    ignore await this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
                         packageName = pkg.packageName;
                         version = pkg.version;
                         repo = pkg.repo;
@@ -211,6 +226,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                         afterInstallCallback = null;
                     });
             };
+
+            additionalInstall.delete(installationId); // Clear memory.
         }
         catch(e) {
             Debug.print(Error.message(e));
@@ -258,7 +275,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
-                data = to_candid(additionalPackages, user);
+                data = to_candid(additionalPackages, user, installationId);
             };
         });
     };
@@ -356,6 +373,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
             preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
         let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
+        // var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
+        // for ((moduleName2, module4) in package3.modules.entries()) {
+        //     if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
+        //         totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
+        //     };
+        // };
+
         let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
             numberOfModulesToInstall = numPackages;
             // id = installationId;
@@ -392,7 +416,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        Debug.print("R4: " # debug_show(afterInstallCallback));
         // TODO: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
 
@@ -443,7 +466,29 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
-            // FIXME: I put installing additionalPackages into a loop.
+            // Keep the below code in-sync with `totalNumberOfInstalledAllModulesCallbacksRemaining` variable value!
+            // TODO: The below code is a trick.
+            // Note that we have different algorithms for zero and non-zero number of callbacks.
+            let #real package = inst.package.specific else { // TODO: virtual packages
+                Debug.trap("virtual packages not yet supported");
+            };
+            var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
+            for ((moduleName2, module4) in package.modules.entries()) {
+                if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
+                    totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
+                };
+            };
+            let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
+            if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
+                switch (afterInstallCallback) {
+                    case (?afterInstallCallback) {
+                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                    };
+                    case null {};
+                };
+            } else {
+                additionalInstall.put(installationId, instx);
+            };
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
                     case (?callbackName, ?afterInstallCallback) {
