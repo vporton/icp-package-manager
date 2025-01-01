@@ -428,45 +428,31 @@ shared({caller = initialCaller}) actor class PackageManager({
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
-        let ?pkg = halfInstalledPackages.get(installationId) else {
-            Debug.trap("PackageManager: programming error");
-        };
-        let #real realPackage = pkg.package.specific else { // TODO: fails with virtual packages
+        let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
-        let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(pkg.installedModules.size(), Text.equal, Text.hash);
+        let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(inst.installedModules.size(), Text.equal, Text.hash);
         // Keep the below code in-sync with `totalNumberOfInstalledAllModulesCallbacksRemaining` variable value!
         // TODO: The below code is a trick.
         // Note that we have different algorithms for zero and non-zero number of callbacks.
         let #real package = inst.package.specific else { // TODO: virtual packages
             Debug.trap("virtual packages not yet supported");
         };
-        var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
-        for ((moduleName2, module4) in package.modules.entries()) {
-            if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
-                totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
-            };
-        };
-        Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
-        let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
-        if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
-            switch (afterInstallCallback) {
-                case (?afterInstallCallback) {
-                    getSimpleIndirect().callAllOneWay([afterInstallCallback]);
-                };
-                case null {};
-            };
-        } else {
-            additionalInstall.put(installationId, instx);
-        };
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
+            var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
+            Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
+                for ((moduleName2, module4) in package.modules.entries()) {
+                if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
+                    totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
+                };
+            };
             // TODO: order of this code
             _updateAfterInstall({installationId});
+            let ?inst2 = installedPackages.get(installationId) else {
+                Debug.trap("no such installationId: " # debug_show(installationId));
+            };
             switch (inst.whatToInstall) {
                 case (#simplyModules _) {
-                    let ?inst2 = installedPackages.get(installationId) else {
-                        Debug.trap("no such installationId: " # debug_show(installationId));
-                    };
                     inst2.allModules.add(canister);
                     switch (moduleName) {
                         case (?moduleName) {
@@ -482,7 +468,18 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }
             };
             halfInstalledPackages.delete(installationId);
-            for (m in pkg.installedModules.vals()) {
+            let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
+            if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
+                switch (afterInstallCallback) {
+                    case (?afterInstallCallback) {
+                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                    };
+                    case null {};
+                };
+            } else {
+                additionalInstall.put(installationId, instx);
+            };
+            for (m in inst.installedModules.vals()) {
                 switch (m) {
                     case (?(?n, p)) {
                         inst3.put(n, p);
@@ -495,7 +492,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
                 case (?callbackName, ?afterInstallCallback) {
                     let ?cbPrincipal = inst3.get(moduleName2) else {
-                        Debug.trap("programming error 2");
+                        Debug.trap("programming error: cannot get module '" # moduleName2 #
+                            "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
                     };
                     getSimpleIndirect().callAllOneWay([{
                         canister = cbPrincipal;
