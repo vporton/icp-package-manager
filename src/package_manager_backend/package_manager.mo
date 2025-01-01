@@ -440,12 +440,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
             var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
-            Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
-                for ((moduleName2, module4) in package.modules.entries()) {
+            for ((moduleName2, module4) in package.modules.entries()) {
                 if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
                     totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
                 };
             };
+            Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
             // TODO: order of this code
             _updateAfterInstall({installationId});
             let ?inst2 = installedPackages.get(installationId) else {
@@ -487,46 +487,47 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
-        };
-        for ((moduleName2, module4) in realPackage.modules.entries()) {
-            switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
-                case (?callbackName, ?afterInstallCallback) {
-                    let ?cbPrincipal = inst3.get(moduleName2) else {
-                        Debug.trap("programming error: cannot get module '" # moduleName2 #
-                            "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
+            for ((moduleName2, module4) in realPackage.modules.entries()) {
+                Debug.print("MODULE: " # debug_show(moduleName2)); // FIXME: Remove.
+                switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
+                    case (?callbackName, ?afterInstallCallback) {
+                        let ?cbPrincipal = inst3.get(moduleName2) else {
+                            Debug.trap("programming error: cannot get module '" # moduleName2 #
+                                "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
+                        };
+                        Debug.print("M1"); // FIXME: Remove.
+                        getSimpleIndirect().callAllOneWay([{
+                            canister = cbPrincipal;
+                            name = callbackName.method;
+                            data = to_candid({ // TODO
+                                installationId;
+                                canister;
+                                user;
+                                packageManagerOrBootstrapper; // TODO: Remove?
+                                module_;
+                            });
+                        }, afterInstallCallback]);
                     };
-                    getSimpleIndirect().callAllOneWay([{
-                        canister = cbPrincipal;
-                        name = callbackName.method;
-                        data = to_candid({ // TODO
-                            installationId;
-                            canister;
-                            user;
-                            packageManagerOrBootstrapper; // TODO: Remove?
-                            module_;
-                        });
-                    }, afterInstallCallback]);
-                };
-                case (?callbackName, null) {
-                    let ?cbPrincipal = inst3.get(moduleName2) else {
-                        Debug.trap("programming error 3");
+                    case (?callbackName, null) {
+                        Debug.print("M2"); // FIXME: Remove.
+                        let ?cbPrincipal = inst3.get(moduleName2) else {
+                            Debug.trap("programming error 3");
+                        };
+                        getSimpleIndirect().callAllOneWay([{
+                            canister = cbPrincipal;
+                            name = callbackName.method;
+                            data = to_candid({ // TODO
+                                installationId;
+                                canister;
+                                user;
+                                packageManagerOrBootstrapper; // TODO: Remove?
+                                module_;
+                            });
+                        }]);
                     };
-                    getSimpleIndirect().callAllOneWay([{
-                        canister = cbPrincipal;
-                        name = callbackName.method;
-                        data = to_candid({ // TODO
-                            installationId;
-                            canister;
-                            user;
-                            packageManagerOrBootstrapper; // TODO: Remove?
-                            module_;
-                        });
-                    }]);
+                    case (null, ?afterInstallCallback) {};
+                    case (null, null) {};
                 };
-                case (null, ?afterInstallCallback) {
-                    getSimpleIndirect().callAllOneWay([afterInstallCallback]);
-                };
-                case (null, null) {};
             };
         };
     };
