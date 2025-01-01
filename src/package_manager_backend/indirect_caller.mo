@@ -356,7 +356,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installationId;
             user;
             packageManagerOrBootstrapper;
-            onInstallCode(;
+            afterInstallCallback;
         });
 
         canister_id;
