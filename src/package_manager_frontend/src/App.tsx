@@ -102,6 +102,7 @@ function GlobalUI() {
           repo: repoPart!,
           user: principal!, // TODO: `!`
           indirectCaller: indirectPrincipal,
+          additionalPackages: [{packageName: 'example', version: "0.0.1", repo: repoPart!}],
         });
         const installationId = 0n; // TODO
         const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});

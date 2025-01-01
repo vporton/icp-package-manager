@@ -189,6 +189,25 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
     };
 
+    /// Internal. Install packages after bootstrapping IC Pack.
+    public shared({caller}) func bootstrapAdditionalPackages(packages: [{
+        packageName: Common.PackageName;
+        version: Common.Version;
+        repo: Common.RepositoryPartitionRO;
+    }], user: Principal) {
+        onlyOwner(caller, "installPackageWithPreinstalledModules");
+
+        for (pkg in packages.vals()) {
+            ignore installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                packageName = pkg.packageName;
+                version = pkg.version;
+                repo = pkg.repo;
+                user;
+                afterInstallCallback = null;
+            });
+        }
+    };
+
     /// Internal used for bootstrapping.
     public shared({caller}) func installPackageWithPreinstalledModules({
         whatToInstall: {
@@ -201,9 +220,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO; 
         user: Principal;
         indirectCaller: Principal;
-        afterInstallCallback: ?{
-            canister: Principal; name: Text; data: Blob;
-        };
+        /// Additional packages to install after bootstrapping.
+        additionalPackages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryPartitionRO;
+        }];
     })
         : async {installationId: Common.InstallationId}
     {
@@ -224,7 +246,11 @@ shared({caller = initialCaller}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
-            afterInstallCallback;
+            afterInstallCallback = ?{
+                canister = Principal.fromActor(this);
+                name = "bootstrapAdditionalPackages";
+                data = to_candid(additionalPackages, user);
+            };
         });
     };
 
