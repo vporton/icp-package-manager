@@ -57,7 +57,9 @@ export default function MainPage() {
           try {
             pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
           }
-          catch (_) {}
+          catch (e) {
+            console.log(e); // TODO: return an error
+          }
         });
         await Promise.all(jobs);
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
