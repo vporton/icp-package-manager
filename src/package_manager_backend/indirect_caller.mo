@@ -253,7 +253,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): () {
         try {
-            Debug.print("R3: " # debug_show(afterInstallCallback));
             onlyOwner(caller, "installModule");
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
