@@ -212,11 +212,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("no such additional installation");
             };
 
-            Debug.print("bootstrapAdditionalPackages1: " # debug_show(inst.totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
             inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
             if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
                 for (pkg in packages.vals()) {
-                    Debug.print("bootstrapAdditionalPackages: " # pkg.packageName # " / " # debug_show(inst.totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
                     ignore await this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
                         packageName = pkg.packageName;
                         version = pkg.version;
@@ -417,7 +415,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         // TODO: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
-        Debug.print("onInstallCode afterInstallCallback: " # debug_show(afterInstallCallback)); // FIXME: Remove.
 
         onlyOwner(caller, "onInstallCode");
 
@@ -445,7 +442,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
                 };
             };
-            Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
             // TODO: order of this code
             _updateAfterInstall({installationId});
             let ?inst2 = installedPackages.get(installationId) else {
@@ -488,14 +484,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
             };
             for ((moduleName2, module4) in realPackage.modules.entries()) {
-                Debug.print("MODULE: " # debug_show(moduleName2)); // FIXME: Remove.
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
                     case (?callbackName, ?afterInstallCallback) {
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error: cannot get module '" # moduleName2 #
                                 "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
                         };
-                        Debug.print("M1"); // FIXME: Remove.
                         getSimpleIndirect().callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
@@ -509,7 +503,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                         }, afterInstallCallback]);
                     };
                     case (?callbackName, null) {
-                        Debug.print("M2"); // FIXME: Remove.
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };

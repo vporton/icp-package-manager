@@ -188,7 +188,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             };
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             for ((name, m): (Text, Common.Module) in modules) {
-                Debug.print("installModule with afterInstallCallback"); // FIXME: Remove.
                 // Starting installation of all modules in parallel:
                 this.installModule({
                     installPackage = whatToInstall == #package; // TODO: correct?
@@ -257,7 +256,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             onlyOwner(caller, "installModule");
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
-            Debug.print("installModule afterInstallCallback" # debug_show(afterInstallCallback)); // FIXME: Remove.
 
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
