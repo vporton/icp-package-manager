@@ -88,7 +88,6 @@ async function main() {
     console.log("Creating packages...");
     const pmReal: SharedRealPackageInfo = {
         modules: [
-            // "backend" goes first, because it stores installation information.
             ['backend', pmBackendModule],
             ['frontend', pmFrontendModule],
             ['indirect', pmIndirectModule],
