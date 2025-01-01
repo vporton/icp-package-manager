@@ -105,7 +105,6 @@ function GlobalUI() {
           additionalPackages: [{packageName: 'example', version: "0.0.1", repo: repoPart!}],
         });
         const installationId = 0n; // TODO
-        const indirect: IndirectCaller = createIndirectActor(indirectPrincipal, {agent});
         const checker = await InitializedChecker.create({package_manager: backendPrincipal, installationId, agent: agent!});
         for (let i = 0; ; ++i) {
           if (await checker.check()) {
