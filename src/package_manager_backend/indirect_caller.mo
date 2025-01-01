@@ -114,6 +114,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installationId: Common.InstallationId;
         preinstalledModules: [(Text, Principal)];
         user: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): () {
         try {
             onlyOwner(caller, "installPackageWrapper");
@@ -202,6 +205,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     preinstalledCanisterId = coreModules.get(name);
                     user; // TODO: `!`
                     wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
+                    afterInstallCallback;
                 });
                 moduleNumber += 1;
             };
@@ -242,6 +246,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         simpleIndirect: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): () {
         try {
             onlyOwner(caller, "installModule");
@@ -269,6 +276,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         canister = preinstalledCanisterId;
                         user;
                         packageManagerOrBootstrapper;
+                        afterInstallCallback;
                     });
                 };
                 case null {
@@ -283,6 +291,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         initialIndirect;
                         simpleIndirect;
                         user;
+                        afterInstallCallback;
                     });
                 };
             };
@@ -305,6 +314,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         simpleIndirect: Principal;
         installArg: Blob;
         user: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[user, initialIndirect, simpleIndirect];
@@ -344,6 +356,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             installationId;
             user;
             packageManagerOrBootstrapper;
+            onInstallCode(;
         });
 
         canister_id;

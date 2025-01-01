@@ -162,6 +162,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         version: Common.Version;
         repo: Common.RepositoryPartitionRO;
         user: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     })
         : async {installationId: Common.InstallationId}
     {
@@ -182,6 +185,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules = [];
+            afterInstallCallback;
         });
     };
 
@@ -197,6 +201,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO; 
         user: Principal;
         indirectCaller: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     })
         : async {installationId: Common.InstallationId}
     {
@@ -217,6 +224,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             objectToInstall = #package {packageName; version};
             user;
             preinstalledModules;
+            afterInstallCallback;
         });
     };
 
@@ -345,6 +353,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         module_: Common.SharedModule;
         packageManagerOrBootstrapper: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): async () {
         // TODO: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
@@ -397,24 +408,28 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
             };
             for ((moduleName2, module4) in realPackage.modules.entries()) {
-                switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
-                    case (?callbackName) {
+                switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
+                    case (?callbackName, ?afterInstallCallback) {
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error");
                         };
-                        // let indirect: IndirectCaller.IndirectCaller = switch (indirect_caller_) { // hack
-                        //     case (?v) v;
-                        //     case null {
-                        //         Debug.trap("programming error");
-                        //     };
-                        // };
-                        let simpleIndirect: SimpleIndirect.SimpleIndirect = switch (simple_indirect_) { // hack
-                            case (?v) v;
-                            case null {
-                                Debug.trap("programming error");
-                            };
+                        getSimpleIndirect().callAllOneWay([{
+                            canister = cbPrincipal;
+                            name = callbackName.method;
+                            data = to_candid({ // TODO
+                                installationId;
+                                canister;
+                                user;
+                                packageManagerOrBootstrapper; // TODO: Remove?
+                                module_;
+                            });
+                        }, afterInstallCallback]);
+                    };
+                    case (?callbackName, null) {
+                        let ?cbPrincipal = inst3.get(moduleName2) else {
+                            Debug.trap("programming error");
                         };
-                        simpleIndirect.callAllOneWay([{
+                        getSimpleIndirect().callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO
@@ -426,7 +441,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                             });
                         }]);
                     };
-                    case null {};
+                    case (null, ?afterInstallCallback) {
+                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                    };
+                    case (null, null) {};
                 };
             };
         };
@@ -777,6 +795,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
         user: Principal;
         preinstalledModules: [(Text, Principal)];
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     })
         : async* {installationId: Common.InstallationId}
     {
@@ -789,6 +810,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo;
             user;
             preinstalledModules;
+            afterInstallCallback;
         });
 
         {installationId};

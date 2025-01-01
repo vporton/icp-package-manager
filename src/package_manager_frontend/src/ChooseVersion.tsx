@@ -153,6 +153,7 @@ export async function installPackageWithModules({
         version,
         repo,
         user,
+        afterInstallCallback: [],
     });
     // const part = createRepositoryPartition(repo);
     // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient

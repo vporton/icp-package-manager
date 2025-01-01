@@ -99,6 +99,7 @@ export default function MainPage() {
                     packageName: p.name,
                     version: p.version,
                     user: principal!,
+                    afterInstallCallback: [],
                 });
             }
         }
