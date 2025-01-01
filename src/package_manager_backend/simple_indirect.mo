@@ -89,6 +89,8 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
+    ///
+    /// TODO: It would be more efficient and elegant to pass a shared method.
     private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
