@@ -224,6 +224,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
     /// TODO: What if, due actor model's non-realiability, it installed partially.
+    ///
+    /// FIXME: It seems, that it reuses an existing installationId.
     public shared({caller}) func installNamedModules({
         installationId: Common.InstallationId;
         repo: Common.RepositoryPartitionRO; // TODO: Install from multiple repos.

@@ -33,7 +33,7 @@ actor class Bootstrapper() = this {
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
-            packageManagerOrBootstrapper = Principal.fromActor(this); // TODO: This is a bug.
+            packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below. // FIXME: check
             initialIndirect;
             simpleIndirect;
             user;
