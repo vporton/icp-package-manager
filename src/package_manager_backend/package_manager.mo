@@ -99,7 +99,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         //         Debug.trap("package manager is not yet installed");
         //     };
         //     let ?frontend = pkg.modules.get("frontend") else {
-        //         Debug.trap("programming error");
+        //         Debug.trap("programming error 1");
         //     };
         //     let f: Asset.AssetCanister = actor(Principal.toText(frontend));
         //     f.get({key = "/index.html"; accept_encodings = ["gzip"]});
@@ -206,18 +206,17 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryPartitionRO;
     }], user: Principal, installationId: Common.InstallationId) {
         try {
-            onlyOwner(caller, "installPackageWithPreinstalledModules");
+            onlyOwner(caller, "bootstrapAdditionalPackages");
 
             let ?inst = additionalInstall.get(installationId) else { // FIXME: already installed, no such installation
                 Debug.trap("no such additional installation");
             };
 
+            Debug.print("bootstrapAdditionalPackages1: " # debug_show(inst.totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
             inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
-            if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining != 0) {
-                return; // ensure it's executed only once.
-            };
-
-            for (pkg in packages.vals()) {
+            if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
+                for (pkg in packages.vals()) {
+                    Debug.print("bootstrapAdditionalPackages: " # pkg.packageName # " / " # debug_show(inst.totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
                     ignore await this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
                         packageName = pkg.packageName;
                         version = pkg.version;
@@ -225,9 +224,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                         user;
                         afterInstallCallback = null;
                     });
+                };
+                additionalInstall.delete(installationId); // Clear memory.
             };
-
-            additionalInstall.delete(installationId); // Clear memory.
         }
         catch(e) {
             Debug.print(Error.message(e));
@@ -418,6 +417,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         // TODO: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
+        Debug.print("onInstallCode afterInstallCallback: " # debug_show(afterInstallCallback)); // FIXME: Remove.
 
         onlyOwner(caller, "onInstallCode");
 
@@ -428,6 +428,37 @@ shared({caller = initialCaller}) actor class PackageManager({
         assert Option.isNull(inst.installedModules.get(moduleNumber));
         inst.modulesWithoutCode.put(moduleNumber, null);
         inst.installedModules.put(moduleNumber, ?(moduleName, canister));
+        let ?pkg = halfInstalledPackages.get(installationId) else {
+            Debug.trap("PackageManager: programming error");
+        };
+        let #real realPackage = pkg.package.specific else { // TODO: fails with virtual packages
+            Debug.trap("trying to directly install a virtual installation");
+        };
+        let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(pkg.installedModules.size(), Text.equal, Text.hash);
+        // Keep the below code in-sync with `totalNumberOfInstalledAllModulesCallbacksRemaining` variable value!
+        // TODO: The below code is a trick.
+        // Note that we have different algorithms for zero and non-zero number of callbacks.
+        let #real package = inst.package.specific else { // TODO: virtual packages
+            Debug.trap("virtual packages not yet supported");
+        };
+        var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
+        for ((moduleName2, module4) in package.modules.entries()) {
+            if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
+                totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
+            };
+        };
+        Debug.print("totalNumberOfInstalledAllModulesCallbacksRemaining start: " # debug_show(totalNumberOfInstalledAllModulesCallbacksRemaining)); // FIXME: Remove.
+        let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
+        if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
+            switch (afterInstallCallback) {
+                case (?afterInstallCallback) {
+                    getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                };
+                case null {};
+            };
+        } else {
+            additionalInstall.put(installationId, instx);
+        };
         if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
             // TODO: order of this code
             _updateAfterInstall({installationId});
@@ -450,14 +481,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
-            let ?pkg = halfInstalledPackages.get(installationId) else {
-                Debug.trap("PackageManager: programming error");
-            };
             halfInstalledPackages.delete(installationId);
-            let #real realPackage = pkg.package.specific else { // TODO: fails with virtual packages
-                Debug.trap("trying to directly install a virtual installation");
-            };
-            let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(pkg.installedModules.size(), Text.equal, Text.hash);
             for (m in pkg.installedModules.vals()) {
                 switch (m) {
                     case (?(?n, p)) {
@@ -466,68 +490,45 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case _ {};
                 };
             };
-            // Keep the below code in-sync with `totalNumberOfInstalledAllModulesCallbacksRemaining` variable value!
-            // TODO: The below code is a trick.
-            // Note that we have different algorithms for zero and non-zero number of callbacks.
-            let #real package = inst.package.specific else { // TODO: virtual packages
-                Debug.trap("virtual packages not yet supported");
-            };
-            var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
-            for ((moduleName2, module4) in package.modules.entries()) {
-                if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
-                    totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
+        };
+        for ((moduleName2, module4) in realPackage.modules.entries()) {
+            switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
+                case (?callbackName, ?afterInstallCallback) {
+                    let ?cbPrincipal = inst3.get(moduleName2) else {
+                        Debug.trap("programming error 2");
+                    };
+                    getSimpleIndirect().callAllOneWay([{
+                        canister = cbPrincipal;
+                        name = callbackName.method;
+                        data = to_candid({ // TODO
+                            installationId;
+                            canister;
+                            user;
+                            packageManagerOrBootstrapper; // TODO: Remove?
+                            module_;
+                        });
+                    }, afterInstallCallback]);
                 };
-            };
-            let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
-            if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
-                switch (afterInstallCallback) {
-                    case (?afterInstallCallback) {
-                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                case (?callbackName, null) {
+                    let ?cbPrincipal = inst3.get(moduleName2) else {
+                        Debug.trap("programming error 3");
                     };
-                    case null {};
+                    getSimpleIndirect().callAllOneWay([{
+                        canister = cbPrincipal;
+                        name = callbackName.method;
+                        data = to_candid({ // TODO
+                            installationId;
+                            canister;
+                            user;
+                            packageManagerOrBootstrapper; // TODO: Remove?
+                            module_;
+                        });
+                    }]);
                 };
-            } else {
-                additionalInstall.put(installationId, instx);
-            };
-            for ((moduleName2, module4) in realPackage.modules.entries()) {
-                switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
-                    case (?callbackName, ?afterInstallCallback) {
-                        let ?cbPrincipal = inst3.get(moduleName2) else {
-                            Debug.trap("programming error");
-                        };
-                        getSimpleIndirect().callAllOneWay([{
-                            canister = cbPrincipal;
-                            name = callbackName.method;
-                            data = to_candid({ // TODO
-                                installationId;
-                                canister;
-                                user;
-                                packageManagerOrBootstrapper; // TODO: Remove?
-                                module_;
-                            });
-                        }, afterInstallCallback]);
-                    };
-                    case (?callbackName, null) {
-                        let ?cbPrincipal = inst3.get(moduleName2) else {
-                            Debug.trap("programming error");
-                        };
-                        getSimpleIndirect().callAllOneWay([{
-                            canister = cbPrincipal;
-                            name = callbackName.method;
-                            data = to_candid({ // TODO
-                                installationId;
-                                canister;
-                                user;
-                                packageManagerOrBootstrapper; // TODO: Remove?
-                                module_;
-                            });
-                        }]);
-                    };
-                    case (null, ?afterInstallCallback) {
-                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
-                    };
-                    case (null, null) {};
+                case (null, ?afterInstallCallback) {
+                    getSimpleIndirect().callAllOneWay([afterInstallCallback]);
                 };
+                case (null, null) {};
             };
         };
     };
@@ -583,10 +584,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                             ourHalfInstalled.installedModules.vals(),
                             func (x: ?(?Text, Principal)) {
                                 let ?s = x else {
-                                    Debug.trap("programming error");
+                                    Debug.trap("programming error 4");
                                 };
                                 let ?n = s.0 else {
-                                    Debug.trap("programming error");
+                                    Debug.trap("programming error 5");
                                 };
                                 (n, s.1);
                             }
@@ -856,7 +857,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 ),
                 func (x: ?(?Text, Principal)): (?Text, Principal) {
                     let ?y = x else {
-                        Debug.trap("programming error");
+                        Debug.trap("programming error 6");
                     };
                     y;
                 },
@@ -883,7 +884,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {installationId: Common.InstallationId}
     {
-        Debug.print("R1: " # debug_show(afterInstallCallback));
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;
