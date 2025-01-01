@@ -10,7 +10,7 @@ import { IDL } from '@dfinity/candid';
 import { Actor, Agent } from '@dfinity/agent';
 
 export async function installPackageWithModules({
-    package_manager_principal, packageName, repo, user, version, agent
+    package_manager_principal, packageName, repo, user, version, agent, afterInstallCallback
 }: {
     package_manager_principal: Principal,
     packageName: PackageName,
@@ -18,6 +18,9 @@ export async function installPackageWithModules({
     user: Principal,
     version: Version,
     agent: Agent,
+    afterInstallCallback: {
+        canister: Principal, name: string, data: Uint8Array,
+    } | undefined,
 }): Promise<{
     installationId: InstallationId;
 }> {
@@ -27,6 +30,7 @@ export async function installPackageWithModules({
         version,
         repo,
         user,
+        afterInstallCallback: afterInstallCallback === undefined ? [] : [afterInstallCallback],
     });
     // const part = createRepositoryPartition(repo);
     // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
