@@ -39,7 +39,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             Principal.equal,
             Principal.hash);
 
-    public shared({caller}) func init({ // TODO
+    public shared({caller}) func init({
         // installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;

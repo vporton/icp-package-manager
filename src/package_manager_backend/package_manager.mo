@@ -29,7 +29,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     Debug.trap("argument userArg is wrong");
     // };
 
-    // stable var initialized = false;
+    stable var initialized = false;
 
     stable var _ownersSave: [(Principal, ())] = [];
     var owners: HashMap.HashMap<Principal, ()> =
@@ -44,16 +44,19 @@ shared({caller = initialCaller}) actor class PackageManager({
             Principal.equal,
             Principal.hash);
 
-    // public shared({caller}) func init(p: {
-    //     // installationId: Common.InstallationId;
-    //     // canister: Principal;
-    //     // user: Principal;
-    //     // packageManagerOrBootstrapper: Principal;
-    // }) {
-    //     onlyOwner(caller, "init");
+    public shared({caller}) func init({
+        // installationId: Common.InstallationId;
+        // canister: Principal;
+        // user: Principal;
+        // packageManagerOrBootstrapper: Principal;
+    }): async () {
+        onlyOwner(caller, "init");
 
-    //     initialized := true;
-    // };
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackage`. // TODO: needed?
+
+        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+        initialized := true;
+    };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         onlyOwner(caller, "setOwners");
@@ -84,9 +87,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public composite query func isAllInitialized(): async () {
-        // if (not initialized) {
-        //     Debug.trap("package_manager: not initialized");
-        // };
+        if (not initialized) {
+            Debug.trap("package_manager: not initialized");
+        };
         // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
         let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
@@ -201,13 +204,13 @@ shared({caller = initialCaller}) actor class PackageManager({
             onlyOwner(caller, "installPackageWithPreinstalledModules");
 
             for (pkg in packages.vals()) {
-                ignore installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
-                    packageName = pkg.packageName;
-                    version = pkg.version;
-                    repo = pkg.repo;
-                    user;
-                    afterInstallCallback = null;
-                });
+                    ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                        packageName = pkg.packageName;
+                        version = pkg.version;
+                        repo = pkg.repo;
+                        user;
+                        afterInstallCallback = null;
+                    });
             };
         }
         catch(e) {
