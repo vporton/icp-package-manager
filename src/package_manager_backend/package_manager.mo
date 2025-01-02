@@ -215,7 +215,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
             if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
                 for (pkg in packages.vals()) {
-                    ignore await this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                    ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
                         packageName = pkg.packageName;
                         version = pkg.version;
                         repo = pkg.repo;
