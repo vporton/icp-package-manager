@@ -208,7 +208,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         try {
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            let ?inst = additionalInstall.get(installationId) else { // FIXME: already installed, no such installation
+            let ?inst = additionalInstall.get(installationId) else {
                 Debug.trap("no such additional installation");
             };
 
