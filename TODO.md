@@ -1,6 +1,6 @@
 Remaining things TODO:
 
-- It should say "Install aidditonal copy" of the package when installing an already installed package.
+- It should say "Install additonal copy" of the package when installing an already installed package.
 
 - If the user has several PMs installed, order their order.
 
