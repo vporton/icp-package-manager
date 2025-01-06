@@ -590,6 +590,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     );
                     packageRepoCanister = ourHalfInstalled.packageRepoCanister;
                     allModules = Buffer.Buffer<Principal>(0);
+                    var pinned = false;
                 });
                 switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
                     case (?ids) {
@@ -889,6 +890,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
 
         {installationId};
+    };
+
+    public shared func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {
+        onlyOwner(Principal.fromActor(this), "setPinned");
+
+        let ?inst = installedPackages.get(installationId) else {
+            Debug.trap("no such installed package");
+        };
+        inst.pinned := pinned;
     };
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.

@@ -12,6 +12,7 @@ export default function Installation(props: {}) {
     const {agent, isAuthenticated} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
+    const [pinned, setPinned] = useState(false);
     const glob = useContext(GlobalContext);
     // TODO: When logged out, show instead that logged out.
     useEffect(() => {
@@ -21,6 +22,7 @@ export default function Installation(props: {}) {
 
         glob.packageManager!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
+            setPinned(pkg.pinned);
         });
     }, [glob.packageManager]);
     useEffect(() => {
@@ -57,10 +59,19 @@ export default function Installation(props: {}) {
         alert("Uninstallation finished");
     }
 
+    function setPinnedHandler(pinned: boolean) {
+        if (pkg !== undefined) {
+            setPinned(pinned);
+            glob.packageManager!.setPinned(BigInt(installationId!), pinned);
+        }
+    }
+
     return (
         <>
             <h2>Installation</h2>
             {pkg === undefined ? <p>No such installed package.</p> : <>
+                <p><input type="checkbox" checked={pinned} onChange={event => setPinnedHandler(event.target.checked)}/>.{" "}
+                    Pin. <small>Pinned packages cannot be upgraded or removed.</small></p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>
                 <p><strong>Package name:</strong> {pkg.name}</p>

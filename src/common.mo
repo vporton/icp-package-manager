@@ -281,6 +281,7 @@ module {
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: HashMap.HashMap<Text, Principal>; // TODO: Rename to `namedModules`.
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
+        var pinned: Bool;
     };
 
     public type SharedInstalledPackageInfo = {
@@ -291,6 +292,7 @@ module {
         version: Version;
         modules: [(Text, Principal)];
         allModules: [Principal];
+        pinned: Bool;
     };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
@@ -301,6 +303,7 @@ module {
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
         allModules = Buffer.toArray(info.allModules);
+        pinned = info.pinned;
     };
 
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
@@ -311,6 +314,7 @@ module {
         version = info.version;
         modules = HashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
         allModules = Buffer.fromArray(info.allModules);
+        var pinned = info.pinned;
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
