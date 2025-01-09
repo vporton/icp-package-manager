@@ -70,7 +70,7 @@ export default function Installation(props: {}) {
         <>
             <h2>Installation</h2>
             {pkg === undefined ? <p>No such installed package.</p> : <>
-                <p><input type="checkbox" checked={pinned} onChange={event => setPinnedHandler(event.target.checked)}/>.{" "}
+                <p><input type="checkbox" checked={pinned} onChange={event => setPinnedHandler(event.target.checked)}/>{" "}
                     Pin. <small>Pinned packages cannot be upgraded or removed.</small></p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>
