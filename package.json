@@ -21,7 +21,7 @@
     "@dfinity/candid": "^1.4.0",
     "@dfinity/identity-secp256k1": "^1.4.0",
     "@dfinity/principal": "^1.4.0",
-    "@internet-identity-labs/react-ic-ii-auth": "^0.0.18",
+    "@internet-identity-labs/react-ic-ii-auth": "^0.0.19",
     "@types/node-fetch": "^2.6.11",
     "@types/react": "^18.3.3",
     "bootstrap": "^5.3.3",
