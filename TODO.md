@@ -43,11 +43,12 @@ Remaining things TODO:
 
 - Wait curtains.
 
+- For initializing a package, add `packageInit` function (not sure in backend or indirect_caller).
+  that could be used to init dependencies from dependent packages (because they may be not yet initialized).
+
 - Extract bootstrapping code from IndirectCaller to a separate canister.
 
 - When user adds a new repository canister, check that it is an index canister.
-
-- Bootstrapping the PM together with any other package(s).
 
 - Prevent browser window to close during bootstrap.
 

@@ -149,9 +149,11 @@ export async function installPackageWithModules({
 }> {
     const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
     const {installationId} = await package_manager.installPackage({
-        packageName,
-        version,
-        repo,
+        packages: [{
+            packageName,
+            version,
+            repo,
+        }],
         user,
         afterInstallCallback: [],
     });

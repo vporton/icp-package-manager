@@ -92,17 +92,18 @@ export default function MainPage() {
         }));
         const firstPart = foundParts.filter(v => v !== null)[0];
 
-        for (const p of packagesToRepair!) {
-            if (checkedHalfInstalled?.has(p.installationId)) {
-                await glob.packageManager!.installPackage({
-                    repo: firstPart,
-                    packageName: p.name,
-                    version: p.version,
-                    user: principal!,
-                    afterInstallCallback: [],
-                });
-            }
-        }
+        // TODO
+        // for (const p of packagesToRepair!) {
+        //     if (checkedHalfInstalled?.has(p.installationId)) {
+        //         await glob.packageManager!.installPackage({
+        //             repo: firstPart,
+        //             packageName: p.name,
+        //             version: p.version,
+        //             user: principal!,
+        //             afterInstallCallback: [],
+        //         });
+        //     }
+        // }
     }
     async function deleteChecked() {
         for (const p of packagesToRepair!) {

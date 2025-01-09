@@ -167,10 +167,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    public shared({caller}) func installPackage({
-        packageName: Common.PackageName;
-        version: Common.Version;
-        repo: Common.RepositoryPartitionRO;
+    public shared({caller}) func installPackage({ // TODO: Rename.
+        packages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryPartitionRO;
+        }];
         user: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -187,14 +189,30 @@ shared({caller = initialCaller}) actor class PackageManager({
             indirectCaller = getIndirectCaller();
             whatToInstall = #package;
             installationId;
-            packageName;
-            packageVersion = version;
+            packages = Iter.toArray(Iter.map<{
+                packageName: Common.PackageName;
+                version: Common.Version;
+                repo: Common.RepositoryPartitionRO;
+                },
+                {
+                    repo: Common.RepositoryPartitionRO;
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    preinstalledModules: [(Text, Principal)];
+                }>(packages.vals(), func (p: {
+                    repo: Common.RepositoryPartitionRO;
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                }) = {
+                    repo = p.repo;
+                    packageName = p.packageName;
+                    version = p.version;
+                    preinstalledModules = [];
+                }));
             installPackage = true;
             pmPrincipal = Principal.fromActor(this);
-            repo;
-            objectToInstall = #package {packageName; version};
+            // objectToInstall = #package {packageName; version}; // TODO
             user;
-            preinstalledModules = [];
             afterInstallCallback;
         });
     };
@@ -214,15 +232,13 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
             if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
-                for (pkg in packages.vals()) {
-                    ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
-                        packageName = pkg.packageName;
-                        version = pkg.version;
-                        repo = pkg.repo;
-                        user;
-                        afterInstallCallback = null;
-                    });
-                };
+                // for (pkg in packages.vals()) {
+                ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
+                    packages;
+                    user;
+                    afterInstallCallback = null;
+                });
+                // };
                 additionalInstall.delete(installationId); // Clear memory.
             };
         }
@@ -235,11 +251,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func installPackageWithPreinstalledModules({
         whatToInstall: {
             #package;
-            #simplyModules : [(Text, Common.SharedModule)];
+            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
         };
         packageName: Common.PackageName;
         version: Common.Version;
-        preinstalledModules: [(Text, Principal)];
         repo: Common.RepositoryPartitionRO; 
         user: Principal;
         indirectCaller: Principal;
@@ -249,6 +264,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryPartitionRO;
         }];
+        preinstalledModules: [(Text, Principal)];
     })
         : async {installationId: Common.InstallationId}
     {
@@ -260,15 +276,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
-            installationId;
-            packageName;
-            packageVersion = version;
-            installPackage = true;
+            installationId; // FIXME: Move inside packages.
+            packages = [{packageName; version; repo; preinstalledModules}]; // HACK
+            installPackage = true; // TODO
             pmPrincipal = Principal.fromActor(this);
-            repo;
-            objectToInstall = #package {packageName; version};
+            // objectToInstall = #package {packageName; version}; // TODO
             user;
-            preinstalledModules;
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
@@ -304,7 +317,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //         packageVersion = inst.package.base.version;
     //         pmPrincipal = Principal.fromActor(this);
     //         repo;
-    //         objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version};
+    //         objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version}; // TODO
     //         user;
     //         preinstalledModules;
     //     });
@@ -321,83 +334,81 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    /// Does most of the work of installing a package.
+    // TODO: Rename.
     public shared({caller}) func installationWorkCallback({
         whatToInstall: {
             #package;
-            #simplyModules : [(Text, Common.SharedModule)];
+            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
         };
-        installationId: Common.InstallationId;
+        installationId: Common.InstallationId; // FIXME: Move inside packages array.
         user: Principal;
-        package: Common.SharedPackageInfo;
-        repo: Common.RepositoryPartitionRO;
-        preinstalledModules: [(Text, Principal)];
-    }): async () {
+        packages: [{
+            package: Common.SharedPackageInfo;
+            repo: Common.RepositoryPartitionRO;
+            preinstalledModules: [(Text, Principal)];
+        }];
+    }) {
         onlyOwner(caller, "installationWorkCallback");
 
-        let #real realPackage = package.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-
-        let package2 = Common.unsharePackageInfo(package); // TODO: why used twice below? seems to be a mis-programming.
-        let numPackages = realPackage.modules.size();
-
-        let package3 = switch (package2.specific) {
-            case (#real v) v;
-            case _ {
-                Debug.trap("unsupported package format");
+        for (p in packages.vals()) {
+            let #real realPackage = p.package.specific else {
+                Debug.trap("trying to directly install a virtual package");
             };
-        };
 
-        let (realModulesToInstall, realModulesToInstallSize): (Iter.Iter<(Text, Common.Module)>, Nat) = switch (whatToInstall) {
-            case (#package) {
-                let iter = Iter.filter<(Text, Common.Module)>(
-                    package3.modules.entries(),
-                    func ((_k, m): (Text, Common.Module)): Bool = m.installByDefault,
-                );
-                (iter, package3.modules.size()); // TODO: efficient?
+            let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
+            let numPackages = realPackage.modules.size();
+
+            let package3 = switch (package2.specific) {
+                case (#real v) v;
+                case _ {
+                    Debug.trap("unsupported package format");
+                };
             };
-            case (#simplyModules ms) {
-                let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                    ms.vals(),
-                    func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
-                );
-                (iter, ms.size()); // TODO: efficient?
+
+            let (realModulesToInstall, realModulesToInstallSize): (Iter.Iter<(Text, Common.Module)>, Nat) = switch (whatToInstall) {
+                case (#package) {
+                    let iter = Iter.filter<(Text, Common.Module)>(
+                        package3.modules.entries(),
+                        func ((_k, m): (Text, Common.Module)): Bool = m.installByDefault,
+                    );
+                    (iter, package3.modules.size()); // TODO: efficient?
+                };
+                // case (#simplyModules ms) { // TODO
+                //     let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                //         ms.vals(),
+                //         func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
+                //     );
+                //     (iter, ms.size()); // TODO: efficient?
+                // };
             };
-        };
-        let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
+            let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
 
-        let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
-            preinstalledModules.vals(), preinstalledModules.size(), Text.equal, Text.hash);
-        let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
-        // var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
-        // for ((moduleName2, module4) in package3.modules.entries()) {
-        //     if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
-        //         totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
-        //     };
-        // };
+            let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
+                p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
+            let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
-        let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-            numberOfModulesToInstall = numPackages;
-            // id = installationId;
-            packageName = package.base.name;
-            version = package.base.version;
-            modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
-            // packageDescriptionIn = part;
-            package = package2;
-            packageRepoCanister = Principal.fromActor(repo);
-            preinstalledModules = preinstalledModules2;
-            modulesToInstall = HashMap.fromIter<Text, Common.Module>(
-                realModulesToInstall2.vals(),
-                realModulesToInstallSize,
-                Text.equal,
-                Text.hash);
-            modulesWithoutCode = Buffer.fromArray(arrayOfEmpty);
-            installedModules = Buffer.fromArray(arrayOfEmpty);
-            whatToInstall;
-            var alreadyCalledAllCanistersCreated = false;
+            let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+                numberOfModulesToInstall = numPackages;
+                // id = installationId;
+                packageName = p.package.base.name;
+                version = p.package.base.version;
+                modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
+                // packageDescriptionIn = part;
+                package = package2;
+                packageRepoCanister = Principal.fromActor(p.repo);
+                preinstalledModules = preinstalledModules2;
+                modulesToInstall = HashMap.fromIter<Text, Common.Module>(
+                    realModulesToInstall2.vals(),
+                    realModulesToInstallSize,
+                    Text.equal,
+                    Text.hash);
+                modulesWithoutCode = Buffer.fromArray(arrayOfEmpty);
+                installedModules = Buffer.fromArray(arrayOfEmpty);
+                whatToInstall;
+                var alreadyCalledAllCanistersCreated = false;
+            };
+            halfInstalledPackages.put(installationId, ourHalfInstalled);
         };
-        halfInstalledPackages.put(installationId, ourHalfInstalled);
     };
 
     /// Internal
@@ -862,15 +873,17 @@ shared({caller = initialCaller}) actor class PackageManager({
         indirectCaller: IndirectCaller.IndirectCaller;
         whatToInstall: {
             #package;
-            #simplyModules : [(Text, Common.SharedModule)];
+            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
         };
         installationId: Common.InstallationId;
-        packageName: Common.PackageName;
-        packageVersion: Common.Version;
+        packages: [{
+            repo: Common.RepositoryPartitionRO;
+            packageName: Common.PackageName;
+            version: Common.Version;
+            preinstalledModules: [(Text, Principal)];
+        }];
         pmPrincipal: Principal;
-        repo: Common.RepositoryPartitionRO;
         user: Principal;
-        preinstalledModules: [(Text, Principal)];
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
@@ -880,12 +893,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         indirectCaller.installPackageWrapper({
             whatToInstall;
             installationId;
-            packageName;
-            version = packageVersion;
+            packages;
             pmPrincipal;
-            repo;
             user;
-            preinstalledModules;
             afterInstallCallback;
         });
 

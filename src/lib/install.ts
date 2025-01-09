@@ -9,6 +9,7 @@ import { createActor as createFrontendActor } from '../declarations/bootstrapper
 import { IDL } from '@dfinity/candid';
 import { Actor, Agent } from '@dfinity/agent';
 
+// TODO: Get rid of this function.
 export async function installPackageWithModules({
     package_manager_principal, packageName, repo, user, version, agent, afterInstallCallback
 }: {
@@ -26,9 +27,11 @@ export async function installPackageWithModules({
 }> {
     const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
     const {installationId} = await package_manager.installPackage({
-        packageName,
-        version,
-        repo,
+        packages: [{
+            packageName,
+            repo,
+            version,
+        }],
         user,
         afterInstallCallback: afterInstallCallback === undefined ? [] : [afterInstallCallback],
     });

@@ -104,14 +104,16 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
         whatToInstall: {
             #package;
-            #simplyModules : [(Text, Common.SharedModule)];
+            // #simplyModules : [(Text, Common.SharedModule)]; // FIXME: This branch does not work now.
         };
-        repo: Common.RepositoryPartitionRO;
         pmPrincipal: Principal;
-        packageName: Common.PackageName;
-        version: Common.Version;
+        packages: [{
+            repo: Common.RepositoryPartitionRO;
+            packageName: Common.PackageName;
+            version: Common.Version;
+            preinstalledModules: [(Text, Principal)];
+        }];
         installationId: Common.InstallationId;
-        preinstalledModules: [(Text, Principal)];
         user: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -120,19 +122,29 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         try {
             onlyOwner(caller, "installPackageWrapper");
 
-            let package = await repo.getPackage(packageName, version); // unsafe operation, run in indirect_caller
+            let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+            for (i in packages.keys()) {
+                // unsafe operation, run in indirect_caller:
+                let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
+                packages2[i] := ?(Common.unsharePackageInfo(pkg));
+            };
+            let ?package2 = packages2[0] else { // FIXME: This is a temporary code.
+                Debug.trap("package not found");
+            };
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installationWorkCallback: ({
                     whatToInstall: {
                         #package;
-                        #simplyModules : [(Text, Common.SharedModule)];
+                        // #simplyModules : [(Text, Common.SharedModule)]; // TODO
                     };
                     installationId: Common.InstallationId;
                     user: Principal;
-                    package: Common.SharedPackageInfo;
-                    repo: Common.RepositoryPartitionRO;
-                    preinstalledModules: [(Text, Principal)];
+                    packages: [{
+                        package: Common.SharedPackageInfo;
+                        repo: Common.RepositoryPartitionRO;
+                        preinstalledModules: [(Text, Principal)];
+                    }];
                 }) -> async ();
             };
 
@@ -141,72 +153,87 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 whatToInstall; /// install package or named modules.
                 installationId;
                 user;
-                package;
-                repo;
-                preinstalledModules;
+                packages = Iter.toArray(Iter.map<Nat, {
+                    package: Common.SharedPackageInfo;
+                    repo: Common.RepositoryPartitionRO;
+                    preinstalledModules: [(Text, Principal)];
+                }>(
+                    packages.keys(),
+                    func (i: Nat) = do {
+                        let ?pkg = packages2[i] else {
+                            Debug.trap("programming error");
+                        };
+                        {
+                            package = Common.sharePackageInfo(pkg);
+                            repo = packages[i].repo;
+                            preinstalledModules = packages[i].preinstalledModules;
+                        };
+                    },
+                ));
             });
 
-            let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
-                case (#simplyModules m) {
-                    Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                        m.vals(),
-                        func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
-                    );
+            for (p0 in packages.keys()) {
+                let ?p = packages2[p0] else {
+                    Debug.trap("programming error");
                 };
-                case (#package) {
-                    let pkg = await repo.getPackage(packageName, version); // TODO: should be not here.
-                    switch (pkg.specific) {
-                        case (#real pkgReal) {
-                            Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                                Iter.filter<(Text, Common.SharedModule)>(
-                                    pkgReal.modules.vals(),
-                                    func (p: (Text, Common.SharedModule)) = p.1.installByDefault,
-                                ),
-                                func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
-                            );
+                let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
+                    // case (#simplyModules m) {
+                    //     Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+                    //         m.vals(),
+                    //         func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
+                    //     );
+                    // };
+                    case (#package) {
+                        switch (package2.specific) {
+                            case (#real pkgReal) {
+                                Iter.filter<(Text, Common.Module)>(
+                                    pkgReal.modules.entries(),
+                                    func (p: (Text, Common.Module)) = p.1.installByDefault,
+                                );
+                            };
+                            case (#virtual _) [].vals();
                         };
-                        case (#virtual _) [].vals();
-                    };
-                }
-            };
+                    }
+                };
 
-            let bi = if (preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
-                [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this)), ("simple_indirect", ourSimpleIndirect)];
-            } else {
-                preinstalledModules;
-            };
-            let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
-            var moduleNumber = 0;
-            let ?backend = coreModules.get("backend") else {
-                Debug.trap("error 1");
-            };
-            let ?indirect = coreModules.get("indirect") else {
-                Debug.trap("error 1");
-            };
-            let ?simple_indirect = coreModules.get("simple_indirect") else {
-                Debug.trap("error 1");
-            };
-            // The following (typically) does not overflow cycles limit, because we use an one-way function.
-            for ((name, m): (Text, Common.Module) in modules) {
-                // Starting installation of all modules in parallel:
-                this.installModule({
-                    installPackage = whatToInstall == #package; // TODO: correct?
-                    moduleNumber;
-                    moduleName = ?name;
-                    installArg = to_candid({
+                let bi = if (packages[p0].preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
+                    [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this)), ("simple_indirect", ourSimpleIndirect)];
+                } else {
+                    packages[p0].preinstalledModules;
+                };
+                let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
+                var moduleNumber = 0;
+                let ?backend = coreModules.get("backend") else {
+                    Debug.trap("error 1");
+                };
+                let ?indirect = coreModules.get("indirect") else {
+                    Debug.trap("error 1");
+                };
+                let ?simple_indirect = coreModules.get("simple_indirect") else {
+                    Debug.trap("error 1");
+                };
+                // The following (typically) does not overflow cycles limit, because we use an one-way function.
+                for ((name, m): (Text, Common.Module) in modules) {
+                    // Starting installation of all modules in parallel:
+                    this.installModule({
+                        installPackage = whatToInstall == #package; // TODO: correct?
+                        moduleNumber;
+                        moduleName = ?name;
+                        installArg = to_candid({
+                            installationId;
+                            packageManagerOrBootstrapper = backend;
+                        }); // TODO: Add more arguments.
                         installationId;
                         packageManagerOrBootstrapper = backend;
-                    }); // TODO: Add more arguments.
-                    installationId;
-                    packageManagerOrBootstrapper = backend;
-                    initialIndirect = indirect;
-                    simpleIndirect = simple_indirect;
-                    preinstalledCanisterId = coreModules.get(name);
-                    user; // TODO: `!`
-                    wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
-                    afterInstallCallback;
-                });
-                moduleNumber += 1;
+                        initialIndirect = indirect;
+                        simpleIndirect = simple_indirect;
+                        preinstalledCanisterId = coreModules.get(name);
+                        user; // TODO: `!`
+                        wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
+                        afterInstallCallback;
+                    });
+                    moduleNumber += 1;
+                };
             };
         }
         catch (e) {
