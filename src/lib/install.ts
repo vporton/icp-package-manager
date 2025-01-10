@@ -23,10 +23,10 @@ export async function installPackageWithModules({
         canister: Principal, name: string, data: Uint8Array,
     } | undefined,
 }): Promise<{
-    installationId: InstallationId;
+    minInstallationId: InstallationId;
 }> {
     const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
-    const {installationId} = await package_manager.installPackage({
+    const {minInstallationId} = await package_manager.installPackage({
         packages: [{
             packageName,
             repo,
@@ -41,7 +41,7 @@ export async function installPackageWithModules({
     // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
     // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
     // const indirect = createIndirectCaller(indirectPrincipal, {agent});
-    return {installationId};
+    return {minInstallationId};
 }
 
 /// Note that this can be checked only from frontend, because calling from backend hacker can hang.

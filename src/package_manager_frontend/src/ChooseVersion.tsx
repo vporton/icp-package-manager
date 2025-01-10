@@ -79,7 +79,7 @@ export default function ChooseVersion(props: {}) {
             }
 
             // TODO: `!`
-            const {installationId: id} = await installPackageWithModules({
+            const {minInstallationId: id} = await installPackageWithModules({
                 package_manager_principal: glob.backend!,
                 packageName: packageName!,
                 version: chosenVersion!,
@@ -145,10 +145,10 @@ export async function installPackageWithModules({
     version: Version,
     agent: Agent,
 }): Promise<{
-    installationId: InstallationId;
+    minInstallationId: InstallationId;
 }> {
     const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
-    const {installationId} = await package_manager.installPackage({
+    const {minInstallationId} = await package_manager.installPackage({
         packages: [{
             packageName,
             version,
@@ -163,5 +163,5 @@ export async function installPackageWithModules({
     // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
     // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
     // const indirect = createIndirectCaller(indirectPrincipal, {agent});
-    return {installationId};
+    return {minInstallationId};
 }

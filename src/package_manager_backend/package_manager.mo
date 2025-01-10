@@ -152,7 +152,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
-    // TODO: Make stable:
+    // TODO: Make stable. // TODO: Rename, it's confusing.
     var additionalInstall: HashMap.HashMap<Common.InstallationId, {
         var totalNumberOfInstalledAllModulesCallbacksRemaining: Nat;
     }> =
@@ -178,17 +178,17 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     })
-        : async {installationId: Common.InstallationId}
+        : async {minInstallationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackage");
 
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
+        let minInstallationId = nextInstallationId;
+        nextInstallationId += packages.size();
 
         await* _installModulesGroup({
             indirectCaller = getIndirectCaller();
             whatToInstall = #package;
-            installationId;
+            minInstallationId;
             packages = Iter.toArray(Iter.map<
                 {
                     packageName: Common.PackageName;
@@ -220,28 +220,30 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// Internal. Install packages after bootstrapping IC Pack.
-    public shared({caller}) func bootstrapAdditionalPackages(packages: [{
-        packageName: Common.PackageName;
-        version: Common.Version;
-        repo: Common.RepositoryPartitionRO;
-    }], user: Principal, installationId: Common.InstallationId) {
+    public shared({caller}) func bootstrapAdditionalPackages(
+        packages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryPartitionRO;
+        }],
+        user: Principal,
+        minInstallationId: Common.InstallationId
+    ) {
         try {
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            let ?inst = additionalInstall.get(installationId) else {
-                Debug.trap("no such additional installation");
+            let ?inst = additionalInstall.get(minInstallationId) else { // PM's ID
+                Debug.trap("no such additional installation: " # debug_show(minInstallationId));
             };
 
             inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
             if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
-                // for (pkg in packages.vals()) {
                 ignore this.installPackage({ // FIXME: Does it skip non-returning-method attack? https://forum.dfinity.org/t/calling-a-synchronous-method-asynchronously-and-the-non-returning-method-attack
                     packages;
                     user;
                     afterInstallCallback = null;
                 });
-                // };
-                additionalInstall.delete(installationId); // Clear memory.
+                additionalInstall.delete(minInstallationId); // Clear memory.
             };
         }
         catch(e) {
@@ -268,17 +270,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         }];
         preinstalledModules: [(Text, Principal)];
     })
-        : async {installationId: Common.InstallationId}
+        : async {minInstallationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
-        let installationId = nextInstallationId;
-        nextInstallationId += 1;
+        let minInstallationId = nextInstallationId;
+        nextInstallationId += additionalPackages.size();
 
+        // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
-            installationId; // FIXME: Move inside packages.
+            minInstallationId; // FIXME: Move inside packages.
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
             installPackage = true; // TODO
             pmPrincipal = Principal.fromActor(this);
@@ -287,7 +290,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
-                data = to_candid(additionalPackages, user, installationId);
+                data = to_candid(additionalPackages, user, minInstallationId);
             };
         });
     };
@@ -342,7 +345,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             #package;
             // #simplyModules : [(Text, Common.SharedModule)]; // TODO
         };
-        installationId: Common.InstallationId; // FIXME: Move inside packages array.
+        minInstallationId: Common.InstallationId; // FIXME: Move inside packages array.
         user: Principal;
         packages: [{
             package: Common.SharedPackageInfo;
@@ -352,7 +355,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     }) {
         onlyOwner(caller, "installationWorkCallback");
 
-        for (p in packages.vals()) {
+        for (p0 in packages.keys()) {
+            let p = packages[p0];
             let #real realPackage = p.package.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
@@ -409,7 +413,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 whatToInstall;
                 var alreadyCalledAllCanistersCreated = false;
             };
-            halfInstalledPackages.put(installationId, ourHalfInstalled);
+            halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
         };
     };
 
@@ -486,6 +490,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case null {};
                 };
             } else {
+                // It puts package manager.
                 additionalInstall.put(installationId, instx);
             };
             for (m in inst.installedModules.vals()) {
@@ -877,7 +882,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             #package;
             // #simplyModules : [(Text, Common.SharedModule)]; // TODO
         };
-        installationId: Common.InstallationId;
+        minInstallationId: Common.InstallationId;
         packages: [{
             repo: Common.RepositoryPartitionRO;
             packageName: Common.PackageName;
@@ -890,18 +895,18 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     })
-        : async* {installationId: Common.InstallationId}
+        : async* {minInstallationId: Common.InstallationId}
     {
         indirectCaller.installPackageWrapper({
             whatToInstall;
-            installationId;
+            minInstallationId;
             packages;
             pmPrincipal;
             user;
             afterInstallCallback;
         });
 
-        {installationId};
+        {minInstallationId};
     };
 
     public shared func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {

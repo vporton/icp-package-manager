@@ -113,7 +113,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
         }];
-        installationId: Common.InstallationId;
+        minInstallationId: Common.InstallationId;
         user: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -135,7 +135,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         #package;
                         // #simplyModules : [(Text, Common.SharedModule)]; // TODO
                     };
-                    installationId: Common.InstallationId;
+                    minInstallationId: Common.InstallationId;
                     user: Principal;
                     packages: [{
                         package: Common.SharedPackageInfo;
@@ -148,7 +148,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
             await pm.installationWorkCallback({
                 whatToInstall; /// install package or named modules.
-                installationId;
+                minInstallationId;
                 user;
                 packages = Iter.toArray(Iter.map<Nat, {
                     package: Common.SharedPackageInfo;
@@ -217,10 +217,10 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         moduleNumber;
                         moduleName = ?name;
                         installArg = to_candid({
-                            installationId;
+                            installationId = minInstallationId + p0;
                             packageManagerOrBootstrapper = backend;
                         }); // TODO: Add more arguments.
-                        installationId;
+                        installationId = minInstallationId + p0;
                         packageManagerOrBootstrapper = backend;
                         initialIndirect = indirect;
                         simpleIndirect = simple_indirect;
