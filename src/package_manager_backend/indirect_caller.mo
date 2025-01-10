@@ -104,7 +104,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
         whatToInstall: {
             #package;
-            // #simplyModules : [(Text, Common.SharedModule)]; // FIXME: This branch does not work now.
+            // #simplyModules : [(Text, Common.SharedModule)]; // TODO: This branch does not work now.
         };
         pmPrincipal: Principal;
         packages: [{
@@ -127,9 +127,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 // unsafe operation, run in indirect_caller:
                 let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
                 packages2[i] := ?(Common.unsharePackageInfo(pkg));
-            };
-            let ?package2 = packages2[0] else { // FIXME: This is a temporary code.
-                Debug.trap("package not found");
             };
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
@@ -184,7 +181,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     //     );
                     // };
                     case (#package) {
-                        switch (package2.specific) {
+                        switch (p.specific) {
                             case (#real pkgReal) {
                                 Iter.filter<(Text, Common.Module)>(
                                     pkgReal.modules.entries(),
