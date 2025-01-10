@@ -305,6 +305,25 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     };
   };
 
+    type RepositoryVersions = {
+        versions: [Common.Version];
+        defaultVersionIndex: Nat;
+    };
+    stable var defaultVersions: RepositoryVersions = {versions = []; defaultVersionIndex = 0};
+
+    public shared({caller}) func setDefaultVersions({
+        versions: [Common.Version];
+        defaultVersionIndex: Nat;
+    }) {
+        onlyOwner(caller);
+
+        defaultVersions := {versions; defaultVersionIndex};
+    };
+
+    public query({caller}) func getDefaultVersions(): async RepositoryVersions {
+        defaultVersions;
+    };
+
   // public shared({caller}) func uploadModules(modules: [(Text, Common.ModuleUpload)]): async [(Text, Common.Module)] {
   //   onlyOwner(caller);
   //   let buf = Buffer.Buffer<(Text, Common.Module)>(Array.size(modules));

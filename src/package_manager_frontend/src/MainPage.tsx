@@ -4,13 +4,14 @@ import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
-import { InstallationId } from "../../declarations/package_manager/package_manager.did";
+import { InstallationId, RepositoryPartitionRO } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
 import { createActor as createRepoIndexActor } from "../../declarations/RepositoryIndex";
 import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { myUseNavigate } from "./MyNavigate";
+import { RepositoryIndex } from "../../declarations/RepositoryIndex/RepositoryIndex.did";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("(Unnamed)"); // TODO: button to rename it
@@ -49,6 +50,8 @@ export default function MainPage() {
     const [distroAddShow, setDistroAddShow] = useState(false);
     const [distros, setDistros] = useState<{canister: Principal, name: string}[] | undefined>();
     const [curDistro, setCurDistro] = useState<Principal | undefined>();
+    const [distroVersions, setDistroVersions] = useState<string[]>([]);
+    const [curDistroVersion, setCurDistroVersion] = useState(0);
     const [packageName, setPackageName] = useState("");
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
@@ -59,6 +62,24 @@ export default function MainPage() {
             });
         }
     }, [glob.packageManager]);
+    useEffect(() => {
+        if (curDistro === undefined || agent === undefined) {
+            setDistroVersions([]);
+            setCurDistroVersion(0);
+            return;
+        }
+        const repo: RepositoryIndex = createRepoIndexActor(curDistro!, {agent});
+        repo.getDefaultVersions().then(v => {
+            setDistroVersions(v.versions);
+            setCurDistroVersion(parseInt(v.defaultVersionIndex.toString()));
+        });
+    }, [curDistro, agent]);
+    function doSetCurDistroVersion(i: number) {
+        setCurDistroVersion(i);
+        const repo = createRepoIndexActor(curDistro!, {agent});
+        repo.setDefaultVersions({versions: distroVersions, defaultVersionIndex: BigInt(i)})
+            .then(() => {});
+    }
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
@@ -127,7 +148,6 @@ export default function MainPage() {
     useEffect(() => {
         const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent});
         bookmarks.hasBookmark(bookmark).then((f: boolean) => setBookmarked(f));
-        
     }, []);
 
     return (
@@ -156,6 +176,14 @@ export default function MainPage() {
                 }{" "}
                 <Button disabled={distros === undefined} onClick={() => setDistroAddShow(true)}>Add distro</Button>{" "}
                 <Button onClick={removeRepository} disabled={!curDistro}>Remove from the list</Button> (doesn't remove installed packages)
+            </p>
+            <p>
+                &#x2514; Default version:{" "}
+                <select>
+                    {distroVersions.map((v, i) =>
+                        <option key={i} value={i} onClick={() => doSetCurDistroVersion(i)}>{v}</option>
+                    )}
+                </select>
             </p>
             <h2>Install</h2>
             <p>

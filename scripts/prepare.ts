@@ -53,6 +53,9 @@ async function main() {
     console.log("Setting repository name...")
     await repositoryIndex.setRepositoryName("RedSocks");
 
+    console.log("Setting repository versions...")
+    await repositoryIndex.setDefaultVersions({versions: ['stable'], defaultVersionIndex: BigInt(0)});
+
     console.log("Uploading WASM code...");
     const pmFrontendModule = await repositoryIndex.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
