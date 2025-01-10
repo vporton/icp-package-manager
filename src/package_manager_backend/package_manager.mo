@@ -189,26 +189,28 @@ shared({caller = initialCaller}) actor class PackageManager({
             indirectCaller = getIndirectCaller();
             whatToInstall = #package;
             installationId;
-            packages = Iter.toArray(Iter.map<{
-                packageName: Common.PackageName;
-                version: Common.Version;
-                repo: Common.RepositoryPartitionRO;
+            packages = Iter.toArray(Iter.map<
+                {
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    repo: Common.RepositoryPartitionRO;
                 },
                 {
                     repo: Common.RepositoryPartitionRO;
                     packageName: Common.PackageName;
                     version: Common.Version;
                     preinstalledModules: [(Text, Principal)];
-                }>(packages.vals(), func (p: {
-                    repo: Common.RepositoryPartitionRO;
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                }) = {
-                    repo = p.repo;
-                    packageName = p.packageName;
-                    version = p.version;
-                    preinstalledModules = [];
-                }));
+                }
+            >(packages.vals(), func (p: {
+                repo: Common.RepositoryPartitionRO;
+                packageName: Common.PackageName;
+                version: Common.Version;
+            }) = {
+                repo = p.repo;
+                packageName = p.packageName;
+                version = p.version;
+                preinstalledModules = [];
+            }));
             installPackage = true;
             pmPrincipal = Principal.fromActor(this);
             // objectToInstall = #package {packageName; version}; // TODO
