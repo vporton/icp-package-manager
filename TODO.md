@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- Can we install additional packages not waiting till full bootstrapping of the PM?
+
 - It should say "Install additonal copy" of the package when installing an already installed package.
 
 - If the user has several PMs installed, order their order.
