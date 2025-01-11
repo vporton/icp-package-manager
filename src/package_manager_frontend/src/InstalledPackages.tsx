@@ -4,15 +4,22 @@ import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
 import { useAuth } from "./auth/use-auth-client";
 
-function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]>}) {
+function InstalledPackageLine(props: {
+    packageName: string,
+    allInstalled: Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]
+>}) {
     const packages = props.allInstalled.get(props.packageName);
     const versionsSet = new Set(packages!.map(p => p.pkg.version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
     const byVersion = new Map(versions.map(version => {
-        const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]] =
+        const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]] =
             [version, Array.from(packages!.filter(p => p.pkg.version === version))];
         return p;
     }));
+    const glob = useContext(GlobalContext);
+    function setDefault(k: bigint) {
+        glob.packageManager!.setDefaultInstalledPackage(props.packageName, k);
+    }
     return (
         <li>
             <code>{props.packageName}</code>{" "}
@@ -22,8 +29,15 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
                     <span key={version}>
                         {packages.length === 1 ?
                             <MyLink to={'/installed/show/'+packages[0].installationId.toString()}>{version}</MyLink> :
-                            <span>{version} ({Array.from(packages.entries()).map(([index, {installationId: k}]) =>
+                            <span>{version} ({Array.from(packages.entries()).map(([index, {installationId: k, pibn}]) =>
                                 <span key={k}>
+                                    <input
+                                        type="radio"
+                                        name={props.packageName}
+                                        value={k.toString()}
+                                        defaultChecked={k === pibn.default}
+                                        onClick={() => setDefault(k)}
+                                    />
                                     <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>
                                     {index === packages.length - 1 ? "" : " "}
                                 </span>
@@ -37,7 +51,8 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
 }
 
 export default function InstalledPackages(props: {}) {
-    const [installedVersions, setInstalledVersions] = useState<Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]> | undefined>();
+    const [installedVersions, setInstalledVersions] =
+        useState<Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]> | undefined>();
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
@@ -45,19 +60,22 @@ export default function InstalledPackages(props: {}) {
             setInstalledVersions(undefined);
             return;
         }
-        glob.packageManager!.getAllInstalledPackages().then(allPackages => {
+        glob.packageManager.getAllInstalledPackages().then(allPackages => {
             const namesSet = new Set(allPackages.map(p => p[1].name));
             const names = Array.from(namesSet);
             names.sort();
-            const byName0 = names.map(name => {
-                const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]] =
+            Promise.all(names.map(async name => {
+                const pibn = await glob.packageManager!.getInstalledPackagesInfoByName(name); // TODO: inefficient
+                const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]] =
                     [name, Array.from(allPackages.filter(p => p[1].name === name))
-                        .map(p => { return {installationId: p[0], pkg: p[1]} })
+                        .map(p => { return {installationId: p[0], pkg: p[1], pibn} })
                     ];
                 return p;
-            });
-            const byName = new Map(byName0);
-            setInstalledVersions(byName);
+            }))
+                .then(byName0 => {
+                    const byName = new Map(byName0);
+                    setInstalledVersions(byName);
+                });
         });
     }, [glob.packageManager, isAuthenticated]);
 
