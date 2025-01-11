@@ -4,12 +4,13 @@ import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
 import { useAuth } from "./auth/use-auth-client";
 
-function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, [bigint, SharedInstalledPackageInfo][]>}) {
+function InstalledPackageLine(props: {packageName: string, allInstalled: Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]>}) {
     const packages = props.allInstalled.get(props.packageName);
-    const versionsSet = new Set(packages!.map(p => p[1].version));
+    const versionsSet = new Set(packages!.map(p => p.pkg.version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
     const byVersion = new Map(versions.map(version => {
-        const p: [string, [bigint, SharedInstalledPackageInfo][]] = [version, Array.from(packages!.filter(p => p[1].version === version))];
+        const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]] =
+            [version, Array.from(packages!.filter(p => p.pkg.version === version))];
         return p;
     }));
     return (
@@ -20,8 +21,8 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
                 return (
                     <span key={version}>
                         {packages.length === 1 ?
-                            <MyLink to={'/installed/show/'+packages[0][0].toString()}>{version}</MyLink> :
-                            <span>{version} ({Array.from(packages.entries()).map(([index, [k, _]]) =>
+                            <MyLink to={'/installed/show/'+packages[0].installationId.toString()}>{version}</MyLink> :
+                            <span>{version} ({Array.from(packages.entries()).map(([index, {installationId: k}]) =>
                                 <span key={k}>
                                     <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>
                                     {index === packages.length - 1 ? "" : " "}
@@ -36,7 +37,7 @@ function InstalledPackageLine(props: {packageName: string, allInstalled: Map<str
 }
 
 export default function InstalledPackages(props: {}) {
-    const [installedVersions, setInstalledVersions] = useState<Map<string, [bigint, SharedInstalledPackageInfo][]> | undefined>();
+    const [installedVersions, setInstalledVersions] = useState<Map<string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]> | undefined>();
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
@@ -49,7 +50,10 @@ export default function InstalledPackages(props: {}) {
             const names = Array.from(namesSet);
             names.sort();
             const byName0 = names.map(name => {
-                const p: [string, [bigint, SharedInstalledPackageInfo][]] = [name, Array.from(allPackages.filter(p => p[1].name === name))];
+                const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo}[]] =
+                    [name, Array.from(allPackages.filter(p => p[1].name === name))
+                        .map(p => { return {installationId: p[0], pkg: p[1]} })
+                    ];
                 return p;
             });
             const byName = new Map(byName0);

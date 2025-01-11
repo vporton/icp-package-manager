@@ -320,7 +320,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
         defaultVersions := {versions; defaultVersionIndex};
     };
 
-    public query({caller}) func getDefaultVersions(): async RepositoryVersions {
+    public query func getDefaultVersions(): async RepositoryVersions {
         defaultVersions;
     };
 

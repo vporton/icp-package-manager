@@ -137,8 +137,14 @@ shared({caller = initialCaller}) actor class PackageManager({
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
         HashMap.HashMap(0, Nat.equal, Common.IntHash);
 
-    stable var _installedPackagesByNameSave: [(Common.PackageName, [Common.InstallationId])] = [];
-    var installedPackagesByName: HashMap.HashMap<Common.PackageName, [Common.InstallationId]> =
+    stable var _installedPackagesByNameSave: [(Common.PackageName, {
+        all: [Common.InstallationId];
+        default: Common.InstallationId;
+    })] = [];
+    var installedPackagesByName: HashMap.HashMap<Common.PackageName, {
+        all: Buffer.Buffer<Common.InstallationId>;
+        default: Common.InstallationId;
+    }> =
         HashMap.HashMap(0, Text.equal, Text.hash);
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
@@ -611,11 +617,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                     var pinned = false;
                 });
                 switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
-                    case (?ids) {
-                        installedPackagesByName.put(ourHalfInstalled.package.base.name, Array.append(ids, [installationId]));
+                    case (?old) {
+                        old.all.add(installationId);
                     };
                     case null {
-                        installedPackagesByName.put(ourHalfInstalled.package.base.name, [installationId]);
+                        installedPackagesByName.put(ourHalfInstalled.package.base.name, {
+                            all = Buffer.fromArray([installationId]);
+                            default = installationId;
+                        });
                     };
                 };
             };
@@ -734,7 +743,16 @@ shared({caller = initialCaller}) actor class PackageManager({
             }
         ));
 
-        _installedPackagesByNameSave := Iter.toArray(installedPackagesByName.entries());
+        _installedPackagesByNameSave := Iter.toArray/*<{all: [Common.InstallationId]; default: Common.InstallationId}>*/(
+            Iter.map<
+                (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; default: Common.InstallationId}),
+                (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId})
+            >(
+                installedPackagesByName.entries(),
+                func ((name, x): (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; default: Common.InstallationId})) =
+                    (name, {all = Buffer.toArray(x.all); default = x.default}),
+            ),
+        );
 
         // TODO:
         // _halfInstalledPackagesSave := Iter.toArray(Iter.map(
@@ -770,7 +788,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         _installedPackagesSave := []; // Free memory.
 
         installedPackagesByName := HashMap.fromIter(
-            _installedPackagesByNameSave.vals(),
+            Iter.map<
+                (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId}),
+                (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; default: Common.InstallationId})
+            >(
+                _installedPackagesByNameSave.vals(),
+                func ((name, x): (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId})) =
+                    (name, {all = Buffer.fromArray(x.all); default = x.default}),
+            ),
             Array.size(_installedPackagesByNameSave),
             Text.equal,
             Text.hash,
@@ -793,19 +818,23 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// TODO: very unstable API.
-    public query({caller}) func getInstalledPackagesInfoByName(name: Text): async [Common.SharedInstalledPackageInfo] {
+    /// FIXME
+    public query({caller}) func getInstalledPackagesInfoByName(name: Text)
+        : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
+    {
         onlyOwner(caller, "getInstalledPackagesInfoByName");
 
-        let ?ids = installedPackagesByName.get(name) else {
-            return [];
+        let ?data = installedPackagesByName.get(name) else {
+            return {all = []; default = 0};
         };
         // TODO: Eliminiate duplicate code:
-        Iter.toArray(Iter.map(ids.vals(), func (id: Common.InstallationId): Common.SharedInstalledPackageInfo {
+        let all = Iter.toArray(Iter.map(data.all.vals(), func (id: Common.InstallationId): Common.SharedInstalledPackageInfo {
             let ?info = installedPackages.get(id) else {
                 Debug.trap("getInstalledPackagesInfoByName: programming error");
             };
             Common.installedPackageInfoShare(info);
         }));
+        {all = all; default = data.default};
     };
 
     /// TODO: very unstable API.
