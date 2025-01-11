@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- FIXME: Classifying packages by name is not enough, because in two repos can be packages with the same name.
+
 - Can we install additional packages not waiting till full bootstrapping of the PM?
 
 - It should say "Install additonal copy" of the package when installing an already installed package.
