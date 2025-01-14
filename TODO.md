@@ -1,6 +1,8 @@
 Remaining things TODO:
 
 - FIXME: Classifying packages by name is not enough, because in two repos can be packages with the same name.
+  But Partition principal can't be used as a qualifier, because it may be used to another partition.
+  Need to store Index principal in Partition.
 
 - Can we install additional packages not waiting till full bootstrapping of the PM?
 
@@ -37,8 +39,6 @@ Remaining things TODO:
 
 - Backing/restoring state of packages.
 
-- Bootstrapping from several repos.
-
 - Paid soft.
 
 - Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
@@ -49,8 +49,6 @@ Remaining things TODO:
 
 - For initializing a package, add `packageInit` function (not sure in backend or indirect_caller).
   that could be used to init dependencies from dependent packages (because they may be not yet initialized).
-
-- Extract bootstrapping code from IndirectCaller to a separate canister.
 
 - When user adds a new repository canister, check that it is an index canister.
 
@@ -85,7 +83,7 @@ Remaining things TODO:
 
 - A special DAO.
 
-- Every package should have owner(s) to specify who is able to change it.
+  - Every package should have owner(s) to specify who is able to change it.
 
 - Package's and/or user's option to stop all canisters of a package before upgrading.
 
