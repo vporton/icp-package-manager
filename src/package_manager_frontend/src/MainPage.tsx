@@ -56,8 +56,8 @@ export default function MainPage() {
     const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
-        if (glob.packageManager != undefined) {
-            glob.packageManager!.getHalfInstalledPackages().then(h => {
+        if (glob.packageManager !== undefined) {
+            glob.packageManager.getHalfInstalledPackages().then(h => {
                 setPackagesToRepair(h);
             });
         }
@@ -85,8 +85,9 @@ export default function MainPage() {
     const reloadDistros = () => {
         if (glob.packageManager === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
             setDistros(undefined);
+            return;
         }
-        glob.packageManager!.getRepositories().then((r) => {
+        glob.packageManager.getRepositories().then((r) => {
             setDistros(r);
             if (r.length !== 0) {
                 setCurDistro(r[0].canister);

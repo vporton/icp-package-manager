@@ -9,11 +9,16 @@ import Itertools "mo:itertools/Iter";
 import Common "../common";
 
 shared ({ caller = owner }) actor class RepositoryPartition({
+  index: Principal;
   partitionKey: Text;
   scalingOptions: CanDB.ScalingOptions;
   owners: [Principal];
 }) = this {
-  // CanDB paritition methods //
+  public shared func getIndex(): async Principal {
+    index;
+  };
+
+  // CanDB partition methods //
 
   private func onlyOwner(caller: Principal) {
     if (Itertools.find(owners.vals(), func (cur: Principal): Bool { caller == cur }) == null) {

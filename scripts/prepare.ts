@@ -110,6 +110,7 @@ async function main() {
             version: "0.0.1",
             shortDescription: "Package manager",
             longDescription: "Manager for installing ICP app to user's subnet",
+            guid: Uint8Array.from([83,  42, 115, 145, 27, 107,  70, 196, 150, 131,  3,  14, 110, 136, 210,  74]),
         },
         specific: {real: pmReal},
     };
@@ -137,6 +138,7 @@ async function main() {
             version: "0.0.1",
             shortDescription: "Example package",
             longDescription: "Used as an example",
+            guid: Uint8Array.from([39, 165, 164, 221, 113,  51,  73,  53, 145, 150,  31,  42, 238, 133, 124, 210]),
         },
         specific: {real: efReal},
     };

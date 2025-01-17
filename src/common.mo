@@ -8,6 +8,8 @@ import Hash "mo:base/Hash";
 import Int "mo:base/Int";
 import Nat32 "mo:base/Nat32";
 import Nat "mo:base/Nat";
+import Blob "mo:base/Blob";
+import Sha256 "mo:sha2/Sha256";
 
 module {
     public func IntHash(value: Int): Hash.Hash {
@@ -33,10 +35,20 @@ module {
 
     /// Common properties of package and virtual package.
     public type CommonPackageInfo = {
+        guid: Blob;
         name: PackageName;
         version: Version;
         shortDescription: Text;
         longDescription: Text;
+    };
+
+    // Probably, not very efficient.
+    public func amendedGUID(guid: Blob, name: PackageName): Blob {
+        let b = Buffer.Buffer<Nat8>(guid.size() + name.size());
+        b.append(Buffer.fromArray(Blob.toArray(guid)));
+        b.append(Buffer.fromArray(Blob.toArray(Text.encodeUtf8(name))));
+        let h256 = Sha256.fromArray(#sha256, Buffer.toArray(b));
+        Blob.fromArray(Array.subArray(Blob.toArray(h256), 0, 16)); // 128-bit hash
     };
 
     public type Location = (canister: Principal, id: Text);

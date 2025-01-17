@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
+import { Guid }  from "js-guid"
 import { useAuth } from "./auth/use-auth-client";
 
 function InstalledPackageLine(props: {
@@ -20,9 +21,13 @@ function InstalledPackageLine(props: {
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, k);
     }
+    // console.log('xxx', byVersion.get(props.packageName)![0].pkg.package.base.guid); // FIXME
+    // return;
+    const guid = props.allInstalled.get(props.packageName)![0].pkg.package.base.guid as Uint8Array;
     return (
         <li>
-            <code>{props.packageName}</code>{" "}
+            {/* FIXME: packages with the same name and different `guid` will be displayed all with the same GUID. */}
+            <span title={Guid.parse(guid).toString()}><code>{props.packageName}</code></span>{" "}
             {/* TODO: Sort. */}
             {Array.from(byVersion.entries()).map(([version, packages]) => {
                 return (

@@ -1,5 +1,5 @@
 import { Principal } from "@dfinity/principal";
-import React, { createContext } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { PackageManager } from "../../declarations/package_manager/package_manager.did";
 import { package_manager } from "../../declarations/package_manager";
 import { useAuth } from "./auth/use-auth-client";
@@ -64,7 +64,12 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
   const {agent} = useAuth();
-  const packageManager: PackageManager | undefined = backend && Actor.createActor(packageManagerIDL, {canisterId: backend!, agent});
+  const [packageManager, setPackageManager] = useState<PackageManager | undefined>();
+  useEffect(() => {
+    setPackageManager(backend !== undefined && agent !== undefined
+      ? Actor.createActor(packageManagerIDL, {canisterId: backend!, agent})
+      : undefined);
+  }, [agent]);
 
   const frontendTweakPrivKeyEncoded = params.get('frontendTweakPrivKey');
   const frontendTweakPrivKey: Uint8Array | undefined =

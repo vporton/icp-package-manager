@@ -81,6 +81,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     Debug.print("creating new user canister with pk=" # pk);
     Cycles.add<system>(100_000_000_000_000);
     let newUserCanister = await RepositoryPartition.RepositoryPartition({
+      index = Principal.fromActor(this);
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleUserCanister;
@@ -168,6 +169,7 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     // left over for the new canister when it is created
     Cycles.add<system>(100_000_000_000_000);
     let newStorageCanister = await RepositoryPartition.RepositoryPartition({
+      index = Principal.fromActor(this);
       partitionKey = pk;
       scalingOptions = {
         autoScalingHook = autoScaleCanister;
