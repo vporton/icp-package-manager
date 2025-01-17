@@ -23,6 +23,7 @@ export default function ChooseVersion(props: {}) {
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
+    const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
@@ -42,11 +43,12 @@ export default function ChooseVersion(props: {}) {
                 const versionsMap = new Map(fullInfo.versionsMap);
                 const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
                 setVersions(fullInfo.versionsMap.concat(p2));
+                setGUIDInfo(fullInfo.packages[0][1].base.guid as Uint8Array);
                 break;
             }
         });
         if (versions !== undefined) {
-            glob.packageManager!.getInstalledPackagesInfoByName(packageName!).then(installed => {
+            glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guidInfo!).then(installed => {
                 setInstalledVersions(new Map(installed.all.map(e => [e.version, 1])));
             });
         }

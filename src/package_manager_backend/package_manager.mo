@@ -137,15 +137,15 @@ shared({caller = initialCaller}) actor class PackageManager({
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
         HashMap.HashMap(0, Nat.equal, Common.IntHash);
 
-    stable var _installedPackagesByNameSave: [(Common.PackageName, {
+    stable var _installedPackagesByNameSave: [(Blob, {
         all: [Common.InstallationId];
         default: Common.InstallationId;
     })] = [];
-    var installedPackagesByName: HashMap.HashMap<Common.PackageName, {
+    var installedPackagesByName: HashMap.HashMap<Blob, {
         all: Buffer.Buffer<Common.InstallationId>;
         var default: Common.InstallationId;
     }> =
-        HashMap.HashMap(0, Text.equal, Text.hash);
+        HashMap.HashMap(0, Blob.equal, Blob.hash);
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         /// The number of modules in fully installed state.
@@ -616,12 +616,13 @@ shared({caller = initialCaller}) actor class PackageManager({
                     allModules = Buffer.Buffer<Principal>(0);
                     var pinned = false;
                 });
-                switch (installedPackagesByName.get(ourHalfInstalled.package.base.name)) {
+                let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
+                switch (installedPackagesByName.get(guid2)) {
                     case (?old) {
                         old.all.add(installationId);
                     };
                     case null {
-                        installedPackagesByName.put(ourHalfInstalled.package.base.name, {
+                        installedPackagesByName.put(guid2, {
                             all = Buffer.fromArray([installationId]);
                             var default = installationId;
                         });
@@ -745,11 +746,11 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         _installedPackagesByNameSave := Iter.toArray/*<{all: [Common.InstallationId]; default: Common.InstallationId}>*/(
             Iter.map<
-                (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId}),
-                (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId})
+                (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId}),
+                (Blob, {all: [Common.InstallationId]; default: Common.InstallationId})
             >(
                 installedPackagesByName.entries(),
-                func ((name, x): (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})) =
+                func ((name, x): (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})) =
                     (name, {all = Buffer.toArray(x.all); default = x.default}),
             ),
         );
@@ -789,16 +790,16 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         installedPackagesByName := HashMap.fromIter(
             Iter.map<
-                (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId}),
-                (Common.PackageName, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})
+                (Blob, {all: [Common.InstallationId]; default: Common.InstallationId}),
+                (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})
             >(
                 _installedPackagesByNameSave.vals(),
-                func ((name, x): (Common.PackageName, {all: [Common.InstallationId]; default: Common.InstallationId})) =
+                func ((name, x): (Blob, {all: [Common.InstallationId]; default: Common.InstallationId})) =
                     (name, {all = Buffer.fromArray(x.all); var default = x.default}),
             ),
             Array.size(_installedPackagesByNameSave),
-            Text.equal,
-            Text.hash,
+            Blob.equal,
+            Blob.hash,
         );
         _installedPackagesByNameSave := []; // Free memory.
 
@@ -819,12 +820,13 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// TODO: very unstable API.
     /// FIXME
-    public query({caller}) func getInstalledPackagesInfoByName(name: Text)
+    public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
         : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
     {
         onlyOwner(caller, "getInstalledPackagesInfoByName");
 
-        let ?data = installedPackagesByName.get(name) else {
+        let guid2 = Common.amendedGUID(guid, name);
+        let ?data = installedPackagesByName.get(guid2) else {
             return {all = []; default = 0};
         };
         // TODO: Eliminiate duplicate code:
@@ -983,10 +985,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         repositories;
     };
 
-    public shared({caller}) func setDefaultInstalledPackage(name: Common.PackageName, installationId: Common.InstallationId): async () {
+    public shared({caller}) func setDefaultInstalledPackage(name: Common.PackageName, guid: Blob, installationId: Common.InstallationId): async () {
         onlyOwner(caller, "setDefaultPackage");
 
-        let ?data = installedPackagesByName.get(name) else {
+        let guid2 = Common.amendedGUID(guid, name);
+        let ?data = installedPackagesByName.get(guid2) else {
             Debug.trap("no such package");
         };
         data.default := installationId;
