@@ -100,5 +100,5 @@ export default function Installation(props: {}) {
                 </Accordion>
             </>}
         </>
-    )
+    );
 }
