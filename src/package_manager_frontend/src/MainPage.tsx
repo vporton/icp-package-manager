@@ -161,7 +161,7 @@ export default function MainPage() {
                         <a className="btn btn-primary" href={bookmarkingUrl} target="_blank">Bookmark</a>
                     </Alert>
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site{" "}
-                        (provided that you've bookmarked it).</Alert>
+                        (provided that you've bookmarked this page).</Alert>
                 </>
             }
             <h2>Distribution</h2>
@@ -195,6 +195,11 @@ export default function MainPage() {
             {packagesToRepair !== undefined && packagesToRepair.length !== 0 ?
             <>
                 <h2>Partially Installed</h2>
+                <Alert variant="warning">
+                    If you recently started an operation, wait for it to complete,{" "}
+                    rather than using this form to force it, because this way you spend some extra money{" "}
+                    for duplicate operations on your packages.
+                </Alert>
                 <ul className='checklist'>
                 {packagesToRepair.map(p =>
                     <li key={p.installationId}>
