@@ -113,3 +113,5 @@ Remaining things TODO:
 - Security policy
 
 - Enhanced orthogonal persistence.
+
+- With new 64-bit memory model no need for CanDB.
