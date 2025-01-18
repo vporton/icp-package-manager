@@ -25,20 +25,21 @@ function myAmendedGUID(guid: Uint8Array, name: string): Uint8Array {
 function InstalledPackageLine(props: {
     packageName: string,
     guid: Uint8Array,
-    allInstalled: Map<string/*Uint8Array*/, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]
+    allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}[]
 >}) {
-    const pkgId = {guid: props.guid, name: props.packageName};
     const packages = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString());
-    if (packages === undefined) { // TODO: Is this block needed?
+    console.log("packages", packages);
+    if (packages === undefined) {
         return ""; // hack
     }
-    const versionsSet = new Set(packages!.map(p => p.pkg.version));
+    const versionsSet = new Set(packages.map(p => p.all[0].version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
     const byVersion = new Map(versions.map(version => {
-        const p: [string, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]] =
-            [version, Array.from(packages!.filter(p => p.pkg.version === version))];
+        const p: [string, {all: SharedInstalledPackageInfo[], default: bigint}[]] =
+            [version, packages];
         return p;
     }));
+    console.log("byVersion", byVersion);
     const glob = useContext(GlobalContext);
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, props.guid, k);
@@ -52,17 +53,18 @@ function InstalledPackageLine(props: {
                 return (
                     <span key={version}>
                         {packages.length === 1 ?
-                            <MyLink to={'/installed/show/'+packages[0].installationId.toString()}>{version}</MyLink> :
-                            <span>{version} ({Array.from(packages.entries()).map(([index, {installationId: k, pibn}]) =>
-                                <span key={k}>
+                            <MyLink to={'/installed/show/'+packages[0].all[0].id.toString()}>{version}</MyLink> :
+                            <span>{version} ({Array.from(packages.entries()).map(([index, pibn]) =>
+                                // FIXME: key
+                                <span key={index}>
                                     <input
                                         type="radio"
                                         name={props.packageName}
-                                        value={k.toString()}
-                                        defaultChecked={k === pibn.default}
-                                        onClick={() => setDefault(k)}
+                                        value={index.toString()}
+                                        defaultChecked={index.toString() === pibn.default.toString()}
+                                        onClick={() => setDefault(BigInt(index.toString()))}
                                     />
-                                    <MyLink to={'/installed/show/'+k.toString()}>{k.toString()}</MyLink>
+                                    <MyLink to={'/installed/show/'+index.toString()}>{index.toString()}</MyLink>
                                     {index === packages.length - 1 ? "" : " "}
                                 </span>
                             )})</span>
@@ -76,7 +78,7 @@ function InstalledPackageLine(props: {
 
 export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] =
-        useState<Map<string/*Uint8Array*/, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]> | undefined>();
+        useState<Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}[]> | undefined>();
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
@@ -90,21 +92,29 @@ export default function InstalledPackages(props: {}) {
             // guids2.sort(); // TODO: wrong order
             Promise.all(guids2.map(async guid2 => {
                 const pibn = await glob.packageManager!.getInstalledPackagesInfoByName(guid2.name, guid2.guid); // TODO: inefficient
-                // const guid2v = await amende\dGUID(guid2.guid, guid2.name);
-                const p: [string/*Uint8Array*/, {installationId: bigint, pkg: SharedInstalledPackageInfo, pibn: {all: SharedInstalledPackageInfo[]; default: bigint}}[]] =
+                const p: [string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}] =
                     [
                         myAmendedGUID(guid2.guid, guid2.name).toString(), // TODO: `.toString` here is a crude hack.
-                        Array.from(allPackages.filter(p => {
-                            return p[1].package.base.guid === guid2.guid && p[1].name === guid2.name
-                        }))
-                            .map(p => {
-                                return {installationId: p[0], pkg: p[1], pibn};
-                            }),
+                        // Array.from(allPackages.filter(p => {
+                        //     return p[1].package.base.guid === guid2.guid && p[1].name === guid2.name
+                        // }))
+                        //     .map(p => { // FIXME
+                        //         return pibn;
+                        //     }),
+                        pibn,
                     ];
                 return p;
             }))
                 .then(byName0 => {
-                    const byName = new Map(byName0);
+                    console.log("fff", byName0);
+                    const byName = new Map(); // FIXME: Group by key
+                    for (const p of byName0) {
+                        if (!byName.has(p[0])) {
+                            byName.set(p[0], [p[1]]);
+                        } else {
+                            byName.get(p[0]).push(p[1]);
+                        }
+                    }
                     setInstalledVersions(byName);
                 });
         });
@@ -118,7 +128,11 @@ export default function InstalledPackages(props: {}) {
                     {/* <li><input type='checkbox'/> All <Button>Uninstall</Button> <Button>Upgrade</Button></li> */}
                     {installedVersions !== undefined &&
                         Array.from(installedVersions.values()).map((info) =>
-                            <InstalledPackageLine packageName={info[0].pkg.name} guid={info[0].pkg.package.base.guid as Uint8Array} key={info[0].pkg.name} allInstalled={installedVersions}/>
+                            <InstalledPackageLine
+                                packageName={info[0].all[0].name}
+                                guid={info[0].all[0].package.base.guid as Uint8Array}
+                                key={info[0].all[0].name}
+                                allInstalled={installedVersions}/>
                     )}
                 </ul>
             }
