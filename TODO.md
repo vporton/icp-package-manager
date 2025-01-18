@@ -111,3 +111,5 @@ Remaining things TODO:
 - `FIXME`/`TODO` in the sources.
 
 - Security policy
+
+- Enhanced orthogonal persistence.
