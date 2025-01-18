@@ -25,20 +25,19 @@ function myAmendedGUID(guid: Uint8Array, name: string): Uint8Array {
 function InstalledPackageLine(props: {
     packageName: string,
     guid: Uint8Array,
-    allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}[]
+    allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}
 >}) {
-    // FIXME: wrong value of `packages`:
-    const packages = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString());
-    if (packages === undefined) { // TODO: needed?
+    const packages0 = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString())!; // TODO: Instead, make it an argument in `props`.
+    if (packages0 === undefined) { // TODO: needed?
         return ""; // hack
     }
-    const versionsSet = new Set(packages.map(p => p.all[0].version));
+    const versionsSet = new Set(packages0.all.map(p => p.version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
-    const byVersion = new Map(versions.map(version => {
-        const p: [string, {all: SharedInstalledPackageInfo[], default: bigint}[]] =
-            [version, packages];
-        return p;
-    }));
+    const byVersion = new Map<string, SharedInstalledPackageInfo[]>();
+    for (const v of versions) {
+        byVersion.set(v, packages0.all.filter(p => p.version === v));
+    }
+    console.log(byVersion);
     const glob = useContext(GlobalContext);
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, props.guid, k);
@@ -50,22 +49,20 @@ function InstalledPackageLine(props: {
             {Array.from(byVersion.entries()).map(([version, packages]) =>
                 <span key={version}>
                     {packages.length === 1 ?
-                        <MyLink to={'/installed/show/'+packages[0].all[0].id.toString()}>{version}</MyLink> :
+                        <MyLink to={'/installed/show/'+packages[0].id.toString()}>{version}</MyLink> :
                         <span>{version} {
-                            Array.from(packages.entries()).map(([index, pibn]) =>
-                                pibn.all.map(p => 
-                                    <span key={p.id.toString()}>
-                                        <input
-                                            type="radio"
-                                            name={Guid.parse(props.guid).toString()}
-                                            value={pibn.default.toString()}
-                                            defaultChecked={p.id.toString() === pibn.default.toString()}
-                                            onClick={() => setDefault(BigInt(p.id.toString()))}
-                                        />
-                                        <MyLink to={'/installed/show/'+p.id.toString()}>{p.id.toString()}</MyLink>
-                                        {index === packages.length - 1 ? "" : " "}
-                                    </span>)
-                            )
+                            Array.from(packages.entries()).map(([index, p]) =>
+                                <span key={p.id.toString()}>
+                                    <input
+                                        type="radio"
+                                        name={Guid.parse(props.guid).toString()}
+                                        value={packages0.default.toString()}
+                                        defaultChecked={p.id.toString() === packages0.default.toString()}
+                                        onClick={() => setDefault(BigInt(p.id.toString()))}
+                                    />
+                                    <MyLink to={'/installed/show/'+p.id.toString()}>{p.id.toString()}</MyLink>
+                                    {index === packages.length - 1 ? "" : " "}
+                                </span>)
                         }</span>
                     }
                 </span>
@@ -76,7 +73,7 @@ function InstalledPackageLine(props: {
 
 export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] =
-        useState<Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}[]> | undefined>();
+        useState<Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}> | undefined>();
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
@@ -98,15 +95,14 @@ export default function InstalledPackages(props: {}) {
                 return p;
             }))
                 .then(byName0 => {
-                    const byName = new Map();
+                    const byName = new Map<string, {
+                        all: SharedInstalledPackageInfo[];
+                        default: bigint;
+                    }>(byName0);
                     for (const p of byName0) {
-                        if (byName.has(p[0])) {
-                            byName.get(p[0]).push(p[1]);
-                        } else {
-                            byName.set(p[0], [p[1]]);
-                        }
+                        byName.set(p[0], p[1]!);
                     }
-                    setInstalledVersions(byName);
+                    setInstalledVersions(byName!);
                 });
         });
     }, [glob.packageManager, isAuthenticated]);
@@ -120,9 +116,9 @@ export default function InstalledPackages(props: {}) {
                     {installedVersions !== undefined &&
                         Array.from(installedVersions.values()).map((info) =>
                             <InstalledPackageLine
-                                packageName={info[0].all[0].name}
-                                guid={info[0].all[0].package.base.guid as Uint8Array}
-                                key={info[0].all[0].name}
+                                packageName={info.all[0].name}
+                                guid={info.all[0].package.base.guid as Uint8Array}
+                                key={info.all[0].name}
                                 allInstalled={installedVersions}/>
                     )}
                 </ul>
