@@ -27,6 +27,7 @@ function InstalledPackageLine(props: {
     guid: Uint8Array,
     allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}[]
 >}) {
+    // FIXME: wrong value of `packages`:
     const packages = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString());
     if (packages === undefined) { // TODO: needed?
         return ""; // hack
@@ -42,34 +43,33 @@ function InstalledPackageLine(props: {
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, props.guid, k);
     }
-    const guid = props.guid; // TODO: Reduce.
     return (
         <li>
-            <span title={Guid.parse(guid).toString()}><code>{props.packageName}</code></span>{" "}
+            <span title={Guid.parse(props.guid).toString()}><code>{props.packageName}</code></span>{" "}
             {/* TODO: Sort. */}
-            {Array.from(byVersion.entries()).map(([version, packages]) => {
-                return (
-                    <span key={version}>
-                        {packages.length === 1 ?
-                            <MyLink to={'/installed/show/'+packages[0].all[0].id.toString()}>{version}</MyLink> :
-                            <span>{version} ({Array.from(packages.entries()).map(([index, pibn]) =>
-                                // FIXME: key
-                                <span key={index}>
-                                    <input
-                                        type="radio"
-                                        name={props.packageName}
-                                        value={index.toString()}
-                                        defaultChecked={index.toString() === pibn.default.toString()}
-                                        onClick={() => setDefault(BigInt(index.toString()))}
-                                    />
-                                    <MyLink to={'/installed/show/'+index.toString()}>{index.toString()}</MyLink>
-                                    {index === packages.length - 1 ? "" : " "}
-                                </span>
-                            )})</span>
-                        }
-                    </span>
-                );
-            })}
+            {Array.from(byVersion.entries()).map(([version, packages]) =>
+                <span key={version}>
+                    {packages.length === 1 ?
+                        <MyLink to={'/installed/show/'+packages[0].all[0].id.toString()}>{version}</MyLink> :
+                        <span>{version} {
+                            Array.from(packages.entries()).map(([index, pibn]) =>
+                                pibn.all.map(p => 
+                                    <span key={p.id.toString()}>
+                                        <input
+                                            type="radio"
+                                            name={Guid.parse(props.guid).toString()}
+                                            value={pibn.default.toString()}
+                                            defaultChecked={p.id.toString() === pibn.default.toString()}
+                                            onClick={() => setDefault(BigInt(p.id.toString()))}
+                                        />
+                                        <MyLink to={'/installed/show/'+p.id.toString()}>{p.id.toString()}</MyLink>
+                                        {index === packages.length - 1 ? "" : " "}
+                                    </span>)
+                            )
+                        }</span>
+                    }
+                </span>
+            )}
         </li>
     )
 }
@@ -93,23 +93,17 @@ export default function InstalledPackages(props: {}) {
                 const p: [string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}] =
                     [
                         myAmendedGUID(guid2.guid, guid2.name).toString(), // TODO: `.toString` here is a crude hack.
-                        // Array.from(allPackages.filter(p => {
-                        //     return p[1].package.base.guid === guid2.guid && p[1].name === guid2.name
-                        // }))
-                        //     .map(p => { // FIXME
-                        //         return pibn;
-                        //     }),
                         pibn,
                     ];
                 return p;
             }))
                 .then(byName0 => {
-                    const byName = new Map(); // FIXME: Group by key
+                    const byName = new Map();
                     for (const p of byName0) {
-                        if (!byName.has(p[0])) {
-                            byName.set(p[0], [p[1]]);
-                        } else {
+                        if (byName.has(p[0])) {
                             byName.get(p[0]).push(p[1]);
+                        } else {
+                            byName.set(p[0], [p[1]]);
                         }
                     }
                     setInstalledVersions(byName);
