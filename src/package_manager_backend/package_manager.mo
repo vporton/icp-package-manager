@@ -836,7 +836,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             Common.installedPackageInfoShare(info);
         }));
-        {all = all; default = data.default};
+        {all = all; default = data.default}; // FIXME: Should preserve the default setting if previously installed this package.
     };
 
     /// TODO: very unstable API.
