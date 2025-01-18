@@ -28,7 +28,7 @@ function InstalledPackageLine(props: {
     allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}[]
 >}) {
     const packages = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString());
-    if (packages === undefined) {
+    if (packages === undefined) { // TODO: needed?
         return ""; // hack
     }
     const versionsSet = new Set(packages.map(p => p.all[0].version));
