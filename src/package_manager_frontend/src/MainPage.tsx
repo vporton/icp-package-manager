@@ -212,5 +212,5 @@ export default function MainPage() {
             </>
             : ""}
         </>
-            );
+    );
 }
