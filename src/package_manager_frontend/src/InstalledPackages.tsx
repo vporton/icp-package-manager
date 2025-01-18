@@ -28,7 +28,6 @@ function InstalledPackageLine(props: {
     allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}[]
 >}) {
     const packages = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString());
-    console.log("packages", packages);
     if (packages === undefined) {
         return ""; // hack
     }
@@ -39,7 +38,6 @@ function InstalledPackageLine(props: {
             [version, packages];
         return p;
     }));
-    console.log("byVersion", byVersion);
     const glob = useContext(GlobalContext);
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, props.guid, k);
@@ -106,7 +104,6 @@ export default function InstalledPackages(props: {}) {
                 return p;
             }))
                 .then(byName0 => {
-                    console.log("fff", byName0);
                     const byName = new Map(); // FIXME: Group by key
                     for (const p of byName0) {
                         if (!byName.has(p[0])) {
