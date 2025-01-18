@@ -6,6 +6,8 @@ import Button from "react-bootstrap/Button";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
+import Accordion from "react-bootstrap/Accordion";
+import { Alert } from "react-bootstrap";
 
 export default function Installation(props: {}) {
     const { installationId } = useParams();
@@ -13,6 +15,7 @@ export default function Installation(props: {}) {
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
     const [pinned, setPinned] = useState(false);
+    const [showDanger, setShowDanger] = useState(false);
     const glob = useContext(GlobalContext);
     // TODO: When logged out, show instead that logged out.
     useEffect(() => {
@@ -83,10 +86,18 @@ export default function Installation(props: {}) {
                 <p><strong>Package version:</strong> {pkg.version}</p>
                 <p><strong>Short description:</strong> {pkg.package.base.shortDescription}</p>
                 <p><strong>Long description:</strong> {pkg.package.base.longDescription}</p>
-                { pkg.package && (pkg.package.specific as { real: SharedRealPackageInfo }).real && 
-                    <p><strong>Dependencies:</strong> {(pkg.package.specific as { real: SharedRealPackageInfo }).real.dependencies.join(", ")}</p>
-                }
                 <p><Button onClick={uninstall}>Uninstall</Button></p>
+                <Accordion defaultActiveKey={undefined}> {/* FIXME: https://stackoverflow.com/q/79367323/856090 */}
+                    <Accordion.Item eventKey="dangerZone" className="bg-red-500">
+                        <Accordion.Header
+                            onClick={() => setShowDanger(!showDanger)}                           
+                        >{showDanger ? "Hide danger zone" : "Show danger zone"}
+                        </Accordion.Header>
+                        <Accordion.Body style={{background: 'red'}}>
+                            <p><Button disabled={!isAuthenticated} onClick={uninstall}>REMOVE THE PACKAGE AND ALL ITS DATA</Button></p>
+                        </Accordion.Body>
+                    </Accordion.Item>
+                </Accordion>
             </>}
         </>
     )
