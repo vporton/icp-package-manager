@@ -37,7 +37,6 @@ function InstalledPackageLine(props: {
     for (const v of versions) {
         byVersion.set(v, packages0.all.filter(p => p.version === v));
     }
-    console.log(byVersion);
     const glob = useContext(GlobalContext);
     function setDefault(k: bigint) {
         glob.packageManager!.setDefaultInstalledPackage(props.packageName, props.guid, k);
