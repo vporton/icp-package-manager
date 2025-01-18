@@ -345,8 +345,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: Rename.
-    public shared({caller}) func installationWorkCallback({
+    /// Internal.
+    ///
+    /// Initialize installation process object.
+    public shared({caller}) func installInitialize({
         whatToInstall: {
             #package;
             // #simplyModules : [(Text, Common.SharedModule)]; // TODO
@@ -359,7 +361,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             preinstalledModules: [(Text, Principal)];
         }];
     }) {
-        onlyOwner(caller, "installationWorkCallback");
+        onlyOwner(caller, "installInitialize");
 
         for (p0 in packages.keys()) {
             let p = packages[p0];
