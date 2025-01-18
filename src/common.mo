@@ -385,6 +385,10 @@ module {
         installedModules: Buffer.Buffer<?(?Text, Principal)>;
         package: PackageInfo;
         preinstalledModules: HashMap.HashMap<Text, Principal>;
+        minInstallationId: Nat; // hack 
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
         var alreadyCalledAllCanistersCreated: Bool;
     };
 

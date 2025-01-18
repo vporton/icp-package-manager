@@ -93,7 +93,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     };
 
     /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper)); // actor("aaaaa-aa");
-    /*stable*/ var ourSimpleIndirect = simpleIndirect;
+    // /*stable*/ var ourSimpleIndirect = simpleIndirect;
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
         onlyOwner(caller, "setOurPM");
@@ -130,12 +130,15 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             };
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
-                installationWorkCallback: ({
+                installStart: ({
                     whatToInstall: {
                         #package;
                         // #simplyModules : [(Text, Common.SharedModule)]; // TODO
                     };
-                    minInstallationId: Common.InstallationId;
+                    minInstallationId: Common.InstallationId; // FIXME: Move inside packages array.
+                    afterInstallCallback: ?{
+                        canister: Principal; name: Text; data: Blob;
+                    };
                     user: Principal;
                     packages: [{
                         package: Common.SharedPackageInfo;
@@ -146,9 +149,10 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             };
 
             // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
-            await pm.installationWorkCallback({
+            await pm.installStart({
                 whatToInstall; /// install package or named modules.
                 minInstallationId;
+                afterInstallCallback;
                 user;
                 packages = Iter.toArray(Iter.map<Nat, {
                     package: Common.SharedPackageInfo;
@@ -168,70 +172,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     },
                 ));
             });
-
-            for (p0 in packages.keys()) {
-                let ?p = packages2[p0] else {
-                    Debug.trap("programming error");
-                };
-                let modules: Iter.Iter<(Text, Common.Module)> = switch (whatToInstall) {
-                    // case (#simplyModules m) {
-                    //     Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                    //         m.vals(),
-                    //         func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
-                    //     );
-                    // };
-                    case (#package) {
-                        switch (p.specific) {
-                            case (#real pkgReal) {
-                                Iter.filter<(Text, Common.Module)>(
-                                    pkgReal.modules.entries(),
-                                    func (p: (Text, Common.Module)) = p.1.installByDefault,
-                                );
-                            };
-                            case (#virtual _) [].vals();
-                        };
-                    }
-                };
-
-                let bi = if (packages[p0].preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
-                    [("backend", Principal.fromActor(ourPM)), ("indirect", Principal.fromActor(this)), ("simple_indirect", ourSimpleIndirect)];
-                } else {
-                    packages[p0].preinstalledModules;
-                };
-                let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
-                var moduleNumber = 0;
-                let ?backend = coreModules.get("backend") else {
-                    Debug.trap("error 1");
-                };
-                let ?indirect = coreModules.get("indirect") else {
-                    Debug.trap("error 1");
-                };
-                let ?simple_indirect = coreModules.get("simple_indirect") else {
-                    Debug.trap("error 1");
-                };
-                // The following (typically) does not overflow cycles limit, because we use an one-way function.
-                for ((name, m): (Text, Common.Module) in modules) {
-                    // Starting installation of all modules in parallel:
-                    this.installModule({
-                        installPackage = whatToInstall == #package; // TODO: correct?
-                        moduleNumber;
-                        moduleName = ?name;
-                        installArg = to_candid({
-                            installationId = minInstallationId + p0;
-                            packageManagerOrBootstrapper = backend;
-                        }); // TODO: Add more arguments.
-                        installationId = minInstallationId + p0;
-                        packageManagerOrBootstrapper = backend;
-                        initialIndirect = indirect;
-                        simpleIndirect = simple_indirect;
-                        preinstalledCanisterId = coreModules.get(name);
-                        user; // TODO: `!`
-                        wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
-                        afterInstallCallback;
-                    });
-                    moduleNumber += 1;
-                };
-            };
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
@@ -345,7 +285,8 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[user, initialIndirect, simpleIndirect];
+            // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
+            mainControllers = ?[user, initialIndirect, simpleIndirect, packageManagerOrBootstrapper];
             user;
             initialIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
