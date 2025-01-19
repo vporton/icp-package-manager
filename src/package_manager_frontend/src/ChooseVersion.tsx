@@ -80,14 +80,16 @@ export default function ChooseVersion(props: {}) {
                 return null;
             }
 
+            const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
             // TODO: `!`
-            const {minInstallationId: id} = await installPackageWithModules({
-                package_manager_principal: glob.backend!,
-                packageName: packageName!,
-                version: chosenVersion!,
-                repo: firstPart,
+            const {minInstallationId: id} = await package_manager.installPackage({
+                packages: [{
+                    packageName: packageName!,
+                    version: chosenVersion!,
+                    repo: firstPart,
+                }],
                 user: principal!,
-                agent: agent!,
+                afterInstallCallback: [],
             });
             const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, agent: agent!});
             for (let i = 0; ; ++i) {
@@ -135,35 +137,4 @@ export default function ChooseVersion(props: {}) {
             </>}
         </>
     );
-}
-
-export async function installPackageWithModules({
-    package_manager_principal, packageName, repo, user, version, agent
-}: {
-    package_manager_principal: Principal,
-    packageName: PackageName,
-    repo: Principal,
-    user: Principal,
-    version: Version,
-    agent: Agent,
-}): Promise<{
-    minInstallationId: InstallationId;
-}> {
-    const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
-    const {minInstallationId} = await package_manager.installPackage({
-        packages: [{
-            packageName,
-            version,
-            repo,
-        }],
-        user,
-        afterInstallCallback: [],
-    });
-    // const part = createRepositoryPartition(repo);
-    // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
-    // const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-    // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
-    // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
-    // const indirect = createIndirectCaller(indirectPrincipal, {agent});
-    return {minInstallationId};
 }

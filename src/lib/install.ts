@@ -1,42 +1,9 @@
 // TODO: Rename this file.
-
 import { Principal } from '@dfinity/principal';
-import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback, SharedInstalledPackageInfo } from '../declarations/package_manager/package_manager.did';
-import { createActor as createRepositoryPartition } from '../declarations/RepositoryPartition';
-import { createActor as createIndirectCaller } from '../declarations/Bootstrapper';
+import { InstallationId, PackageManager, SharedRealPackageInfo } from '../declarations/package_manager/package_manager.did';
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
-import { IDL } from '@dfinity/candid';
 import { Actor, Agent } from '@dfinity/agent';
-
-// TODO: Get rid of this function.
-export async function installPackageWithModules({
-    package_manager_principal, packageName, repo, user, version, agent, afterInstallCallback
-}: {
-    package_manager_principal: Principal,
-    packageName: PackageName,
-    repo: Principal,
-    user: Principal,
-    version: Version,
-    agent: Agent,
-    afterInstallCallback: {
-        canister: Principal, name: string, data: Uint8Array,
-    } | undefined,
-}): Promise<{
-    minInstallationId: InstallationId;
-}> {
-    const package_manager: PackageManager = createPackageManager(package_manager_principal, {agent});
-    const {minInstallationId} = await package_manager.installPackage({
-        packages: [{
-            packageName,
-            repo,
-            version,
-        }],
-        user,
-        afterInstallCallback: afterInstallCallback === undefined ? [] : [afterInstallCallback],
-    });
-    return {minInstallationId};
-}
 
 /// Note that this can be checked only from frontend, because calling from backend hacker can hang.
 export class InitializedChecker {
