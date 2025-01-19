@@ -5,6 +5,8 @@ import { createActor as createPackageManager } from '../declarations/package_man
 import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
 import { Actor, Agent } from '@dfinity/agent';
 
+/// Check if the package is initialized.
+///
 /// Note that this can be checked only from frontend, because calling from backend hacker can hang.
 export class InitializedChecker {
     private agent: Agent;
