@@ -95,7 +95,7 @@ export default function ChooseVersion(props: {}) {
                     break;
                 }
                 if (i == 30) {
-                    alert("Cannot initilize canisters"); // TODO
+                    alert("Cannot initilialize canisters"); // TODO
                     return;
                 }
                 await new Promise<void>((resolve, _reject) => {
