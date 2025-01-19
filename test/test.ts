@@ -26,10 +26,6 @@ function commandOutput(command: string): Promise<string> {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function doIt() {
-    myExecSync("dfx identity use Zon")
-    myExecSync("dfx deploy test")
-    myExecSync("dfx ledger fabricate-cycles --amount 100000000 --canister test")
-
     const counter_blob = readFileSync(".dfx/local/canisters/counter/counter.wasm");
     const pm_blob = readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm");
     const frontend_blob = readFileSync(".dfx/local/canisters/package_manager_frontend/assetstorage.wasm.gz");
@@ -38,7 +34,7 @@ async function doIt() {
     // const test_principal = j['test']['local'];
     const pm_frontend_source_principal = Principal.fromText(j['package_manager_frontend']['local']);
 
-    const key = await commandOutput("dfx identity export Zon");
+    const key = await commandOutput("dfx identity export `dfx identity whoami`");
     const identity = decodeFile(key);
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     if (process.env.DFX_NETWORK === 'local') {
