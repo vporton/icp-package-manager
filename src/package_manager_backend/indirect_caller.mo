@@ -284,6 +284,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             canister: Principal; name: Text; data: Blob;
         };
     }): async* Principal {
+        // TODO: Run in parallel.
         let {canister_id} = await* Install.myCreateCanister({
             // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
             // FIXME: packageManagerOrBootstrapper seems superfluous.
