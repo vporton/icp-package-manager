@@ -35,12 +35,6 @@ export async function installPackageWithModules({
         user,
         afterInstallCallback: afterInstallCallback === undefined ? [] : [afterInstallCallback],
     });
-    // const part = createRepositoryPartition(repo);
-    // const pkg = await part.getPackage(packageName, version); // TODO: a little inefficient
-    // const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-    // const pkg2 = await package_manager.getInstalledPackage(BigInt(0)); // TODO: hard-coded package ID
-    // const indirectPrincipal = pkg2.modules.filter(x => x[0] === 'indirect')[0][1];
-    // const indirect = createIndirectCaller(indirectPrincipal, {agent});
     return {minInstallationId};
 }
 
