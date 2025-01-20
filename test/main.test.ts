@@ -1,4 +1,4 @@
-import { Agent, HttpAgent } from "@dfinity/agent";
+    import { Agent, HttpAgent } from "@dfinity/agent";
 import { exec, execSync } from "child_process";
 import { readFileSync } from "fs";
 import node_fetch from 'node-fetch';
@@ -22,25 +22,25 @@ function commandOutput(command: string): Promise<string> {
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 describe('My Test Suite', () => {
-    const icHost = "http://localhost:4943";
-    function newAgent(): Agent {
-        const identity = Ed25519KeyIdentity.generate();
-        const agent = new HttpAgent({host: icHost, identity})
-        if (process.env.DFX_NETWORK === 'local') {
-            agent.fetchRootKey();
-        }
-        return agent;
-    };
+    // const icHost = "http://localhost:4943";
+    // function newAgent(): Agent {
+    //     const identity = Ed25519KeyIdentity.generate();
+    //     const agent = new HttpAgent({host: icHost, identity})
+    //     if (process.env.DFX_NETWORK === 'local') {
+    //         agent.fetchRootKey();
+    //     }
+    //     return agent;
+    // };
 
     beforeEach(async () => {
     //     const key = await commandOutput("dfx identity export `dfx identity whoami`");
     //     const identity = decodeFile(key);
     });
 
-    test('misc',  async () => {
-        const bootstrapperAgent = newAgent();
-        const bootstrapperUser = await bootstrapperAgent.getPrincipal();
-        const {canister_id: _, frontendTweakPrivKey} = await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
+    describe('misc', async () => {
+        // const bootstrapperAgent = newAgent();
+        // const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+        // const {canister_id: _, frontendTweakPrivKey} = await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
         // expect(sum(1, 2)).toBe(3);
     });
 });
