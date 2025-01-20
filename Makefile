@@ -53,4 +53,4 @@ deploy:
 	dfx canister install -m auto example_frontend
 	-dfx ledger fabricate-cycles --t 2000000 --canister RepositoryIndex
 	-dfx canister call RepositoryIndex init "()"
-	npx tsx scripts/prepare.ts
+	npx ts-node scripts/prepare.ts
