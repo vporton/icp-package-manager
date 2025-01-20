@@ -4,50 +4,6 @@ import { InstallationId, PackageManager, SharedRealPackageInfo } from '../declar
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
 import { Actor, Agent } from '@dfinity/agent';
-import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
-import { createActor as createRepositoryIndexActor } from "../declarations/RepositoryIndex";
-import { createActor as createRepositoryPartitionActor } from "../declarations/RepositoryPartition";
-import { SharedPackageInfo } from "../declarations/RepositoryPartition/RepositoryPartition.did";
-import { IDL } from "@dfinity/candid";
-
-export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
-    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
-    try {// TODO: Duplicate code
-        const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo | undefined = undefined;
-        const jobs = repoParts.map(async part => {
-            const obj = createRepositoryPartitionActor(part, {agent: props.agent});
-            try {
-              pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-            }
-            catch (e) {
-                console.log(e); // TODO: return an error
-            }
-        });
-        await Promise.all(jobs);
-        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-
-        const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
-        const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
-        const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
-            wasmModule: pkgReal.modules[1][1],
-            installArg: new Uint8Array(IDL.encode(
-                [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
-                [{user: props.user, installationId: 0 /* TODO */}],
-            )),
-            user: props.user,
-            initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-            simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-            frontendTweakPubKey,
-        });
-        return {canister_id: frontendPrincipal, frontendTweakPrivKey};
-    }
-    catch(e) {
-      console.log(e);
-      throw e; // TODO
-    }
-}
 
 /// Check if the package is initialized.
 ///

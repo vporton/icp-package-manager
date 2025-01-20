@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
+import { createActor as createBootstrapperIndirectActor } from "../../declarations/Bootstrapper";
+import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
+import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
 import { Actor, Agent } from "@dfinity/agent";
@@ -8,7 +11,8 @@ import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert, useAccordionButton } from "react-bootstrap";
 import useConfirm from "./useConfirm";
-import { bootstrapFrontend } from "../../lib/install";
+import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
+import { IDL } from "@dfinity/candid";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -43,14 +47,48 @@ export default function MainPage() {
       });
     }, [props.isAuthenticated, props.principal]);
     // TODO: Allow to change the bootstrap repo:
-    async function bootstrap() {
-      const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({user: props.principal!, agent: props.agent!});
-      // gives the right to set frontend owner and controller to backend:
-      const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
-      const url = getIsLocal()
-        ? `http://${frontendPrincipal}.localhost:4943`
-        : `https://${frontendPrincipal}.icp0.io`;
-      open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
+    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
+    async function bootstrap() { // TODO: Move to `useEffect`.
+      try {// TODO: Duplicate code
+        const repoParts = await repoIndex.getCanistersByPK("main");
+        let pkg: SharedPackageInfo | undefined = undefined;
+        const jobs = repoParts.map(async part => {
+          const obj = createRepositoryPartitionActor(part, {agent: props.agent});
+          try {
+            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+          }
+          catch (e) {
+            console.log(e); // TODO: return an error
+          }
+        });
+        await Promise.all(jobs);
+        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+
+        const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+        const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
+        const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
+        const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
+          wasmModule: pkgReal.modules[1][1],
+          installArg: new Uint8Array(IDL.encode(
+            [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
+            [{user: props.principal!, installationId: 0 /* TODO */}],
+          )),
+          user: props.principal!,
+          initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+          simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+          frontendTweakPubKey,
+        });
+        const url = getIsLocal()
+          ? `http://${frontendPrincipal}.localhost:4943`
+          : `https://${frontendPrincipal}.icp0.io`;
+        // gives the right to set frontend owner and controller to backend:
+        const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
+        open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
+      }
+      catch(e) {
+        console.log(e);
+        throw e; // TODO
+      }
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(
       "Are you sure to bootstrap it AGAIN?",

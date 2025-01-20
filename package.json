@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=7.0.0"
@@ -9,7 +8,7 @@
     "build": "npm run build --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test": "tsx test/test.ts"
+    "test": "npm test --workspaces --if-present"
   },
   "workspaces": [
     "src/bootstrapper_frontend",
@@ -35,6 +34,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
-    "tsx": "^4.19.2"
+    "ts-node": "^10.9.2"
   }
 }
