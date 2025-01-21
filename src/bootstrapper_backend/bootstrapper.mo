@@ -24,10 +24,10 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this), user, initialIndirect, simpleIndirect];
+            mainControllers = ?[Principal.fromActor(this), user, initialIndirect, simpleIndirect]; // TODO: This is a bug.
             user;
             cyclesAmount = newCanisterCycles;
-        }); // TODO: This is a bug.
+        });
         await* Install.myInstallCode({
             installationId = 0;
             canister_id;
