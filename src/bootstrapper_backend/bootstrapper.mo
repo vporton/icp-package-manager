@@ -123,6 +123,7 @@ actor class Bootstrapper() = this {
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
 
+        // FIXME: Move it after installing, to set right permissions for the user.
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
