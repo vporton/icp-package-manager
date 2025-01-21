@@ -75,17 +75,17 @@ describe('My Test Suite', () => {
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
 
-        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
-          backendWasmModule: modules.get("backend")!,
-          indirectWasmModule: modules.get("indirect")!,
-          simpleIndirectWasmModule: modules.get("simple_indirect")!,
-          user: bootstrapperUser,
-          packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
-          frontendTweakPrivKey,
-          frontend: frontendPrincipal,
-          repoPart: repoPart!,
-        });
-        // const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
+        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
+            await bootstrapperIndirectCaller.bootstrapBackend({
+                backendWasmModule: modules.get("backend")!,
+                indirectWasmModule: modules.get("indirect")!,
+                simpleIndirectWasmModule: modules.get("simple_indirect")!,
+                user: bootstrapperUser,
+                packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
+                frontendTweakPrivKey,
+                frontend: frontendPrincipal,
+                repoPart: repoPart!,
+            });
         const installationId = 0n; // TODO
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId)
         
@@ -94,13 +94,3 @@ describe('My Test Suite', () => {
         // expect(sum(1, 2)).toBe(3);
     });
 });
-
-async function doIt() {
-    const counter_blob = readFileSync(".dfx/local/canisters/counter/counter.wasm");
-    const pm_blob = readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm");
-    const frontend_blob = readFileSync(".dfx/local/canisters/package_manager_frontend/assetstorage.wasm.gz");
-
-    const j = JSON.parse(readFileSync('.dfx/local/canister_ids.json', {encoding: 'utf-8'}));
-    const pm_frontend_source_principal = Principal.fromText(j['package_manager_frontend']['local']);
-
-}
