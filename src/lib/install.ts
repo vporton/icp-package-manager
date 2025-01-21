@@ -116,3 +116,22 @@ export class InitializedChecker {
         return true;
     }
 }
+
+export async function waitTillInitialized(agent: Agent, package_manager: Principal, installationId: InstallationId) {
+    return new Promise<void>(async (resolve, reject) => {
+        const checker = await InitializedChecker.create({package_manager, installationId, agent});
+        for (let i = 0; ; ++i) {
+            if (await checker.check()) {
+                resolve();
+                return;
+            }
+            if (i == 30) {
+                reject("Cannot initilialize canisters");
+                return;
+            }
+            await new Promise<void>((resolve, _reject) => {
+                setTimeout(() => resolve(), 1000);
+            });
+        }
+    });
+}

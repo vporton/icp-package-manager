@@ -20,7 +20,7 @@ import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
-import { InitializedChecker } from '../../lib/install';
+import { waitTillInitialized } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
 
 function App() {
@@ -89,7 +89,7 @@ function GlobalUI() {
           frontend: glob.frontend!,
         });
         const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
-        await backend.installPackageWithPreinstalledModules({ // TODO: Move this to backend.
+        await backend.installPackageWithPreinstalledModules({
           whatToInstall: { package: null },
           packageName: "icpack",
           version: "0.0.1", // TODO: should be `stable`.
@@ -105,18 +105,10 @@ function GlobalUI() {
           additionalPackages: [{packageName: 'example', version: "0.0.1", repo: repoPart!}],
         });
         const installationId = 0n; // TODO
-        const checker = await InitializedChecker.create({package_manager: backendPrincipal, installationId, agent: agent!});
-        for (let i = 0; ; ++i) {
-          if (await checker.check()) {
-            break;
-          }
-          if (i == 30) {
-            alert("Cannot initilialize canisters"); // TODO
-            return;
-          }
-          await new Promise<void>((resolve, _reject) => {
-            setTimeout(() => resolve(), 1000);
-          });
+        const waitResult = await waitTillInitialized(agent!, glob.backend!, installationId);
+        if (waitResult !== undefined) {
+          alert(waitResult);
+          return;
         }
 
         const backend_str = backendPrincipal.toString();
