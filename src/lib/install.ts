@@ -37,8 +37,8 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
                 [{user: props.user, installationId: 0 /* TODO */}],
             )),
             user: props.user,
-            initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-            simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+            initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // FIXME
+            simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // FIXME
             frontendTweakPubKey,
         });
         return {canister_id: frontendPrincipal, frontendTweakPrivKey};

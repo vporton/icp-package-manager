@@ -4,12 +4,14 @@ import { readFileSync } from "fs";
 import node_fetch from 'node-fetch';
 import { Principal } from "@dfinity/principal";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
-import { bootstrapFrontend } from "../src/lib/install";
+import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
 import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../src/declarations/RepositoryPartition";
 import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryPartition/RepositoryPartition.did";
 import { config as dotenv_config } from 'dotenv';
+import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
+import { IDL } from "@dfinity/candid";
 
 global.fetch = node_fetch as any;
 
@@ -49,8 +51,13 @@ describe('My Test Suite', () => {
     });
 
     describe('misc', async () => {
+        const bootstrapperAgent = newAgent();
+        const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
+        const bootstrapperIndirectCaller: Bootstrapper =
+            createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent}); // FIXME
+
         // TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
         let pkg: SharedPackageInfo | undefined = undefined;
@@ -67,21 +74,23 @@ describe('My Test Suite', () => {
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
         const modules = new Map(pkgReal.modules);
 
-        const bootstrapperAgent = newAgent();
-        const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+        // const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
+        const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
+            await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
+
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
           simpleIndirectWasmModule: modules.get("simple_indirect")!,
           user: bootstrapperUser,
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
-          frontendTweakPrivKey: glob.frontendTweakPrivKey!,
-          frontend: glob.frontend!,
+          frontendTweakPrivKey,
+          frontend: frontendPrincipal,
           repoPart: repoPart!,
         });
-        const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
-        const {canister_id: _, frontendTweakPrivKey} = await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
-        await waitTillInitialized(bootstrapperAgent, package_manager: Principal, installationId: InstallationId)
+        // const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
+        const installationId = 0n; // TODO
+        await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId)
         
         const backendAgent = newAgent();
 

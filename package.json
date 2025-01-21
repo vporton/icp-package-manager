@@ -9,7 +9,7 @@
     "build": "npm run build --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "test": "mocha 'test/**/*.test.ts'"
   },
   "workspaces": [
     "src/bootstrapper_frontend",
