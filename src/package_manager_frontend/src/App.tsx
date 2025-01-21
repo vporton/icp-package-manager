@@ -89,23 +89,6 @@ function GlobalUI() {
           frontend: glob.frontend!,
           repoPart: repoPart!,
         });
-        // const backend: PackageManager = createBackendActor(backendPrincipal, {agent});
-        // await backend.installPackageWithPreinstalledModules({
-        //   whatToInstall: { package: null },
-        //   packageName: "icpack",
-        //   version: "0.0.1", // TODO: should be `stable`.
-        //   preinstalledModules: [
-        //     ["backend", backendPrincipal],
-        //     ["frontend", glob.frontend!],
-        //     ["indirect", indirectPrincipal],
-        //     ["simple_indirect", simpleIndirectPrincipal],
-        //   ],
-        //   repo: repoPart!,
-        //   user: principal!, // TODO: `!`
-        //   indirectCaller: indirectPrincipal,
-        //   additionalPackages: [{packageName: 'example', version: "0.0.1", repo: repoPart!}],
-        //   repoPart: repoPart!,
-        // });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, glob.backend!, installationId);
         if (waitResult !== undefined) {
