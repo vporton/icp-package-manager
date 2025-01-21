@@ -126,7 +126,7 @@ actor class Bootstrapper() = this {
         // FIXME: Move it after installing, to set right permissions for the user.
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
-            await ic.update_settings({
+            await ic.update_settings({ // FIXME: It can be a DoS-attack.
                 canister_id;
                 sender_canister_version = null;
                 settings = {
