@@ -95,7 +95,7 @@ describe('My Test Suite', () => {
             });
         const installationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
-        await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId)
+        await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId);
         
         const backendAgent = newAgent();
 
