@@ -43,10 +43,14 @@ describe('My Test Suite', () => {
         return agent;
     };
 
-    const defaultAgent = new HttpAgent({host: icHost});
-    if (process.env.DFX_NETWORK === 'local') {
-        defaultAgent.fetchRootKey();
-    }
+    let defaultAgent: Agent;
+
+    before("Init", () => {
+        defaultAgent = new HttpAgent({host: icHost});
+        if (process.env.DFX_NETWORK === 'local') {
+            defaultAgent.fetchRootKey();
+        }
+    });
 
     it('misc', async function () {
         this.timeout(1800000); // 30 min
