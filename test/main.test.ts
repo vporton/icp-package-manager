@@ -77,10 +77,11 @@ describe('My Test Suite', () => {
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
         const modules = new Map(pkgReal.modules);
 
-        // const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
+        console.log("Bootstrapping frontend...");
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
 
+        console.log("Bootstrapping backend...");
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper.bootstrapBackend({
                 backendWasmModule: modules.get("backend")!,
@@ -93,6 +94,7 @@ describe('My Test Suite', () => {
                 repoPart: repoPart!,
             });
         const installationId = 0n; // TODO
+        console.log("Wait till installed PM initializes...");
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId)
         
         const backendAgent = newAgent();
