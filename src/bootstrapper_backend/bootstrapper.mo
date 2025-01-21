@@ -10,8 +10,8 @@ import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 
-// TODO: Functions in this canister are legible to non-returning-callee attack. Develop the strategy of updating this module.
-//       Especially, we should preserve `frontendTweakers`.
+// FIXME: Functions in this canister are legible to non-returning-callee attack. Develop the strategy of updating this module.
+//        Especially, we should preserve `frontendTweakers`.
 actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it.
 
