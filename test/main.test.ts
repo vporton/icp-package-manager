@@ -53,7 +53,7 @@ describe('My Test Suite', () => {
     });
 
     it('misc', async function () {
-        this.timeout(1800000); // 30 min
+        this.timeout(600_000); // 10 min
 
         const bootstrapperAgent = newAgent();
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
