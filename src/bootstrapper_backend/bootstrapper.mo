@@ -52,6 +52,7 @@ actor class Bootstrapper() = this {
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
+        repoPart: Common.RepositoryPartitionRO;
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
@@ -122,8 +123,6 @@ actor class Bootstrapper() = this {
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
 
-        await* tweakFrontend(frontend, frontendTweakPrivKey, {backend_canister_id; simple_indirect_canister_id; user});
-
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
@@ -132,7 +131,8 @@ actor class Bootstrapper() = this {
                 settings = {
                     compute_allocation = null;
                     // We don't include `indirect_canister_id` because it can't control without risk of ite being replaced.
-                    controllers = ?[simple_indirect_canister_id, user]; // TODO: Should `user` be among controllers?    
+                    // TODO: Check which canisters are necessary as controllers.
+                    controllers = ?[simple_indirect_canister_id, user, indirect_canister_id, Principal.fromActor(this), backend_canister_id]; // TODO: Should `user` be among controllers?    
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
@@ -141,6 +141,44 @@ actor class Bootstrapper() = this {
                 };
             });
         };
+
+        await* tweakFrontend(frontend, frontendTweakPrivKey, {backend_canister_id; simple_indirect_canister_id; user});
+
+        let backend = actor(Principal.toText(backend_canister_id)): actor {
+            installPackageWithPreinstalledModules: shared ({
+                whatToInstall: {
+                    #package;
+                    // #simplyModules : [(Text, Common.SharedModule)]; // TODO
+                };
+                packageName: Common.PackageName;
+                version: Common.Version;
+                repo: Common.RepositoryPartitionRO; 
+                user: Principal;
+                indirectCaller: Principal;
+                /// Additional packages to install after bootstrapping.
+                additionalPackages: [{
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    repo: Common.RepositoryPartitionRO;
+                }];
+                preinstalledModules: [(Text, Principal)];
+            }) -> async {minInstallationId: Common.InstallationId};
+        };
+        ignore await backend.installPackageWithPreinstalledModules({ // FIXME: Remove `await` not to run into a DoS-attack.
+          whatToInstall = #package;
+          packageName = "icpack";
+          version = "0.0.1"; // TODO: should be `stable`.
+          preinstalledModules = [
+            ("backend", backend_canister_id),
+            ("frontend", frontend),
+            ("indirect", indirect_canister_id),
+            ("simple_indirect", simple_indirect_canister_id),
+          ];
+          repo = repoPart;
+          user;
+          indirectCaller = indirect_canister_id;
+          additionalPackages = [{packageName = "example"; version = "0.0.1"; repo = repoPart}];
+        });
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
     };

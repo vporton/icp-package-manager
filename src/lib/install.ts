@@ -121,10 +121,12 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
     return new Promise<void>(async (resolve, reject) => {
         const checker = await InitializedChecker.create({package_manager, installationId, agent});
         for (let i = 0; ; ++i) {
-            if (await checker.check()) {
+            try {
+                await checker.check();
                 resolve();
                 return;
             }
+            catch (_) {} // TODO
             if (i == 30) {
                 reject("Cannot initilialize canisters");
                 return;
