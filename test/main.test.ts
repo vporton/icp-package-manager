@@ -17,16 +17,16 @@ global.fetch = node_fetch as any;
 
 dotenv_config({ path: '.env' });
 
-function myExecSync(command: string) {
-    console.log(`Executing: ${command}`);
-    execSync(command);
-}
+// function myExecSync(command: string) {
+//     console.log(`Executing: ${command}`);
+//     execSync(command);
+// }
 
-function commandOutput(command: string): Promise<string> {
-    return new Promise(resolve => exec(command, function(error, stdout, stderr) {
-        resolve(stdout);
-    }));
-}
+// function commandOutput(command: string): Promise<string> {
+//     return new Promise(resolve => exec(command, function(error, stdout, stderr) {
+//         resolve(stdout);
+//     }));
+// }
 
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
