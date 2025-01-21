@@ -32,6 +32,7 @@ function commandOutput(command: string): Promise<string> {
 
 describe('My Test Suite', () => {
     const icHost = "http://localhost:4943";
+
     function newAgent(): Agent {
         const identity = Ed25519KeyIdentity.generate();
         const agent = new HttpAgent({host: icHost, identity})
@@ -41,14 +42,10 @@ describe('My Test Suite', () => {
         return agent;
     };
 
-    let user: Principal;
-    let defaultAgent: Agent;
-    // const key = await commandOutput("dfx identity export `dfx identity whoami`");
-    // const identity = decodeFile(key);
-
-    beforeEach(async () => {
-        defaultAgent = new HttpAgent({host: icHost});
-    });
+    const defaultAgent = new HttpAgent({host: icHost});
+    if (process.env.DFX_NETWORK === 'local') {
+        defaultAgent.fetchRootKey();
+    }
 
     describe('misc', async () => {
         const bootstrapperAgent = newAgent();
