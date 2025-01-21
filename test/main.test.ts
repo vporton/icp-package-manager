@@ -12,6 +12,7 @@ import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/Re
 import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
+import { it } from "mocha";
 
 global.fetch = node_fetch as any;
 
@@ -47,15 +48,21 @@ describe('My Test Suite', () => {
         defaultAgent.fetchRootKey();
     }
 
-    describe('misc', async () => {
+    it('misc', async function () {
+        this.timeout(1800000); // 30 min
+        console.log("A1");
+
         const bootstrapperAgent = newAgent();
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+        console.log("A2");
 
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
         const bootstrapper: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
+        console.log("A3");
 
         // TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
+        console.log("A4");
         let pkg: SharedPackageInfo | undefined = undefined;
         let repoPart: Principal | undefined;
         const jobs = repoParts.map(async part => {
@@ -66,13 +73,17 @@ describe('My Test Suite', () => {
           }
           catch (_) {}
         });
+        console.log("A5");
         await Promise.all(jobs);
+        console.log("A6");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
         const modules = new Map(pkgReal.modules);
+        console.log("A7");
 
         // const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
+        console.log("A8");
 
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper.bootstrapBackend({
@@ -85,11 +96,15 @@ describe('My Test Suite', () => {
                 frontend: frontendPrincipal,
                 repoPart: repoPart!,
             });
+        console.log("A9");
         const installationId = 0n; // TODO
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId)
+        console.log("A10");
         
         const backendAgent = newAgent();
 
         // expect(sum(1, 2)).toBe(3);
+
+        // done();
     });
 });
