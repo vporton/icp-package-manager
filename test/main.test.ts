@@ -52,8 +52,7 @@ describe('My Test Suite', () => {
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
 
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        const bootstrapperIndirectCaller: Bootstrapper =
-            createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent}); // FIXME
+        const bootstrapper: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
 
         // TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
@@ -76,7 +75,7 @@ describe('My Test Suite', () => {
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
 
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
-            await bootstrapperIndirectCaller.bootstrapBackend({
+            await bootstrapper.bootstrapBackend({
                 backendWasmModule: modules.get("backend")!,
                 indirectWasmModule: modules.get("indirect")!,
                 simpleIndirectWasmModule: modules.get("simple_indirect")!,
