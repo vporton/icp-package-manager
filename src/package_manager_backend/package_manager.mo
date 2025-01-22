@@ -568,7 +568,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
                 switch (afterInstallCallback) {
                     case (?afterInstallCallback) {
-                        getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                        ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
                     };
                     case null {};
                 };
@@ -591,7 +591,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                             Debug.trap("programming error: cannot get module '" # moduleName2 #
                                 "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
                         };
-                        getSimpleIndirect().callAllOneWay([{
+                        ignore getSimpleIndirect().callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO
@@ -607,7 +607,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
-                        getSimpleIndirect().callAllOneWay([{
+                        ignore getSimpleIndirect().callAllOneWay([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO

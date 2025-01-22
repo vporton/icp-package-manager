@@ -8,11 +8,13 @@ import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
 import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
 import { createActor as createRepositoryPartitionActor } from "../src/declarations/RepositoryPartition";
+import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryPartition/RepositoryPartition.did";
 import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
 import { it } from "mocha";
+import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
 
 global.fetch = node_fetch as any;
 
@@ -81,13 +83,16 @@ describe('My Test Suite', () => {
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
 
+        const backendAgent = newAgent();
+        const backendUser = await backendAgent.getPrincipal();
+
         console.log("Bootstrapping backend...");
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper.bootstrapBackend({
                 backendWasmModule: modules.get("backend")!,
                 indirectWasmModule: modules.get("indirect")!,
                 simpleIndirectWasmModule: modules.get("simple_indirect")!,
-                user: bootstrapperUser,
+                user: backendUser,
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
@@ -96,9 +101,11 @@ describe('My Test Suite', () => {
         const installationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId);
-        
-        const backendAgent = newAgent();
 
+        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
+        const result = await simpleIndirect.canister_info(
+            {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
+        // console.log(result.controllers);
         // expect(sum(1, 2)).toBe(3);
 
         // done();

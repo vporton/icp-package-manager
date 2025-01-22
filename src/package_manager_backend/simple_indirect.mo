@@ -6,6 +6,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Error "mo:base/Error";
 import Debug "mo:base/Debug";
+import Blob "mo:base/Blob";
 import IC "mo:ic";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
@@ -91,10 +92,10 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     /// If a method is missing, stop.
     ///
     /// TODO: It would be more efficient and elegant to pass a shared method.
-    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* Blob {
         label cycle for (method in methods.vals()) {
             try {
-                ignore await ICE.call(method.canister, method.name, method.data); 
+                return await ICE.call(method.canister, method.name, method.data); 
             }
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -103,6 +104,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
                 break cycle;
             };
         };
+        "";
     };
 
     /// Call methods in the given order and don't return.
@@ -110,10 +112,10 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     /// If a method is missing, keep calling other methods.
     ///
     /// TODO: We don't need this function.
-    private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+    private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* Blob {
         for (method in methods.vals()) {
             try {
-                ignore await ICE.call(method.canister, method.name, method.data);
+                return await ICE.call(method.canister, method.name, method.data);
             }
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -124,16 +126,17 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
                 }
             };
         };
+        "";
     };
 
     /// TODO: We don't need this function.
-    public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async Blob {
         onlyOwner(caller, "callIgnoringMissingOneWay");
 
         await* callIgnoringMissingOneWayImpl(methods)
     };
 
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): () {
+    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async Blob {
         onlyOwner(caller, "callAllOneWay");
 
         await* callAllOneWayImpl(methods);
@@ -168,169 +171,200 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 
     // TODO: Are the following methods necessary? Can't we use `callAll` with management canister?
 
-    public shared({caller}) func canister_info(args: IC.CanisterInfoArgs, amount: Nat): async CanisterInfoResult {
-        onlyOwner(caller, "call");
+    public shared({caller}) func canister_info(args: IC.CanisterInfoArgs, amount: Nat): async IC.CanisterInfoResult {
+        onlyOwner(caller, "canister_info");
 
         Cycles.add<system>(amount);
         await IC.ic.canister_info(args);
     };
 
-	public shared({caller}) func canister_status(args: IC.CanisterStatusArgs, amount: Nat): async CanisterStatusResult {
-        onlyOwner(caller, "call");
+	public shared({caller}) func canister_status(args: IC.CanisterStatusArgs, amount: Nat): async IC.CanisterStatusResult {
+        onlyOwner(caller, "canister_status");
 
         Cycles.add<system>(amount);
         await IC.ic.canister_status(args);
     };
 
 	public shared({caller}) func clear_chunk_store(args: IC.ClearChunkStoreArgs, amount: Nat): async () {
-        onlyOwner(caller, "call");
+        onlyOwner(caller, "clear_chunk_store");
 
         Cycles.add<system>(amount);
         await IC.ic.clear_chunk_store(args);
     };
 
-    public shared({caller}) func create_canister(args: IC.CreateCanisterArgs, amount: Nat): async CreateCanisterResult {
-        onlyOwner(caller, "call");
+    public shared({caller}) func create_canister(args: IC.CreateCanisterArgs, amount: Nat): async IC.CreateCanisterResult {
+        onlyOwner(caller, "create_canister");
 
         Cycles.add<system>(amount);
         await IC.ic.create_canister(args);
     };
 
-	public shared({caller}) func delete_canister(args: IC.DeleteCanisterArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func delete_canister(args: IC.DeleteCanisterArgs, amount: Nat): async () {
+        onlyOwner(caller, "delete_canister");
 
         Cycles.add<system>(amount);
         await IC.ic.delete_canister(args);
     };
 
-	public shared({caller}) func delete_canister_snapshot(args: IC.DeleteCanisterSnapshotArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func delete_canister_snapshot(args: IC.DeleteCanisterSnapshotArgs, amount: Nat): async () {
+        onlyOwner(caller, "delete_canister_snapshot");
 
         Cycles.add<system>(amount);
         await IC.ic.delete_canister_snapshot(args);
     };
 
     // TODO: Is `amount` needed here?
-	public shared({caller}) func deposit_cycles(args: IC.DepositCyclesArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func deposit_cycles(args: IC.DepositCyclesArgs, amount: Nat): async () {
+        onlyOwner(caller, "deposit_cycles");
 
         Cycles.add<system>(amount);
         await IC.ic.deposit_cycles(args);
     };
 
-    public shared({caller}) func ecdsa_public_key(args: IC.EcdsaPublicKeyArgs, amount: Nat): IC.EcdsaPublicKeyResult {
-        onlyOwner(caller, "call");
+    public shared({caller}) func ecdsa_public_key(args: IC.EcdsaPublicKeyArgs, amount: Nat): async IC.EcdsaPublicKeyResult {
+        onlyOwner(caller, "ecdsa_public_key");
 
         Cycles.add<system>(amount);
         await IC.ic.ecdsa_public_key(args);
     };
 
-    public query({caller}) func fetch_canister_logs(args: IC.FetchCanisterLogsArgs, amount: Nat): async IC.FetchCanisterLogsResult {
-        onlyOwner(caller, "call");
+    public composite query({caller}) func fetch_canister_logs(args: IC.FetchCanisterLogsArgs): async IC.FetchCanisterLogsResult {
+        onlyOwner(caller, "fetch_canister_logs");
 
-        Cycles.add<system>(amount);
+        // Cycles.add<system>(amount);
         await IC.ic.fetch_canister_logs(args);
     };
 
     public shared({caller}) func http_request(args: IC.HttpRequestArgs, amount: Nat): async IC.HttpRequestResult {
-        onlyOwner(caller, "call");
+        onlyOwner(caller, "http_request");
 
         Cycles.add<system>(amount);
         await IC.ic.http_request(args);
     };
 
-	public shared({caller}) func install_chunked_code(args: IC.InstallChunkedCodeArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func install_chunked_code(args: IC.InstallChunkedCodeArgs, amount: Nat): async () {
+        onlyOwner(caller, "install_chunked_code");
 
         Cycles.add<system>(amount);
         await IC.ic.install_chunked_code(args);
     };
 
-	public shared({caller}) func install_code(args: IC.InstallCodeArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func install_code(args: IC.InstallCodeArgs, amount: Nat): async () {
+        onlyOwner(caller, "install_code");
 
         Cycles.add<system>(amount);
         await IC.ic.install_code(args);
     };
 
-	public shared({caller}) func list_canister_snapshots(args: ListCanisterSnapshotsArgs, amount: Nat): async ListCanisterSnapshotsResult {
-        onlyOwner(caller, "call");
+	public shared({caller}) func list_canister_snapshots(args: IC.ListCanisterSnapshotsArgs, amount: Nat): async IC.ListCanisterSnapshotsResult {
+        onlyOwner(caller, "list_canister_snapshots");
 
         Cycles.add<system>(amount);
         await IC.ic.list_canister_snapshots(args);
     };
 
-	public shared({caller}) func load_canister_snapshot(args: IC.LoadCanisterSnapshotArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func load_canister_snapshot(args: IC.LoadCanisterSnapshotArgs, amount: Nat): async () {
+        onlyOwner(caller, "load_canister_snapshot");
 
         Cycles.add<system>(amount);
         await IC.ic.load_canister_snapshot(args);
     };
 
-	public shared({caller}) func node_metrics_history(args: IC.NodeMetricsHistoryArgs, amount: Nat): async NodeMetricsHistoryResult {
-        onlyOwner(caller, "call");
+	public shared({caller}) func node_metrics_history(args: IC.NodeMetricsHistoryArgs, amount: Nat): async IC.NodeMetricsHistoryResult {
+        onlyOwner(caller, "node_metrics_history");
 
         Cycles.add<system>(amount);
         await IC.ic.node_metrics_history(args);
     };
 
-	public shared({caller}) func provisional_create_canister_with_cycles(args: IC.ProvisionalCreateCanisterWithCyclesArgs, amount: Nat): async ProvisionalCreateCanisterWithCyclesResult {
-        onlyOwner(caller, "call");
+	public shared({caller}) func provisional_create_canister_with_cycles(args: IC.ProvisionalCreateCanisterWithCyclesArgs, amount: Nat): async IC.ProvisionalCreateCanisterWithCyclesResult {
+        onlyOwner(caller, "provisional_create_canister_with_cycles");
 
         Cycles.add<system>(amount);
         await IC.ic.provisional_create_canister_with_cycles(args);
     };
 
-	public shared({caller}) func provisional_top_up_canister(args: IC.ProvisionalTopUpCanisterArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func provisional_top_up_canister(args: IC.ProvisionalTopUpCanisterArgs, amount: Nat): async () {
+        onlyOwner(caller, "provisional_top_up_canister");
 
         Cycles.add<system>(amount);
         await IC.ic.provisional_top_up_canister(args);
     };
 
-	public shared({caller}) func start_canister(args: IC.StartCanisterArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func raw_rand(amount: Nat): async IC.RawRandResult {
+        onlyOwner(caller, "raw_rand");
+
+        Cycles.add<system>(amount);
+        await IC.ic.raw_rand();
+    };
+
+    public shared({caller}) func schnorr_public_key(args: IC.SchnorrPublicKeyArgs, amount: Nat): async IC.SchnorrPublicKeyResult {
+        onlyOwner(caller, "schnorr_public_key");
+
+        Cycles.add<system>(amount);
+        await IC.ic.schnorr_public_key(args);
+    };
+
+    public shared({caller}) func sign_with_ecdsa(args: IC.SignWithEcdsaArgs, amount: Nat): async IC.SignWithEcdsaResult {
+        onlyOwner(caller, "sign_with_ecdsa");
+
+        Cycles.add<system>(amount);
+        await IC.ic.sign_with_ecdsa(args);
+    };
+
+    public shared({caller}) func sign_with_schnorr(args: IC.SignWithSchnorrArgs, amount: Nat): async IC.SignWithSchnorrResult {
+        onlyOwner(caller, "sign_with_schnorr");
+
+        Cycles.add<system>(amount);
+        await IC.ic.sign_with_schnorr(args);
+    };
+
+	public shared({caller}) func start_canister(args: IC.StartCanisterArgs, amount: Nat): async () {
+        onlyOwner(caller, "start_canister");
 
         Cycles.add<system>(amount);
         await IC.ic.start_canister(args);
     };
 
-	public shared({caller}) func stop_canister(args: IC.StopCanisterArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func stop_canister(args: IC.StopCanisterArgs, amount: Nat): async () {
+        onlyOwner(caller, "stop_canister");
 
         Cycles.add<system>(amount);
         await IC.ic.stop_canister(args);
     };
 
-	// public shared({caller}) func stored_chunks(args: StoredChunksArgs): async StoredChunksResult {
-    //     onlyOwner(caller, "call");
-    // };
-
-	public shared({caller}) func take_canister_snapshot(args: IC.TakeCanisterSnapshotArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func stored_chunks(args: IC.StoredChunksArgs, amount: Nat): async IC.StoredChunksResult {
+        onlyOwner(caller, "stored_chunks");
 
         Cycles.add<system>(amount);
-        ignore await IC.ic.take_canister_snapshot(args);
+        await IC.ic.stored_chunks(args);
     };
 
-	public shared({caller}) func uninstall_code(args: IC.uninstall_code_args, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func take_canister_snapshot(args: IC.TakeCanisterSnapshotArgs, amount: Nat): async IC.TakeCanisterSnapshotResult {
+        onlyOwner(caller, "take_canister_snapshot");
+
+        Cycles.add<system>(amount);
+        await IC.ic.take_canister_snapshot(args);
+    };
+
+	public shared({caller}) func uninstall_code(args: IC.uninstall_code_args, amount: Nat): async () {
+        onlyOwner(caller, "uninstall_code");
 
         Cycles.add<system>(amount);
         await IC.ic.uninstall_code(args);
     };
 
-	public shared({caller}) func update_settings(args: IC.UpdateSettingsArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func update_settings(args: IC.UpdateSettingsArgs, amount: Nat): async () {
+        onlyOwner(caller, "update_settings");
 
         Cycles.add<system>(amount);
         await IC.ic.update_settings(args);
     };
 
-	public shared({caller}) func upload_chunk(args: IC.UploadChunkArgs, amount: Nat): () {
-        onlyOwner(caller, "call");
+	public shared({caller}) func upload_chunk(args: IC.UploadChunkArgs, amount: Nat): async IC.UploadChunkResult {
+        onlyOwner(caller, "upload_chunk");
 
         Cycles.add<system>(amount);
-        ignore await IC.ic.upload_chunk(args);
+        await IC.ic.upload_chunk(args);
     };
 };
