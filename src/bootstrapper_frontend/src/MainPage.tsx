@@ -13,6 +13,7 @@ import { Alert, useAccordionButton } from "react-bootstrap";
 import useConfirm from "./useConfirm";
 import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
 import { IDL } from "@dfinity/candid";
+import { bootstrapFrontend } from "../../lib/install";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -64,19 +65,10 @@ export default function MainPage() {
         await Promise.all(jobs);
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-        const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = crypto.getRandomValues(new Uint8Array(32));
-        const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
-        const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
-          wasmModule: pkgReal.modules[1][1],
-          installArg: new Uint8Array(IDL.encode(
-            [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
-            [{user: props.principal!, installationId: 0 /* TODO */}],
-          )),
+        // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+        const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({
           user: props.principal!,
-          initialIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-          simpleIndirect: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-          frontendTweakPubKey,
+          agent: props.agent!,
         });
         const url = getIsLocal()
           ? `http://${frontendPrincipal}.localhost:4943`
