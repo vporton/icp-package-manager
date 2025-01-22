@@ -65,7 +65,7 @@ export default function MainPage() {
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = window.crypto.getRandomValues(new Uint8Array(32));
+        const frontendTweakPrivKey = crypto.getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
           wasmModule: pkgReal.modules[1][1],

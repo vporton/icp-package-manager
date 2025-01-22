@@ -9,6 +9,7 @@ import { createActor as createRepositoryIndexActor } from "../declarations/Repos
 import { createActor as createRepositoryPartitionActor } from "../declarations/RepositoryPartition";
 import { SharedPackageInfo } from "../declarations/RepositoryPartition/RepositoryPartition.did";
 import { IDL } from "@dfinity/candid";
+import { webcrypto } from 'node:crypto';
 
 export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
@@ -28,7 +29,7 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = crypto.getRandomValues(new Uint8Array(32));
+        const frontendTweakPrivKey = webcrypto.getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
             wasmModule: pkgReal.modules[1][1],
