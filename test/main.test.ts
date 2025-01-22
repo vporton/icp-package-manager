@@ -15,6 +15,9 @@ import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did"
 import { IDL } from "@dfinity/candid";
 import { it } from "mocha";
 import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
+import { assert } from "console";
+import { PackageManager } from "../src/declarations/package_manager/package_manager.did";
+import { createActor as createPackageManager } from '../src/declarations/package_manager';
 
 global.fetch = node_fetch as any;
 
@@ -32,6 +35,13 @@ dotenv_config({ path: '.env' });
 // }
 
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function isEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
+    if (a === b) return true;
+    if (a.size !== b.size) return false;
+    for (const value of a) if (!b.has(value)) return false;
+    return true;
+}
 
 describe('My Test Suite', () => {
     const icHost = "http://localhost:4943";
@@ -102,12 +112,32 @@ describe('My Test Suite', () => {
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId);
 
+        const foundParts2 = await Promise.all(repoParts.map(async part => {
+            try {
+                const part2 = createRepositoryPartitionActor(part, {agent: defaultAgent});
+                await part2.getFullPackageInfo("example");
+                return part;
+            }
+            catch(_) { // TODO: Check error.
+                return null;
+            }
+        }));
+        const firstPart2 = foundParts2 ? foundParts2.filter(v => v !== null)[0] : null;
+        const package_manager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
+        const {minInstallationId: exampleInstallationId} = await package_manager.installPackage({
+            packages: [{
+                packageName: "example",
+                version: "0.0.1",
+                repo: Principal.fromText(firstPart2!),
+            }],
+            user: backendUser,
+            afterInstallCallback: [],
+        });
+        await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
+        
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        // console.log(result.controllers);
-        // expect(sum(1, 2)).toBe(3);
-
-        // done();
+        // assert(isEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal])));
     });
 });

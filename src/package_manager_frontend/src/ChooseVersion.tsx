@@ -12,7 +12,7 @@ import { createActor as repoPartitionCreateActor } from '../../declarations/Repo
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
-import { InitializedChecker } from "../../lib/install";
+import { InitializedChecker, waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "./ErrorContext.js";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 
@@ -81,7 +81,6 @@ export default function ChooseVersion(props: {}) {
             }
 
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
-            // TODO: `!`
             const {minInstallationId: id} = await package_manager.installPackage({
                 packages: [{
                     packageName: packageName!,
@@ -91,19 +90,7 @@ export default function ChooseVersion(props: {}) {
                 user: principal!,
                 afterInstallCallback: [],
             });
-            const checker = await InitializedChecker.create({package_manager: glob.backend!, installationId: id, agent: agent!});
-            for (let i = 0; ; ++i) {
-                if (await checker.check()) {
-                    break;
-                }
-                if (i == 30) {
-                    alert("Cannot initilialize canisters"); // TODO
-                    return;
-                }
-                await new Promise<void>((resolve, _reject) => {
-                    setTimeout(() => resolve(), 1000);
-                });
-            }
+            await waitTillInitialized(agent!, glob.backend!, id);
             navigate(`/installed/show/${id}`);
         }
         catch(e) {
