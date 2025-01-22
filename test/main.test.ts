@@ -75,19 +75,19 @@ describe('My Test Suite', () => {
 
         // TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo | undefined = undefined;
-        let repoPart: Principal | undefined;
-        const jobs = repoParts.map(async part => {
+
+        let icPackPkg: SharedPackageInfo | undefined = undefined;
+        let icPackRepoPart: Principal | undefined;
+        await Promise.all(repoParts.map(async part => {
           const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
           try {
-            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-            repoPart = Principal.fromText(part);
+            icPackPkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+            icPackRepoPart = Principal.fromText(part);
           }
           catch (_) {}
-        });
-        await Promise.all(jobs);
-        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
-        const modules = new Map(pkgReal.modules);
+        }));
+        const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
+        const icPackModules = new Map(icPackPkgReal.modules);
 
         console.log("Bootstrapping frontend...");
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
@@ -99,20 +99,21 @@ describe('My Test Suite', () => {
         console.log("Bootstrapping backend...");
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper.bootstrapBackend({
-                backendWasmModule: modules.get("backend")!,
-                indirectWasmModule: modules.get("indirect")!,
-                simpleIndirectWasmModule: modules.get("simple_indirect")!,
+                backendWasmModule: icPackModules.get("backend")!,
+                indirectWasmModule: icPackModules.get("indirect")!,
+                simpleIndirectWasmModule: icPackModules.get("simple_indirect")!,
                 user: backendUser,
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
-                repoPart: repoPart!,
+                repoPart: icPackRepoPart!,
             });
-        const installationId = 0n; // TODO
+        const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
-        await waitTillInitialized(bootstrapperAgent, backendPrincipal, installationId);
+        await waitTillInitialized(bootstrapperAgent, backendPrincipal, pmInstallationId);
 
-        const foundParts2 = await Promise.all(repoParts.map(async part => {
+        console.log("Installing `example` package...");
+        const exampleFoundParts = await Promise.all(repoParts.map(async part => {
             try {
                 const part2 = createRepositoryPartitionActor(part, {agent: defaultAgent});
                 await part2.getFullPackageInfo("example");
@@ -122,13 +123,13 @@ describe('My Test Suite', () => {
                 return null;
             }
         }));
-        const firstPart2 = foundParts2 ? foundParts2.filter(v => v !== null)[0] : null;
-        const package_manager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
-        const {minInstallationId: exampleInstallationId} = await package_manager.installPackage({
+        const exampleFirstPart = exampleFoundParts ? exampleFoundParts.filter(v => v !== null)[0] : null;
+        const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
+        const {minInstallationId: exampleInstallationId} = await packageManager.installPackage({
             packages: [{
                 packageName: "example",
                 version: "0.0.1",
-                repo: Principal.fromText(firstPart2!),
+                repo: Principal.fromText(exampleFirstPart!),
             }],
             user: backendUser,
             afterInstallCallback: [],
