@@ -31,12 +31,18 @@
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-router-dom": "^6.24.1",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vite-plugin-node-polyfills": "^0.23.0"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
     "chai": "^5.1.2",
     "mocha": "^11.0.1",
     "tsx": "^4.19.2"
+  },
+  "browser": {
+    "crypto": "crypto-browserify",
+    "stream": "stream-browserify",
+    "buffer": "buffer"
   }
 }

@@ -82,6 +82,8 @@ Remaining things TODO:
 
 - Upgrading.
 
+- `"stream"` and `"buffer"` under `"browser"` in `package.json` are probably superfluous.
+
 - UI:
     - Scanning package dependencies in the UI.
 
