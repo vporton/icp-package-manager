@@ -9,7 +9,26 @@ import { createActor as createRepositoryIndexActor } from "../declarations/Repos
 import { createActor as createRepositoryPartitionActor } from "../declarations/RepositoryPartition";
 import { SharedPackageInfo } from "../declarations/RepositoryPartition/RepositoryPartition.did";
 import { IDL } from "@dfinity/candid";
-import { webcrypto } from 'node:crypto';
+
+async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
+    const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
+    if (typeof window !== 'undefined') {
+        return crypto.getRandomValues(v);
+    } else {
+        return mycrypto.webcrypto.getRandomValues(v);
+    }
+}
+
+async function sha256(v: Uint8Array): Promise<Uint8Array> {
+    const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
+    if (typeof window !== 'undefined') {
+        return new Uint8Array(await crypto.subtle.digest('SHA-256', v));
+    } else {
+        const hash = mycrypto.createHash('sha256');
+        hash.update(v);
+        return new Uint8Array(hash.digest());
+    }
+}
 
 export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
@@ -29,8 +48,8 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = webcrypto.getRandomValues(new Uint8Array(32));
-        const frontendTweakPubKey = new Uint8Array(await crypto.subtle.digest('SHA-256', frontendTweakPrivKey));
+        const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
+        const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
             wasmModule: pkgReal.modules[1][1],
             installArg: new Uint8Array(IDL.encode(
