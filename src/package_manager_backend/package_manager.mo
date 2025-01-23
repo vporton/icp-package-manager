@@ -227,29 +227,16 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryPartitionRO;
         }],
         user: Principal,
-        minInstallationId: Common.InstallationId
+        minInstallationId: Common.InstallationId, // TODO: Remove.
     ) {
         try {
-            Debug.print("A1"); // FIXME: Remove.
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            // let ?inst = additionalInstall.get(minInstallationId) else { // PM's ID
-            //     Debug.trap("no such additional installation: " # debug_show(minInstallationId));
-            // };
-            // Debug.print("A2"); // FIXME: Remove.
-
-            // inst.totalNumberOfModulesRemainingToInstall -= 1; // also keep its initialization code
-            // Debug.print("A3: " # debug_show(inst.totalNumberOfModulesRemainingToInstall)); // FIXME: Remove.
-            // if (inst.totalNumberOfModulesRemainingToInstall == 0) { // TODO: This checks seems to be superfluous.
-            //     Debug.print("A4"); // FIXME: Remove.
-                ignore await this.installPackage({ // TODO: no need for shared call
-                    packages;
-                    user;
-                    afterInstallCallback = null;
-                });
-                Debug.print("A5"); // FIXME: Remove.
-                // additionalInstall.delete(minInstallationId); // Clear memory.
-            // };
+            ignore await this.installPackage({ // TODO: no need for shared call
+                packages;
+                user;
+                afterInstallCallback = null;
+            });
         }
         catch(e) {
             Debug.print(Error.message(e));
