@@ -158,7 +158,7 @@ actor class Bootstrapper() = this {
           repo = repoPart;
           user;
           indirectCaller = indirect_canister_id;
-          additionalPackages = [{packageName = "example"; version = "0.0.1"; repo = repoPart}];
+          additionalPackages = [{packageName = "example"; version = "0.0.1"; repo = repoPart}]; // FIXME: Should not be here.
         });
 
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
