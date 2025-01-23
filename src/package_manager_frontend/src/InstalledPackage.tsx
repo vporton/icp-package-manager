@@ -86,7 +86,6 @@ export default function Installation(props: {}) {
                 <p><strong>Package version:</strong> {pkg.version}</p>
                 <p><strong>Short description:</strong> {pkg.package.base.shortDescription}</p>
                 <p><strong>Long description:</strong> {pkg.package.base.longDescription}</p>
-                <p><Button onClick={uninstall}>Uninstall</Button></p>
                 <Accordion defaultActiveKey={undefined}> {/* FIXME: https://stackoverflow.com/q/79367323/856090 */}
                     <Accordion.Item eventKey="dangerZone" className="bg-red-500">
                         <Accordion.Header
