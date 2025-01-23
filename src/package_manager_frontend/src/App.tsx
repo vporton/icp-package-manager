@@ -90,7 +90,7 @@ function GlobalUI() {
           repoPart: repoPart!,
         });
         const installationId = 0n; // TODO
-        const waitResult = await waitTillInitialized(agent!, glob.backend!, installationId);
+        const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);
         if (waitResult !== undefined) {
           alert(waitResult);
           return;

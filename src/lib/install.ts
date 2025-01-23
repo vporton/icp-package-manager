@@ -92,22 +92,23 @@ export class InitializedChecker {
         this.installationId = installationId;
         this.agent = agent;
     }
-    async check(): Promise<boolean> {
-        // TODO: very inefficient
+    /// Throws exception, if not yet installed.
+    async check() {
         try {
+            // TODO: very inefficient
             const pkgMan: PackageManager = createPackageManager(this.package_manager, {agent: this.agent});
             const pkg = await pkgMan.getInstalledPackage(this.installationId);
             const real = (pkg.package.specific as any).real as SharedRealPackageInfo;
             if (real.checkInitializedCallback.length === 0) {
-                return false; // TODO: Also check that all modules were installed.
-                            // Note that it is easier to do here, in frontend.
+                return; // TODO: Also check that all modules were installed.
+                        // Note that it is easier to do here, in frontend.
             }
             const cb = real.checkInitializedCallback[0];
             const canister = pkg.modules.filter(([name, _m]) => name === cb.moduleName)[0][1];
 
             const methodName: string | undefined = (cb.how as any).methodName;
                 if (methodName !== undefined) {
-                const idlFactory = ({ IDL }: { IDL: any }) => {
+                    const idlFactory = ({ IDL }: { IDL: any }) => {
                     return IDL.Service({
                         [methodName]: IDL.Func([], [], ['query']),
                     });
@@ -117,7 +118,6 @@ export class InitializedChecker {
                     canisterId: canister!,
                 });
                 await actor[methodName](); // throws or doesn't
-                return true;
             }
 
             const urlPath: string | undefined = (cb.how as any).urlPath;
@@ -125,15 +125,15 @@ export class InitializedChecker {
                 const frontend = createFrontendActor(canister!, {agent: this.agent});
                 const res = await frontend.http_request({method: "GET", url: urlPath, headers: [], body: [], certificate_version: [2]});
                 const status_code = parseInt(res.status_code.toString());
-                return status_code - status_code % 100 === 200;
+                if (status_code - status_code % 100 !== 200) {
+                    throw "frontend not initialized";
+                }
             }
         }
         catch (e) {
-            // console.log(e);
-            return false;
+            console.log("Waiting for initialization: " + e);
+            throw e;
         }
-
-        return true;
     }
 }
 
@@ -148,7 +148,7 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
             }
             catch (_) {} // TODO
             if (i == 30) {
-                reject("Cannot initilialize canisters");
+                alert("Cannot initilialize canisters");
                 return;
             }
             await new Promise<void>((resolve, _reject) => {
