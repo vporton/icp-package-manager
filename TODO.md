@@ -80,6 +80,8 @@ Remaining things TODO:
 
 - Check that f installed multiple package versions, correctly select just one default.
 
+- "no such frontend or key expired" - show this message to the user.
+
 - Upgrading.
 
 - UI:
