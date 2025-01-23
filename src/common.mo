@@ -390,6 +390,7 @@ module {
             canister: Principal; name: Text; data: Blob;
         };
         var alreadyCalledAllCanistersCreated: Bool;
+        var totalNumberOfModulesRemainingToInstall: Nat;
     };
 
     public type canister_settings = {

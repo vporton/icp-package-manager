@@ -158,12 +158,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
-    // TODO: Make stable. // TODO: Rename, it's confusing.
-    var additionalInstall: HashMap.HashMap<Common.InstallationId, {
-        var totalNumberOfInstalledAllModulesCallbacksRemaining: Nat;
-    }> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
-
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
     // TODO: Copy this code to other modules:
@@ -236,21 +230,26 @@ shared({caller = initialCaller}) actor class PackageManager({
         minInstallationId: Common.InstallationId
     ) {
         try {
+            Debug.print("A1"); // FIXME: Remove.
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            let ?inst = additionalInstall.get(minInstallationId) else { // PM's ID
-                Debug.trap("no such additional installation: " # debug_show(minInstallationId));
-            };
+            // let ?inst = additionalInstall.get(minInstallationId) else { // PM's ID
+            //     Debug.trap("no such additional installation: " # debug_show(minInstallationId));
+            // };
+            // Debug.print("A2"); // FIXME: Remove.
 
-            inst.totalNumberOfInstalledAllModulesCallbacksRemaining -= 1; // also keep its initialization code
-            if (inst.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) {
-                ignore this.installPackage({ // TODO: no need for shared call
+            // inst.totalNumberOfModulesRemainingToInstall -= 1; // also keep its initialization code
+            // Debug.print("A3: " # debug_show(inst.totalNumberOfModulesRemainingToInstall)); // FIXME: Remove.
+            // if (inst.totalNumberOfModulesRemainingToInstall == 0) { // TODO: This checks seems to be superfluous.
+            //     Debug.print("A4"); // FIXME: Remove.
+                ignore await this.installPackage({ // TODO: no need for shared call
                     packages;
                     user;
                     afterInstallCallback = null;
                 });
-                additionalInstall.delete(minInstallationId); // Clear memory.
-            };
+                Debug.print("A5"); // FIXME: Remove.
+                // additionalInstall.delete(minInstallationId); // Clear memory.
+            // };
         }
         catch(e) {
             Debug.print(Error.message(e));
@@ -283,6 +282,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += additionalPackages.size();
 
+        Debug.print("B1"); // FIXME: Remove.
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
@@ -364,7 +364,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             preinstalledModules: [(Text, Principal)];
         }];
     }) {
+        Debug.print("E1");
         onlyOwner(caller, "installStart");
+        Debug.print("E2");
 
         for (p0 in packages.keys()) {
             let p = packages[p0];
@@ -373,7 +375,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
 
             let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
-            let numPackages = realPackage.modules.size();
+            let numModules = realPackage.modules.size();
 
             let package3 = switch (package2.specific) {
                 case (#real v) v;
@@ -404,12 +406,13 @@ shared({caller = initialCaller}) actor class PackageManager({
                 p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
             let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
+            Debug.print("E3");
             let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-                numberOfModulesToInstall = numPackages;
+                numberOfModulesToInstall = numModules;
                 // id = installationId;
                 packageName = p.package.base.name;
                 version = p.package.base.version;
-                modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numPackages, Text.equal, Text.hash);
+                modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numModules, Text.equal, Text.hash);
                 // packageDescriptionIn = part;
                 package = package2;
                 packageRepoCanister = Principal.fromActor(p.repo);
@@ -425,15 +428,18 @@ shared({caller = initialCaller}) actor class PackageManager({
                 minInstallationId;
                 afterInstallCallback;
                 var alreadyCalledAllCanistersCreated = false;
+                var totalNumberOfModulesRemainingToInstall = numModules;
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
+            Debug.print("E4");
             await* doInstallFinish();
         };
     };
 
     // FIXME: Can other packages be installed if one of them fails?
     private func doInstallFinish(): async* () {
+        Debug.print("F1");
         for ((p0, pkg) in halfInstalledPackages.entries()) {
             let p = pkg.package;
             let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
@@ -474,6 +480,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             var i = 0;
+            Debug.print("Z1: " # debug_show(pkg.afterInstallCallback));
             for ((name, m): (Text, Common.Module) in modules) {
                 // Starting installation of all modules in parallel:
                 getIndirectCaller().installModule({
@@ -529,19 +536,14 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("trying to directly install a virtual installation");
         };
         let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(inst.installedModules.size(), Text.equal, Text.hash);
-        // Keep the below code in-sync with `totalNumberOfInstalledAllModulesCallbacksRemaining` variable value!
+        // Keep the below code in-sync with `totalNumberOfModulesRemainingToInstall` variable value!
         // TODO: The below code is a trick.
         // Note that we have different algorithms for zero and non-zero number of callbacks.
         let #real package = inst.package.specific else { // TODO: virtual packages
             Debug.trap("virtual packages not yet supported");
         };
-        if (Buffer.forAll(inst.installedModules, func (x: ?(?Text, Principal)): Bool = x != null)) { // All module have been installed. // TODO: efficient?
-            var totalNumberOfInstalledAllModulesCallbacksRemaining = 0;
-            for ((moduleName2, module4) in package.modules.entries()) {
-                if (Option.isSome(module4.callbacks.get(#CodeInstalledForAllCanisters))) {
-                    totalNumberOfInstalledAllModulesCallbacksRemaining += 1;
-                };
-            };
+        inst.totalNumberOfModulesRemainingToInstall -= 1;
+        if (inst.totalNumberOfModulesRemainingToInstall == 0) { // All module have been installed.
             // TODO: order of this code
             _updateAfterInstall({installationId});
             let ?inst2 = installedPackages.get(installationId) else {
@@ -563,19 +565,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
-            halfInstalledPackages.delete(installationId);
-            let instx = {var totalNumberOfInstalledAllModulesCallbacksRemaining};
-            if (instx.totalNumberOfInstalledAllModulesCallbacksRemaining == 0) { // It is not going to execute later.
-                switch (afterInstallCallback) {
-                    case (?afterInstallCallback) {
-                        ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
-                    };
-                    case null {};
-                };
-            } else {
-                // It puts package manager.
-                additionalInstall.put(installationId, instx);
-            };
+            // if (inst.totalNumberOfModulesRemainingToInstall == 0) { // FIXME: Edge case of package with no modules.
+            //     switch (afterInstallCallback) {
+            //         case (?afterInstallCallback) {
+            //             ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+            //         };
+            //         case null {};
+            //     };
+            // };
             for (m in inst.installedModules.vals()) {
                 switch (m) {
                     case (?(?n, p)) {
@@ -585,25 +582,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
             };
             for ((moduleName2, module4) in realPackage.modules.entries()) {
-                switch (module4.callbacks.get(#CodeInstalledForAllCanisters), afterInstallCallback) {
-                    case (?callbackName, ?afterInstallCallback) {
-                        let ?cbPrincipal = inst3.get(moduleName2) else {
-                            Debug.trap("programming error: cannot get module '" # moduleName2 #
-                                "' principal. Available modules: " # debug_show(Iter.toArray(inst3.keys())));
-                        };
-                        ignore getSimpleIndirect().callAllOneWay([{
-                            canister = cbPrincipal;
-                            name = callbackName.method;
-                            data = to_candid({ // TODO
-                                installationId;
-                                canister;
-                                user;
-                                packageManagerOrBootstrapper; // TODO: Remove?
-                                module_;
-                            });
-                        }, afterInstallCallback]);
-                    };
-                    case (?callbackName, null) {
+                switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
+                    case (?callbackName) {
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
@@ -619,10 +599,16 @@ shared({caller = initialCaller}) actor class PackageManager({
                             });
                         }]);
                     };
-                    case (null, ?afterInstallCallback) {};
-                    case (null, null) {};
+                    case (null) {};
                 };
             };
+            switch (afterInstallCallback) {
+                case (?afterInstallCallback) {
+                    ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                };
+                case null {};
+            };
+            halfInstalledPackages.delete(installationId);
         };
     };
 
@@ -1005,6 +991,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
+        Debug.print("C1"); // FIXME: Remove.
         indirectCaller.installPackageWrapper({
             whatToInstall;
             minInstallationId;

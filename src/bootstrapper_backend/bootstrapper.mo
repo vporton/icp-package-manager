@@ -125,6 +125,26 @@ actor class Bootstrapper() = this {
 
         await* tweakFrontend(frontend, frontendTweakPrivKey, {backend_canister_id; simple_indirect_canister_id; user});
 
+        // FIXME: Move below?
+        for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
+            // TODO: We can provide these setting initially and thus update just one canister.
+            await ic.update_settings({ // FIXME: It can be a DoS-attack.
+                canister_id;
+                sender_canister_version = null;
+                settings = {
+                    compute_allocation = null;
+                    // We don't include `indirect_canister_id` because it can't control without risk of ite being replaced.
+                    // TODO: Check which canisters are necessary as controllers.
+                    controllers = ?[simple_indirect_canister_id, user, indirect_canister_id, Principal.fromActor(this), backend_canister_id]; // TODO: Should `user` be among controllers?    
+                    freezing_threshold = null;
+                    log_visibility = null;
+                    memory_allocation = null;
+                    reserved_cycles_limit = null;
+                    wasm_memory_limit = null;
+                };
+            });
+        };
+
         let backend = actor(Principal.toText(backend_canister_id)): actor {
             installPackageWithPreinstalledModules: shared ({
                 whatToInstall: {
@@ -160,25 +180,6 @@ actor class Bootstrapper() = this {
           indirectCaller = indirect_canister_id;
           additionalPackages = [{packageName = "example"; version = "0.0.1"; repo = repoPart}]; // FIXME: Should not be here.
         });
-
-        for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id].vals()) {
-            // TODO: We can provide these setting initially and thus update just one canister.
-            await ic.update_settings({ // FIXME: It can be a DoS-attack.
-                canister_id;
-                sender_canister_version = null;
-                settings = {
-                    compute_allocation = null;
-                    // We don't include `indirect_canister_id` because it can't control without risk of ite being replaced.
-                    // TODO: Check which canisters are necessary as controllers.
-                    controllers = ?[simple_indirect_canister_id, user, indirect_canister_id, Principal.fromActor(this), backend_canister_id]; // TODO: Should `user` be among controllers?    
-                    freezing_threshold = null;
-                    log_visibility = null;
-                    memory_allocation = null;
-                    reserved_cycles_limit = null;
-                    wasm_memory_limit = null;
-                };
-            });
-        };
 
         {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
     };

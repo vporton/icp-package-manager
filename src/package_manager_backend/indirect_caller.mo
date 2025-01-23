@@ -120,7 +120,9 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): () {
         try {
+            Debug.print("D1"); // FIXME: Remove.
             onlyOwner(caller, "installPackageWrapper");
+            Debug.print("D2"); // FIXME: Remove.
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
@@ -148,6 +150,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 }) -> async ();
             };
 
+            Debug.print("D3"); // FIXME: Remove.
             // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
                 whatToInstall; /// install package or named modules.
@@ -172,6 +175,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     },
                 ));
             });
+            Debug.print("D4"); // FIXME: Remove.
         }
         catch (e) {
             Debug.print("installPackageWrapper: " # Error.message(e));
