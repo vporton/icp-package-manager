@@ -1,14 +1,11 @@
-import RBTree "mo:base/RBTree";
-import Time "mo:base/Time";
-import Int "mo:base/Int";
 import Asset "mo:assets-api";
 import Principal "mo:base/Principal";
-import HashMap "mo:base/HashMap";
 import Debug "mo:base/Debug";
 import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
+import Data "canister:BootstrapperData";
 
 // FIXME: Functions in this canister are legible to non-returning-callee attack. Develop the strategy of updating this module.
 //        Especially, we should preserve `frontendTweakers`.
@@ -38,8 +35,7 @@ actor class Bootstrapper() = this {
             simpleIndirect;
             user;
         });
-        frontendTweakers.put(canister_id, frontendTweakPubKey);
-        frontendTweakerTimes.put(Time.now(), canister_id);
+        await Data.putFrontendTweaker(canister_id, frontendTweakPubKey);
         {canister_id};
     };
 
@@ -187,10 +183,6 @@ actor class Bootstrapper() = this {
     public type PubKey = Blob;
     public type PrivKey = Blob;
 
-    /// Frontend canisters belong to this canister. We move them to new owners.
-    let frontendTweakers = HashMap.HashMap<Principal, PubKey>(1, Principal.equal, Principal.hash); // TODO: Make it stable?
-    let frontendTweakerTimes = RBTree.RBTree<Time.Time, Principal>(Int.compare); // TODO: Make it stable?
-
     /// Internal. Updates controllers and owners of the frontend.
     private func tweakFrontend(
         frontend: Principal,
@@ -201,24 +193,7 @@ actor class Bootstrapper() = this {
             user: Principal;
         },
     ): async* () {
-        do { // clean memory by removing old entries
-            let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min // TODO: make configurable?
-            var i = RBTree.iter(frontendTweakerTimes.share(), #fwd);
-            label x loop {
-                let ?(time, principal) = i.next() else {
-                    break x;
-                };
-                if (time < threshold) {
-                    frontendTweakerTimes.delete(time);
-                    frontendTweakers.delete(principal);
-                } else {
-                    break x;
-                };
-            };
-        };
-        let ?pubKey = frontendTweakers.get(frontend) else {
-            Debug.trap("no such frontend or key expired");
-        };
+        let pubKey = await Data.getFrontendTweaker(frontend);
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
             Debug.trap("access denied");
         };
@@ -247,6 +222,6 @@ actor class Bootstrapper() = this {
                 wasm_memory_limit = null;
             };
         });
-        frontendTweakers.delete(frontend);
+        await Data.deleteFrontendTweaker(frontend);
     };
 }

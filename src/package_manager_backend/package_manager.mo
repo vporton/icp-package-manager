@@ -526,9 +526,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         // Keep the below code in-sync with `totalNumberOfModulesRemainingToInstall` variable value!
         // TODO: The below code is a trick.
         // Note that we have different algorithms for zero and non-zero number of callbacks.
-        let #real package = inst.package.specific else { // TODO: virtual packages
-            Debug.trap("virtual packages not yet supported");
-        };
+        // let #real package = inst.package.specific else { // TODO: virtual packages
+        //     Debug.trap("virtual packages not yet supported");
+        // };
         inst.totalNumberOfModulesRemainingToInstall -= 1;
         if (inst.totalNumberOfModulesRemainingToInstall == 0) { // All module have been installed.
             // TODO: order of this code
