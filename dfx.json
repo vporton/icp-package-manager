@@ -8,7 +8,7 @@
     "BootstrapperData": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/BootstrapperData.mo",
-      "dependencies": ["cycles_ledger"]
+      "dependencies": []
     },
     "indirect_caller": {
       "type": "motoko",
@@ -40,7 +40,7 @@
     },
     "package_manager_frontend": {
       "dependencies": [
-        "internet_identity"
+        "package_manager", "internet_identity"
       ],
       "source": [
         "src/package_manager_frontend/dist"
@@ -50,6 +50,7 @@
     },
     "bootstrapper_frontend": {
       "dependencies": [
+        "Bootstrapper",
         "bookmark",
         "internet_identity"
       ],
