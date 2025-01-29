@@ -6,14 +6,11 @@ DEPLOY_FLAGS.BootstrapperData = --argument "principal \"$(USER)\""
 .PHONY: deploy
 deploy:
 
-include deps.mk
+	include deps.mk
 
 .PHONY: deps
 deps:
-	dfx rules -o $@
-
-.PHONY: deps
-deps: deps.mk
+	dfx rules -o deps.mk
 
 # INIT_BLOB = $(shell echo 'encode(record {})' | ic-repl-linux64)
 INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"

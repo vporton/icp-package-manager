@@ -36,7 +36,11 @@ canister@bookmark: \
 $(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.did: $(ROOT_DIR)/src/bootstrapper_backend/bookmarks.mo
 
 canister@bootstrapper_frontend: \
-  $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/assetstorage.wasm.gz
+  $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/assetstorage.did
+
+$(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/assetstorage.did:
+	dfx canister create bootstrapper_frontend
+	dfx build --no-deps bootstrapper_frontend
 
 canister@cycles_ledger: \
   $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.wasm $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.did
@@ -44,7 +48,11 @@ canister@cycles_ledger: \
 $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.wasm $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.did: $(ROOT_DIR)/src/MockCreateCanister.mo
 
 canister@example_frontend: \
-  $(ROOT_DIR)/.dfx/local/canisters/example_frontend/example_frontend.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/example_frontend/assetstorage.wasm.gz
+  $(ROOT_DIR)/.dfx/local/canisters/example_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/example_frontend/assetstorage.did
+
+$(ROOT_DIR)/.dfx/local/canisters/example_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/example_frontend/assetstorage.did:
+	dfx canister create example_frontend
+	dfx build --no-deps example_frontend
 
 canister@indirect_caller: \
   $(ROOT_DIR)/.dfx/local/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/local/canisters/indirect_caller/indirect_caller.did
@@ -60,7 +68,11 @@ canister@package_manager: \
 $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.did: $(ROOT_DIR)/src/package_manager_backend/package_manager.mo
 
 canister@package_manager_frontend: \
-  $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/assetstorage.wasm.gz
+  $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/assetstorage.did
+
+$(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/assetstorage.wasm.gz $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/assetstorage.did:
+	dfx canister create package_manager_frontend
+	dfx build --no-deps package_manager_frontend
 
 canister@simple_indirect: \
   $(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.wasm $(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.did
@@ -168,95 +180,21 @@ $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.wasm $(ROOT_DIR
 $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.did: $(ROOT_DIR)/src/package_manager_backend/simple_indirect.mo
 $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.did: $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.did
 $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.did: $(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.wasm $(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.did
-$(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.wasm $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.did:
-	dfx canister create cycles_ledger
-	dfx build --no-deps cycles_ledger
-
-
-deploy@cycles_ledger: canister@cycles_ledger
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.cycles_ledger) cycles_ledger
-
-$(ROOT_DIR)/.dfx/local/canisters/BootstrapperData/BootstrapperData.wasm $(ROOT_DIR)/.dfx/local/canisters/BootstrapperData/BootstrapperData.did:
-	dfx canister create BootstrapperData
-	dfx build --no-deps BootstrapperData
-
-
-deploy@BootstrapperData: canister@BootstrapperData
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.BootstrapperData) BootstrapperData
-
-$(ROOT_DIR)/.dfx/local/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/local/canisters/RepositoryIndex/RepositoryIndex.did:
-	dfx canister create RepositoryIndex
-	dfx build --no-deps RepositoryIndex
-
-
-deploy@RepositoryIndex: canister@RepositoryIndex
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
-
 $(ROOT_DIR)/.dfx/local/canisters/example_frontend/example_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/example_frontend/example_frontend.did:
 	dfx canister create example_frontend
 	dfx build --no-deps example_frontend
 
 
 deploy@example_frontend: canister@example_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.example_frontend) example_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.example_frontend) example_frontend
 
 $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager/package_manager.did:
 	dfx canister create package_manager
 	dfx build --no-deps package_manager
 
 
-deploy@package_manager: canister@package_manager
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.package_manager) package_manager
-
-$(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.did:
-	dfx canister create bootstrapper_frontend
-	dfx build --no-deps bootstrapper_frontend
-
-
-deploy@bootstrapper_frontend: canister@bootstrapper_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
-
-
-canister@bootstrapper_frontend: generate@Bootstrapper generate@bookmark generate@internet_identity
-$(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.did:
-	dfx canister create bookmark
-	dfx build --no-deps bookmark
-
-
-deploy@bookmark: canister@bookmark
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.bookmark) bookmark
-
-$(ROOT_DIR)/.dfx/local/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)/.dfx/local/canisters/Bootstrapper/Bootstrapper.did:
-	dfx canister create Bootstrapper
-	dfx build --no-deps Bootstrapper
-
-
-deploy@Bootstrapper: canister@Bootstrapper
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.Bootstrapper) Bootstrapper
-
-$(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.wasm $(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.did:
-	dfx canister create simple_indirect
-	dfx build --no-deps simple_indirect
-
-
-deploy@simple_indirect: canister@simple_indirect
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
-
-$(ROOT_DIR)/.dfx/local/canisters/RepositoryPartition/RepositoryPartition.wasm $(ROOT_DIR)/.dfx/local/canisters/RepositoryPartition/RepositoryPartition.did:
-	dfx canister create RepositoryPartition
-	dfx build --no-deps RepositoryPartition
-
-
-deploy@RepositoryPartition: canister@RepositoryPartition
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.RepositoryPartition) RepositoryPartition
-
-$(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.wasm $(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.did:
-	dfx canister create internet_identity
-	dfx build --no-deps internet_identity
-
-
-deploy@internet_identity: canister@internet_identity
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.internet_identity) internet_identity
+deploy@package_manager: canister@package_manager \n  canister@Bootstrapper canister@cycles_ledger
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager) package_manager
 
 $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_frontend.did:
 	dfx canister create package_manager_frontend
@@ -264,15 +202,89 @@ $(ROOT_DIR)/.dfx/local/canisters/package_manager_frontend/package_manager_fronte
 
 
 deploy@package_manager_frontend: canister@package_manager_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.package_manager_frontend) package_manager_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager_frontend) package_manager_frontend
 
 
 canister@package_manager_frontend: generate@package_manager generate@internet_identity
+$(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm $(ROOT_DIR)/.dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.did:
+	dfx canister create bootstrapper_frontend
+	dfx build --no-deps bootstrapper_frontend
+
+
+deploy@bootstrapper_frontend: canister@bootstrapper_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
+
+
+canister@bootstrapper_frontend: generate@Bootstrapper generate@bookmark generate@internet_identity
+$(ROOT_DIR)/.dfx/local/canisters/BootstrapperData/BootstrapperData.wasm $(ROOT_DIR)/.dfx/local/canisters/BootstrapperData/BootstrapperData.did:
+	dfx canister create BootstrapperData
+	dfx build --no-deps BootstrapperData
+
+
+deploy@BootstrapperData: canister@BootstrapperData
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.BootstrapperData) BootstrapperData
+
+$(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.wasm $(ROOT_DIR)/.dfx/local/canisters/simple_indirect/simple_indirect.did:
+	dfx canister create simple_indirect
+	dfx build --no-deps simple_indirect
+
+
+deploy@simple_indirect: canister@simple_indirect \n  canister@cycles_ledger
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
+
+$(ROOT_DIR)/.dfx/local/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)/.dfx/local/canisters/Bootstrapper/Bootstrapper.did:
+	dfx canister create Bootstrapper
+	dfx build --no-deps Bootstrapper
+
+
+deploy@Bootstrapper: canister@Bootstrapper \n  canister@cycles_ledger canister@BootstrapperData
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.Bootstrapper) Bootstrapper
+
+$(ROOT_DIR)/.dfx/local/canisters/RepositoryPartition/RepositoryPartition.wasm $(ROOT_DIR)/.dfx/local/canisters/RepositoryPartition/RepositoryPartition.did:
+	dfx canister create RepositoryPartition
+	dfx build --no-deps RepositoryPartition
+
+
+deploy@RepositoryPartition: canister@RepositoryPartition
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryPartition) RepositoryPartition
+
 $(ROOT_DIR)/.dfx/local/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/local/canisters/indirect_caller/indirect_caller.did:
 	dfx canister create indirect_caller
 	dfx build --no-deps indirect_caller
 
 
-deploy@indirect_caller: canister@indirect_caller
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
+deploy@indirect_caller: canister@indirect_caller \n  canister@Bootstrapper canister@cycles_ledger
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
+
+$(ROOT_DIR)/.dfx/local/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/local/canisters/RepositoryIndex/RepositoryIndex.did:
+	dfx canister create RepositoryIndex
+	dfx build --no-deps RepositoryIndex
+
+
+deploy@RepositoryIndex: canister@RepositoryIndex
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
+
+$(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/local/canisters/bookmark/bookmark.did:
+	dfx canister create bookmark
+	dfx build --no-deps bookmark
+
+
+deploy@bookmark: canister@bookmark
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
+
+$(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.wasm $(ROOT_DIR)/.dfx/local/canisters/internet_identity/internet_identity.did:
+	dfx canister create internet_identity
+	dfx build --no-deps internet_identity
+
+
+deploy@internet_identity: canister@internet_identity
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
+
+$(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.wasm $(ROOT_DIR)/.dfx/local/canisters/cycles_ledger/cycles_ledger.did:
+	dfx canister create cycles_ledger
+	dfx build --no-deps cycles_ledger
+
+
+deploy@cycles_ledger: canister@cycles_ledger
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.cycles_ledger) cycles_ledger
 
