@@ -42,12 +42,14 @@ export default function MainPage() {
         setInstallations([]);
         return;
       }
-      const bootstrapper = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: props.agent});
-      bootstrapper.getUserBookmarks().then(list => {
+      // console.log("process.env.CANISTER_ID_BOOKMARK", process.env.CANISTER_ID_BOOKMARK);
+      const bookmark = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: props.agent});
+      bookmark.getUserBookmarks().then(list => {
         setInstallations(list);
       });
     }, [props.isAuthenticated, props.principal]);
     // TODO: Allow to change the bootstrap repo:
+    // console.log("process.env.CANISTER_ID_REPOSITORYINDEX", process.env.CANISTER_ID_REPOSITORYINDEX);
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
       try {// TODO: Duplicate code
