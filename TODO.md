@@ -119,3 +119,6 @@ Remaining things TODO:
 - Enhanced orthogonal persistence.
 
 - With new 64-bit memory model no need for CanDB.
+
+- https://thoropass.com/guide/compliance-guide-soc-2-for-your-startup/
+  SOC 2 defines criteria for managing customer data based on five “trust service principles”—security, availability, processing integrity, confidentiality and privacy.
