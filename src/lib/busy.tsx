@@ -58,6 +58,4 @@ export const BusyWidget: React.FC<{children: React.ReactNode}> = (props: { child
             {props.children}
         </div>
     </>;
-
-    return busy ? <p>Processing...</p> : props.children;
 }
