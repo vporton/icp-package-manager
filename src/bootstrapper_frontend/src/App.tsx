@@ -5,23 +5,29 @@ import { AuthProvider, getIsLocal } from './auth/use-auth-client';
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Bookmark from './Bookmark';
+import { BusyProvider, BusyWidget } from '../../lib/busy';
+import "../../lib/busy.css";
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
   return (
-    <AuthProvider options={{loginOptions: {
-        identityProvider,
-        maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-        windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-        onSuccess: () => {
-            console.log('Login Successful!');
-        },
-        onError: (error) => {
-            console.error('Login Failed: ', error);
-        },
-    }}}>
-      <App2/>
-    </AuthProvider>
+    <BusyProvider>
+      <BusyWidget>
+        <AuthProvider options={{loginOptions: {
+            identityProvider,
+            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+            onSuccess: () => {
+                console.log('Login Successful!');
+            },
+            onError: (error) => {
+                console.error('Login Failed: ', error);
+            },
+        }}}>
+          <App2/>
+        </AuthProvider>
+      </BusyWidget>
+    </BusyProvider>
   );
 }
 

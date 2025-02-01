@@ -15,6 +15,7 @@ import { GlobalContext } from "./state";
 import { InitializedChecker, waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "./ErrorContext.js";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
+import { BusyContext } from "../../lib/busy.js";
 
 export default function ChooseVersion(props: {}) {
     const { packageName, repo } = useParams();
@@ -56,8 +57,10 @@ export default function ChooseVersion(props: {}) {
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
+    let { setBusy } = useContext(BusyContext);
     async function install() {
         try {
+            setBusy(true);
             setInstalling(true);
 
             // TODO: hack
@@ -96,6 +99,9 @@ export default function ChooseVersion(props: {}) {
         catch(e) {
             console.log(e);
             throw e; // TODO
+        }
+        finally {
+            setBusy(false);
         }
     }
     useEffect(() => {

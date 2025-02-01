@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createBootstrapperIndirectActor } from "../../declarations/Bootstrapper";
@@ -14,6 +14,7 @@ import useConfirm from "./useConfirm";
 import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
 import { IDL } from "@dfinity/candid";
 import { bootstrapFrontend } from "../../lib/install";
+import { BusyContext } from "../../lib/busy";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -35,6 +36,7 @@ export default function MainPage() {
   }
   
   function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
+    const { setBusy } = useContext(BusyContext)!;
     const [installations, setInstallations] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
@@ -52,7 +54,8 @@ export default function MainPage() {
     // console.log("process.env.CANISTER_ID_REPOSITORYINDEX", process.env.CANISTER_ID_REPOSITORYINDEX);
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
-      try {// TODO: Duplicate code
+      try { // TODO: Duplicate code
+        setBusy(true);
         const repoParts = await repoIndex.getCanistersByPK("main");
         let pkg: SharedPackageInfo | undefined = undefined;
         const jobs = repoParts.map(async part => {
@@ -82,6 +85,9 @@ export default function MainPage() {
       catch(e) {
         console.log(e);
         throw e; // TODO
+      }
+      finally {
+        setBusy(false);
       }
     }
     const [BootstrapAgainDialog, confirmBootstrapAgain] = useConfirm(

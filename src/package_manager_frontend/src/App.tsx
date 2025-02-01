@@ -22,45 +22,53 @@ import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
 import { waitTillInitialized } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
+import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
+import "../../lib/busy.css";
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
   return (
-    <BrowserRouter>
-      <AuthProvider options={{loginOptions: {
-          identityProvider,
-          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-          onSuccess: () => {
-              console.log('Login Successful!');
-          },
-          onError: (error) => {
-              console.error('Login Failed: ', error);
-          },
-      }}}>
-        <GlobalContextProvider>
-          <h1 style={{textAlign: 'center'}}>
-            <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
-            {" "}
-            Package Manager
-          </h1>
-          <ErrorProvider>
-            <ErrorBoundary>
-              <GlobalUI/>
-            </ErrorBoundary>
-          </ErrorProvider>
-        </GlobalContextProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <BusyProvider>
+      <BusyWidget>
+        <BrowserRouter>
+          <AuthProvider options={{loginOptions: {
+              identityProvider,
+              maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+              windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+              onSuccess: () => {
+                  console.log('Login Successful!');
+              },
+              onError: (error) => {
+                  console.error('Login Failed: ', error);
+              },
+          }}}>
+            <GlobalContextProvider>
+              <h1 style={{textAlign: 'center'}}>
+                <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
+                {" "}
+                Package Manager
+              </h1>
+              <ErrorProvider>
+                <ErrorBoundary>
+                  <GlobalUI/>
+                </ErrorBoundary>
+              </ErrorProvider>
+            </GlobalContextProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </BusyWidget>
+    </BusyProvider>
   );
 }
 
 function GlobalUI() {
   const glob = useContext(GlobalContext);
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
+  const { setBusy } = useContext(BusyContext);
   if (glob.backend === undefined) {
     async function installBackend() {
       try {
+        setBusy(true);
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
         // TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
@@ -102,6 +110,9 @@ function GlobalUI() {
       }
       catch (e) {
         console.log(e); // TODO: Return an error.
+      }
+      finally {
+        setBusy(false);
       }
     }
     // TODO: Start installation automatically, without clicking a button?
