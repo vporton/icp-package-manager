@@ -11,7 +11,7 @@ include deps.$(NETWORK).mk
 
 .PHONY: deps
 deps:
-	dfx rules -o deps.$(NETWORK).mk
+	dfx rules --network $(NETWORK) -o deps.$(NETWORK).mk
 
 # INIT_BLOB = $(shell echo 'encode(record {})' | ic-repl-linux64)
 INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"
