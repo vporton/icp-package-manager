@@ -44,23 +44,30 @@ dotenv_config({ path: '.env' });
 //     return true;
 // }
 
-function getCanisterNameFromPrincipal(principal: string): string | null {
-  // Iterate through canisters in dfx config
-  for (const [canisterName, config] of Object.entries(dfxConfig.canisters)) {
-    if ((canisterId as any)[canisterName].local === principal) {
-      return canisterName;
+/// Human-readable canister names.
+const canisterNames = new Map<string, string>(); // anti-pattern: a global variable
+
+function getCanisterNameFromPrincipal(principal: Principal): string {
+    if (canisterNames.has(principal.toText())) {
+        return canisterNames.get(principal.toText())! + ' ' + principal.toText();
     }
-  }
-  return principal;
+    // Iterate through canisters in dfx config
+    for (const [canisterName, _config] of Object.entries(dfxConfig.canisters)) {
+        if ((canisterId as any)[canisterName].local === principal.toString()) {
+            return canisterName;
+        }
+    }
+    return principal.toString();
 }
 
 Assertion.addMethod('equalPrincipalSet', function (expected) {
     const actual = this._obj;
-    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p.toString()));
-    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p.toString()));
+    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p as Principal));
+    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal));
+    console.log("A", actualStrings, "E", expectedStrings);
     
     this.assert(
-      expect(expectedStrings).to.deep.equal(actualStrings),
+      expect(actualStrings).to.deep.equal(expectedStrings),
       "expected #{act} to equal #{exp}",
       "expected #{act} to not equal #{exp}",
       expectedStrings,
@@ -102,9 +109,10 @@ describe('My Test Suite', () => {
 
         const bootstrapperAgent = newAgent();
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+        canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
 
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        const bootstrapper: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
+        canisterNames.set(process.env.CANISTER_ID_REPOSITORYINDEX!, 'repoIndex');
 
         let icPackPkg = await repoIndex.getPackage('icpack', "0.0.1");
         const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
@@ -113,9 +121,11 @@ describe('My Test Suite', () => {
         console.log("Bootstrapping frontend...");
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
             await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
+        canisterNames.set(frontendPrincipal.toText(), 'frontendPrincipal');
 
         const backendAgent = newAgent();
         const backendUser = await backendAgent.getPrincipal();
+        canisterNames.set(backendUser.toText(), 'backendUser');
         const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
@@ -130,6 +140,9 @@ describe('My Test Suite', () => {
                 frontend: frontendPrincipal,
                 repoPart: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
             });
+        canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
+        canisterNames.set(indirectPrincipal.toText(), 'indirectPrincipal');
+        canisterNames.set(simpleIndirectPrincipal.toText(), 'simpleIndirectPrincipal');
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
