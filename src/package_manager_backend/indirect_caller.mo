@@ -108,7 +108,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
         pmPrincipal: Principal;
         packages: [{
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
@@ -144,7 +144,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                     user: Principal;
                     packages: [{
                         package: Common.SharedPackageInfo;
-                        repo: Common.RepositoryPartitionRO;
+                        repo: Common.RepositoryIndexRO;
                         preinstalledModules: [(Text, Principal)];
                     }];
                 }) -> async ();
@@ -159,7 +159,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 user;
                 packages = Iter.toArray(Iter.map<Nat, {
                     package: Common.SharedPackageInfo;
-                    repo: Common.RepositoryPartitionRO;
+                    repo: Common.RepositoryIndexRO;
                     preinstalledModules: [(Text, Principal)];
                 }>(
                     packages.keys(),

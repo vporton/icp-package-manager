@@ -3,7 +3,7 @@
     "Bootstrapper": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["cycles_ledger", "BootstrapperData"],
+      "dependencies": ["cycles_ledger", "BootstrapperData", "RepositoryIndex"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -35,7 +35,7 @@
     "package_manager": {
       "type": "motoko",
       "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": ["Bootstrapper", "cycles_ledger"],
+      "dependencies": ["Bootstrapper", "cycles_ledger", "RepositoryIndex"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -79,8 +79,8 @@
       "dependencies": [
         "Bootstrapper",
         "bookmark",
-        "RepositoryIndex",
-        "internet_identity"
+        "internet_identity",
+        "RepositoryIndex"
       ],
       "source": [
         "src/bootstrapper_frontend/dist"

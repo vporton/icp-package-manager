@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SharedFullPackageInfo, idlFactory as repositoryPartitionIDL } from '../../declarations/RepositoryPartition/RepositoryPartition.did.js';
+import { SharedFullPackageInfo } from '../../declarations/RepositoryIndex/RepositoryIndex.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
@@ -8,7 +8,7 @@ import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
-import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryPartition';
+import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryIndex';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";

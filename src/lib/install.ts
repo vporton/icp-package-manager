@@ -6,8 +6,7 @@ import { createActor as createFrontendActor } from '../declarations/bootstrapper
 import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../declarations/RepositoryIndex";
-import { createActor as createRepositoryPartitionActor } from "../declarations/RepositoryPartition";
-import { SharedPackageInfo } from "../declarations/RepositoryPartition/RepositoryPartition.did";
+import { SharedPackageInfo } from "../declarations/RepositoryIndex/RepositoryIndex.did";
 import { IDL } from "@dfinity/candid";
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
@@ -34,17 +33,7 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     try {// TODO: Duplicate code
         const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo | undefined = undefined;
-        const jobs = repoParts.map(async part => {
-            const obj = createRepositoryPartitionActor(part, {agent: props.agent});
-            try {
-              pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-            }
-            catch (e) {
-                console.log(e); // TODO: return an error
-            }
-        });
-        await Promise.all(jobs);
+        let pkg: SharedPackageInfo = repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});

@@ -171,7 +171,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
         }];
         user: Principal;
         afterInstallCallback: ?{
@@ -193,16 +193,16 @@ shared({caller = initialCaller}) actor class PackageManager({
                 {
                     packageName: Common.PackageName;
                     version: Common.Version;
-                    repo: Common.RepositoryPartitionRO;
+                    repo: Common.RepositoryIndexRO;
                 },
                 {
-                    repo: Common.RepositoryPartitionRO;
+                    repo: Common.RepositoryIndexRO;
                     packageName: Common.PackageName;
                     version: Common.Version;
                     preinstalledModules: [(Text, Principal)];
                 }
             >(packages.vals(), func (p: {
-                repo: Common.RepositoryPartitionRO;
+                repo: Common.RepositoryIndexRO;
                 packageName: Common.PackageName;
                 version: Common.Version;
             }) = {
@@ -224,7 +224,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
         }],
         user: Principal,
         minInstallationId: Common.InstallationId, // TODO: Remove.
@@ -251,14 +251,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         packageName: Common.PackageName;
         version: Common.Version;
-        repo: Common.RepositoryPartitionRO; 
+        repo: Common.RepositoryIndexRO; 
         user: Principal;
         indirectCaller: Principal;
         /// Additional packages to install after bootstrapping.
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
         }];
         preinstalledModules: [(Text, Principal)];
     })
@@ -296,7 +296,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// FIXME: It reuses an existing `installationId`.
     // public shared({caller}) func installNamedModules({
     //     installationId: Common.InstallationId;
-    //     repo: Common.RepositoryPartitionRO; // TODO: Install from multiple repos.
+    //     repo: Common.RepositoryIndexRO; // TODO: Install from multiple repos.
     //     modules: [(Text, Common.SharedModule)]; // TODO: installArg, initArg
     //     _avoidRepeated: Bool; // TODO: Use.
     //     user: Principal;
@@ -347,7 +347,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         packages: [{
             package: Common.SharedPackageInfo;
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
             preinstalledModules: [(Text, Principal)];
         }];
     }) {
@@ -715,7 +715,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     halfInstalledPackages.put(installationId, ourHalfInstalled);
 
     //     // TODO:
-    //     // let part: Common.RepositoryPartitionRO = actor (Principal.toText(canister));
+    //     // let part: Common.RepositoryIndexRO = actor (Principal.toText(canister));
     //     // let installation = await part.getPackage(packageName, version);
     //     let #real realPackage = packageInfo.specific else {
     //         Debug.trap("trying to directly install a virtual installation");
@@ -965,7 +965,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         minInstallationId: Common.InstallationId;
         packages: [{
-            repo: Common.RepositoryPartitionRO;
+            repo: Common.RepositoryIndexRO;
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];

@@ -12,7 +12,7 @@ import Blob "mo:base/Blob";
 import Sha256 "mo:sha2/Sha256";
 
 module {
-    public func IntHash(value: Int): Hash.Hash {
+    public func IntHash(value: Int): Hash.Hash { // TODO: letter casing
         var v2 = Int.abs(value);
         var hash: Nat32 = 0;
         while (v2 != 0) {
@@ -51,7 +51,7 @@ module {
         Blob.fromArray(Array.subArray(Blob.toArray(h256), 0, 16)); // 128-bit hash
     };
 
-    public type Location = (canister: Principal, id: Text);
+    public type Location = (canister: Principal, id: Nat);
 
     public type ModuleEvent = {
         #CodeInstalledForAllCanisters;
@@ -265,15 +265,11 @@ module {
     public type InstallationId = Nat;
 
     public type RepositoryIndexRO = actor {
-        getRepositoryPartitions: query () -> async [RepositoryPartitionRO];
         getRepositoryName: query () -> async Text;
         getRepositoryInfoURL: query () -> async Text;
         /// Returns releases with optional other release name
         /// (like `("stable", ?"morpheus")`).
         getReleases: query () -> async [(Text, ?Text)];
-    };
-
-    public type RepositoryPartitionRO = actor {
         // TODO: Uncomment below.
         /// Returns versions with optional other version name
         /// (like `("stable", ?"2.0.4")`).
@@ -281,7 +277,7 @@ module {
         /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
-        getWasmModule: query (sk: Text) -> async Blob;
+        getWasmModule: query (sk: Nat) -> async Blob;
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
     };
 
@@ -415,7 +411,7 @@ module {
         } -> async ();
     };
 
-    public func extractModuleLocation(code: ModuleCode): (Principal, Text) =
+    public func extractModuleLocation(code: ModuleCode): (Principal, Nat) =
         switch (code) {
             case (#Wasm wasmModuleLocation) {
                 wasmModuleLocation;

@@ -12,10 +12,9 @@ import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
-import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { createActor as createBackendActor } from "../../declarations/package_manager";
 import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
-import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
 import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
@@ -70,19 +69,7 @@ function GlobalUI() {
       try {
         setBusy(true);
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        // TODO: Duplicate code
-        const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo | undefined = undefined;
-        let repoPart: Principal | undefined;
-        const jobs = repoParts.map(async part => {
-          const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
-          try {
-            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-            repoPart = Principal.fromText(part);
-          }
-          catch (_) {}
-        });
-        await Promise.all(jobs);
+        let pkg: SharedPackageInfo = repoIndex.getPackage('icpack', "0.0.1");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});

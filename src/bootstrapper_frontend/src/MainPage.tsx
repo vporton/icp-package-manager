@@ -3,7 +3,6 @@ import { AuthContext, getIsLocal } from "./auth/use-auth-client";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createBootstrapperIndirectActor } from "../../declarations/Bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
-import { createActor as createRepositoryPartitionActor } from "../../declarations/RepositoryPartition";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
 import { Actor, Agent } from "@dfinity/agent";
@@ -11,7 +10,7 @@ import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert, useAccordionButton } from "react-bootstrap";
 import useConfirm from "./useConfirm";
-import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryPartition/RepositoryPartition.did";
+import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/RepositoryIndex/RepositoryIndex.did";
 import { IDL } from "@dfinity/candid";
 import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
@@ -54,21 +53,10 @@ export default function MainPage() {
     // console.log("process.env.CANISTER_ID_REPOSITORYINDEX", process.env.CANISTER_ID_REPOSITORYINDEX);
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
-      try { // TODO: Duplicate code
+      try {
         setBusy(true);
         const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo | undefined = undefined;
-        const jobs = repoParts.map(async part => {
-          const obj = createRepositoryPartitionActor(part, {agent: props.agent});
-          try {
-            pkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-          }
-          catch (e) {
-            console.log(e); // TODO: return an error
-          }
-        });
-        await Promise.all(jobs);
-        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+        let pkg: SharedPackageInfo = repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({

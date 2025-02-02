@@ -48,7 +48,7 @@ actor class Bootstrapper() = this {
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
-        repoPart: Common.RepositoryPartitionRO;
+        repoPart: Common.RepositoryIndexRO; // TODO: Rename.
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
@@ -149,14 +149,14 @@ actor class Bootstrapper() = this {
                 };
                 packageName: Common.PackageName;
                 version: Common.Version;
-                repo: Common.RepositoryPartitionRO; 
+                repo: Common.RepositoryIndexRO; 
                 user: Principal;
                 indirectCaller: Principal;
                 /// Additional packages to install after bootstrapping.
                 additionalPackages: [{
                     packageName: Common.PackageName;
                     version: Common.Version;
-                    repo: Common.RepositoryPartitionRO;
+                    repo: Common.RepositoryIndexRO;
                 }];
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
