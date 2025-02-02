@@ -7,9 +7,8 @@ import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
 import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
-import { createActor as createRepositoryPartitionActor } from "../src/declarations/RepositoryPartition";
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
-import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryPartition/RepositoryPartition.did";
+import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryIndex/RepositoryIndex.did";
 import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
@@ -73,19 +72,7 @@ describe('My Test Suite', () => {
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
         const bootstrapper: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
 
-        // TODO: Duplicate code
-        const repoParts = await repoIndex.getCanistersByPK("main");
-
-        let icPackPkg: SharedPackageInfo | undefined = undefined;
-        let icPackRepoPart: Principal | undefined;
-        await Promise.all(repoParts.map(async part => {
-          const obj = createRepositoryPartitionActor(part, {agent: defaultAgent});
-          try {
-            icPackPkg = await obj.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
-            icPackRepoPart = Principal.fromText(part);
-          }
-          catch (_) {}
-        }));
+        let icPackPkg = await repoIndex.getPackage('icpack', "0.0.1");
         const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
         const icPackModules = new Map(icPackPkgReal.modules);
 
@@ -106,30 +93,19 @@ describe('My Test Suite', () => {
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
-                repoPart: icPackRepoPart!,
+                repoPart: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
             });
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(bootstrapperAgent, backendPrincipal, pmInstallationId);
 
         console.log("Installing `example` package...");
-        const exampleFoundParts = await Promise.all(repoParts.map(async part => {
-            try {
-                const part2 = createRepositoryPartitionActor(part, {agent: defaultAgent});
-                await part2.getFullPackageInfo("example");
-                return part;
-            }
-            catch(_) { // TODO: Check error.
-                return null;
-            }
-        }));
-        const exampleFirstPart = exampleFoundParts ? exampleFoundParts.filter(v => v !== null)[0] : null;
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
         const {minInstallationId: exampleInstallationId} = await packageManager.installPackage({
             packages: [{
                 packageName: "example",
                 version: "0.0.1",
-                repo: Principal.fromText(exampleFirstPart!),
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
             }],
             user: backendUser,
             afterInstallCallback: [],
