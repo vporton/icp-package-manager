@@ -7,6 +7,9 @@ DEPLOY_FLAGS.BootstrapperData = --argument "principal \"$(USER)\""
 .PHONY: deploy
 deploy:
 
+# Don't use dfx.json dependency, because package_manager is not to be installed.
+canister@bootstrapper_frontend: generate@package_manager
+
 include deps.$(NETWORK).mk
 
 .PHONY: deps

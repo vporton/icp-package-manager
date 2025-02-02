@@ -1,13 +1,13 @@
 // TODO: Rename this file.
 import { Principal } from '@dfinity/principal';
-import { InstallationId, PackageManager, SharedRealPackageInfo } from '../declarations/package_manager/package_manager.did';
+import { InstallationId, PackageManager, SharedRealPackageInfo, SharedModule } from '../declarations/package_manager/package_manager.did';
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
 import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../declarations/RepositoryIndex";
-import { SharedPackageInfo } from "../declarations/RepositoryIndex/RepositoryIndex.did";
 import { IDL } from "@dfinity/candid";
+import {  } from '../declarations/RepositoryPartition/RepositoryPartition.did';
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
     const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
@@ -32,14 +32,14 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
 export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     try {// TODO: Duplicate code
-        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+        let pkg = await repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
-            wasmModule: pkgReal.modules[1][1],
+            wasmModule: pkgReal.modules[1][1] as SharedModule,
             installArg: new Uint8Array(IDL.encode(
                 [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
                 [{user: props.user, installationId: 0 /* TODO */}],
