@@ -9,6 +9,7 @@
         "module": "ES2020",
         "outDir": "HACK_BECAUSE_OF_ALLOW_JS",
         "allowSyntheticDefaultImports": true,
-        "jsx": "react"
+        "jsx": "react",
+        "resolveJsonModule": true
     }
 }

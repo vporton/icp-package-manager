@@ -17,6 +17,8 @@ import { expect, Assertion } from "chai";
 import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
 import { PackageManager } from "../src/declarations/package_manager/package_manager.did";
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
+import dfxConfig from "../dfx.json";
+import canisterId from "../.dfx/local/canister_ids.json";
 
 global.fetch = node_fetch as any;
 
@@ -42,10 +44,20 @@ dotenv_config({ path: '.env' });
 //     return true;
 // }
 
+function getCanisterNameFromPrincipal(principal: string): string | null {
+  // Iterate through canisters in dfx config
+  for (const [canisterName, config] of Object.entries(dfxConfig.canisters)) {
+    if ((canisterId as any)[canisterName].local === principal) {
+      return canisterName;
+    }
+  }
+  return principal;
+}
+
 Assertion.addMethod('equalPrincipalSet', function (expected) {
     const actual = this._obj;
-    const actualStrings = Array.from(actual).map(p => p.toString());
-    const expectedStrings = Array.from(expected).map(p => p.toString());
+    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p.toString()));
+    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p.toString()));
     
     this.assert(
       expect(expectedStrings).to.deep.equal(actualStrings),
@@ -138,6 +150,6 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([backendPrincipal, indirectPrincipal, backendUser]));
+        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([backendPrincipal, simpleIndirectPrincipal, backendUser]));
     });
 });
