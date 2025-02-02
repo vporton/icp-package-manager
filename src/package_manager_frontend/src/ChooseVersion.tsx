@@ -28,31 +28,17 @@ export default function ChooseVersion(props: {}) {
     // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-        index.getCanistersByPK("main").then(async pks => {
-            const res: ([string, SharedFullPackageInfo] | undefined)[] = await Promise.all(pks.map(async pk => {
-                const part = repoPartitionCreateActor(pk, {agent: defaultAgent});
-                let fullInfo = undefined;
-                try {
-                    fullInfo = await part.getFullPackageInfo(packageName!); // TODO: `!`
-                }
-                catch(_) { // TODO: Handle exception type.
-                    return undefined;
-                }
-                return [pk, fullInfo];
-            })) as any;
-            for (const [_pk, fullInfo] of res.filter(x => x !== undefined)) {
-                const versionsMap = new Map(fullInfo.versionsMap);
-                const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                setVersions(fullInfo.versionsMap.concat(p2));
-                setGUIDInfo(fullInfo.packages[0][1].base.guid as Uint8Array);
-                break;
+        let fullInfo = index.getFullPackageInfo(packageName!).then(fullInfo => {
+            const versionsMap = new Map(fullInfo.versionsMap);
+            const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
+            setVersions(fullInfo.versionsMap.concat(p2));
+            setGUIDInfo(fullInfo.packages[0][1].base.guid as Uint8Array);
+            if (versions !== undefined) {
+                glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guidInfo!).then(installed => {
+                    setInstalledVersions(new Map(installed.all.map(e => [e.version, 1])));
+                });
             }
         });
-        if (versions !== undefined) {
-            glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guidInfo!).then(installed => {
-                setInstalledVersions(new Map(installed.all.map(e => [e.version, 1])));
-            });
-        }
     }, []);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
@@ -64,31 +50,12 @@ export default function ChooseVersion(props: {}) {
             setInstalling(true);
 
             // TODO: hack
-            const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-            const parts = (await index.getCanistersByPK('main'))
-                .map(s => Principal.fromText(s))
-            const foundParts = await Promise.all(parts.map(async part => {
-                try {
-                    const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                    await part2.getFullPackageInfo(packageName!); // TODO: `!`
-                    return part;
-                }
-                catch(_) { // TODO: Check error.
-                    return null;
-                }
-            }));
-            const firstPart = foundParts ? foundParts.filter(v => v !== null)[0] : null;
-            if (firstPart === null) {
-                errorContext?.setError("no such package");
-                return null;
-            }
-
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
             const {minInstallationId: id} = await package_manager.installPackage({
                 packages: [{
                     packageName: packageName!,
                     version: chosenVersion!,
-                    repo: firstPart,
+                    repo: glob.backend!,
                 }],
                 user: principal!,
                 afterInstallCallback: [],

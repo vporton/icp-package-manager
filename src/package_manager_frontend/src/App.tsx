@@ -69,7 +69,7 @@ function GlobalUI() {
       try {
         setBusy(true);
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        let pkg: SharedPackageInfo = repoIndex.getPackage('icpack', "0.0.1");
+        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
@@ -82,7 +82,7 @@ function GlobalUI() {
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
-          repoPart: repoPart!,
+          repoPart: process.env.CANISTER_ID_REPOSITORYINDEX!,
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);

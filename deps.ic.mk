@@ -143,14 +143,11 @@ $(ROOT_DIR)/src/install.mo: $(ROOT_DIR)/src/common.mo
 $(ROOT_DIR)/src/install.mo: $(ROOT_DIR)/src/copy_assets.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did: $(ROOT_DIR)/src/install.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.did
-$(ROOT_DIR)/src/repository_backend/RepositoryPartition.mo: $(ROOT_DIR)/src/common.mo
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did: $(ROOT_DIR)/src/repository_backend/RepositoryPartition.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did: $(ROOT_DIR)/src/common.mo
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.did: $(ROOT_DIR)/src/common.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.did
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did: $(ROOT_DIR)/src/common.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did: $(ROOT_DIR)/src/install.mo
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.did: $(ROOT_DIR)/src/common.mo
@@ -175,16 +172,81 @@ canister@package_manager_frontend: \
 deploy@package_manager_frontend: deploy@package_manager deploy@internet_identity \
   deploy-self@package_manager_frontend
 
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
-	dfx canister create --network $(NETWORK) simple_indirect
-	dfx build --no-deps --network $(NETWORK) simple_indirect
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
+	dfx canister create --network $(NETWORK) bookmark
+	dfx build --no-deps --network $(NETWORK) bookmark
 
 
-deploy-self@simple_indirect: canister@simple_indirect
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
+deploy-self@bookmark: canister@bookmark
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
 
-deploy@simple_indirect: deploy@cycles_ledger \
-  deploy-self@simple_indirect
+deploy@bookmark: deploy-self@bookmark
+
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did:
+	dfx canister create --network $(NETWORK) internet_identity
+	dfx build --no-deps --network $(NETWORK) internet_identity
+
+
+deploy-self@internet_identity: canister@internet_identity
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
+
+deploy@internet_identity: deploy-self@internet_identity
+
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.did:
+	dfx canister create --network $(NETWORK) BootstrapperData
+	dfx build --no-deps --network $(NETWORK) BootstrapperData
+
+
+deploy-self@BootstrapperData: canister@BootstrapperData
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.BootstrapperData) BootstrapperData
+
+deploy@BootstrapperData: deploy-self@BootstrapperData
+
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.did:
+	dfx canister create --network $(NETWORK) RepositoryPartition
+	dfx build --no-deps --network $(NETWORK) RepositoryPartition
+
+
+deploy-self@RepositoryPartition: canister@RepositoryPartition
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryPartition) RepositoryPartition
+
+deploy@RepositoryPartition: deploy-self@RepositoryPartition
+
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did:
+	dfx canister create --network $(NETWORK) RepositoryIndex
+	dfx build --no-deps --network $(NETWORK) RepositoryIndex
+
+
+deploy-self@RepositoryIndex: canister@RepositoryIndex
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
+
+deploy@RepositoryIndex: deploy-self@RepositoryIndex
+
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did:
+	dfx canister create --network $(NETWORK) indirect_caller
+	dfx build --no-deps --network $(NETWORK) indirect_caller
+
+
+deploy-self@indirect_caller: canister@indirect_caller
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
+
+deploy@indirect_caller: deploy@Bootstrapper deploy@cycles_ledger \
+  deploy-self@indirect_caller
+
+.PHONY: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz:
+	dfx canister create --network $(NETWORK) bootstrapper_frontend
+	dfx build --no-deps --network $(NETWORK) bootstrapper_frontend
+
+
+deploy-self@bootstrapper_frontend: canister@bootstrapper_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
+
+
+canister@bootstrapper_frontend: \
+  generate@Bootstrapper generate@bookmark generate@internet_identity generate@RepositoryIndex
+deploy@bootstrapper_frontend: deploy@Bootstrapper deploy@bookmark deploy@internet_identity deploy@RepositoryIndex \
+  deploy-self@bootstrapper_frontend
 
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did:
 	dfx canister create --network $(NETWORK) cycles_ledger
@@ -204,75 +266,8 @@ $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm $(ROOT_DIR)
 deploy-self@Bootstrapper: canister@Bootstrapper
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.Bootstrapper) Bootstrapper
 
-deploy@Bootstrapper: deploy@cycles_ledger deploy@BootstrapperData \
+deploy@Bootstrapper: deploy@cycles_ledger deploy@BootstrapperData deploy@RepositoryIndex \
   deploy-self@Bootstrapper
-
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryPartition/RepositoryPartition.did:
-	dfx canister create --network $(NETWORK) RepositoryPartition
-	dfx build --no-deps --network $(NETWORK) RepositoryPartition
-
-
-deploy-self@RepositoryPartition: canister@RepositoryPartition
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryPartition) RepositoryPartition
-
-deploy@RepositoryPartition: deploy-self@RepositoryPartition
-
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
-	dfx canister create --network $(NETWORK) bookmark
-	dfx build --no-deps --network $(NETWORK) bookmark
-
-
-deploy-self@bookmark: canister@bookmark
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
-
-deploy@bookmark: deploy-self@bookmark
-
-.PHONY: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz:
-	dfx canister create --network $(NETWORK) bootstrapper_frontend
-	dfx build --no-deps --network $(NETWORK) bootstrapper_frontend
-
-
-deploy-self@bootstrapper_frontend: canister@bootstrapper_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
-
-
-canister@bootstrapper_frontend: \
-  generate@Bootstrapper generate@bookmark generate@RepositoryIndex generate@internet_identity
-deploy@bootstrapper_frontend: deploy@Bootstrapper deploy@bookmark deploy@RepositoryIndex deploy@internet_identity \
-  deploy-self@bootstrapper_frontend
-
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did:
-	dfx canister create --network $(NETWORK) internet_identity
-	dfx build --no-deps --network $(NETWORK) internet_identity
-
-
-deploy-self@internet_identity: canister@internet_identity
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
-
-deploy@internet_identity: deploy-self@internet_identity
-
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did:
-	dfx canister create --network $(NETWORK) indirect_caller
-	dfx build --no-deps --network $(NETWORK) indirect_caller
-
-
-deploy-self@indirect_caller: canister@indirect_caller
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
-
-deploy@indirect_caller: deploy@Bootstrapper deploy@cycles_ledger \
-  deploy-self@indirect_caller
-
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.did:
-	dfx canister create --network $(NETWORK) package_manager
-	dfx build --no-deps --network $(NETWORK) package_manager
-
-
-deploy-self@package_manager: canister@package_manager
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager) package_manager
-
-deploy@package_manager: deploy@Bootstrapper deploy@cycles_ledger \
-  deploy-self@package_manager
 
 .PHONY: $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
 $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz:
@@ -285,23 +280,25 @@ deploy-self@example_frontend: canister@example_frontend
 
 deploy@example_frontend: deploy-self@example_frontend
 
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did:
-	dfx canister create --network $(NETWORK) RepositoryIndex
-	dfx build --no-deps --network $(NETWORK) RepositoryIndex
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/package_manager/package_manager.did:
+	dfx canister create --network $(NETWORK) package_manager
+	dfx build --no-deps --network $(NETWORK) package_manager
 
 
-deploy-self@RepositoryIndex: canister@RepositoryIndex
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
+deploy-self@package_manager: canister@package_manager
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager) package_manager
 
-deploy@RepositoryIndex: deploy-self@RepositoryIndex
+deploy@package_manager: deploy@Bootstrapper deploy@cycles_ledger deploy@RepositoryIndex \
+  deploy-self@package_manager
 
-$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.did:
-	dfx canister create --network $(NETWORK) BootstrapperData
-	dfx build --no-deps --network $(NETWORK) BootstrapperData
+$(ROOT_DIR)/.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm $(ROOT_DIR)/.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
+	dfx canister create --network $(NETWORK) simple_indirect
+	dfx build --no-deps --network $(NETWORK) simple_indirect
 
 
-deploy-self@BootstrapperData: canister@BootstrapperData
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.BootstrapperData) BootstrapperData
+deploy-self@simple_indirect: canister@simple_indirect
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
 
-deploy@BootstrapperData: deploy-self@BootstrapperData
+deploy@simple_indirect: deploy@cycles_ledger \
+  deploy-self@simple_indirect
 

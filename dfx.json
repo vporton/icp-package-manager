@@ -55,13 +55,6 @@
         "name": "candid:service"
       }]
     },
-    "RepositoryPartition": {
-      "type": "motoko",
-      "main": "src/repository_backend/RepositoryPartition.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }]
-    },
     "package_manager_frontend": {
       "dependencies": [
         "package_manager", "internet_identity"

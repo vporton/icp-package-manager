@@ -32,8 +32,7 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
 export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     try {// TODO: Duplicate code
-        const repoParts = await repoIndex.getCanistersByPK("main");
-        let pkg: SharedPackageInfo = repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
