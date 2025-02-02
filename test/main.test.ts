@@ -82,10 +82,11 @@ describe('My Test Suite', () => {
 
         const backendAgent = newAgent();
         const backendUser = await backendAgent.getPrincipal();
+        const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
-            await bootstrapper.bootstrapBackend({
+            await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
                 indirectWasmModule: icPackModules.get("indirect")!,
                 simpleIndirectWasmModule: icPackModules.get("simple_indirect")!,
@@ -97,7 +98,7 @@ describe('My Test Suite', () => {
             });
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
-        await waitTillInitialized(bootstrapperAgent, backendPrincipal, pmInstallationId);
+        await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
