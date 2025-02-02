@@ -35,7 +35,7 @@ dotenv_config({ path: '.env' });
 
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function isEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
+function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
     if (a === b) return true;
     if (a.size !== b.size) return false;
     for (const value of a) if (!b.has(value)) return false;
@@ -116,6 +116,6 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        // assert(isEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal])));
+        // assert(areEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal])));
     });
 });
