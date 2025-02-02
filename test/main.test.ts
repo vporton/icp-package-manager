@@ -13,7 +13,7 @@ import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
 import { it } from "mocha";
-import { expect } from "chai";
+import { expect, Assertion } from "chai";
 import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
 import { PackageManager } from "../src/declarations/package_manager/package_manager.did";
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
@@ -35,13 +35,35 @@ dotenv_config({ path: '.env' });
 
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
-    if (a === b) return true;
-    if (a.size !== b.size) return false;
-    for (const value of a) if (!b.has(value)) return false;
-    return true;
-}
+// function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
+//     if (a === b) return true;
+//     if (a.size !== b.size) return false;
+//     for (const value of a) if (!b.has(value)) return false;
+//     return true;
+// }
 
+Assertion.addMethod('equalPrincipalSet', function (expected) {
+    const actual = this._obj;
+    const actualStrings = Array.from(actual).map(p => p.toString());
+    const expectedStrings = Array.from(expected).map(p => p.toString());
+    
+    this.assert(
+      expect(expectedStrings).to.deep.equal(actualStrings),
+      "expected #{act} to equal #{exp}",
+      "expected #{act} to not equal #{exp}",
+      expectedStrings,
+      actualStrings
+    );
+});
+  
+declare global {
+    namespace Chai {
+        interface Assertion {
+            equalPrincipalSet(expected: Set<any>): void;
+        }
+    }
+}
+  
 describe('My Test Suite', () => {
     const icHost = "http://localhost:4943";
 
@@ -116,6 +138,6 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(areEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal]))).to.be.true;
+        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([backendPrincipal, indirectPrincipal, backendUser]));
     });
 });
