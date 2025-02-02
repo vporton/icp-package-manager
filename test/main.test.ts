@@ -13,8 +13,8 @@ import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
 import { it } from "mocha";
+import { expect } from "chai";
 import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
-import { assert } from "console";
 import { PackageManager } from "../src/declarations/package_manager/package_manager.did";
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 
@@ -116,6 +116,6 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        // assert(areEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal])));
+        expect(areEqualSets(new Set(result.controllers), new Set([backendPrincipal, indirectPrincipal]))).to.be.true;
     });
 });
