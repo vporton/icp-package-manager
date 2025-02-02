@@ -21,8 +21,10 @@ actor Bookmarks {
     };
 
     /// user -> ((frontend, backend) -> ()))
+    /// FIXME: persistent
     let userToBookmark = TrieMap.TrieMap<Principal, HashMap.HashMap<Bookmark, ()>>(Principal.equal, Principal.hash);
 
+    /// FIXME: persistent
     let bookmarks = TrieMap.TrieMap<Bookmark, ()>(bookmarksEqual, bookmarkHash);
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
