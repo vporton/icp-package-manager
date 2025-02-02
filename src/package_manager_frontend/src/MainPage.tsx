@@ -99,26 +99,11 @@ export default function MainPage() {
     const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
     async function installChecked() {
         // TODO: hack
-        let repo = createRepoIndexActor(curDistro!, {agent}); // TODO: `!`
-        const parts = (await repo.getCanistersByPK('main'))
-            .map(s => Principal.fromText(s))
-        const foundParts = await Promise.all(parts.map(part => {
-            try {
-                const part2 = repoPartitionCreateActor(part, {agent: defaultAgent});
-                part2.getFullPackageInfo(packageName); // TODO: a little inefficient
-                return part;
-            }
-            catch(_) { // TODO: Check error.
-                return null;
-            }
-        }));
-        const firstPart = foundParts.filter(v => v !== null)[0];
-
         // TODO
         // for (const p of packagesToRepair!) {
         //     if (checkedHalfInstalled?.has(p.installationId)) {
         //         await glob.packageManager!.installPackage({
-        //             repo: firstPart,
+        //             repo: index,
         //             packageName: p.name,
         //             version: p.version,
         //             user: principal!,

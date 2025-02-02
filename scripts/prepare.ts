@@ -3,11 +3,11 @@ import { exec, execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { SharedRealPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedRealPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
-import { SharedPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
-import { SharedFullPackageInfo } from '../src/declarations/RepositoryPartition/RepositoryPartition.did';
+import { SharedPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
+import { SharedFullPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
 
@@ -118,7 +118,7 @@ async function main() {
         packages: [["0.0.1", pmInfo]],
         versionsMap: [["stable", "0.0.1"]],
     };
-    await repositoryIndex.createPackage("icpack", pmFullInfo);
+    await repositoryIndex.setFullPackageInfo("icpack", pmFullInfo);
 
     const efReal: SharedRealPackageInfo = {
         modules: [
@@ -146,7 +146,7 @@ async function main() {
         packages: [["0.0.1", pmEFInfo]],
         versionsMap: [["stable", "0.0.1"]],
     };
-    await repositoryIndex.createPackage("example", pmEFFullInfo);
+    await repositoryIndex.setFullPackageInfo("example", pmEFFullInfo);
 }
 
 main()

@@ -82,7 +82,7 @@ function GlobalUI() {
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
-          repoPart: process.env.CANISTER_ID_REPOSITORYINDEX!,
+          repoPart: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);

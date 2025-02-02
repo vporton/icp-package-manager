@@ -5,6 +5,7 @@ import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
+import Option "mo:base/Option";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
@@ -160,16 +161,22 @@ shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
     _getFullPackageInfo(name);
   };
 
-  private func _setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo) {
-    packages.put(name, info);
-  };
-
   /// TODO: Put a barrier to make the update atomic.
   /// TODO: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
     onlyOwner(caller);
 
-    _setFullPackageInfo(name, info);
+    // TODO: Check that package exists?
+    packages.put(name, info);
+  };
+
+  public shared({caller}) func createPackage(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
+    onlyOwner(caller);
+
+    if (Option.isSome(packages.get(name))) {
+      Debug.trap("package already exists");
+    };
+    packages.put(name, info);
   };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
