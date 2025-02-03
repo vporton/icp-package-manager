@@ -55,6 +55,7 @@ module {
         simpleIndirect: Principal;
         user: Principal;
     }): async* () {
+        Debug.print("USER: " # debug_show(user)); // FIXME: Remove.
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryIndexRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
         let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
@@ -82,14 +83,16 @@ module {
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
                 let assets2: Asset.AssetCanister = actor(Principal.toText(canister_id)); // TODO: Rename.
+                // let oldController = (await assets2.list_authorized())[0];
+                // Debug.print("QQQ: " # debug_show(oldController));
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
                     for (principal in [simpleIndirect, user].vals()) {
                         await assets2.grant_permission({to_principal = principal; permission});
                     };
-                    await assets2.revoke_permission({
-                        of_principal = initialIndirect;
-                        permission;
-                    });
+                    // await assets2.revoke_permission({
+                    //     of_principal = oldController;
+                    //     permission;
+                    // });
                 };
             };
             case _ {};
