@@ -57,6 +57,10 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         };
     };
 
+    public query func getOwners(): async [Principal] {
+        Iter.toArray(owners.keys());
+    };
+
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         onlyOwner(caller, "setOwners");
 

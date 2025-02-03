@@ -116,6 +116,8 @@ Remaining things TODO:
 
 - Security policy
 
+- Should `getOwners` method be available only to owners?
+
 - Enhanced orthogonal persistence.
 
 - With new 64-bit memory model no need for CanDB.

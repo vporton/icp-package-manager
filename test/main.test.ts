@@ -7,6 +7,7 @@ import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
 import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
+import { createActor as createIndirectActor } from '../src/declarations/indirect_caller';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryIndex/RepositoryIndex.did";
 import { config as dotenv_config } from 'dotenv';
@@ -157,6 +158,19 @@ describe('My Test Suite', () => {
                 new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
             );
         }
+        for (const [principal, create] of [
+            [simpleIndirectPrincipal, createSimpleIndirectActor],
+            [indirectPrincipal, createIndirectActor],
+            [backendPrincipal, createPackageManager]
+        ]) {
+            const canister = (create as any)(principal, {agent: backendAgent});
+            const owners = await canister.getOwners();
+            console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
+            expect(new Set(owners)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
+        }
+        // TODO: frontend
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});

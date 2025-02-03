@@ -53,6 +53,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "init");
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackage`. // TODO: needed?
+        owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
@@ -81,7 +82,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         owners.delete(oldOwner);
     };
 
-    // TODO: Remove.
     public query func getOwners(): async [Principal] {
         Iter.toArray(owners.keys());
     };
