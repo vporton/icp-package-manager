@@ -129,7 +129,6 @@ actor class Bootstrapper() = this {
                 sender_canister_version = null;
                 settings = {
                     compute_allocation = null;
-                    // TODO: Check which canisters are necessary as controllers.
                     controllers = ?[simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
                     freezing_threshold = null;
                     log_visibility = null;
