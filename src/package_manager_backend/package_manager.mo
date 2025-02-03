@@ -269,7 +269,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += additionalPackages.size();
 
-        Debug.print("B1"); // FIXME: Remove.
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
@@ -351,9 +350,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             preinstalledModules: [(Text, Principal)];
         }];
     }) {
-        Debug.print("E1");
         onlyOwner(caller, "installStart");
-        Debug.print("E2");
 
         for (p0 in packages.keys()) {
             let p = packages[p0];
@@ -393,7 +390,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
             let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
-            Debug.print("E3");
             let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
                 numberOfModulesToInstall = numModules;
                 // id = installationId;
@@ -419,14 +415,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
-            Debug.print("E4");
             await* doInstallFinish();
         };
     };
 
     // FIXME: Can other packages be installed if one of them fails?
     private func doInstallFinish(): async* () {
-        Debug.print("F1");
         for ((p0, pkg) in halfInstalledPackages.entries()) {
             let p = pkg.package;
             let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
@@ -467,7 +461,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             var i = 0;
-            Debug.print("Z1: " # debug_show(pkg.afterInstallCallback));
             for ((name, m): (Text, Common.Module) in modules) {
                 // Starting installation of all modules in parallel:
                 getIndirectCaller().installModule({
@@ -978,7 +971,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        Debug.print("C1"); // FIXME: Remove.
         indirectCaller.installPackageWrapper({
             whatToInstall;
             minInstallationId;

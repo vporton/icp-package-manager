@@ -21,7 +21,7 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this), user, initialIndirect, simpleIndirect]; // TODO: This is a bug.
+            mainControllers = ?[Principal.fromActor(this), simpleIndirect, user]; // TODO: This is a bug.
             user;
             cyclesAmount = newCanisterCycles;
         });
@@ -129,7 +129,7 @@ actor class Bootstrapper() = this {
                 sender_canister_version = null;
                 settings = {
                     compute_allocation = null;
-                    controllers = ?[simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
+                    controllers = ?[simple_indirect_canister_id, backend_canister_id, user];
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
