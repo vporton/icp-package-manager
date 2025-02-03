@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
-            packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below. // FIXME: check
+            packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
             initialIndirect;
             simpleIndirect;
             user;
