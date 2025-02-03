@@ -286,8 +286,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
-            // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
-            // FIXME: `packageManagerOrBootstrapper` seems superfluous.
             mainControllers = ?[Principal.fromActor(this)];
             user;
             initialIndirect;
@@ -317,6 +315,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         });
 
         // Remove `indirectCaller` as a controller, because it's costly to replace it in every canister after new version of `indirectCaller`..
+        // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
         await IC.ic.update_settings({
             canister_id;
             sender_canister_version = null;
