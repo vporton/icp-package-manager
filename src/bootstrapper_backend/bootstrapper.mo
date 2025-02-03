@@ -119,7 +119,9 @@ actor class Bootstrapper() = this {
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
 
-        await* tweakFrontend(frontend, frontendTweakPrivKey, {backend_canister_id; simple_indirect_canister_id; user});
+        await* tweakFrontend(frontend, frontendTweakPrivKey, {
+            simple_indirect_canister_id; indirect_canister_id; backend_canister_id; user;
+        });
 
         // FIXME: Move below?
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend].vals()) {
@@ -187,8 +189,9 @@ actor class Bootstrapper() = this {
         frontend: Principal,
         privKey: PrivKey,
         {
-            // backend_canister_id: Principal;
+            backend_canister_id: Principal;
             simple_indirect_canister_id: Principal;
+            indirect_canister_id: Principal;
             user: Principal;
         },
     ): async* () {
@@ -198,10 +201,10 @@ actor class Bootstrapper() = this {
         };
         let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
-            await assets.grant_permission({
-                to_principal = simple_indirect_canister_id;
-                permission;
-            });
+            // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
+            for (principal in [simple_indirect_canister_id, indirect_canister_id, backend_canister_id/*, user*/].vals()) {
+                await assets.grant_permission({to_principal = principal; permission});
+            };
             await assets.revoke_permission({
                 of_principal = Principal.fromActor(this);
                 permission;

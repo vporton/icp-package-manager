@@ -81,6 +81,16 @@ module {
                 await* CopyAssets.copyAll({
                     from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
                 });
+                let assets2: Asset.AssetCanister = actor(Principal.toText(canister_id)); // TODO: Rename.
+                for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
+                    for (principal in [simpleIndirect, user].vals()) {
+                        await assets2.grant_permission({to_principal = principal; permission});
+                    };
+                    await assets2.revoke_permission({
+                        of_principal = initialIndirect;
+                        permission;
+                    });
+                };
             };
             case _ {};
         };

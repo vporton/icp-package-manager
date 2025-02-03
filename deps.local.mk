@@ -89,7 +89,7 @@ src/declarations/bookmark/bookmark.did.js src/declarations/bookmark/index.js src
 generate@bootstrapper_frontend: \
   src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.js src/declarations/bootstrapper_frontend/index.js src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.d.ts src/declarations/bootstrapper_frontend/index.d.ts src/declarations/bootstrapper_frontend/bootstrapper_frontend.did
 
-src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.js src/declarations/bootstrapper_frontend/index.js src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.d.ts src/declarations/bootstrapper_frontend/index.d.ts src/declarations/bootstrapper_frontend/bootstrapper_frontend.did: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/bootstrapper_frontend.did
+src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.js src/declarations/bootstrapper_frontend/index.js src/declarations/bootstrapper_frontend/bootstrapper_frontend.did.d.ts src/declarations/bootstrapper_frontend/index.d.ts src/declarations/bootstrapper_frontend/bootstrapper_frontend.did: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/service.did
 	dfx generate --no-compile --network $(NETWORK) bootstrapper_frontend
 
 generate@cycles_ledger: \
@@ -101,7 +101,7 @@ src/declarations/cycles_ledger/cycles_ledger.did.js src/declarations/cycles_ledg
 generate@example_frontend: \
   src/declarations/example_frontend/example_frontend.did.js src/declarations/example_frontend/index.js src/declarations/example_frontend/example_frontend.did.d.ts src/declarations/example_frontend/index.d.ts src/declarations/example_frontend/example_frontend.did
 
-src/declarations/example_frontend/example_frontend.did.js src/declarations/example_frontend/index.js src/declarations/example_frontend/example_frontend.did.d.ts src/declarations/example_frontend/index.d.ts src/declarations/example_frontend/example_frontend.did: .dfx/$(NETWORK)/canisters/example_frontend/example_frontend.did
+src/declarations/example_frontend/example_frontend.did.js src/declarations/example_frontend/index.js src/declarations/example_frontend/example_frontend.did.d.ts src/declarations/example_frontend/index.d.ts src/declarations/example_frontend/example_frontend.did: .dfx/$(NETWORK)/canisters/example_frontend/service.did
 	dfx generate --no-compile --network $(NETWORK) example_frontend
 
 generate@indirect_caller: \
@@ -119,7 +119,7 @@ src/declarations/package_manager/package_manager.did.js src/declarations/package
 generate@package_manager_frontend: \
   src/declarations/package_manager_frontend/package_manager_frontend.did.js src/declarations/package_manager_frontend/index.js src/declarations/package_manager_frontend/package_manager_frontend.did.d.ts src/declarations/package_manager_frontend/index.d.ts src/declarations/package_manager_frontend/package_manager_frontend.did
 
-src/declarations/package_manager_frontend/package_manager_frontend.did.js src/declarations/package_manager_frontend/index.js src/declarations/package_manager_frontend/package_manager_frontend.did.d.ts src/declarations/package_manager_frontend/index.d.ts src/declarations/package_manager_frontend/package_manager_frontend.did: .dfx/$(NETWORK)/canisters/package_manager_frontend/package_manager_frontend.did
+src/declarations/package_manager_frontend/package_manager_frontend.did.js src/declarations/package_manager_frontend/index.js src/declarations/package_manager_frontend/package_manager_frontend.did.d.ts src/declarations/package_manager_frontend/index.d.ts src/declarations/package_manager_frontend/package_manager_frontend.did: .dfx/$(NETWORK)/canisters/package_manager_frontend/service.did
 	dfx generate --no-compile --network $(NETWORK) package_manager_frontend
 
 generate@simple_indirect: \
@@ -149,59 +149,6 @@ src/package_manager_backend/indirect_caller.mo: src/install.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/simple_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
-.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm .dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did:
-	dfx canister create --network $(NETWORK) Bootstrapper
-	dfx build --no-deps --network $(NETWORK) Bootstrapper
-
-
-deploy-self@Bootstrapper: canister@Bootstrapper
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.Bootstrapper) Bootstrapper
-
-deploy@Bootstrapper: deploy@cycles_ledger deploy@BootstrapperData deploy@RepositoryIndex \
-  deploy-self@Bootstrapper
-
-.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
-	dfx canister create --network $(NETWORK) simple_indirect
-	dfx build --no-deps --network $(NETWORK) simple_indirect
-
-
-deploy-self@simple_indirect: canister@simple_indirect
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
-
-deploy@simple_indirect: deploy@cycles_ledger \
-  deploy-self@simple_indirect
-
-.PHONY: .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
-.dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz:
-	dfx canister create --network $(NETWORK) example_frontend
-	dfx build --no-deps --network $(NETWORK) example_frontend
-
-
-deploy-self@example_frontend: canister@example_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.example_frontend) example_frontend
-
-deploy@example_frontend: deploy-self@example_frontend
-
-.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did:
-	dfx canister create --network $(NETWORK) internet_identity
-	dfx build --no-deps --network $(NETWORK) internet_identity
-
-
-deploy-self@internet_identity: canister@internet_identity
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
-
-deploy@internet_identity: deploy-self@internet_identity
-
-.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm .dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did:
-	dfx canister create --network $(NETWORK) RepositoryIndex
-	dfx build --no-deps --network $(NETWORK) RepositoryIndex
-
-
-deploy-self@RepositoryIndex: canister@RepositoryIndex
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
-
-deploy@RepositoryIndex: deploy-self@RepositoryIndex
-
 .PHONY: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
 .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz:
 	dfx canister create --network $(NETWORK) bootstrapper_frontend
@@ -216,6 +163,80 @@ canister@bootstrapper_frontend: \
   generate@Bootstrapper generate@bookmark generate@internet_identity generate@RepositoryIndex
 deploy@bootstrapper_frontend: deploy@Bootstrapper deploy@bookmark deploy@internet_identity deploy@RepositoryIndex \
   deploy-self@bootstrapper_frontend
+
+.PHONY: .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
+.dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz:
+	dfx canister create --network $(NETWORK) example_frontend
+	dfx build --no-deps --network $(NETWORK) example_frontend
+
+
+deploy-self@example_frontend: canister@example_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.example_frontend) example_frontend
+
+deploy@example_frontend: deploy-self@example_frontend
+
+.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did:
+	dfx canister create --network $(NETWORK) package_manager
+	dfx build --no-deps --network $(NETWORK) package_manager
+
+
+deploy-self@package_manager: canister@package_manager
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager) package_manager
+
+deploy@package_manager: deploy@Bootstrapper deploy@cycles_ledger deploy@RepositoryIndex \
+  deploy-self@package_manager
+
+.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did:
+	dfx canister create --network $(NETWORK) indirect_caller
+	dfx build --no-deps --network $(NETWORK) indirect_caller
+
+
+deploy-self@indirect_caller: canister@indirect_caller
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
+
+deploy@indirect_caller: deploy@Bootstrapper deploy@cycles_ledger \
+  deploy-self@indirect_caller
+
+.dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.wasm .dfx/$(NETWORK)/canisters/RepositoryIndex/RepositoryIndex.did:
+	dfx canister create --network $(NETWORK) RepositoryIndex
+	dfx build --no-deps --network $(NETWORK) RepositoryIndex
+
+
+deploy-self@RepositoryIndex: canister@RepositoryIndex
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.RepositoryIndex) RepositoryIndex
+
+deploy@RepositoryIndex: deploy-self@RepositoryIndex
+
+.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm .dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
+	dfx canister create --network $(NETWORK) bookmark
+	dfx build --no-deps --network $(NETWORK) bookmark
+
+
+deploy-self@bookmark: canister@bookmark
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
+
+deploy@bookmark: deploy-self@bookmark
+
+.dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm .dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did:
+	dfx canister create --network $(NETWORK) Bootstrapper
+	dfx build --no-deps --network $(NETWORK) Bootstrapper
+
+
+deploy-self@Bootstrapper: canister@Bootstrapper
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.Bootstrapper) Bootstrapper
+
+deploy@Bootstrapper: deploy@cycles_ledger deploy@BootstrapperData deploy@RepositoryIndex \
+  deploy-self@Bootstrapper
+
+.dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did:
+	dfx canister create --network $(NETWORK) internet_identity
+	dfx build --no-deps --network $(NETWORK) internet_identity
+
+
+deploy-self@internet_identity: canister@internet_identity
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
+
+deploy@internet_identity: deploy-self@internet_identity
 
 .PHONY: .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz:
@@ -242,37 +263,16 @@ deploy-self@cycles_ledger: canister@cycles_ledger
 
 deploy@cycles_ledger: deploy-self@cycles_ledger
 
-.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm .dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
-	dfx canister create --network $(NETWORK) bookmark
-	dfx build --no-deps --network $(NETWORK) bookmark
+.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
+	dfx canister create --network $(NETWORK) simple_indirect
+	dfx build --no-deps --network $(NETWORK) simple_indirect
 
 
-deploy-self@bookmark: canister@bookmark
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
+deploy-self@simple_indirect: canister@simple_indirect
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
 
-deploy@bookmark: deploy-self@bookmark
-
-.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did:
-	dfx canister create --network $(NETWORK) indirect_caller
-	dfx build --no-deps --network $(NETWORK) indirect_caller
-
-
-deploy-self@indirect_caller: canister@indirect_caller
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
-
-deploy@indirect_caller: deploy@Bootstrapper deploy@cycles_ledger \
-  deploy-self@indirect_caller
-
-.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did:
-	dfx canister create --network $(NETWORK) package_manager
-	dfx build --no-deps --network $(NETWORK) package_manager
-
-
-deploy-self@package_manager: canister@package_manager
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.package_manager) package_manager
-
-deploy@package_manager: deploy@Bootstrapper deploy@cycles_ledger deploy@RepositoryIndex \
-  deploy-self@package_manager
+deploy@simple_indirect: deploy@cycles_ledger \
+  deploy-self@simple_indirect
 
 .dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.wasm .dfx/$(NETWORK)/canisters/BootstrapperData/BootstrapperData.did:
 	dfx canister create --network $(NETWORK) BootstrapperData

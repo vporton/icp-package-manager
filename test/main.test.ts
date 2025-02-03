@@ -9,6 +9,8 @@ import { createActor as createBootstrapperActor } from '../src/declarations/Boot
 import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
 import { createActor as createIndirectActor } from '../src/declarations/indirect_caller';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
+import { createActor as createPMFrontend } from '../src/declarations/package_manager_frontend';
+import { createActor as createExampleFrontend } from '../src/declarations/example_frontend';
 import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryIndex/RepositoryIndex.did";
 import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
@@ -170,7 +172,14 @@ describe('My Test Suite', () => {
                 new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
             );
         }
-        // TODO: frontend
+        console.log("Cheking PM frontend owners...");
+        const pmFrontend = createPMFrontend(frontendPrincipal, {agent: backendAgent});
+        for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
+            const owners = await pmFrontend.list_permitted({permission});
+            expect(new Set(owners)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
+        }
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
@@ -190,8 +199,13 @@ describe('My Test Suite', () => {
         const examplePrincipal = examplePkg.modules.filter(([name, _principal]) => name === 'example1')[0][1];
         const exampleInfo = await simpleIndirect.canister_info(
             {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendPrincipal, backendUser]));
+        expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
 
-        // TODO: Test also owners: PM modules and frontends.
+        const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
+        console.log("Cheking example frontend owners...");
+        for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
+            const owners = await exampleFrontend.list_permitted({permission});
+            expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+        }
     });
 });
