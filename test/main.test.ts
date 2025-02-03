@@ -148,7 +148,7 @@ describe('My Test Suite', () => {
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
 
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
-        for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal/*, frontendPrincipal*/]) {
+        for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, frontendPrincipal]) {
             const simpleIndirectInfo = await simpleIndirect.canister_info(
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
             // `indirectPrincipal` here is only for the package manager package:
@@ -170,8 +170,6 @@ describe('My Test Suite', () => {
         });
         await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
 
-        // TODO: Test also PM frontend controllers.
-
         // TODO: Test also example with backend modules.
         const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
         const examplePrincipal = examplePkg.modules.filter(([name, _principal]) => name === 'example1')[0][1];
@@ -179,6 +177,6 @@ describe('My Test Suite', () => {
             {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
         expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendPrincipal, backendUser]));
 
-        // TODO: Test also owners.
+        // TODO: Test also owners: PM modules and frontends.
     });
 });
