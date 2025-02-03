@@ -147,6 +147,11 @@ describe('My Test Suite', () => {
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
 
+        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
+        const simpleIndirectInfo = await simpleIndirect.canister_info(
+            {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
+        expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser]));
+
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
         const {minInstallationId: exampleInstallationId} = await packageManager.installPackage({
@@ -159,10 +164,16 @@ describe('My Test Suite', () => {
             afterInstallCallback: [],
         });
         await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
-        
-        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
-        const result = await simpleIndirect.canister_info(
-            {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser]));
+
+        // TODO: Test also PM frontend controllers.
+
+        // TODO: Test also example with backend modules.
+        const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
+        const examplePrincipal = examplePkg.modules.filter(([name, principal]) => name === 'example1')[0][1];
+        const exampleInfo = await simpleIndirect.canister_info(
+            {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
+        expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendPrincipal, backendUser]));
+
+        // TODO: Test also owners.
     });
 });
