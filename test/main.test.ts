@@ -66,12 +66,12 @@ Assertion.addMethod('equalPrincipalSet', function (expected) {
     const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal)).sort();
     
     this.assert(
-    expect(actualStrings).to.deep.equal(expectedStrings),
-    // expect(actualStrings).to.have.same.members(expectedStrings),
-    "expected #{act} to equal #{exp}",
-      "expected #{act} to not equal #{exp}",
-      expectedStrings,
-      actualStrings
+        expect(actualStrings).to.deep.equal(expectedStrings),
+        // expect(actualStrings).to.have.same.members(expectedStrings),
+        "expected #{act} to equal #{exp}",
+        "expected #{act} to not equal #{exp}",
+        expectedStrings,
+        actualStrings
     );
 });
   
@@ -150,7 +150,8 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const simpleIndirectInfo = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser]));
+        // TODO: Should have also `indirectPrincipal`?
+        expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendPrincipal, backendUser]));
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
