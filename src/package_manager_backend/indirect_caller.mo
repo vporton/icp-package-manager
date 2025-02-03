@@ -287,8 +287,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         let {canister_id} = await* Install.myCreateCanister({
             // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
             // FIXME: `packageManagerOrBootstrapper` seems superfluous.
-            // TODO: both `initialIndirect` and `this`?
-            mainControllers = ?[user, initialIndirect, simpleIndirect, packageManagerOrBootstrapper, Principal.fromActor(this)];
+            mainControllers = ?[user, simpleIndirect, packageManagerOrBootstrapper, Principal.fromActor(this)];
             user;
             initialIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
