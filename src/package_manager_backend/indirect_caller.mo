@@ -29,14 +29,13 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
-            [ // TODO: Remove unneeded:
+            [
                 (packageManagerOrBootstrapper, ()),
                 (initialIndirect, ()),
                 (simpleIndirect, ()),
                 (user, ()),
-                (Principal.fromActor(this), ()),
             ].vals(),
-            5,
+            4,
             Principal.equal,
             Principal.hash);
 
