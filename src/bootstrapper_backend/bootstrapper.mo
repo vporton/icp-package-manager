@@ -131,7 +131,7 @@ actor class Bootstrapper() = this {
                     compute_allocation = null;
                     // We don't include `indirect_canister_id` because it can't control without risk of ite being replaced.
                     // TODO: Check which canisters are necessary as controllers.
-                    controllers = ?[simple_indirect_canister_id, user, indirect_canister_id, Principal.fromActor(this), backend_canister_id]; // TODO: Should `user` be among controllers?    
+                    controllers = ?[simple_indirect_canister_id, user, indirect_canister_id, Principal.fromActor(this), backend_canister_id];
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
