@@ -150,8 +150,10 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const simpleIndirectInfo = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        // TODO: Should have also `indirectPrincipal` (only for PM package)?
-        expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendPrincipal, backendUser]));
+            // `indirectPrincipal` here is only for the package manager package:
+            expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});

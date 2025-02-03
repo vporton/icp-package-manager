@@ -129,7 +129,8 @@ actor class Bootstrapper() = this {
                 sender_canister_version = null;
                 settings = {
                     compute_allocation = null;
-                    controllers = ?[simple_indirect_canister_id, backend_canister_id, user];
+                    // `indirect_canister_id` here is only for the package manager package:
+                    controllers = ?[simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
