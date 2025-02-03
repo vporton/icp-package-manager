@@ -147,6 +147,7 @@ describe('My Test Suite', () => {
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
 
+        console.log("Testing controllers of the PM modules...");
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, frontendPrincipal]) {
             const simpleIndirectInfo = await simpleIndirect.canister_info(
