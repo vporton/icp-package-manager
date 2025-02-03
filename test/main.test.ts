@@ -62,13 +62,13 @@ function getCanisterNameFromPrincipal(principal: Principal): string {
 
 Assertion.addMethod('equalPrincipalSet', function (expected) {
     const actual = this._obj;
-    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p as Principal));
-    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal));
-    console.log("A", actualStrings, "E", expectedStrings);
+    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p as Principal)).sort();
+    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal)).sort();
     
     this.assert(
-      expect(actualStrings).to.deep.equal(expectedStrings),
-      "expected #{act} to equal #{exp}",
+    expect(actualStrings).to.deep.equal(expectedStrings),
+    // expect(actualStrings).to.have.same.members(expectedStrings),
+    "expected #{act} to equal #{exp}",
       "expected #{act} to not equal #{exp}",
       expectedStrings,
       actualStrings
@@ -163,6 +163,6 @@ describe('My Test Suite', () => {
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
         const result = await simpleIndirect.canister_info(
             {canister_id: backendPrincipal, num_requested_changes: []}, 1000_000_000_000n);
-        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([backendPrincipal, simpleIndirectPrincipal, backendUser]));
+        expect(new Set(result.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser]));
     });
 });
