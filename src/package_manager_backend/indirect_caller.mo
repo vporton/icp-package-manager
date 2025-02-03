@@ -9,6 +9,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Common "../common";
 import Install "../install";
+import IC "mo:ic";
 
 shared({caller = initialCaller}) actor class IndirectCaller({
     packageManagerOrBootstrapper: Principal;
@@ -287,7 +288,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         let {canister_id} = await* Install.myCreateCanister({
             // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
             // FIXME: `packageManagerOrBootstrapper` seems superfluous.
-            mainControllers = ?[user, simpleIndirect, packageManagerOrBootstrapper, Principal.fromActor(this)];
+            mainControllers = ?[simpleIndirect, packageManagerOrBootstrapper, user, Principal.fromActor(this)];
             user;
             initialIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
@@ -313,6 +314,21 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             initialIndirect;
             simpleIndirect;
             user;
+        });
+
+        // Remove `indirectCaller` as a controller, because it's costly to replace it in every canister after new version of `indirectCaller`..
+        await IC.ic.update_settings({
+            canister_id;
+            sender_canister_version = null;
+            settings = {
+                compute_allocation = null;
+                controllers = ?[simpleIndirect, packageManagerOrBootstrapper, user];
+                freezing_threshold = null;
+                log_visibility = null;
+                memory_allocation = null;
+                reserved_cycles_limit = null;
+                wasm_memory_limit = null;
+            };
         });
 
         await pm.onInstallCode({
