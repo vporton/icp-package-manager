@@ -119,7 +119,8 @@ export class InitializedChecker {
             }
         }
         catch (e) {
-            console.log("Waiting for initialization: " + e);
+            // console.log("Waiting for initialization: " + e);
+            console.log("Waiting for initialization...");
             throw e;
         }
     }
