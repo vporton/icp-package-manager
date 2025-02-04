@@ -74,6 +74,7 @@ function GlobalUI() {
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
+        const repoPart = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
@@ -82,7 +83,8 @@ function GlobalUI() {
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
-          repoPart: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
+          repoPart, // TODO: Rename.
+          additionalPackages: [{packageName: "example", version: "0.0.1", repo: repoPart}],
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);

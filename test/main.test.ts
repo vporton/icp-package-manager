@@ -132,6 +132,7 @@ describe('My Test Suite', () => {
         const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
+        const repoPart = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
@@ -141,7 +142,8 @@ describe('My Test Suite', () => {
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
-                repoPart: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
+                repoPart, // TODO: Rename.
+                additionalPackages: [{packageName: "example", version: "0.0.1", repo: repoPart}],
             });
         canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
         canisterNames.set(indirectPrincipal.toText(), 'indirectPrincipal');
