@@ -21,7 +21,7 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this), simpleIndirect, user]; // TODO: This is a bug.
+            mainControllers = ?[Principal.fromActor(this)/*, simpleIndirect, user*/]; // TODO: This is a bug.
             user;
             cyclesAmount = newCanisterCycles;
         });
@@ -208,7 +208,7 @@ actor class Bootstrapper() = this {
             };
             for (owner in owners.vals()) {
                 await assets.revoke_permission({
-                    of_principal = owner; // Principal.fromActor(this);
+                    of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
                 });
             };

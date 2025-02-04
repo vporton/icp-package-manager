@@ -204,15 +204,13 @@ describe('My Test Suite', () => {
         const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
         console.log("Checking example frontend owners...");
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
-            try {
-                console.log("SSS");
+            // try {
                 const owners = await exampleFrontend.list_permitted({permission});
-                console.log("LEN: " + owners.length);
-                // expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
-            }
-            catch(e) {
-                console.log("PP", e);
-            }
+                expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+            // }
+            // catch(e) {
+            //     console.log("PP", e);
+            // }
         }
     });
 });

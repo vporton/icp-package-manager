@@ -55,7 +55,6 @@ module {
         simpleIndirect: Principal;
         user: Principal;
     }): async* () {
-        Debug.print("USER: " # debug_show(user)); // FIXME: Remove.
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryIndexRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
         let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
