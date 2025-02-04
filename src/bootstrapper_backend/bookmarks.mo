@@ -25,6 +25,7 @@ actor Bookmarks {
     let userToBookmark = TrieMap.TrieMap<Principal, HashMap.HashMap<Bookmark, ()>>(Principal.equal, Principal.hash);
 
     /// FIXME: persistent
+    /// TODO: Use https://mops.one/hash-map
     let bookmarks = TrieMap.TrieMap<Bookmark, ()>(bookmarksEqual, bookmarkHash);
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
