@@ -161,7 +161,7 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        ignore await backend.installPackageWithPreinstalledModules({ // FIXME: Remove `await` not to run into a DoS-attack.
+        ignore await backend.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
           version = "0.0.1"; // TODO: should be `stable`.
