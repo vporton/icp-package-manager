@@ -7,11 +7,11 @@ import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { InstallationId, RepositoryIndexRO } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
-import { createActor as createRepoIndexActor } from "../../declarations/RepositoryIndex";
-import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryIndex';
+import { createActor as createRepoIndexActor } from "../../declarations/Repository";
+import { createActor as repoPartitionCreateActor } from '../../declarations/Repository';
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { myUseNavigate } from "./MyNavigate";
-import { RepositoryIndex } from "../../declarations/RepositoryIndex/RepositoryIndex.did";
+import { Repository } from "../../declarations/Repository/Repository.did";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("(Unnamed)"); // TODO: button to rename it
@@ -68,7 +68,7 @@ export default function MainPage() {
             setCurDistroVersion(0);
             return;
         }
-        const repo: RepositoryIndex = createRepoIndexActor(curDistro!, {agent});
+        const repo: Repository = createRepoIndexActor(curDistro!, {agent});
         repo.getDefaultVersions().then(v => {
             setDistroVersions(v.versions);
             setCurDistroVersion(parseInt(v.defaultVersionIndex.toString()));

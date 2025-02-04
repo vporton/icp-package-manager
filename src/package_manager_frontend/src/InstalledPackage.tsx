@@ -3,7 +3,7 @@ import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
-import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryIndex/RepositoryIndex.did.js';
+import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/Repository/Repository.did.js';
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";

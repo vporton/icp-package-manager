@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SharedFullPackageInfo } from '../../declarations/RepositoryIndex/RepositoryIndex.did.js';
+import { SharedFullPackageInfo } from '../../declarations/Repository/Repository.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
-import { _SERVICE as RepositoryIndex } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
-import { idlFactory as repositoryIndexIdl } from '../../declarations/RepositoryIndex';
-import { createActor as repoPartitionCreateActor } from '../../declarations/RepositoryIndex';
+import { _SERVICE as Repository } from '../../declarations/Repository/Repository.did';
+import { idlFactory as repositoryIndexIdl } from '../../declarations/Repository';
+import { createActor as repoPartitionCreateActor } from '../../declarations/Repository';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
@@ -27,7 +27,7 @@ export default function ChooseVersion(props: {}) {
     const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
-        const index: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
+        const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
         let fullInfo = index.getFullPackageInfo(packageName!).then(fullInfo => {
             const versionsMap = new Map(fullInfo.versionsMap);
             const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);

@@ -3,11 +3,11 @@ import { exec, execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { SharedRealPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
-import { _SERVICE as RepositoryIndex } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
-import { idlFactory as repositoryIndexIdl } from '../src/declarations/RepositoryIndex';
-import { SharedPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
-import { SharedFullPackageInfo } from '../src/declarations/RepositoryIndex/RepositoryIndex.did';
+import { SharedRealPackageInfo } from '../src/declarations/Repository/Repository.did';
+import { _SERVICE as Repository } from '../src/declarations/Repository/Repository.did';
+import { idlFactory as repositoryIndexIdl } from '../src/declarations/Repository';
+import { SharedPackageInfo } from '../src/declarations/Repository/Repository.did';
+import { SharedFullPackageInfo } from '../src/declarations/Repository/Repository.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
 
@@ -16,7 +16,7 @@ dotenv_config({ path: '.env' });
 global.fetch = node_fetch as any;
 
 if (process.env.DFX_NETWORK === 'local') {
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister RepositoryIndex");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Repository");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
 }
@@ -41,7 +41,7 @@ async function main() {
         agent.fetchRootKey();
     }
 
-    const repositoryIndex: RepositoryIndex = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
+    const repositoryIndex: Repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORYINDEX!});
     console.log("Repository init...");
     try {
         await repositoryIndex.init();

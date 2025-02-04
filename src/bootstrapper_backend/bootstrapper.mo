@@ -47,7 +47,7 @@ actor class Bootstrapper() = this {
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
-        repoPart: Common.RepositoryIndexRO; // TODO: Rename.
+        repo: Common.RepositoryIndexRO;
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
@@ -176,7 +176,7 @@ actor class Bootstrapper() = this {
             ("indirect", indirect_canister_id),
             ("simple_indirect", simple_indirect_canister_id),
           ];
-          repo = repoPart;
+          repo = repo;
           user;
           indirectCaller = indirect_canister_id;
           additionalPackages;

@@ -6,12 +6,12 @@ import { Principal } from "@dfinity/principal";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
-import { createActor as createRepositoryIndexActor } from "../src/declarations/RepositoryIndex";
+import { createActor as createRepositoryIndexActor } from "../src/declarations/Repository";
 import { createActor as createIndirectActor } from '../src/declarations/indirect_caller';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { createActor as createPMFrontend } from '../src/declarations/package_manager_frontend';
 import { createActor as createExampleFrontend } from '../src/declarations/example_frontend';
-import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/RepositoryIndex/RepositoryIndex.did";
+import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/Repository/Repository.did";
 import { config as dotenv_config } from 'dotenv';
 import { Bootstrapper } from "../src/declarations/Bootstrapper/Bootstrapper.did";
 import { IDL } from "@dfinity/candid";
@@ -132,7 +132,7 @@ describe('My Test Suite', () => {
         const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
-        const repoPart = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
+        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
@@ -142,8 +142,8 @@ describe('My Test Suite', () => {
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
-                repoPart, // TODO: Rename.
-                additionalPackages: [{packageName: "example", version: "0.0.1", repo: repoPart}],
+                repo,
+                additionalPackages: [{packageName: "example", version: "0.0.1", repo: repo}],
             });
         canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
         canisterNames.set(indirectPrincipal.toText(), 'indirectPrincipal');

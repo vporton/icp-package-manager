@@ -43,7 +43,7 @@ Remaining things TODO:
 
 - Paid soft.
 
-- Reconcile different naming schemes: `indirect_caller` but `RepositoryIndex`.
+- Reconcile different naming schemes: `indirect_caller` but `Repository`.
 
 - Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
 
@@ -103,7 +103,7 @@ Remaining things TODO:
 
 - Should we automatically uninstall "orphaned" packages (installed only to support another package)?
 
-- Store in installed package info also its `RepositoryIndex`?
+- Store in installed package info also its `Repository`?
 
 - Package manager (and probably some other packages) should be non-removable.
 

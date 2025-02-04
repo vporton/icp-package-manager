@@ -11,10 +11,10 @@ import { GlobalContext, GlobalContextProvider } from './state';
 import { AuthButton } from './AuthButton';
 import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
-import { createActor as createRepositoryIndexActor } from "../../declarations/RepositoryIndex";
+import { createActor as createRepositoryIndexActor } from "../../declarations/Repository";
 import { createActor as createBackendActor } from "../../declarations/package_manager";
 import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
-import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/RepositoryIndex/RepositoryIndex.did';
+import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/Repository/Repository.did';
 import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
@@ -74,7 +74,7 @@ function GlobalUI() {
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
-        const repoPart = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
+        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
@@ -83,8 +83,8 @@ function GlobalUI() {
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
-          repoPart, // TODO: Rename.
-          additionalPackages: [{packageName: "example", version: "0.0.1", repo: repoPart}],
+          repo,
+          additionalPackages: [{packageName: "example", version: "0.0.1", repo: repo}],
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);

@@ -8,7 +8,7 @@ import Nat "mo:base/Nat";
 import Option "mo:base/Option";
 import Common "../common";
 
-shared ({caller = initialOwner}) actor class RepositoryIndex() = this {
+shared ({caller = initialOwner}) actor class Repository() = this {
   var owner = initialOwner;
   
   var nextWasmId = 0;

@@ -5,7 +5,7 @@ import { createActor as createPackageManager } from '../declarations/package_man
 import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
 import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
-import { createActor as createRepositoryIndexActor } from "../declarations/RepositoryIndex";
+import { createActor as createRepositoryIndexActor } from "../declarations/Repository";
 import { IDL } from "@dfinity/candid";
 import {  } from '../declarations/RepositoryPartition/RepositoryPartition.did';
 
