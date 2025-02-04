@@ -1,3 +1,5 @@
+/// This module is legible to non-returning-function attack. Throw it away if it fails this way.
+/// Data is stored in `BootstrapperData` instead.
 import Asset "mo:assets-api";
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
@@ -7,10 +9,8 @@ import Common "../common";
 import Install "../install";
 import Data "canister:BootstrapperData";
 
-// FIXME: Functions in this canister are legible to non-returning-callee attack. Develop the strategy of updating this module.
-//        Especially, we should preserve `frontendTweakers`.
 actor class Bootstrapper() = this {
-    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it.
+    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `BootstrapperData`?)
 
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
