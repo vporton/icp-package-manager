@@ -200,15 +200,18 @@ actor class Bootstrapper() = this {
             Debug.trap("access denied");
         };
         let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
+        let owners = await assets.list_authorized();
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
-            for (principal in [simple_indirect_canister_id, indirect_canister_id, backend_canister_id/*, user*/].vals()) {
+            for (principal in [simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user].vals()) {
                 await assets.grant_permission({to_principal = principal; permission});
             };
-            await assets.revoke_permission({
-                of_principal = Principal.fromActor(this);
-                permission;
-            });
+            for (owner in owners.vals()) {
+                await assets.revoke_permission({
+                    of_principal = owner; // Principal.fromActor(this);
+                    permission;
+                });
+            };
         };
         // Done above:
         // await ic.update_settings({
