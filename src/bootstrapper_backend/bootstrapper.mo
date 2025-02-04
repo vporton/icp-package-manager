@@ -29,7 +29,7 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
             packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
-            // Automated tests esnure that these `aaaaa-aa` are removed at a later installation stage:
+            // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
             initialIndirect = Principal.fromText("aaaaa-aa");
             simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
