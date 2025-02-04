@@ -20,6 +20,8 @@ Remaining things TODO:
 
 - TODO: future compaitibility in package format.
 
+- Prevent using Tab key to circumvent “busy” overlay.
+
 - A button to copy repository's principal.
 
 - FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
