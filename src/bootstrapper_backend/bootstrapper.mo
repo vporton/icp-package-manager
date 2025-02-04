@@ -19,7 +19,7 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)/*, simpleIndirect, user*/]; // TODO: This is a bug.
+            mainControllers = ?[Principal.fromActor(this)];
             user;
             cyclesAmount = newCanisterCycles;
         });
@@ -29,6 +29,7 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
             packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
+            // Automated tests esnure that these `aaaaa-aa` are removed at a later installation stage:
             initialIndirect = Principal.fromText("aaaaa-aa");
             simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
