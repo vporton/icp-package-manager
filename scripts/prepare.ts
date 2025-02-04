@@ -34,6 +34,7 @@ async function main() {
     const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/indirect_caller/indirect_caller.wasm"));
     const pmSimpleIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/simple_indirect/simple_indirect.wasm"));
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
+    const pmExampleBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_backend/example_backend.wasm"));
 
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     if (process.env.DFX_NETWORK === 'local') {
@@ -87,6 +88,12 @@ async function main() {
         forceReinstall: false,
         callbacks: [],
     });
+    const pmExampleBackend = await repositoryIndex.uploadModule({
+        code: {Wasm: pmExampleBackendBlob},
+        installByDefault: true,
+        forceReinstall: false,
+        callbacks: [],
+    });
 
     console.log("Creating packages...");
     const pmReal: SharedRealPackageInfo = {
@@ -123,6 +130,7 @@ async function main() {
     const efReal: SharedRealPackageInfo = {
         modules: [
             ['example1', pmExampleFrontend],
+            ['example2', pmExampleBackend],
         ],
         dependencies: [],
         suggests: [],

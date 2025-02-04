@@ -55,6 +55,13 @@
         "name": "candid:service"
       }]
     },
+    "example_backend": {
+      "type": "motoko",
+      "main": "src/example_backend/main.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
     "package_manager_frontend": {
       "dependencies": [
         "package_manager", "internet_identity"
@@ -85,8 +92,9 @@
       }]
     },
     "example_frontend": {
+      "dependencies": ["example_backend"],
       "source": [
-        "src/example_frontend"
+        "src/example_frontend/dist"
       ],
       "type": "assets",
       "workspace": "bootstrapper_frontend",
