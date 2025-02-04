@@ -16,8 +16,6 @@ actor class Bootstrapper() = this {
         wasmModule: Common.SharedModule;
         installArg: Blob;
         user: Principal;
-        initialIndirect: Principal;
-        simpleIndirect: Principal;
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let {canister_id} = await* Install.myCreateCanister({
@@ -31,8 +29,8 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
             packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
-            initialIndirect;
-            simpleIndirect;
+            initialIndirect = Principal.fromText("aaaaa-aa");
+            simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
         });
         await Data.putFrontendTweaker(canister_id, frontendTweakPubKey);
