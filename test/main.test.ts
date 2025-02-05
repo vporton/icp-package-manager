@@ -114,8 +114,8 @@ describe('My Test Suite', () => {
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
         canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
 
-        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
-        canisterNames.set(process.env.CANISTER_ID_REPOSITORYINDEX!, 'repoIndex');
+        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: defaultAgent});
+        canisterNames.set(process.env.CANISTER_ID_REPOSITORY!, 'repoIndex');
 
         let icPackPkg = await repoIndex.getPackage('icpack', "0.0.1");
         const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
@@ -132,7 +132,7 @@ describe('My Test Suite', () => {
         const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
-        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
+        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
@@ -189,7 +189,7 @@ describe('My Test Suite', () => {
             packages: [{
                 packageName: "example",
                 version: "0.0.1",
-                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
             }],
             user: backendUser,
             afterInstallCallback: [],

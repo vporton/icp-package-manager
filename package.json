@@ -14,7 +14,8 @@
   "workspaces": [
     "src/bootstrapper_frontend",
     "src/package_manager_frontend",
-    "src/repository_frontend"
+    "src/repository_frontend",
+    "src/example_frontend"
   ],
   "dependencies": {
     "@dfinity/agent": "^1.4.0",

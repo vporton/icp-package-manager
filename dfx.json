@@ -97,7 +97,7 @@
         "src/example_frontend/dist"
       ],
       "type": "assets",
-      "workspace": "bootstrapper_frontend",
+      "workspace": "example_frontend",
       "metadata": [{
         "name": "candid:service"
       }]

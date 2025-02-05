@@ -68,13 +68,13 @@ function GlobalUI() {
     async function installBackend() {
       try {
         setBusy(true);
-        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: defaultAgent});
+        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: defaultAgent});
         let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
-        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!);
+        const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
         const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,

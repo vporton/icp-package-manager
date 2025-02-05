@@ -49,7 +49,7 @@ function App2() {
               <>
                 <h2>Install</h2>
                 <p>Copy the repository ID:{" "}
-                {process.env.CANISTER_ID_REPOSITORYINDEX}
+                {process.env.CANISTER_ID_REPOSITORY}
                 </p>
               </>}/>
             </Routes>

@@ -55,7 +55,7 @@ export default function ChooseVersion(props: {}) {
                 packages: [{
                     packageName: packageName!,
                     version: chosenVersion!,
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORYINDEX!),
+                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
                 }],
                 user: principal!,
                 afterInstallCallback: [],

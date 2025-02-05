@@ -50,8 +50,8 @@ export default function MainPage() {
       });
     }, [props.isAuthenticated, props.principal]);
     // TODO: Allow to change the bootstrap repo:
-    // console.log("process.env.CANISTER_ID_REPOSITORYINDEX", process.env.CANISTER_ID_REPOSITORYINDEX);
-    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORYINDEX!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
+    // console.log("process.env.CANISTER_ID_REPOSITORY", process.env.CANISTER_ID_REPOSITORY);
+    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
       try {
         setBusy(true);
