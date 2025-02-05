@@ -2,12 +2,11 @@
 import { Principal } from '@dfinity/principal';
 import { InstallationId, PackageManager, SharedRealPackageInfo, SharedModule } from '../declarations/package_manager/package_manager.did';
 import { createActor as createPackageManager } from '../declarations/package_manager';
-import { createActor as createFrontendActor } from '../declarations/bootstrapper_frontend';
+import { createActor as createFrontendActor } from '../declarations/example_frontend';
 import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../declarations/Repository";
 import { IDL } from "@dfinity/candid";
-import {  } from '../declarations/RepositoryPartition/RepositoryPartition.did';
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
     const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
