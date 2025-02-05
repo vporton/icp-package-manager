@@ -7,6 +7,7 @@ DEPLOY_FLAGS.BootstrapperData = --argument "principal \"$(USER)\""
 .PHONY: deploy
 deploy:
 
+# TODO: Rules should be not here:
 # Don't use dfx.json dependency, because package_manager is not to be installed.
 # example_frontend is used here to deploy an asset canister.
 canister@bootstrapper_frontend: generate@example_frontend generate@package_manager generate@indirect_caller generate@simple_indirect generate@bookmark
