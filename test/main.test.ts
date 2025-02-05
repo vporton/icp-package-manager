@@ -143,7 +143,7 @@ describe('My Test Suite', () => {
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
                 repo,
-                additionalPackages: [{packageName: "example", version: "0.0.1", repo: repo}],
+                additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
             });
         canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
         canisterNames.set(indirectPrincipal.toText(), 'indirectPrincipal');

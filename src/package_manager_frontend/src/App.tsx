@@ -84,7 +84,7 @@ function GlobalUI() {
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
           repo,
-          additionalPackages: [{packageName: "example", version: "0.0.1", repo: repo}],
+          additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);
