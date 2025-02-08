@@ -139,7 +139,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         #package;
                         // #simplyModules : [(Text, Common.SharedModule)]; // TODO
                     };
-                    minInstallationId: Common.InstallationId; // FIXME: Move inside packages array.
+                    minInstallationId: Common.InstallationId;
                     afterInstallCallback: ?{
                         canister: Principal; name: Text; data: Blob;
                     };
