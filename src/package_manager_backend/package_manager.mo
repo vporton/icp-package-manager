@@ -545,14 +545,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO: Do it here instead.
                 }
             };
-            // if (inst.totalNumberOfModulesRemainingToInstall == 0) { // FIXME: Edge case of package with no modules.
-            //     switch (afterInstallCallback) {
-            //         case (?afterInstallCallback) {
-            //             ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
-            //         };
-            //         case null {};
-            //     };
-            // };
             for (m in inst.installedModules.vals()) {
                 switch (m) {
                     case (?(?n, p)) {
