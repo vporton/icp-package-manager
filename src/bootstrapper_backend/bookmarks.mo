@@ -1,6 +1,4 @@
 import Principal "mo:base/Principal";
-import Hash "mo:base/Hash";
-import Debug "mo:base/Debug";
 import Array "mo:base/Array";
 import BTree "mo:stableheapbtreemap/BTree";
 
