@@ -40,7 +40,7 @@ persistent actor Bookmarks {
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark(b: Bookmark): async Bool {
         switch (BTree.get(bookmarks, bookmarksCompare, b)) {
-            case (?_) false;
+            case (?_) true;
             case null {
                 ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
                 let a = BTree.get(userToBookmark, Principal.compare, caller);
@@ -49,7 +49,7 @@ persistent actor Bookmarks {
                     case null [b];
                 };
                 ignore BTree.insert(userToBookmark, Principal.compare, caller, a2);
-                true;
+                false;
             };
         };
     };
