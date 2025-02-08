@@ -273,7 +273,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         await* _installModulesGroup({
             indirectCaller = actor(Principal.toText(indirectCaller));
             whatToInstall;
-            minInstallationId; // FIXME: Move inside packages.
+            minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
             installPackage = true; // TODO
             pmPrincipal = Principal.fromActor(this);
@@ -282,7 +282,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
-                data = to_candid(additionalPackages, user, minInstallationId);
+                data = to_candid(additionalPackages, user, minInstallationId); // TODO: duplicate value of `minInstallationId`
             };
         });
     };
