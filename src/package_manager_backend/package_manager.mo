@@ -861,8 +861,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         Common.installedPackageInfoShare(result);
     };
 
-    /// TODO: very unstable API.
-    /// FIXME
     public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
         : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
     {
@@ -879,7 +877,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             Common.installedPackageInfoShare(info);
         }));
-        {all = all; default = data.default}; // FIXME: Should preserve the default setting if previously installed this package.
+        {all = all; default = data.default};
     };
 
     /// TODO: very unstable API.
