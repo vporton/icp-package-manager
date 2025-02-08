@@ -1,64 +1,59 @@
-import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
-import TrieMap "mo:base/TrieMap";
 import Hash "mo:base/Hash";
-import Iter "mo:base/Iter";
-import Option "mo:base/Option";
+import Debug "mo:base/Debug";
+import Array "mo:base/Array";
+import BTree "mo:stableheapbtreemap/BTree";
 
 // TODO: Allow only the user to see his bookmarks?
-actor Bookmarks {
+persistent actor Bookmarks {
     public type Bookmark = {
         frontend: Principal;
         backend: Principal;
     };
 
-    private func bookmarksEqual(a: Bookmark, b: Bookmark): Bool {
-        a == b;
+    private func bookmarksCompare(a: Bookmark, b: Bookmark): {#less; #equal; #greater} {
+        switch (Principal.compare(a.frontend, b.frontend)) {
+            case (#less) #less;
+            case (#equal) Principal.compare(a.backend, b.backend);
+            case (#greater) #greater;
+        };
     };
 
-    private func bookmarkHash(a: Bookmark): Hash.Hash {
-        Principal.hash(a.frontend) ^ Principal.hash(a.backend);
-    };
+    // private func bookmarkHash(a: Bookmark): Hash.Hash {
+    //     Principal.hash(a.frontend) ^ Principal.hash(a.backend);
+    // };
 
-    /// user -> ((frontend, backend) -> ()))
-    /// FIXME: persistent
-    let userToBookmark = TrieMap.TrieMap<Principal, HashMap.HashMap<Bookmark, ()>>(Principal.equal, Principal.hash);
+    /// user -> [Bookmark]
+    stable let userToBookmark = BTree.init<Principal, [Bookmark]>(null);
 
-    /// FIXME: persistent
-    /// TODO: Use https://mops.one/hash-map
-    let bookmarks = TrieMap.TrieMap<Bookmark, ()>(bookmarksEqual, bookmarkHash);
+    stable let bookmarks = BTree.init<Bookmark, ()>(null);
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
-        switch (userToBookmark.get(caller)) {
-            case (?a) Iter.toArray(Iter.map(
-                a.entries(),
-                func ((b, _): (Bookmark, ())): Bookmark = b,
-            ));
+        switch (BTree.get(userToBookmark, Principal.compare, caller)) {
+            case (?a) a;
             case null [];
         };
     };
 
     public query func hasBookmark(b: Bookmark): async Bool {
-        Option.isSome(bookmarks.get(b));
+        BTree.has(bookmarks, bookmarksCompare, b);
     };
 
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark(b: Bookmark): async Bool {
-        let result = Option.isSome(bookmarks.get(b));
-        if (not result) {
-            bookmarks.put(b, ());
-        };
-        switch (userToBookmark.get(caller)) {
-            case (?subMap) {
-                subMap.put(b, ());
-            };
+        switch (BTree.get(bookmarks, bookmarksCompare, b)) {
+            case (?_) false;
             case null {
-                let subMap = HashMap.HashMap<Bookmark, ()>(1, bookmarksEqual, bookmarkHash);
-                subMap.put(b, ());
-                userToBookmark.put(caller, subMap);
+                ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
+                let a = BTree.get(userToBookmark, Principal.compare, caller);
+                let a2 = switch (a) {
+                    case (?a) Array.append(a, [b]);
+                    case null [b];
+                };
+                ignore BTree.insert(userToBookmark, Principal.compare, caller, a2);
+                true;
             };
         };
-        result;
     };
 
     // TODO: Charge the allocated by dev to limit DoS spam.
