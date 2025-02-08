@@ -127,7 +127,6 @@ actor class Bootstrapper() = this {
             simple_indirect_canister_id; indirect_canister_id; backend_canister_id; user;
         });
 
-        // FIXME: Move below?
         for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
