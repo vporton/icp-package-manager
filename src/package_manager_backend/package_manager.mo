@@ -290,34 +290,15 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// It can be used directly from frontend.
     ///
     /// `avoidRepeated` forbids to install them same named modules more than once.
-    /// TODO: What if, due actor model's non-realiability, it installed partially.
     ///
-    /// FIXME: It reuses an existing `installationId`.
     // public shared({caller}) func installNamedModules({
-    //     installationId: Common.InstallationId;
     //     repo: Common.RepositoryIndexRO; // TODO: Install from multiple repos.
-    //     modules: [(Text, Common.SharedModule)]; // TODO: installArg, initArg
-    //     _avoidRepeated: Bool; // TODO: Use.
+    //     modules: [(Text, Common.SharedModule)]; //  installArg, initArg
+    //     avoidRepeated: Bool;
     //     user: Principal;
     //     preinstalledModules: [(Text, Principal)];
     // }): async {installationId: Common.InstallationId} {
     //     onlyOwner(caller, "installNamedModule");
-
-    //     let ?inst = installedPackages.get(installationId) else {
-    //         Debug.trap("no such package");
-    //     };
-    //     await* _installModulesGroup({
-    //         indirectCaller = getIndirectCaller();
-    //         whatToInstall = #simplyModules modules;
-    //         installationId;
-    //         packageName = inst.package.base.name;
-    //         packageVersion = inst.package.base.version;
-    //         pmPrincipal = Principal.fromActor(this);
-    //         repo;
-    //         objectToInstall = #package {packageName = inst.package.base.name; version = inst.package.base.version}; // TODO
-    //         user;
-    //         preinstalledModules;
-    //     });
     // };
 
     type ObjectToInstall = {
