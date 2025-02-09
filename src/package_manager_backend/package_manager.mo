@@ -400,78 +400,78 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
-            await* doInstallFinish();
+            for ((p0, pkg) in halfInstalledPackages.entries()) {
+                await* doInstallFinish(p0, pkg);
+            };
         };
     };
 
-    private func doInstallFinish(): async* () {
-        for ((p0, pkg) in halfInstalledPackages.entries()) {
-            let p = pkg.package;
-            let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
-                // case (#simplyModules m) {
-                //     Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                //         m.vals(),
-                //         func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
-                //     );
-                // };
-                case (#package) {
-                    switch (p.specific) {
-                        case (#real pkgReal) {
-                            Iter.filter<(Text, Common.Module)>(
-                                pkgReal.modules.entries(),
-                                func (p: (Text, Common.Module)) = p.1.installByDefault,
-                            );
-                        };
-                        case (#virtual _) [].vals();
+    private func doInstallFinish(p0: Common.InstallationId, pkg: Common.HalfInstalledPackageInfo): async* () {
+        let p = pkg.package;
+        let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
+            // case (#simplyModules m) {
+            //     Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
+            //         m.vals(),
+            //         func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
+            //     );
+            // };
+            case (#package) {
+                switch (p.specific) {
+                    case (#real pkgReal) {
+                        Iter.filter<(Text, Common.Module)>(
+                            pkgReal.modules.entries(),
+                            func (p: (Text, Common.Module)) = p.1.installByDefault,
+                        );
                     };
-                }
-            };
-
-            let bi = if (pkg.bootstrapping) {
-                // TODO: hack (instead should base this list on package description)
-                [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getIndirectCaller())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
-            } else {
-                let ?pkg0 = installedPackages.get(0) else {
-                    Debug.trap("package manager not installed");
+                    case (#virtual _) [].vals();
                 };
-                Iter.toArray(pkg0.modules.entries()); // TODO: inefficient?
+            }
+        };
+
+        let bi = if (pkg.bootstrapping) {
+            // TODO: hack (instead should base this list on package description)
+            [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getIndirectCaller())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
+        } else {
+            let ?pkg0 = installedPackages.get(0) else {
+                Debug.trap("package manager not installed");
             };
-            let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
-            var moduleNumber = 0;
-            let ?backend = coreModules.get("backend") else {
-                Debug.trap("error getting backend");
-            };
-            let ?indirect = coreModules.get("indirect") else {
-                Debug.trap("error getting indirect");
-            };
-            let ?simple_indirect = coreModules.get("simple_indirect") else {
-                Debug.trap("error getting simple_indirect");
-            };
-            // The following (typically) does not overflow cycles limit, because we use an one-way function.
-            var i = 0;
-            for ((name, m): (Text, Common.Module) in modules) {
-                // Starting installation of all modules in parallel:
-                getIndirectCaller().installModule({
-                    installPackage = true/*whatToInstall == #package*/; // TODO: correct?
-                    moduleNumber;
-                    moduleName = ?name;
-                    installArg = to_candid({
-                        installationId = p0;
-                        packageManagerOrBootstrapper = backend;
-                    }); // TODO: Add more arguments.
+            Iter.toArray(pkg0.modules.entries()); // TODO: inefficient?
+        };
+        let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
+        var moduleNumber = 0;
+        let ?backend = coreModules.get("backend") else {
+            Debug.trap("error getting backend");
+        };
+        let ?indirect = coreModules.get("indirect") else {
+            Debug.trap("error getting indirect");
+        };
+        let ?simple_indirect = coreModules.get("simple_indirect") else {
+            Debug.trap("error getting simple_indirect");
+        };
+        // The following (typically) does not overflow cycles limit, because we use an one-way function.
+        var i = 0;
+        for ((name, m): (Text, Common.Module) in modules) {
+            // Starting installation of all modules in parallel:
+            getIndirectCaller().installModule({
+                installPackage = true/*whatToInstall == #package*/; // TODO: correct?
+                moduleNumber;
+                moduleName = ?name;
+                installArg = to_candid({
                     installationId = p0;
                     packageManagerOrBootstrapper = backend;
-                    initialIndirect = indirect;
-                    simpleIndirect = simple_indirect;
-                    preinstalledCanisterId = coreModules.get(name);
-                    user; // TODO: `!`
-                    wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
-                    afterInstallCallback = pkg.afterInstallCallback;
-                });
-                // TODO: Do two following variables duplicate each other?
-                moduleNumber += 1;
-                i += 1;
-            };
+                }); // TODO: Add more arguments.
+                installationId = p0;
+                packageManagerOrBootstrapper = backend;
+                initialIndirect = indirect;
+                simpleIndirect = simple_indirect;
+                preinstalledCanisterId = coreModules.get(name);
+                user; // TODO: `!`
+                wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
+                afterInstallCallback = pkg.afterInstallCallback;
+            });
+            // TODO: Do two following variables duplicate each other?
+            moduleNumber += 1;
+            i += 1;
         };
     };
 
