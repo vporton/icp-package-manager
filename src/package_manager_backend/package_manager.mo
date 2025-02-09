@@ -49,6 +49,48 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping: Bool;
     };
 
+    public type SharedHalfInstalledPackageInfo = {
+        modulesToInstall: [(Text, Common.SharedModule)];
+        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
+        whatToInstall: {
+            #package;
+            // #simplyModules : [(Text, SharedModule)]; // TODO
+        };
+        modulesWithoutCode: [?(?Text, Principal)];
+        installedModules: [?(?Text, Principal)];
+        package: Common.SharedPackageInfo;
+        preinstalledModules: [(Text, Principal)];
+        minInstallationId: Nat; // hack 
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
+        alreadyCalledAllCanistersCreated: Bool;
+        totalNumberOfModulesRemainingToInstall: Nat;
+        bootstrapping: Bool;
+    };
+
+    private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
+        modulesToInstall = Iter.toArray<(Text, Common.SharedModule)>(Iter.map<(Text, Common.Module), (Text, Common.SharedModule)>(
+            x.modulesToInstall.entries(),
+            func (elt: (Text, Common.Module)) = (elt.0, Common.shareModule(elt.1)),
+        ));
+        packageRepoCanister = x.packageRepoCanister;
+        whatToInstall = x.whatToInstall;
+        modulesWithoutCode = Buffer.toArray(x.modulesWithoutCode);
+        installedModules = Buffer.toArray(x.installedModules);
+        package = Common.sharePackageInfo(x.package);
+        preinstalledModules = Iter.toArray(x.preinstalledModules.entries());
+        minInstallationId = x.minInstallationId;
+        afterInstallCallback = x.afterInstallCallback;
+        alreadyCalledAllCanistersCreated = x.alreadyCalledAllCanistersCreated;
+        totalNumberOfModulesRemainingToInstall = x.totalNumberOfModulesRemainingToInstall;
+        bootstrapping = x.bootstrapping;
+    };
+
+    public type HalfUninstalledPackageInfo = {
+        var remainingModules: Nat;
+    };
+
     stable var initialized = false;
 
     stable var _ownersSave: [(Principal, ())] = [];
@@ -167,12 +209,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     }> =
         HashMap.HashMap(0, Blob.equal, Blob.hash);
 
-    stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
-        /// The number of modules in fully installed state.
-        name: Common.PackageName;
-        version: Common.Version;
-        modules: [Principal];
-    })] = [];
+    stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
@@ -795,16 +832,10 @@ shared({caller = initialCaller}) actor class PackageManager({
             ),
         );
 
-        // TODO:
-        // _halfInstalledPackagesSave := Iter.toArray(Iter.map(
-        //     halfInstalledPackages,
-        //     {
-        //         numberOfModulesToInstall: Nat;
-        //         name: Common.PackageName;
-        //         version: Common.Version;
-        //         modules: [Principal];
-        //     }
-        // ));
+        _halfInstalledPackagesSave := Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), (Common.InstallationId, SharedHalfInstalledPackageInfo)>(
+            halfInstalledPackages.entries(),
+            func (elt: (Common.InstallationId, HalfInstalledPackageInfo)) = (elt.0, shareHalfInstalledPackageInfo(elt.1)),
+        ));
     };
 
     system func postupgrade() {
@@ -822,7 +853,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                 func ((id, info): (Common.InstallationId, Common.SharedInstalledPackageInfo)): (Common.InstallationId, Common.InstalledPackageInfo) {
                     (id, Common.installedPackageInfoUnshare(info));
                 },
-            ),Array.size(_installedPackagesSave),
+            ),
+            Array.size(_installedPackagesSave),
             Nat.equal,
             Common.IntHash,
         );
