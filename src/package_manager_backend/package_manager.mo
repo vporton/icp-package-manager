@@ -98,7 +98,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.fromIter(
             [
                 (packageManagerOrBootstrapper, ()),
-                (initialIndirect, ()),
+                (initialIndirect, ()), // temporary
                 (simpleIndirect, ()), // TODO: superfluous?
                 (user, ()),
             ].vals(), // TODO: Are all required?
