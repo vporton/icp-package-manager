@@ -920,7 +920,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         halfInstalledPackages := HashMap.fromIter<Common.InstallationId, HalfInstalledPackageInfo>(
             Iter.map<(Common.InstallationId, SharedHalfInstalledPackageInfo), (Common.InstallationId, HalfInstalledPackageInfo)>(
                 _halfInstalledPackagesSave.vals(),
-                func (x: (Common.InstallationId, SharedHalfInstalledPackageInfo)) = (x.0, unshareHalfInstalledPackageInfo(x.1))
+                func (x: (Common.InstallationId, SharedHalfInstalledPackageInfo)) = (x.0, unshareHalfInstalledPackageInfo(x.1)),
             ),
             _halfInstalledPackagesSave.size(),
             Nat.equal,
@@ -930,7 +930,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         halfUninstalledPackages := HashMap.fromIter<Common.InstallationId, HalfUninstalledPackageInfo>(
             Iter.map<(Common.InstallationId, SharedHalfUninstalledPackageInfo), (Common.InstallationId, HalfUninstalledPackageInfo)>(
                 _halfUninstalledPackagesSave.vals(),
-                func (x: (Common.InstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1))
+                func (x: (Common.InstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1)),
             ),
             _halfInstalledPackagesSave.size(),
             Nat.equal,
