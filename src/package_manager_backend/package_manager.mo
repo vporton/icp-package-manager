@@ -439,13 +439,13 @@ shared({caller = initialCaller}) actor class PackageManager({
             let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
             let ?backend = coreModules.get("backend") else {
-                Debug.trap("error 1");
+                Debug.trap("error getting backend");
             };
             let ?indirect = coreModules.get("indirect") else {
-                Debug.trap("error 1");
+                Debug.trap("error getting indirect");
             };
             let ?simple_indirect = coreModules.get("simple_indirect") else {
-                Debug.trap("error 1");
+                Debug.trap("error getting simple_indirect");
             };
             // The following (typically) does not overflow cycles limit, because we use an one-way function.
             var i = 0;
