@@ -424,7 +424,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
 
             let bi = if (pkg.preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
-                [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(this)), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
+                [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getIndirectCaller())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
             } else {
                 Iter.toArray(pkg.preinstalledModules.entries()); // TODO: inefficient?
             };
