@@ -860,7 +860,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         {all = all; default = data.default};
     };
 
-    /// TODO: very unstable API.
     public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
         onlyOwner(caller, "getAllInstalledPackages");
 
@@ -873,7 +872,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         );
     };
 
-    /// TODO: very unstable API.
+    /// Internal.
     public query({caller}) func getHalfInstalledPackages(): async [{
         installationId: Common.InstallationId;
         packageRepoCanister: Principal;
