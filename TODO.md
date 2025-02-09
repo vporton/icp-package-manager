@@ -71,10 +71,6 @@ Remaining things TODO:
 
 - Managing package repositories.
 
-- Save repo index/partition (link to index from partition), when installing a package.
-
-- Check that f installed multiple package versions, correctly select just one default.
-
 - "no such frontend or key expired" - show this message to the user.
 
 - Upgrading.
