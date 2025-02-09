@@ -29,6 +29,26 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     Debug.trap("argument userArg is wrong");
     // };
 
+    public type HalfInstalledPackageInfo = {
+        modulesToInstall: HashMap.HashMap<Text, Common.Module>;
+        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
+        whatToInstall: {
+            #package;
+            // #simplyModules : [(Text, SharedModule)]; // TODO
+        };
+        modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
+        installedModules: Buffer.Buffer<?(?Text, Principal)>;
+        package: Common.PackageInfo;
+        preinstalledModules: HashMap.HashMap<Text, Principal>;
+        minInstallationId: Nat; // hack 
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
+        var alreadyCalledAllCanistersCreated: Bool;
+        var totalNumberOfModulesRemainingToInstall: Nat;
+        bootstrapping: Bool;
+    };
+
     stable var initialized = false;
 
     stable var _ownersSave: [(Principal, ())] = [];
@@ -154,7 +174,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         modules: [Principal];
     })] = [];
     // TODO: `var` or `let` here and in other places:
-    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, Common.HalfInstalledPackageInfo> =
+    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
@@ -372,7 +392,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
             let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
-            let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+            let ourHalfInstalled: HalfInstalledPackageInfo = {
                 // id = installationId;
                 packageName = p.package.base.name;
                 version = p.package.base.version;
@@ -403,7 +423,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    private func doInstallFinish(p0: Common.InstallationId, pkg: Common.HalfInstalledPackageInfo): async* () {
+    private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
             // case (#simplyModules m) {
@@ -665,7 +685,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     let part: Repository.Repository = actor (Principal.toText(installation.packageRepoCanister));
     //     let packageInfo = await part.getPackage(installation.name, installation.version);
 
-    //     let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
+    //     let ourHalfInstalled: HalfInstalledPackageInfo = {
     //         numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
     //         name = installation.name;
     //         version = installation.version;
@@ -701,7 +721,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO: Uncomment.
     // private func _finishUninstallPackage({
     //     installationId: Nat;
-    //     ourHalfInstalled: Common.HalfInstalledPackageInfo;
+    //     ourHalfInstalled: HalfInstalledPackageInfo;
     //     realPackage: Common.RealPackageInfo;
     // }): async* () {
     //     let IC: CanisterDeletor = actor("aaaaa-aa");
@@ -878,12 +898,12 @@ shared({caller = initialCaller}) actor class PackageManager({
     }] {
         onlyOwner(caller, "getHalfInstalledPackages");
 
-        Iter.toArray(Iter.map<(Common.InstallationId, Common.HalfInstalledPackageInfo), {
+        Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), {
             installationId: Common.InstallationId;
             packageRepoCanister: Principal;
             name: Common.PackageName;
             version: Common.Version;
-        }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, Common.HalfInstalledPackageInfo)): {
+        }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, HalfInstalledPackageInfo)): {
             installationId: Common.InstallationId;
             packageRepoCanister: Principal;
             name: Common.PackageName;

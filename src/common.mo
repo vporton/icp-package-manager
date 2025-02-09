@@ -367,26 +367,6 @@ module {
             );
         };
 
-    public type HalfInstalledPackageInfo = {
-        modulesToInstall: HashMap.HashMap<Text, Module>;
-        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, SharedModule)]; // TODO
-        };
-        modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
-        installedModules: Buffer.Buffer<?(?Text, Principal)>;
-        package: PackageInfo;
-        preinstalledModules: HashMap.HashMap<Text, Principal>;
-        minInstallationId: Nat; // hack 
-        afterInstallCallback: ?{
-            canister: Principal; name: Text; data: Blob;
-        };
-        var alreadyCalledAllCanistersCreated: Bool;
-        var totalNumberOfModulesRemainingToInstall: Nat;
-        bootstrapping: Bool;
-    };
-
     public type canister_settings = {
         freezing_threshold : ?Nat;
         controllers : ?[Principal];
