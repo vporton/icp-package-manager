@@ -91,6 +91,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         var remainingModules: Nat;
     };
 
+    public type SharedHalfUninstalledPackageInfo = {
+        remainingModules: Nat;
+    };
+
+    private func shareHalfUninstalledPackageInfo(x: HalfUninstalledPackageInfo): SharedHalfUninstalledPackageInfo = {
+        remainingModules = x.remainingModules;
+    };
+
     stable var initialized = false;
 
     stable var _ownersSave: [(Principal, ())] = [];
@@ -212,6 +220,11 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+
+    stable var _halfUninstalledPackagesSave: [(Common.InstallationId, SharedHalfUninstalledPackageInfo)] = [];
+    // TODO: `var` or `let` here and in other places:
+    var halfUninstalledPackages: HashMap.HashMap<Common.InstallationId, HalfUninstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
@@ -835,6 +848,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         _halfInstalledPackagesSave := Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), (Common.InstallationId, SharedHalfInstalledPackageInfo)>(
             halfInstalledPackages.entries(),
             func (elt: (Common.InstallationId, HalfInstalledPackageInfo)) = (elt.0, shareHalfInstalledPackageInfo(elt.1)),
+        ));
+
+        _halfUninstalledPackagesSave := Iter.toArray(Iter.map<(Common.InstallationId, HalfUninstalledPackageInfo), (Common.InstallationId, SharedHalfUninstalledPackageInfo)>(
+            halfUninstalledPackages.entries(),
+            func (elt: (Common.InstallationId, HalfUninstalledPackageInfo)) = (elt.0, shareHalfUninstalledPackageInfo(elt.1)),
         ));
     };
 
