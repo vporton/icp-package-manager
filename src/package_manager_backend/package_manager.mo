@@ -926,6 +926,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Nat.equal,
             Common.IntHash,
         );
+        _halfInstalledPackagesSave := []; // Free memory.
         halfUninstalledPackages := HashMap.fromIter<Common.InstallationId, HalfUninstalledPackageInfo>(
             Iter.map<(Common.InstallationId, SharedHalfUninstalledPackageInfo), (Common.InstallationId, HalfUninstalledPackageInfo)>(
                 _halfUninstalledPackagesSave.vals(),
@@ -935,7 +936,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             Nat.equal,
             Common.IntHash,
         );
-        _halfInstalledPackagesSave := []; // Free memory.
         _halfUninstalledPackagesSave := []; // Free memory.
     };
 
