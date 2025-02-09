@@ -216,6 +216,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             // objectToInstall = #package {packageName; version}; // TODO
             user;
             afterInstallCallback;
+            bootstrapping = false;
         });
     };
 
@@ -284,6 +285,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 name = "bootstrapAdditionalPackages";
                 data = to_candid(additionalPackages, user, minInstallationId); // TODO: duplicate value of `minInstallationId`
             };
+            bootstrapping = true;
         });
     };
 
@@ -330,6 +332,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryIndexRO;
             preinstalledModules: [(Text, Principal)];
         }];
+        bootstrapping: Bool;
     }) {
         onlyOwner(caller, "installStart");
 
@@ -393,6 +396,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 afterInstallCallback;
                 var alreadyCalledAllCanistersCreated = false;
                 var totalNumberOfModulesRemainingToInstall = numModules;
+                bootstrapping;
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
@@ -423,10 +427,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }
             };
 
-            let bi = if (pkg.preinstalledModules.size() == 0) { // TODO: All this block is a crude hack.
+            let bi = if (pkg.bootstrapping) {
+                // TODO: hack (instead should base this list on package description)
                 [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getIndirectCaller())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
             } else {
-                Iter.toArray(pkg.preinstalledModules.entries()); // TODO: inefficient?
+                let ?pkg0 = installedPackages.get(0) else {
+                    Debug.trap("package manager not installed");
+                };
+                Iter.toArray(pkg0.modules.entries()); // TODO: inefficient?
             };
             let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
             var moduleNumber = 0;
@@ -938,6 +946,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
+        bootstrapping: Bool;
     })
         : async* {minInstallationId: Common.InstallationId}
     {
@@ -948,6 +957,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             pmPrincipal;
             user;
             afterInstallCallback;
+            bootstrapping;
         });
 
         {minInstallationId};

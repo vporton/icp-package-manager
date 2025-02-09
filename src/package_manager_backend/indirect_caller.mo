@@ -122,6 +122,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
+        bootstrapping: Bool;
     }): () {
         try {
             onlyOwner(caller, "installPackageWrapper");
@@ -149,6 +150,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         repo: Common.RepositoryIndexRO;
                         preinstalledModules: [(Text, Principal)];
                     }];
+                    bootstrapping: Bool;
                 }) -> async ();
             };
 
@@ -175,6 +177,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         };
                     },
                 ));
+                bootstrapping;
             });
         }
         catch (e) {

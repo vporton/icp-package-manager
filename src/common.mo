@@ -387,6 +387,7 @@ module {
         };
         var alreadyCalledAllCanistersCreated: Bool;
         var totalNumberOfModulesRemainingToInstall: Nat;
+        bootstrapping: Bool;
     };
 
     public type canister_settings = {
