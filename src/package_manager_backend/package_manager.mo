@@ -400,7 +400,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // FIXME: Can other packages be installed if one of them fails?
     private func doInstallFinish(): async* () {
         for ((p0, pkg) in halfInstalledPackages.entries()) {
             let p = pkg.package;
