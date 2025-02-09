@@ -308,7 +308,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         #namedModules : {
             dest: Common.InstallationId;
-            modules: [(Text, Blob, ?Blob)]; // name, installArg, initArg // TODO: Use named fields.
+            modules: [{name: Text; installArg: Blob; initArg: ?Blob}];
         };
     };
 
