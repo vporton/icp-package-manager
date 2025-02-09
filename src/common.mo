@@ -367,7 +367,6 @@ module {
             );
         };
 
-    /// TODO: Rename.
     public type HalfInstalledPackageInfo = {
         modulesToInstall: HashMap.HashMap<Text, Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
