@@ -371,10 +371,9 @@ module {
     public type HalfInstalledPackageInfo = {
         modulesToInstall: HashMap.HashMap<Text, Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        packageName: PackageName;
         whatToInstall: {
             #package;
-            #simplyModules : [(Text, SharedModule)];
+            // #simplyModules : [(Text, SharedModule)]; // TODO
         };
         modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         installedModules: Buffer.Buffer<?(?Text, Principal)>;

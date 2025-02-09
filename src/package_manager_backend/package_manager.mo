@@ -512,20 +512,20 @@ shared({caller = initialCaller}) actor class PackageManager({
         if (inst.totalNumberOfModulesRemainingToInstall == 0) { // All module have been installed.
             // TODO: order of this code
             _updateAfterInstall({installationId});
-            let ?inst2 = installedPackages.get(installationId) else {
-                Debug.trap("no such installationId: " # debug_show(installationId));
-            };
+            // let ?inst2 = installedPackages.get(installationId) else {
+            //     Debug.trap("no such installationId: " # debug_show(installationId));
+            // };
             switch (inst.whatToInstall) {
-                case (#simplyModules _) {
-                    inst2.allModules.add(canister);
-                    switch (moduleName) {
-                        case (?moduleName) {
-                            inst2.allModules.add(canister);
-                            inst2.modules.put(moduleName, canister);
-                        };
-                        case null {};
-                    };
-                };
+                // case (#simplyModules _) {
+                //     inst2.allModules.add(canister);
+                //     switch (moduleName) {
+                //         case (?moduleName) {
+                //             inst2.allModules.add(canister);
+                //             inst2.modules.put(moduleName, canister);
+                //         };
+                //         case null {};
+                //     };
+                // };
                 case (#package) {
                     // Package modules are updated after installation of all modules.
                     // TODO: Do it here instead.
@@ -613,7 +613,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             case (#package _) {
                 installedPackages.put(installationId, {
                     id = installationId;
-                    name = ourHalfInstalled.packageName;
+                    name = ourHalfInstalled.package.base.name;
                     package = ourHalfInstalled.package;
                     version = ourHalfInstalled.package.base.version; // TODO: needed?
                     modules = HashMap.fromIter(
@@ -650,7 +650,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     };
                 };
             };
-            case (#simplyModules _) {};
+            // case (#simplyModules _) {};
         };
     };
 
@@ -893,7 +893,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             {
                 installationId = x.0;
                 packageRepoCanister = x.1.packageRepoCanister;
-                name = x.1.packageName;
+                name = x.1.package.base.name;
                 version = x.1.package.base.version;
             },
         ));
