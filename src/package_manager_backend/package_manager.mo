@@ -894,7 +894,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         _installedPackagesByNameSave := []; // Free memory.
 
         // halfInstalledPackages := TODO;
+        // halfUninstalledPackages := TODO;
         _halfInstalledPackagesSave := []; // Free memory.
+        _halfUninstalledPackagesSave := []; // Free memory.
     };
 
     // Accessor method //
