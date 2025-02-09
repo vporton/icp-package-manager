@@ -87,6 +87,26 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping = x.bootstrapping;
     };
 
+    private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
+        modulesToInstall = HashMap.fromIter(
+            Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(x.modulesToInstall.vals(), func (elt: (Text, Common.SharedModule)) = (elt.0, Common.unshareModule(elt.1))),
+            x.modulesToInstall.size(),
+            Text.equal,
+            Text.hash
+        );
+        packageRepoCanister = x.packageRepoCanister;
+        whatToInstall = x.whatToInstall;
+        modulesWithoutCode = Buffer.fromArray(x.modulesWithoutCode);
+        installedModules = Buffer.fromArray(x.installedModules);
+        package = Common.unsharePackageInfo(x.package);
+        preinstalledModules = HashMap.fromIter(x.preinstalledModules.vals(), x.preinstalledModules.size(), Text.equal, Text.hash);
+        minInstallationId = x.minInstallationId;
+        afterInstallCallback = x.afterInstallCallback;
+        var alreadyCalledAllCanistersCreated = x.alreadyCalledAllCanistersCreated;
+        var totalNumberOfModulesRemainingToInstall = x.totalNumberOfModulesRemainingToInstall;
+        bootstrapping = x.bootstrapping;
+    };
+
     public type HalfUninstalledPackageInfo = {
         var remainingModules: Nat;
     };
@@ -97,6 +117,10 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func shareHalfUninstalledPackageInfo(x: HalfUninstalledPackageInfo): SharedHalfUninstalledPackageInfo = {
         remainingModules = x.remainingModules;
+    };
+
+    private func unshareHalfUninstalledPackageInfo(x: SharedHalfUninstalledPackageInfo): HalfUninstalledPackageInfo = {
+        var remainingModules = x.remainingModules;
     };
 
     stable var initialized = false;
@@ -893,8 +917,24 @@ shared({caller = initialCaller}) actor class PackageManager({
         );
         _installedPackagesByNameSave := []; // Free memory.
 
-        // halfInstalledPackages := TODO;
-        // halfUninstalledPackages := TODO;
+        halfInstalledPackages := HashMap.fromIter<Common.InstallationId, HalfInstalledPackageInfo>(
+            Iter.map<(Common.InstallationId, SharedHalfInstalledPackageInfo), (Common.InstallationId, HalfInstalledPackageInfo)>(
+                _halfInstalledPackagesSave.vals(),
+                func (x: (Common.InstallationId, SharedHalfInstalledPackageInfo)) = (x.0, unshareHalfInstalledPackageInfo(x.1))
+            ),
+            _halfInstalledPackagesSave.size(),
+            Nat.equal,
+            Common.IntHash,
+        );
+        halfUninstalledPackages := HashMap.fromIter<Common.InstallationId, HalfUninstalledPackageInfo>(
+            Iter.map<(Common.InstallationId, SharedHalfUninstalledPackageInfo), (Common.InstallationId, HalfUninstalledPackageInfo)>(
+                _halfUninstalledPackagesSave.vals(),
+                func (x: (Common.InstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1))
+            ),
+            _halfInstalledPackagesSave.size(),
+            Nat.equal,
+            Common.IntHash,
+        );
         _halfInstalledPackagesSave := []; // Free memory.
         _halfUninstalledPackagesSave := []; // Free memory.
     };
