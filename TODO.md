@@ -71,9 +71,6 @@ Remaining things TODO:
 
 - Managing package repositories.
 
-- FIXME: The current implementation of uninstallation will bug, if the package description
-  moves to a different CanDB partition.
-
 - Save repo index/partition (link to index from partition), when installing a package.
 
 - Check that f installed multiple package versions, correctly select just one default.
