@@ -149,7 +149,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, {
         /// The number of modules in fully installed state.
-        numberOfModulesToInstall: Nat;
         name: Common.PackageName;
         version: Common.Version;
         modules: [Principal];
@@ -375,7 +374,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
             let ourHalfInstalled: Common.HalfInstalledPackageInfo = {
-                numberOfModulesToInstall = numModules;
                 // id = installationId;
                 packageName = p.package.base.name;
                 version = p.package.base.version;
