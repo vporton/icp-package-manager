@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- Check variable preservance, when upgrading modules.
+
 - casing of identifiers: https://forum.dfinity.org/t/what-is-the-advised-naming-scheme-for-canisters/41023/2
 
 - Can we install additional packages not waiting till full bootstrapping of the PM?
