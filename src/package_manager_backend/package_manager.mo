@@ -227,7 +227,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryIndexRO;
         }],
         user: Principal,
-        minInstallationId: Common.InstallationId, // TODO: Remove.
     ) {
         try {
             onlyOwner(caller, "bootstrapAdditionalPackages");
@@ -282,7 +281,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
-                data = to_candid(additionalPackages, user, minInstallationId); // TODO: duplicate value of `minInstallationId`
+                data = to_candid(additionalPackages, user);
             };
             bootstrapping = true;
         });
