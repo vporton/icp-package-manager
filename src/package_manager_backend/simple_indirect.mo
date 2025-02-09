@@ -11,7 +11,7 @@ import IC "mo:ic";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
-    initialIndirect: Principal; // TODO: Rename.
+    indirectCaller: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
@@ -29,7 +29,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         HashMap.fromIter(
             [
                 (packageManagerOrBootstrapper, ()),
-                (initialIndirect, ()),
+                (indirectCaller, ()),
                 (user, ()),
                 (simpleIndirect, ()),
             ].vals(),

@@ -18,7 +18,7 @@ import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
-    initialIndirect: Principal; // TODO: Rename.
+    indirectCaller: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
@@ -98,7 +98,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.fromIter(
             [
                 (packageManagerOrBootstrapper, ()),
-                (initialIndirect, ()), // temporary
+                (indirectCaller, ()), // temporary
                 (simpleIndirect, ()), // TODO: superfluous?
                 (user, ()),
             ].vals(), // TODO: Are all required?
@@ -169,7 +169,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
-    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(initialIndirect)); // TODO: Remove `?`.
+    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(indirectCaller)); // TODO: Remove `?`.
     stable var simple_indirect_: ?SimpleIndirect.SimpleIndirect = ?actor(Principal.toText(simpleIndirect)); // TODO: Remove `?`.
 
     private func getIndirectCaller(): IndirectCaller.IndirectCaller {
@@ -516,7 +516,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }); // TODO: Add more arguments.
                 installationId = p0;
                 packageManagerOrBootstrapper = backend;
-                initialIndirect = indirect;
+                indirectCaller = indirect;
                 simpleIndirect = simple_indirect;
                 preinstalledCanisterId = coreModules.get(name);
                 user; // TODO: `!`

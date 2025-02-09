@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
             installArg;
             packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
             // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
-            initialIndirect = Principal.fromText("aaaaa-aa");
+            indirectCaller = Principal.fromText("aaaaa-aa");
             simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
         });
@@ -76,10 +76,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                initialIndirect = indirect_canister_id;
+                indirectCaller = indirect_canister_id;
             });
             packageManagerOrBootstrapper;
-            initialIndirect = indirect_canister_id;
+            indirectCaller = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
@@ -89,10 +89,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                initialIndirect = indirect_canister_id;
+                indirectCaller = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
-            initialIndirect = indirect_canister_id;
+            indirectCaller = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
@@ -102,10 +102,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(simpleIndirectWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                initialIndirect = indirect_canister_id;
+                indirectCaller = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
-            initialIndirect = indirect_canister_id;
+            indirectCaller = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
