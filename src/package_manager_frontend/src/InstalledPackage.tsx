@@ -9,7 +9,7 @@ import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert } from "react-bootstrap";
 
-export default function Installation(props: {}) {
+export default function InstalledPackage(props: {}) {
     const { installationId } = useParams();
     const {agent, isAuthenticated} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
