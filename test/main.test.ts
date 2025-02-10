@@ -185,7 +185,7 @@ describe('My Test Suite', () => {
 
         console.log("Installing `example` package...");
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
-        const {minInstallationId: exampleInstallationId} = await packageManager.installPackage({
+        const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
             packages: [{
                 packageName: "example",
                 version: "0.0.1",

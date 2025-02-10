@@ -51,7 +51,7 @@ export default function ChooseVersion(props: {}) {
 
             // TODO: hack
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
-            const {minInstallationId: id} = await package_manager.installPackage({
+            const {minInstallationId: id} = await package_manager.installPackages({
                 packages: [{
                     packageName: packageName!,
                     version: chosenVersion!,

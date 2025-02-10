@@ -146,7 +146,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackage`. // TODO: needed?
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
         owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
 
         // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
@@ -260,7 +260,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    public shared({caller}) func installPackage({ // TODO: Rename.
+    public shared({caller}) func installPackages({ // TODO: Rename.
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
@@ -273,7 +273,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        onlyOwner(caller, "installPackage");
+        onlyOwner(caller, "installPackages");
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
@@ -304,7 +304,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 version = p.version;
                 preinstalledModules = [];
             }));
-            installPackage = true;
+            installPackages = true;
             pmPrincipal = Principal.fromActor(this);
             // objectToInstall = #package {packageName; version}; // TODO
             user;
@@ -325,7 +325,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         try {
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            ignore await this.installPackage({ // TODO: no need for shared call
+            ignore await this.installPackages({ // TODO: no need for shared call
                 packages;
                 user;
                 afterInstallCallback = null;
@@ -368,7 +368,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             whatToInstall;
             minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
-            installPackage = true; // TODO
+            installPackages = true; // TODO
             pmPrincipal = Principal.fromActor(this);
             // objectToInstall = #package {packageName; version}; // TODO
             user;
@@ -545,7 +545,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         for ((name, m): (Text, Common.Module) in modules) {
             // Starting installation of all modules in parallel:
             getIndirectCaller().installModule({
-                installPackage = true/*whatToInstall == #package*/; // TODO: correct?
+                installPackages = true/*whatToInstall == #package*/; // TODO: correct?
                 moduleNumber;
                 moduleName = ?name;
                 installArg = to_candid({

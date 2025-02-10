@@ -208,7 +208,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     };
 
     public shared({caller}) func installModule({
-        installPackage: Bool;
+        installPackages: Bool;
         installationId: Common.InstallationId;
         moduleNumber: Nat;
         moduleName: ?Text;
@@ -232,7 +232,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                 case (?preinstalledCanisterId) {
                     let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                     await cb.onCreateCanister({
-                        installPackage;
+                        installPackages;
                         installationId;
                         moduleNumber;
                         moduleName;
@@ -241,7 +241,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         user;
                     });
                     await cb.onInstallCode({
-                        installPackage;
+                        installPackages;
                         installationId;
                         moduleNumber;
                         moduleName;
@@ -258,7 +258,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         moduleNumber;
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
-                        installPackage;
+                        installPackages;
                         installArg;
                         packageManagerOrBootstrapper;
                         indirectCaller;
@@ -279,7 +279,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
     private func _installModuleCode({
         moduleNumber: Nat;
         moduleName: ?Text;
-        installPackage: Bool;
+        installPackages: Bool;
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
@@ -300,7 +300,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
         await pm.onCreateCanister({
-            installPackage; // Bool
+            installPackages; // Bool
             moduleNumber;
             moduleName;
             // module_ = Common.shareModule(wasmModule);
@@ -337,7 +337,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         });
 
         await pm.onInstallCode({
-            installPackage; // Bool
+            installPackages; // Bool
             moduleNumber;
             moduleName;
             module_ = Common.shareModule(wasmModule);

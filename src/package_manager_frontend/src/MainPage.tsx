@@ -102,7 +102,7 @@ export default function MainPage() {
         // TODO
         // for (const p of packagesToRepair!) {
         //     if (checkedHalfInstalled?.has(p.installationId)) {
-        //         await glob.packageManager!.installPackage({
+        //         await glob.packageManager!.installPackages({
         //             repo: index,
         //             packageName: p.name,
         //             version: p.version,
