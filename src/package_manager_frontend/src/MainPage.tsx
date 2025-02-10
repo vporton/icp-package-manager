@@ -4,7 +4,7 @@ import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
-import { InstallationId, RepositoryIndexRO } from "../../declarations/package_manager/package_manager.did";
+import { InstallationId, RepositoryRO } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
 import { createActor as createRepoIndexActor } from "../../declarations/Repository";

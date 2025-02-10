@@ -264,7 +264,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
         }];
         user: Principal;
         afterInstallCallback: ?{
@@ -286,16 +286,16 @@ shared({caller = initialCaller}) actor class PackageManager({
                 {
                     packageName: Common.PackageName;
                     version: Common.Version;
-                    repo: Common.RepositoryIndexRO;
+                    repo: Common.RepositoryRO;
                 },
                 {
-                    repo: Common.RepositoryIndexRO;
+                    repo: Common.RepositoryRO;
                     packageName: Common.PackageName;
                     version: Common.Version;
                     preinstalledModules: [(Text, Principal)];
                 }
             >(packages.vals(), func (p: {
-                repo: Common.RepositoryIndexRO;
+                repo: Common.RepositoryRO;
                 packageName: Common.PackageName;
                 version: Common.Version;
             }) = {
@@ -318,7 +318,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
         }],
         user: Principal,
     ) {
@@ -344,14 +344,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         packageName: Common.PackageName;
         version: Common.Version;
-        repo: Common.RepositoryIndexRO; 
+        repo: Common.RepositoryRO; 
         user: Principal;
         indirectCaller: Principal;
         /// Additional packages to install after bootstrapping.
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
         }];
         preinstalledModules: [(Text, Principal)];
     })
@@ -386,7 +386,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// `avoidRepeated` forbids to install them same named modules more than once.
     ///
     // public shared({caller}) func installNamedModules({
-    //     repo: Common.RepositoryIndexRO; // TODO: Install from multiple repos.
+    //     repo: Common.RepositoryRO; // TODO: Install from multiple repos.
     //     modules: [(Text, Common.SharedModule)]; //  installArg, initArg
     //     avoidRepeated: Bool;
     //     user: Principal;
@@ -422,7 +422,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         packages: [{
             package: Common.SharedPackageInfo;
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
             preinstalledModules: [(Text, Principal)];
         }];
         bootstrapping: Bool;
@@ -783,7 +783,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     halfInstalledPackages.put(installationId, ourHalfInstalled);
 
     //     // TODO:
-    //     // let part: Common.RepositoryIndexRO = actor (Principal.toText(canister));
+    //     // let part: Common.RepositoryRO = actor (Principal.toText(canister));
     //     // let installation = await part.getPackage(packageName, version);
     //     let #real realPackage = packageInfo.specific else {
     //         Debug.trap("trying to directly install a virtual installation");
@@ -1048,7 +1048,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         minInstallationId: Common.InstallationId;
         packages: [{
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];

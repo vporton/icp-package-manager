@@ -264,7 +264,7 @@ module {
 
     public type InstallationId = Nat;
 
-    public type RepositoryIndexRO = actor {
+    public type RepositoryRO = actor {
         getRepositoryName: query () -> async Text;
         getRepositoryInfoURL: query () -> async Text;
         /// Returns releases with optional other release name
@@ -274,7 +274,7 @@ module {
         /// Returns versions with optional other version name
         /// (like `("stable", ?"2.0.4")`).
         ///
-        /// TODO: Should it contain aliases from `RepositoryIndexRO.getReleases`? Maybe, not.
+        /// TODO: Should it contain aliases from `RepositoryRO.getReleases`? Maybe, not.
         // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
         getWasmModule: query (sk: Nat) -> async Blob;

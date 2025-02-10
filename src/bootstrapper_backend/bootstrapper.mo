@@ -47,11 +47,11 @@ actor class Bootstrapper() = this {
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
-        repo: Common.RepositoryIndexRO;
+        repo: Common.RepositoryRO;
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
-            repo: Common.RepositoryIndexRO;
+            repo: Common.RepositoryRO;
         }];
     }): async {backendPrincipal: Principal; indirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
@@ -153,14 +153,14 @@ actor class Bootstrapper() = this {
                 };
                 packageName: Common.PackageName;
                 version: Common.Version;
-                repo: Common.RepositoryIndexRO; 
+                repo: Common.RepositoryRO; 
                 user: Principal;
                 indirectCaller: Principal;
                 /// Additional packages to install after bootstrapping.
                 additionalPackages: [{
                     packageName: Common.PackageName;
                     version: Common.Version;
-                    repo: Common.RepositoryIndexRO;
+                    repo: Common.RepositoryRO;
                 }];
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
