@@ -395,6 +395,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     onlyOwner(caller, "installNamedModule");
     // };
 
+    // TODO
     type ObjectToInstall = {
         #package : {
             packageName: Common.PackageName;
@@ -748,10 +749,13 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO: Uncomment.
-    // public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
-    //     : async ()
-    // {
-    //     onlyOwner(caller, "uninstallPackage");
+    public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
+        : async ()
+    {
+        onlyOwner(caller, "uninstallPackage");
+
+        // TODO
+    };
 
     //     let ?installation = installedPackages.get(installationId) else {
     //         Debug.trap("no such installed installation");
