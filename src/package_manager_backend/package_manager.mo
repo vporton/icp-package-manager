@@ -225,7 +225,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         indirect_caller_ := ?indirect_caller_v;
     };
 
-    stable var nextInstallationId: Nat = 0;
+    stable var nextInstallationId: Common.InstallationId = 0;
+    stable var nextUninstallationId: Common.UninstallationId = 0;
+    stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
@@ -246,9 +248,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
-    stable var _halfUninstalledPackagesSave: [(Common.InstallationId, SharedHalfUninstalledPackageInfo)] = [];
+    stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
-    var halfUninstalledPackages: HashMap.HashMap<Common.InstallationId, HalfUninstalledPackageInfo> =
+    var halfUninstalledPackages: HashMap.HashMap<Common.UninstallationId, HalfUninstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
@@ -311,6 +313,59 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback;
             bootstrapping = false;
         });
+    };
+
+    public shared({caller}) func uninstallPackages({ // TODO: Rename.
+        packages: [Common.InstallationId];
+        user: Principal;
+    })
+        : async {minUninstallationId: Common.UninstallationId}
+    {
+        onlyOwner(caller, "uninstallPackages");
+
+        let minUninstallationId = nextUninstallationId;
+        nextUninstallationId += Array.size(packages);
+        var ourNextUninstallationId = minUninstallationId;
+
+        label cycle for (installationId in packages.vals()) { // FIXME: IDs
+            let uninstallationId = ourNextUninstallationId;
+            ourNextUninstallationId += 1;
+            let ?pkg = installedPackages.get(installationId) else {
+                continue cycle; // already uninstalled
+            };
+            let uninst = halfUninstalledPackages.put(uninstallationId, {
+                var remainingModules = pkg.modules.size();
+            });
+            let modules = pkg.modules;
+            for (canister_id in modules.vals()) {
+                ignore getSimpleIndirect().callAllOneWay([{
+                    canister = Principal.fromText("aaaaa-aa");
+                    name = "delete_canister";
+                    data = to_candid({canister_id});
+                }, {
+                    canister = Principal.fromActor(this);
+                    name = "onDeleteCanister";
+                    data = to_candid({uninstallationId});
+                }]);
+            };
+        };
+
+        {minUninstallationId};
+    };
+
+    /// Internal
+    public shared({caller}) func onDeleteCanister({
+        uninstallationId: Common.UninstallationId;
+    }): async () {
+        onlyOwner(caller, "onDeleteCanister");
+
+        let ?uninst = halfUninstalledPackages.get(uninstallationId) else {
+            return;
+        };
+        uninst.remainingModules -= 1;
+        if (uninst.remainingModules == 0) {
+            halfUninstalledPackages.delete(uninstallationId);
+        };
     };
 
     /// Internal. Install packages after bootstrapping IC Pack.

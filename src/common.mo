@@ -263,6 +263,8 @@ module {
     // };
 
     public type InstallationId = Nat;
+    public type UninstallationId = Nat;
+    public type UpgradeId = Nat;
 
     public type RepositoryRO = actor {
         getRepositoryName: query () -> async Text;
