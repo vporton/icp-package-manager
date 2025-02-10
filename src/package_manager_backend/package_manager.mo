@@ -803,15 +803,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: Uncomment.
-    public shared({caller}) func uninstallPackage(installationId: Common.InstallationId)
-        : async ()
-    {
-        onlyOwner(caller, "uninstallPackage");
-
-        // TODO
-    };
-
     //     let ?installation = installedPackages.get(installationId) else {
     //         Debug.trap("no such installed installation");
     //     };

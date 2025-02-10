@@ -1,21 +1,23 @@
 import { useParams } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
-import { useContext, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/Repository/Repository.did.js';
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
-import { Alert } from "react-bootstrap";
+import { Alert, Modal } from "react-bootstrap";
 
 export default function InstalledPackage(props: {}) {
     const { installationId } = useParams();
-    const {agent, isAuthenticated} = useAuth();
+    const {agent, isAuthenticated, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
     const [pinned, setPinned] = useState(false);
     const [showDanger, setShowDanger] = useState(false);
+    const [showUninstallConfirmation, setShowUninstallConfirmation] = useState(false);
+    const [uninstallConfirmationMessage, setUninstallConfirmationMessage] = useState("");
     const glob = useContext(GlobalContext);
     // TODO: When logged out, show instead that logged out.
     useEffect(() => {
@@ -54,11 +56,15 @@ export default function InstalledPackage(props: {}) {
     }, [glob.packageManager, glob.backend, pkg]);
 
     // TODO: Ask for confirmation.
-    async function uninstall() {
-        // TODO
-        // let id = await glob.packageManager!.uninstallPackage(BigInt(installationId!));
-        // TODO:
-        alert("Uninstallation finished");
+    function uninstall() {
+        setUninstallConfirmationMessage("");
+        setShowUninstallConfirmation(true);
+    }
+    async function doUninstall() {
+        setShowUninstallConfirmation(false);
+        if (uninstallConfirmationMessage === "remove data") {
+            await glob.packageManager!.uninstallPackages({packages: [BigInt(installationId!)], user: principal!});
+        }
     }
 
     function setPinnedHandler(pinned: boolean) {
@@ -97,6 +103,29 @@ export default function InstalledPackage(props: {}) {
                     </Accordion.Item>
                 </Accordion>
             </>}
+            <Modal show={showUninstallConfirmation} onHide={() => setShowUninstallConfirmation(false)} className="danger">
+                <Modal.Header closeButton>
+                    <Modal.Title>Uninstall</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Remove the package and all its data?</p>
+                    <p>Type <em>remove data</em> to remove:</p>
+                    <p>
+                        <input
+                            value={uninstallConfirmationMessage}
+                            onInput={(e: FormEvent<HTMLInputElement>) => setUninstallConfirmationMessage((e.target as HTMLInputElement).value)}
+                        />
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowUninstallConfirmation(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={doUninstall}>
+                        Confirm
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 }
