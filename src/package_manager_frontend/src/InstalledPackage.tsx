@@ -22,8 +22,7 @@ export default function InstalledPackage(props: {}) {
         if (glob.packageManager === undefined) { // TODO: `agent` is unused.
             return;
         }
-
-        glob.packageManager!.getInstalledPackage(BigInt(installationId!)).then(pkg => {
+        glob.packageManager.getInstalledPackage(BigInt(installationId!)).then(pkg => {
             setPkg(pkg);
             setPinned(pkg.pinned);
         });
