@@ -90,12 +90,14 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         };
     };
 
+    public type OnError = { #abort; #keepDoing };
+
     /// Call methods in the given order and don't return.
     ///
     /// If a method is missing, stop.
     ///
     /// TODO: It would be more efficient and elegant to pass a shared method.
-    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
+    private func callAllImpl(methods: [{canister: Principal; name: Text; data: Blob; error: OnError}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
                 ignore await ICE.call(method.canister, method.name, method.data); 
@@ -103,72 +105,17 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
                 Debug.print(msg);
-                Debug.trap(msg);
-                break cycle;
+                if (method.error == #abort or Error.code(e) == #call_error {err_code = 302}) { // CanisterMethodNotFound
+                    Debug.trap(msg);
+                };
             };
         };
     };
 
-    /// Call methods in the given order and don't return.
-    ///
-    /// If a method is missing, keep calling other methods.
-    ///
-    /// TODO: We don't need this function.
-    private func callIgnoringMissingOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* Blob {
-        for (method in methods.vals()) {
-            try {
-                return await ICE.call(method.canister, method.name, method.data);
-            }
-            catch (e) {
-                let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-                Debug.print(msg);
-                Debug.trap(msg);
-                if (Error.code(e) != #call_error {err_code = 302}) { // CanisterMethodNotFound
-                    throw e; // Other error cause interruption.
-                }
-            };
-        };
-        "";
-    };
-
-    /// TODO: We don't need this function.
-    public shared({caller}) func callIgnoringMissingOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async Blob {
-        onlyOwner(caller, "callIgnoringMissingOneWay");
-
-        await* callIgnoringMissingOneWayImpl(methods)
-    };
-
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
+    public shared({caller}) func callAll(methods: [{canister: Principal; name: Text; data: Blob; error: OnError}]): async () {
         onlyOwner(caller, "callAllOneWay");
 
-        await* callAllOneWayImpl(methods);
-    };
-
-    /// TODO: We don't need this function.
-    public shared({caller}) func callIgnoringMissing(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller, "callIgnoringMissing");
-
-        try {
-            return await ICE.call(method.canister, method.name, method.data); 
-        }
-        catch (e) {
-            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-            Debug.print(msg);
-            Debug.trap(msg);
-        };
-    };
-
-    public shared({caller}) func call(method: {canister: Principal; name: Text; data: Blob}): async Blob {
-        onlyOwner(caller, "call");
-
-        try {
-            return await ICE.call(method.canister, method.name, method.data);
-        }
-        catch (e) {
-            let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
-            Debug.print(msg);
-            Debug.trap(msg);
-        };
+        await* callAllImpl(methods);
     };
 
     // TODO: Are the following methods necessary? Can't we use `callAll` with management canister?

@@ -110,7 +110,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type HalfUninstalledPackageInfo = {
         installationId: Common.InstallationId;
-        var remainingModules: Nat;
+        var remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
     };
 
     public type SharedHalfUninstalledPackageInfo = {
@@ -127,6 +127,20 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId = x.installationId;
         var remainingModules = x.remainingModules;
     };
+
+    // public type HalfUpgradedPackageInfo = {
+    //     modulesToUpgrade: HashMap.HashMap<Text, Common.Module>;
+    //     packageRepoCanister: Principal; // TODO: needed? move to `#package`?
+    //     package: Common.PackageInfo;
+    //     preinstalledModules: HashMap.HashMap<Text, Principal>;
+    //     minInstallationId: Nat; // hack 
+    //     afterInstallCallback: ?{
+    //         canister: Principal; name: Text; data: Blob;
+    //     };
+    //     var alreadyCalledAllCanistersCreated: Bool;
+    //     var totalNumberOfModulesRemainingToInstall: Nat;
+    //     bootstrapping: Bool;
+    // };
 
     stable var initialized = false;
 
@@ -344,18 +358,21 @@ shared({caller = initialCaller}) actor class PackageManager({
             });
             let modules = pkg.modules;
             for (canister_id in modules.vals()) {
-                ignore getSimpleIndirect().callAllOneWay([{
+                ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
                     data = to_candid({canister_id});
+                    error = #keepDoing; // need to reach `onDeleteCanister`
                 }, {
                     canister = Principal.fromText("aaaaa-aa");
                     name = "delete_canister";
                     data = to_candid({canister_id});
+                    error = #keepDoing; // need to reach `onDeleteCanister`
                 }, {
                     canister = Principal.fromActor(this);
                     name = "onDeleteCanister";
                     data = to_candid({uninstallationId});
+                    error = #abort;
                 }]);
             };
         };
@@ -730,7 +747,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         let ?cbPrincipal = inst3.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
-                        ignore getSimpleIndirect().callAllOneWay([{
+                        ignore getSimpleIndirect().callAll([{
                             canister = cbPrincipal;
                             name = callbackName.method;
                             data = to_candid({ // TODO
@@ -740,6 +757,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 packageManagerOrBootstrapper; // TODO: Remove?
                                 module_;
                             });
+                            error = #abort;
                         }]);
                     };
                     case (null) {};
@@ -747,7 +765,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             switch (afterInstallCallback) {
                 case (?afterInstallCallback) {
-                    ignore getSimpleIndirect().callAllOneWay([afterInstallCallback]);
+                    ignore getSimpleIndirect().callAll([{
+                        canister = afterInstallCallback.canister;
+                        name = afterInstallCallback.name;
+                        data = afterInstallCallback.data;
+                        error = #abort; // TODO: Here it's superfluous.
+                    }]);
                 };
                 case null {};
             };
