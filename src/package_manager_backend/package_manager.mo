@@ -378,9 +378,25 @@ shared({caller = initialCaller}) actor class PackageManager({
                 return;
             };
             installedPackages.delete(uninst.installationId);
-            installedPackagesByName.delete(Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name)); // FIXME: multiple packages
+            let guid2 = Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name);
+            switch (installedPackagesByName.get(guid2)) {
+                case (?info) {
+                    if (RBTree.size(info.all.share()) == 1) {
+                        installedPackagesByName.delete(guid2);
+                        info.default := 0;
+                    } else {
+                        info.all.delete(uninst.installationId);
+                        if (info.default == uninst.installationId) {
+                            let ?(last, ()) = info.all.entriesRev().next() else {
+                                Debug.trap("programming error");
+                            };
+                            info.default := last;
+                        };
+                    }
+                };
+                case null {};
+            };
             halfUninstalledPackages.delete(uninstallationId);
-            // TODO: Update selected package.
         };
     };
 
