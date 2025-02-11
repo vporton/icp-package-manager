@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
+
 - Update some packages automatically (every day).
 
 - casing of identifiers: https://forum.dfinity.org/t/what-is-the-advised-naming-scheme-for-canisters/41023/2
