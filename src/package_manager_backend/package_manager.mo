@@ -108,18 +108,22 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public type HalfUninstalledPackageInfo = {
+        installationId: Common.InstallationId;
         var remainingModules: Nat;
     };
 
     public type SharedHalfUninstalledPackageInfo = {
+        installationId: Common.InstallationId;
         remainingModules: Nat;
     };
 
     private func shareHalfUninstalledPackageInfo(x: HalfUninstalledPackageInfo): SharedHalfUninstalledPackageInfo = {
+        installationId = x.installationId;
         remainingModules = x.remainingModules;
     };
 
     private func unshareHalfUninstalledPackageInfo(x: SharedHalfUninstalledPackageInfo): HalfUninstalledPackageInfo = {
+        installationId = x.installationId;
         var remainingModules = x.remainingModules;
     };
 
@@ -227,7 +231,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var nextInstallationId: Common.InstallationId = 0;
     stable var nextUninstallationId: Common.UninstallationId = 0;
-    stable var nextUpgradeId: Common.UpgradeId = 0;
+    // stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
@@ -327,18 +331,23 @@ shared({caller = initialCaller}) actor class PackageManager({
         nextUninstallationId += Array.size(packages);
         var ourNextUninstallationId = minUninstallationId;
 
-        label cycle for (installationId in packages.vals()) { // FIXME: IDs
+        label cycle for (installationId in packages.vals()) {
             let uninstallationId = ourNextUninstallationId;
             ourNextUninstallationId += 1;
             let ?pkg = installedPackages.get(installationId) else {
                 continue cycle; // already uninstalled
             };
-            let uninst = halfUninstalledPackages.put(uninstallationId, {
+            halfUninstalledPackages.put(uninstallationId, {
+                installationId;
                 var remainingModules = pkg.modules.size();
             });
             let modules = pkg.modules;
             for (canister_id in modules.vals()) {
                 ignore getSimpleIndirect().callAllOneWay([{
+                    canister = Principal.fromText("aaaaa-aa");
+                    name = "stop_canister";
+                    data = to_candid({canister_id});
+                }, {
                     canister = Principal.fromText("aaaaa-aa");
                     name = "delete_canister";
                     data = to_candid({canister_id});
@@ -364,6 +373,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         uninst.remainingModules -= 1;
         if (uninst.remainingModules == 0) {
+            let ?pkg = installedPackages.get(uninst.installationId) else {
+                return;
+            };
+            installedPackages.delete(uninst.installationId);
+            installedPackagesByName.delete(Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name)); // FIXME: multiple packages
             halfUninstalledPackages.delete(uninstallationId);
         };
     };
