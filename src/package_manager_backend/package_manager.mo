@@ -248,7 +248,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var nextInstallationId: Common.InstallationId = 0;
     stable var nextUninstallationId: Common.UninstallationId = 0;
-    // stable var nextUpgradeId: Common.UpgradeId = 0;
+    stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
@@ -386,6 +386,69 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         {minUninstallationId};
     };
+
+    // public shared({caller}) func upgradePackages({
+    //     packages: [{
+    //         installationId: Common.InstallationId;
+    //         packageName: Common.PackageName;
+    //         version: Common.Version;
+    //         repo: Common.RepositoryRO;
+    //     }];
+    //     user: Principal;
+    //     arg: [Nat8];
+    // })
+    //     : async {minUpgradeId: Common.UpgradeId}
+    // {
+    //     onlyOwner(caller, "uninstallPackages");
+
+    //     let minUpgradeId = nextUpgradeId;
+    //     nextUpgradeId += Array.size(packages);
+    //     var ourNextUpgradeId = minUpgradeId;
+
+    //     label cycle for (package in packages.vals()) {
+    //         let installationId = package.installationId;
+    //         let uninstallationId = ourNextUpgradeId;
+    //         ourNextUpgradeId += 1;
+    //         let ?pkg = installedPackages.get(installationId) else {
+    //             continue cycle; // already uninstalled
+    //         };
+    //         halfUpgradedPackages.put(uninstallationId, {
+    //             // installationId;
+    //             var remainingModules = pkg.modules.size();
+    //         });
+    //         let modules = pkg.modules;
+    //         // FIXME: delete removed modules, create new modules
+    //         // FIXME: update assets
+    //         for (canister_id in modules.vals()) {
+    //             let m: Common.Module = Common.shareModule(pkg.package.modules); // FIXME
+
+    //             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+    //             let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+    //             let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+    //             // TODO: user's callback
+    //             ignore getSimpleIndirect().callAll([
+    //             // {
+    //             //     canister = Principal.fromText("aaaaa-aa");
+    //             //     name = "stop_canister";
+    //             //     data = to_candid({canister_id});
+    //             //     error = #keepDoing; // need to reach `onDeleteCanister`
+    //             // },
+    //             {
+    //                 canister = Principal.fromText("aaaaa-aa");
+    //                 name = "install_code";
+    //                 data = to_candid({arg; wasm_module; mode = #upgrade; canister_id});
+    //                 error = #keepDoing; // need to reach `onUpgradeCanister`
+    //             }, {
+    //                 canister = Principal.fromActor(this);
+    //                 name = "onUpgradeCanister";
+    //                 data = to_candid({uninstallationId});
+    //                 error = #abort;
+    //             }]);
+    //         };
+    //     };
+
+    //     {minUpgradeId};
+    // };
 
     /// Internal
     public shared({caller}) func onDeleteCanister({
