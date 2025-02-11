@@ -128,19 +128,21 @@ shared({caller = initialCaller}) actor class PackageManager({
         var remainingModules = x.remainingModules;
     };
 
-    // public type HalfUpgradedPackageInfo = {
-    //     modulesToUpgrade: HashMap.HashMap<Text, Common.Module>;
-    //     packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-    //     package: Common.PackageInfo;
-    //     preinstalledModules: HashMap.HashMap<Text, Principal>;
-    //     minInstallationId: Nat; // hack 
-    //     afterInstallCallback: ?{
-    //         canister: Principal; name: Text; data: Blob;
-    //     };
-    //     var alreadyCalledAllCanistersCreated: Bool;
-    //     var totalNumberOfModulesRemainingToInstall: Nat;
-    //     bootstrapping: Bool;
-    // };
+    public type HalfUpgradedPackageInfo = {
+        var remainingModules: Nat;
+    };
+
+    public type SharedHalfUpgradedPackageInfo = {
+        remainingModules: Nat;
+    };
+
+    private func shareHalfUpgradedPackageInfo(x: HalfUpgradedPackageInfo): SharedHalfUpgradedPackageInfo = {
+        remainingModules = x.remainingModules;
+    };
+
+    private func unshareHalfUpgradedPackageInfo(x: SharedHalfUpgradedPackageInfo): HalfUpgradedPackageInfo = {
+        var remainingModules = x.remainingModules;
+    };
 
     stable var initialized = false;
 
@@ -270,6 +272,11 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfUninstalledPackages: HashMap.HashMap<Common.UninstallationId, HalfUninstalledPackageInfo> =
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+
+    stable var _halfUpgradedPackagesSave: [(Common.UpgradeId, SharedHalfUpgradedPackageInfo)] = [];
+    // TODO: `var` or `let` here and in other places:
+    var halfUpgradedPackages: HashMap.HashMap<Common.UpgradeId, HalfUpgradedPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
@@ -990,9 +997,14 @@ shared({caller = initialCaller}) actor class PackageManager({
             func (elt: (Common.InstallationId, HalfInstalledPackageInfo)) = (elt.0, shareHalfInstalledPackageInfo(elt.1)),
         ));
 
-        _halfUninstalledPackagesSave := Iter.toArray(Iter.map<(Common.InstallationId, HalfUninstalledPackageInfo), (Common.InstallationId, SharedHalfUninstalledPackageInfo)>(
+        _halfUninstalledPackagesSave := Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), (Common.UninstallationId, SharedHalfUninstalledPackageInfo)>(
             halfUninstalledPackages.entries(),
             func (elt: (Common.InstallationId, HalfUninstalledPackageInfo)) = (elt.0, shareHalfUninstalledPackageInfo(elt.1)),
+        ));
+
+        _halfUpgradedPackagesSave := Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), (Common.UpgradeId, SharedHalfUpgradedPackageInfo)>(
+            halfUninstalledPackages.entries(),
+            func (elt: (Common.UpgradeId, HalfUpgradedPackageInfo)) = (elt.0, shareHalfUpgradedPackageInfo(elt.1)),
         ));
     };
 
@@ -1046,16 +1058,26 @@ shared({caller = initialCaller}) actor class PackageManager({
             Common.IntHash,
         );
         _halfInstalledPackagesSave := []; // Free memory.
-        halfUninstalledPackages := HashMap.fromIter<Common.InstallationId, HalfUninstalledPackageInfo>(
-            Iter.map<(Common.InstallationId, SharedHalfUninstalledPackageInfo), (Common.InstallationId, HalfUninstalledPackageInfo)>(
+        halfUninstalledPackages := HashMap.fromIter<Common.UninstallationId, HalfUninstalledPackageInfo>(
+            Iter.map<(Common.UninstallationId, SharedHalfUninstalledPackageInfo), (Common.UninstallationId, HalfUninstalledPackageInfo)>(
                 _halfUninstalledPackagesSave.vals(),
-                func (x: (Common.InstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1)),
+                func (x: (Common.UninstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1)),
             ),
             _halfInstalledPackagesSave.size(),
             Nat.equal,
             Common.IntHash,
         );
         _halfUninstalledPackagesSave := []; // Free memory.
+        halfUpgradedPackages := HashMap.fromIter<Common.UpgradeId, HalfUpgradedPackageInfo>(
+            Iter.map<(Common.UpgradeId, SharedHalfUpgradedPackageInfo), (Common.UpgradeId, HalfUpgradedPackageInfo)>(
+                _halfUpgradedPackagesSave.vals(),
+                func (x: (Common.UpgradeId, SharedHalfUpgradedPackageInfo)) = (x.0, unshareHalfUpgradedPackageInfo(x.1)),
+            ),
+            _halfUpgradedPackagesSave.size(),
+            Nat.equal,
+            Common.IntHash,
+        );
+        _halfUpgradedPackagesSave := []; // Free memory.
     };
 
     // Accessor method //
