@@ -12,6 +12,7 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import OrderedHashMap "mo:ordered-map";
+import RBTree "mo:base/RBTree";
 import Common "../common";
 import IndirectCaller "indirect_caller";
 import SimpleIndirect "simple_indirect";
@@ -238,11 +239,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.HashMap(0, Nat.equal, Common.IntHash);
 
     stable var _installedPackagesByNameSave: [(Blob, {
-        all: [Common.InstallationId];
+        all: RBTree.Tree<Common.InstallationId, ()>;
         default: Common.InstallationId;
     })] = [];
     var installedPackagesByName: HashMap.HashMap<Blob, {
-        all: Buffer.Buffer<Common.InstallationId>;
+        all: RBTree.RBTree<Common.InstallationId, ()>;
         var default: Common.InstallationId;
     }> =
         HashMap.HashMap(0, Blob.equal, Blob.hash);
@@ -379,6 +380,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             installedPackages.delete(uninst.installationId);
             installedPackagesByName.delete(Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name)); // FIXME: multiple packages
             halfUninstalledPackages.delete(uninstallationId);
+            // TODO: Update selected package.
         };
     };
 
@@ -801,17 +803,20 @@ shared({caller = initialCaller}) actor class PackageManager({
                     var pinned = false;
                 });
                 let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
-                switch (installedPackagesByName.get(guid2)) {
+                let tree = switch (installedPackagesByName.get(guid2)) {
                     case (?old) {
-                        old.all.add(installationId);
+                        old.all;
                     };
                     case null {
+                        let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
                         installedPackagesByName.put(guid2, {
-                            all = Buffer.fromArray([installationId]);
+                            all = tree;
                             var default = installationId;
                         });
+                        tree;
                     };
                 };
+                tree.put(installationId, ());
             };
             // case (#simplyModules _) {};
         };
@@ -924,12 +929,16 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         _installedPackagesByNameSave := Iter.toArray/*<{all: [Common.InstallationId]; default: Common.InstallationId}>*/(
             Iter.map<
-                (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId}),
-                (Blob, {all: [Common.InstallationId]; default: Common.InstallationId})
+                (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId}),
+                (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId})
             >(
                 installedPackagesByName.entries(),
-                func ((name, x): (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})) =
-                    (name, {all = Buffer.toArray(x.all); default = x.default}),
+                func (x: (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId})) {
+                    (
+                        x.0,
+                        {all = x.1.all.share(); default = x.1.default},
+                    );
+                },
             ),
         );
 
@@ -968,12 +977,15 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         installedPackagesByName := HashMap.fromIter(
             Iter.map<
-                (Blob, {all: [Common.InstallationId]; default: Common.InstallationId}),
-                (Blob, {all: Buffer.Buffer<Common.InstallationId>; var default: Common.InstallationId})
+                (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId}),
+                (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId})
             >(
                 _installedPackagesByNameSave.vals(),
-                func ((name, x): (Blob, {all: [Common.InstallationId]; default: Common.InstallationId})) =
-                    (name, {all = Buffer.fromArray(x.all); var default = x.default}),
+                func ((name, x): (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId})) {
+                    let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
+                    tree.unshare(x.all);
+                    (name, {all = tree; var default = x.default});
+                },
             ),
             Array.size(_installedPackagesByNameSave),
             Blob.equal,
@@ -1023,14 +1035,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?data = installedPackagesByName.get(guid2) else {
             return {all = []; default = 0};
         };
-        // TODO: Eliminiate duplicate code:
-        let all = Iter.toArray(Iter.map(data.all.vals(), func (id: Common.InstallationId): Common.SharedInstalledPackageInfo {
-            let ?info = installedPackages.get(id) else {
-                Debug.trap("getInstalledPackagesInfoByName: programming error");
-            };
-            Common.installedPackageInfoShare(info);
-        }));
-        {all = all; default = data.default};
+        let all = Iter.toArray(Iter.map<(Common.InstallationId, ()), Common.SharedInstalledPackageInfo>(
+            data.all.entries(),
+            func (id: Common.InstallationId, _: ()): Common.SharedInstalledPackageInfo {
+                let ?info = installedPackages.get(id) else {
+                    Debug.trap("getInstalledPackagesInfoByName: programming error");
+                };
+                Common.installedPackageInfoShare(info);
+            }));
+        {all; default = data.default};
     };
 
     public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
