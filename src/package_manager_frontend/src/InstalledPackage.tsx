@@ -62,7 +62,7 @@ export default function InstalledPackage(props: {}) {
     }
     async function doUninstall() {
         setShowUninstallConfirmation(false);
-        if (uninstallConfirmationMessage === "remove data") {
+        if (uninstallConfirmationMessage === "delete data") {
             await glob.packageManager!.uninstallPackages({packages: [BigInt(installationId!)], user: principal!});
         }
     }
@@ -109,7 +109,7 @@ export default function InstalledPackage(props: {}) {
                 </Modal.Header>
                 <Modal.Body>
                     <p>Remove the package and all its data?</p>
-                    <p>Type <em>remove data</em> to remove:</p>
+                    <p>Type <em>delete data</em> to remove:</p>
                     <p>
                         <input
                             value={uninstallConfirmationMessage}
