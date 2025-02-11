@@ -95,10 +95,10 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     /// If a method is missing, stop.
     ///
     /// TODO: It would be more efficient and elegant to pass a shared method.
-    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* Blob {
+    private func callAllOneWayImpl(methods: [{canister: Principal; name: Text; data: Blob}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
-                return await ICE.call(method.canister, method.name, method.data); 
+                ignore await ICE.call(method.canister, method.name, method.data); 
             }
             catch (e) {
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
@@ -107,7 +107,6 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
                 break cycle;
             };
         };
-        "";
     };
 
     /// Call methods in the given order and don't return.
@@ -139,7 +138,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await* callIgnoringMissingOneWayImpl(methods)
     };
 
-    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async Blob {
+    public shared({caller}) func callAllOneWay(methods: [{canister: Principal; name: Text; data: Blob}]): async () {
         onlyOwner(caller, "callAllOneWay");
 
         await* callAllOneWayImpl(methods);

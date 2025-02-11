@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
@@ -10,6 +10,7 @@ import Accordion from "react-bootstrap/Accordion";
 import { Alert, Modal } from "react-bootstrap";
 
 export default function InstalledPackage(props: {}) {
+    const navigate = useNavigate();
     const { installationId } = useParams();
     const {agent, isAuthenticated, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
@@ -64,6 +65,7 @@ export default function InstalledPackage(props: {}) {
         setShowUninstallConfirmation(false);
         if (uninstallConfirmationMessage === "delete data") {
             await glob.packageManager!.uninstallPackages({packages: [BigInt(installationId!)], user: principal!});
+            navigate("/");
         }
     }
 

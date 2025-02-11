@@ -367,16 +367,20 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onDeleteCanister({
         uninstallationId: Common.UninstallationId;
     }): async () {
+        Debug.print("onDeleteCanister"); // FIXME: Remove.
         onlyOwner(caller, "onDeleteCanister");
 
         let ?uninst = halfUninstalledPackages.get(uninstallationId) else {
             return;
         };
         uninst.remainingModules -= 1;
+        Debug.print("uninst.remainingModules: " # debug_show(uninst.remainingModules)); // FIXME: Remove.
         if (uninst.remainingModules == 0) {
+            Debug.print("uninst.installationId: " # debug_show(uninst.installationId)); // FIXME: Remove.
             let ?pkg = installedPackages.get(uninst.installationId) else {
                 return;
             };
+            Debug.print("A1"); // FIXME: Remove.
             installedPackages.delete(uninst.installationId);
             let guid2 = Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name);
             switch (installedPackagesByName.get(guid2)) {
