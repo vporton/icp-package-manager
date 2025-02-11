@@ -8,6 +8,8 @@ Remaining things TODO:
 
 - It should say "Install additonal copy" of the package when installing an already installed package.
 
+- `HashMap<..., ()>` -> `Set<...>`.
+
 - Test real module with zero modules.
 
 - If the user has several PMs installed, order their order.
