@@ -4,7 +4,7 @@ import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
-import { InstallationId, RepositoryRO } from "../../declarations/package_manager/package_manager.did";
+import { InstallationId, SharedPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
 import { createActor as createRepoIndexActor } from "../../declarations/Repository";
@@ -53,7 +53,7 @@ export default function MainPage() {
     const [distroVersions, setDistroVersions] = useState<string[]>([]);
     const [curDistroVersion, setCurDistroVersion] = useState(0);
     const [packageName, setPackageName] = useState("");
-    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, name: string, version: string, packageRepoCanister: Principal}[]>();
+    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, package: SharedPackageInfo}[]>();
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
         if (glob.packageManager !== undefined) {
@@ -194,7 +194,7 @@ export default function MainPage() {
                             (event.target as HTMLInputElement).checked ? checkedHalfInstalled!.add(p.installationId) : checkedHalfInstalled!.delete(p.installationId);
                             setCheckedHalfInstalled(checkedHalfInstalled);
                         } }/>{" "}
-                    <code>{p.name}</code> {p.version}
+                    <code>{p.package.base.name}</code> {p.package.base.version}
                     </li>
                 )}
                 </ul>

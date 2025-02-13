@@ -231,15 +231,6 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
-                    await cb.onCreateCanister({
-                        installPackages;
-                        installationId;
-                        moduleNumber;
-                        moduleName;
-                        // module_ = wasmModule;
-                        canister = preinstalledCanisterId;
-                        user;
-                    });
                     await cb.onInstallCode({
                         installPackages;
                         installationId;
@@ -276,6 +267,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         };
     };
 
+    // TODO: unused?
     private func _installModuleCode({
         moduleNumber: Nat;
         moduleName: ?Text;
@@ -299,16 +291,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         });
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-        await pm.onCreateCanister({
-            installPackages; // Bool
-            moduleNumber;
-            moduleName;
-            // module_ = Common.shareModule(wasmModule);
-            installationId;
-            canister = canister_id;
-            user;
-        });
-
+    
         await* Install.myInstallCode({
             installationId;
             canister_id;

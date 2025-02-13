@@ -11,7 +11,6 @@ import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
-import OrderedHashMap "mo:ordered-map";
 import RBTree "mo:base/RBTree";
 import Common "../common";
 import IndirectCaller "indirect_caller";
@@ -31,78 +30,48 @@ shared({caller = initialCaller}) actor class PackageManager({
     // };
 
     public type HalfInstalledPackageInfo = {
-        modulesToInstall: HashMap.HashMap<Text, Common.Module>;
-        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
+        // modulesToInstall: HashMap.HashMap<Text, Common.Module>;
         // #simplyModules : [(Text, SharedModule)]; // TODO
-        modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
-        installedModules: Buffer.Buffer<?(?Text, Principal)>;
+        // modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         package: Common.PackageInfo;
-        preinstalledModules: HashMap.HashMap<Text, Principal>;
+        installedModules: HashMap.HashMap<Text, Principal>;
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
-        var alreadyCalledAllCanistersCreated: Bool;
-        var totalNumberOfModulesRemainingToInstall: Nat;
+        // var alreadyCalledAllCanistersCreated: Bool;
+        // var totalNumberOfModulesRemainingToInstall: Nat;
         bootstrapping: Bool;
+        var remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
     };
 
     public type SharedHalfInstalledPackageInfo = {
-        modulesToInstall: [(Text, Common.SharedModule)];
-        packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        // whatToInstall: {
-        //     #package;
-        //     // #simplyModules : [(Text, SharedModule)]; // TODO
-        // };
-        modulesWithoutCode: [?(?Text, Principal)];
-        installedModules: [?(?Text, Principal)];
         package: Common.SharedPackageInfo;
-        preinstalledModules: [(Text, Principal)];
+        installedModules: [(Text, Principal)];
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
-        alreadyCalledAllCanistersCreated: Bool;
-        totalNumberOfModulesRemainingToInstall: Nat;
         bootstrapping: Bool;
+        remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
     };
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
-        modulesToInstall = Iter.toArray<(Text, Common.SharedModule)>(Iter.map<(Text, Common.Module), (Text, Common.SharedModule)>(
-            x.modulesToInstall.entries(),
-            func (elt: (Text, Common.Module)) = (elt.0, Common.shareModule(elt.1)),
-        ));
-        packageRepoCanister = x.packageRepoCanister;
-        // whatToInstall = x.whatToInstall;
-        modulesWithoutCode = Buffer.toArray(x.modulesWithoutCode);
-        installedModules = Buffer.toArray(x.installedModules);
         package = Common.sharePackageInfo(x.package);
-        preinstalledModules = Iter.toArray(x.preinstalledModules.entries());
+        installedModules = Iter.toArray(x.installedModules.entries());
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
-        alreadyCalledAllCanistersCreated = x.alreadyCalledAllCanistersCreated;
-        totalNumberOfModulesRemainingToInstall = x.totalNumberOfModulesRemainingToInstall;
         bootstrapping = x.bootstrapping;
+        remainingModules = x.remainingModules;
     };
 
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
-        modulesToInstall = HashMap.fromIter(
-            Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(x.modulesToInstall.vals(), func (elt: (Text, Common.SharedModule)) = (elt.0, Common.unshareModule(elt.1))),
-            x.modulesToInstall.size(),
-            Text.equal,
-            Text.hash
-        );
-        packageRepoCanister = x.packageRepoCanister;
-        // whatToInstall = x.whatToInstall;
-        modulesWithoutCode = Buffer.fromArray(x.modulesWithoutCode);
-        installedModules = Buffer.fromArray(x.installedModules);
         package = Common.unsharePackageInfo(x.package);
-        preinstalledModules = HashMap.fromIter(x.preinstalledModules.vals(), x.preinstalledModules.size(), Text.equal, Text.hash);
+        installedModules = HashMap.fromIter(x.installedModules.vals(), x.installedModules.size(), Text.equal, Text.hash);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
-        var alreadyCalledAllCanistersCreated = x.alreadyCalledAllCanistersCreated;
-        var totalNumberOfModulesRemainingToInstall = x.totalNumberOfModulesRemainingToInstall;
         bootstrapping = x.bootstrapping;
+        var remainingModules = x.remainingModules;
     };
 
     public type HalfUninstalledPackageInfo = {
@@ -635,41 +604,28 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
 
-            let preinstalledModules2 = HashMap.fromIter<Text, Principal>(
+            // two clones of identical data:
+            let preinstalledModules = HashMap.fromIter<Text, Principal>(
                 p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
-            let arrayOfEmpty = Array.tabulate(realModulesToInstallSize, func (_: Nat): ?(?Text, Principal) = null);
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
-                // id = installationId;
-                packageName = p.package.base.name;
-                version = p.package.base.version;
-                modules = OrderedHashMap.OrderedHashMap<Text, (Principal, {#empty; #installed})>(numModules, Text.equal, Text.hash);
-                // packageDescriptionIn = part;
                 package = package2;
-                packageRepoCanister = Principal.fromActor(p.repo);
-                preinstalledModules = preinstalledModules2;
-                modulesToInstall = HashMap.fromIter<Text, Common.Module>(
-                    realModulesToInstall2.vals(),
-                    realModulesToInstallSize,
-                    Text.equal,
-                    Text.hash);
-                modulesWithoutCode = Buffer.fromArray(arrayOfEmpty);
-                installedModules = Buffer.fromArray(arrayOfEmpty);
-                whatToInstall;
+                installedModules = preinstalledModules;
                 minInstallationId;
                 afterInstallCallback;
-                var alreadyCalledAllCanistersCreated = false;
-                var totalNumberOfModulesRemainingToInstall = numModules;
                 bootstrapping;
+                var remainingModules = numModules;
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             for ((p0, pkg) in halfInstalledPackages.entries()) {
+                // getIndirectCaller().;
                 await* doInstallFinish(p0, pkg);
             };
         };
     };
 
+    // FIXME: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
@@ -717,6 +673,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         for ((name, m): (Text, Common.Module) in modules) {
             // Starting installation of all modules in parallel:
             getIndirectCaller().installModule({
+                // FIXME: arguments
                 installPackages = true/*whatToInstall == #package*/; // TODO: correct?
                 moduleNumber;
                 moduleName = ?name;
@@ -743,7 +700,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;
         canister: Principal;
-        moduleNumber: Nat;
+        moduleNumber: Nat; // TODO: Use it.
         moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
@@ -760,51 +717,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        assert Option.isSome(inst.modulesWithoutCode.get(moduleNumber));
-        assert Option.isNull(inst.installedModules.get(moduleNumber));
-        inst.modulesWithoutCode.put(moduleNumber, null);
-        inst.installedModules.put(moduleNumber, ?(moduleName, canister));
         let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
         let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(inst.installedModules.size(), Text.equal, Text.hash);
-        // Keep the below code in-sync with `totalNumberOfModulesRemainingToInstall` variable value!
-        // TODO: The below code is a trick.
-        // Note that we have different algorithms for zero and non-zero number of callbacks.
-        // let #real package = inst.package.specific else { // TODO: virtual packages
-        //     Debug.trap("virtual packages not yet supported");
-        // };
-        inst.totalNumberOfModulesRemainingToInstall -= 1;
-        if (inst.totalNumberOfModulesRemainingToInstall == 0) { // All module have been installed.
+        // Note that we have different algorithms for zero and non-zero number of callbacks (TODO: check).
+        inst.remainingModules -= 1;
+        if (inst.remainingModules == 0) { // All module have been installed.
             // TODO: order of this code
             _updateAfterInstall({installationId});
-            // let ?inst2 = installedPackages.get(installationId) else {
-            //     Debug.trap("no such installationId: " # debug_show(installationId));
-            // };
-            // switch (inst.whatToInstall) {
-            //     // case (#simplyModules _) {
-            //     //     inst2.allModules.add(canister);
-            //     //     switch (moduleName) {
-            //     //         case (?moduleName) {
-            //     //             inst2.allModules.add(canister);
-            //     //             inst2.modules.put(moduleName, canister);
-            //     //         };
-            //     //         case null {};
-            //     //     };
-            //     // };
-            //     case (#package) {
-            //         // Package modules are updated after installation of all modules.
-            //         // TODO: Do it here instead.
-            //     }
-            // };
-            for (m in inst.installedModules.vals()) {
-                switch (m) {
-                    case (?(?n, p)) {
-                        inst3.put(n, p);
-                    };
-                    case _ {};
-                };
-            };
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
@@ -842,40 +763,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: probably superfluous
-    public shared({caller}) func onCreateCanister({
-        installationId: Common.InstallationId;
-        moduleNumber: Nat;
-        moduleName: ?Text;
-        canister: Principal;
-        user: Principal;
-    }): async () {
-        // TODO: Move after `onlyOwner` call:
-        Debug.print("Called onCreateCanister for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
-
-        onlyOwner(caller, "onCreateCanister");
-
-        let ?inst = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package"); // better message
-        };
-        if (not inst.alreadyCalledAllCanistersCreated) {
-            assert Option.isNull(inst.modulesWithoutCode.get(moduleNumber));
-            inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with below
-            var missingCanister = false; // There is a module for which canister wasn't created yet.
-            assert(inst.modulesWithoutCode.size() == inst.installedModules.size());
-            var i = 0;
-            label searchMissing while (i != inst.modulesWithoutCode.size()) { // TODO: efficient?
-                if (Option.isSome(inst.modulesWithoutCode.get(i)) or Option.isSome(inst.installedModules.get(i))) {
-                    missingCanister := true;
-                    break searchMissing;
-                };
-                i += 1;
-            };
-            inst.alreadyCalledAllCanistersCreated := true;
-        };
-        inst.modulesWithoutCode.put(moduleNumber, ?(moduleName, canister)); // TODO: duplicate with above
-    };
-
     // TODO: Keep registry of ALL installed modules.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
@@ -886,24 +773,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             name = ourHalfInstalled.package.base.name;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = HashMap.fromIter(
-                Iter.map<?(?Text, Principal), (Text, Principal)>(
-                    ourHalfInstalled.installedModules.vals(),
-                    func (x: ?(?Text, Principal)) {
-                        let ?s = x else {
-                            Debug.trap("programming error 4");
-                        };
-                        let ?n = s.0 else {
-                            Debug.trap("programming error 5");
-                        };
-                        (n, s.1);
-                    }
-                ),
-                ourHalfInstalled.installedModules.size(),
-                Text.equal,
-                Text.hash,
-            );
-            packageRepoCanister = ourHalfInstalled.packageRepoCanister;
+            modules = ourHalfInstalled.installedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
             allModules = Buffer.Buffer<Principal>(0);
             var pinned = false;
         });
@@ -1178,56 +1048,33 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// Internal.
     public query({caller}) func getHalfInstalledPackages(): async [{
         installationId: Common.InstallationId;
-        packageRepoCanister: Principal;
-        name: Common.PackageName;
-        version: Common.Version;
+        package: Common.SharedPackageInfo;
     }] {
         onlyOwner(caller, "getHalfInstalledPackages");
 
         Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), {
             installationId: Common.InstallationId;
-            packageRepoCanister: Principal;
-            name: Common.PackageName;
-            version: Common.Version;
+            package: Common.SharedPackageInfo;
         }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, HalfInstalledPackageInfo)): {
             installationId: Common.InstallationId;
-            packageRepoCanister: Principal;
-            name: Common.PackageName;
-            version: Common.Version;
+            package: Common.SharedPackageInfo;
         } =
             {
                 installationId = x.0;
-                packageRepoCanister = x.1.packageRepoCanister;
-                name = x.1.package.base.name;
-                version = x.1.package.base.version;
+                package = Common.sharePackageInfo(x.1.package);
             },
         ));
     };
 
     /// TODO: very unstable API.
-    public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(?Text, Principal)] {
+    public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
         onlyOwner(caller, "getHalfInstalledPackageModulesById");
 
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package");
         };
         // TODO: May be a little bit slow.
-        Iter.toArray(
-            Iter.map<?(?Text, Principal), (?Text, Principal)>(
-                Iter.filter<?(?Text, Principal)>(
-                    res.installedModules.vals(),
-                    func (x: ?(?Text, Principal)): Bool {
-                        Option.isSome(x);
-                    },
-                ),
-                func (x: ?(?Text, Principal)): (?Text, Principal) {
-                    let ?y = x else {
-                        Debug.trap("programming error 6");
-                    };
-                    y;
-                },
-            ),
-        );
+        Iter.toArray<(Text, Principal)>(res.installedModules.entries());
     };
 
     private func _installModulesGroup({

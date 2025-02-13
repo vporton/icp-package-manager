@@ -35,6 +35,7 @@ module {
 
     /// Common properties of package and virtual package.
     public type CommonPackageInfo = {
+        // FIXME: Add repo canister here.
         guid: Blob;
         name: PackageName;
         version: Version;
@@ -287,7 +288,7 @@ module {
         id: InstallationId;
         name: PackageName;
         package: PackageInfo;
-        packageRepoCanister: Principal;
+        // packageRepoCanister: Principal;
         version: Version; // TODO: Remove it everywhere. because it's in PackageInfo?
         modules: HashMap.HashMap<Text, Principal>; // TODO: Rename to `namedModules`.
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
@@ -298,7 +299,6 @@ module {
         id: InstallationId;
         name: PackageName;
         package: SharedPackageInfo;
-        packageRepoCanister: Principal;
         version: Version;
         modules: [(Text, Principal)];
         allModules: [Principal];
@@ -309,7 +309,6 @@ module {
         id = info.id;
         name = info.name;
         package = sharePackageInfo(info.package);
-        packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = Iter.toArray(info.modules.entries());
         allModules = Buffer.toArray(info.allModules);
@@ -320,7 +319,6 @@ module {
         id = info.id;
         name = info.name;
         package = unsharePackageInfo(info.package);
-        packageRepoCanister = info.packageRepoCanister;
         version = info.version;
         modules = HashMap.fromIter(info.modules.vals(), Array.size(info.modules), Text.equal, Text.hash);
         allModules = Buffer.fromArray(info.allModules);
