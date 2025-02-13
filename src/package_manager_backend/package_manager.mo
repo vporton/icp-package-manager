@@ -33,10 +33,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfInstalledPackageInfo = {
         modulesToInstall: HashMap.HashMap<Text, Common.Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        // whatToInstall: {
-        //     #package;
-        //     // #simplyModules : [(Text, SharedModule)]; // TODO
-        // };
+        // #simplyModules : [(Text, SharedModule)]; // TODO
         modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         installedModules: Buffer.Buffer<?(?Text, Principal)>;
         package: Common.PackageInfo;
