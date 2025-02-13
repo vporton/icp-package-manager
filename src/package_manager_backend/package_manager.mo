@@ -33,10 +33,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfInstalledPackageInfo = {
         modulesToInstall: HashMap.HashMap<Text, Common.Module>;
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, SharedModule)]; // TODO
-        };
+        // whatToInstall: {
+        //     #package;
+        //     // #simplyModules : [(Text, SharedModule)]; // TODO
+        // };
         modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         installedModules: Buffer.Buffer<?(?Text, Principal)>;
         package: Common.PackageInfo;
@@ -53,10 +53,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfInstalledPackageInfo = {
         modulesToInstall: [(Text, Common.SharedModule)];
         packageRepoCanister: Principal; // TODO: needed? move to `#package`?
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, SharedModule)]; // TODO
-        };
+        // whatToInstall: {
+        //     #package;
+        //     // #simplyModules : [(Text, SharedModule)]; // TODO
+        // };
         modulesWithoutCode: [?(?Text, Principal)];
         installedModules: [?(?Text, Principal)];
         package: Common.SharedPackageInfo;
@@ -76,7 +76,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             func (elt: (Text, Common.Module)) = (elt.0, Common.shareModule(elt.1)),
         ));
         packageRepoCanister = x.packageRepoCanister;
-        whatToInstall = x.whatToInstall;
+        // whatToInstall = x.whatToInstall;
         modulesWithoutCode = Buffer.toArray(x.modulesWithoutCode);
         installedModules = Buffer.toArray(x.installedModules);
         package = Common.sharePackageInfo(x.package);
@@ -96,7 +96,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Text.hash
         );
         packageRepoCanister = x.packageRepoCanister;
-        whatToInstall = x.whatToInstall;
+        // whatToInstall = x.whatToInstall;
         modulesWithoutCode = Buffer.fromArray(x.modulesWithoutCode);
         installedModules = Buffer.fromArray(x.installedModules);
         package = Common.unsharePackageInfo(x.package);
@@ -248,7 +248,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var nextInstallationId: Common.InstallationId = 0;
     stable var nextUninstallationId: Common.UninstallationId = 0;
-    stable var nextUpgradeId: Common.UpgradeId = 0;
+    // stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
@@ -784,22 +784,22 @@ shared({caller = initialCaller}) actor class PackageManager({
             // let ?inst2 = installedPackages.get(installationId) else {
             //     Debug.trap("no such installationId: " # debug_show(installationId));
             // };
-            switch (inst.whatToInstall) {
-                // case (#simplyModules _) {
-                //     inst2.allModules.add(canister);
-                //     switch (moduleName) {
-                //         case (?moduleName) {
-                //             inst2.allModules.add(canister);
-                //             inst2.modules.put(moduleName, canister);
-                //         };
-                //         case null {};
-                //     };
-                // };
-                case (#package) {
-                    // Package modules are updated after installation of all modules.
-                    // TODO: Do it here instead.
-                }
-            };
+            // switch (inst.whatToInstall) {
+            //     // case (#simplyModules _) {
+            //     //     inst2.allModules.add(canister);
+            //     //     switch (moduleName) {
+            //     //         case (?moduleName) {
+            //     //             inst2.allModules.add(canister);
+            //     //             inst2.modules.put(moduleName, canister);
+            //     //         };
+            //     //         case null {};
+            //     //     };
+            //     // };
+            //     case (#package) {
+            //         // Package modules are updated after installation of all modules.
+            //         // TODO: Do it here instead.
+            //     }
+            // };
             for (m in inst.installedModules.vals()) {
                 switch (m) {
                     case (?(?n, p)) {
@@ -884,52 +884,47 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
-        switch (ourHalfInstalled.whatToInstall) {
-            case (#package _) {
-                installedPackages.put(installationId, {
-                    id = installationId;
-                    name = ourHalfInstalled.package.base.name;
-                    package = ourHalfInstalled.package;
-                    version = ourHalfInstalled.package.base.version; // TODO: needed?
-                    modules = HashMap.fromIter(
-                        Iter.map<?(?Text, Principal), (Text, Principal)>(
-                            ourHalfInstalled.installedModules.vals(),
-                            func (x: ?(?Text, Principal)) {
-                                let ?s = x else {
-                                    Debug.trap("programming error 4");
-                                };
-                                let ?n = s.0 else {
-                                    Debug.trap("programming error 5");
-                                };
-                                (n, s.1);
-                            }
-                        ),
-                        ourHalfInstalled.installedModules.size(),
-                        Text.equal,
-                        Text.hash,
-                    );
-                    packageRepoCanister = ourHalfInstalled.packageRepoCanister;
-                    allModules = Buffer.Buffer<Principal>(0);
-                    var pinned = false;
-                });
-                let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
-                let tree = switch (installedPackagesByName.get(guid2)) {
-                    case (?old) {
-                        old.all;
-                    };
-                    case null {
-                        let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
-                        installedPackagesByName.put(guid2, {
-                            all = tree;
-                            var default = installationId;
-                        });
-                        tree;
-                    };
-                };
-                tree.put(installationId, ());
+        installedPackages.put(installationId, {
+            id = installationId;
+            name = ourHalfInstalled.package.base.name;
+            package = ourHalfInstalled.package;
+            version = ourHalfInstalled.package.base.version; // TODO: needed?
+            modules = HashMap.fromIter(
+                Iter.map<?(?Text, Principal), (Text, Principal)>(
+                    ourHalfInstalled.installedModules.vals(),
+                    func (x: ?(?Text, Principal)) {
+                        let ?s = x else {
+                            Debug.trap("programming error 4");
+                        };
+                        let ?n = s.0 else {
+                            Debug.trap("programming error 5");
+                        };
+                        (n, s.1);
+                    }
+                ),
+                ourHalfInstalled.installedModules.size(),
+                Text.equal,
+                Text.hash,
+            );
+            packageRepoCanister = ourHalfInstalled.packageRepoCanister;
+            allModules = Buffer.Buffer<Principal>(0);
+            var pinned = false;
+        });
+        let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
+        let tree = switch (installedPackagesByName.get(guid2)) {
+            case (?old) {
+                old.all;
             };
-            // case (#simplyModules _) {};
+            case null {
+                let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
+                installedPackagesByName.put(guid2, {
+                    all = tree;
+                    var default = installationId;
+                });
+                tree;
+            };
         };
+        tree.put(installationId, ());
     };
 
     //     let ?installation = installedPackages.get(installationId) else {
