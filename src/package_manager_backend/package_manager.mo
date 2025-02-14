@@ -43,7 +43,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // var alreadyCalledAllCanistersCreated: Bool;
         // var totalNumberOfModulesRemainingToInstall: Nat;
         bootstrapping: Bool;
-        var remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
+        var remainingModules: Nat;
     };
 
     public type SharedHalfInstalledPackageInfo = {
@@ -55,7 +55,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
         bootstrapping: Bool;
-        remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
+        remainingModules: Nat;
     };
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
