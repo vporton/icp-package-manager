@@ -587,28 +587,19 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // FIXME: Check that all useful code has been moved from here and delete this function.
+    // TODO: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
         let p = pkg.package;
-        let modules: Iter.Iter<(Text, Common.Module)> = switch (#package/*whatToInstall*/) {
-            // case (#simplyModules m) {
-            //     Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-            //         m.vals(),
-            //         func (p: (Text, Common.SharedModule)) = (p.0, Common.unshareModule(p.1)),
-            //     );
-            // };
-            case (#package) {
-                switch (p.specific) {
-                    case (#real pkgReal) {
-                        Iter.filter<(Text, Common.Module)>(
-                            pkgReal.modules.entries(),
-                            func (p: (Text, Common.Module)) = p.1.installByDefault,
-                        );
-                    };
-                    case (#virtual _) [].vals();
+        let modules: Iter.Iter<(Text, Common.Module)> =
+            switch (p.specific) {
+                case (#real pkgReal) {
+                    Iter.filter<(Text, Common.Module)>(
+                        pkgReal.modules.entries(),
+                        func (p: (Text, Common.Module)) = p.1.installByDefault,
+                    );
                 };
-            }
-        };
+                case (#virtual _) [].vals();
+            };
 
         let bi = if (pkg.bootstrapping) {
             // TODO: hack (instead should base this list on package description)
