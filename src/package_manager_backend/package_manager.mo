@@ -212,7 +212,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var nextInstallationId: Common.InstallationId = 0;
     stable var nextUninstallationId: Common.UninstallationId = 0;
-    // stable var nextUpgradeId: Common.UpgradeId = 0;
+    stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
