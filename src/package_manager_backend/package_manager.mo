@@ -582,7 +582,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             for ((p0, pkg) in halfInstalledPackages.entries()) {
-                // getMainIndirect().;
                 await* doInstallFinish(p0, pkg);
             };
         };
