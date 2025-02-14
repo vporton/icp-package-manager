@@ -106,10 +106,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     public shared({caller}) func installPackageWrapper({ // TODO: Rename.
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, Common.SharedModule)]; // TODO: This branch does not work now.
-        };
         pmPrincipal: Principal;
         packages: [{
             repo: Common.RepositoryRO;
@@ -136,10 +132,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installStart: ({
-                    whatToInstall: {
-                        #package;
-                        // #simplyModules : [(Text, Common.SharedModule)]; // TODO
-                    };
                     minInstallationId: Common.InstallationId;
                     afterInstallCallback: ?{
                         canister: Principal; name: Text; data: Blob;
@@ -156,7 +148,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             // TODO: The following can't work during bootstrapping, because we are `Bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
-                whatToInstall; /// install package or named modules.
                 minInstallationId;
                 afterInstallCallback;
                 user;

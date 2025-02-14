@@ -272,7 +272,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         await* _installModulesGroup({
             mainIndirect = getMainIndirect();
-            whatToInstall = #package;
             minInstallationId;
             packages = Iter.toArray(Iter.map<
                 {
@@ -550,10 +549,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     ///
     /// Initialize installation process object.
     public shared({caller}) func installStart({
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
-        };
         minInstallationId: Common.InstallationId;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -576,31 +571,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
             let numModules = realPackage.modules.size();
-
-            let package3 = switch (package2.specific) {
-                case (#real v) v;
-                case _ {
-                    Debug.trap("unsupported package format");
-                };
-            };
-
-            let (realModulesToInstall, realModulesToInstallSize): (Iter.Iter<(Text, Common.Module)>, Nat) = switch (whatToInstall) {
-                case (#package) {
-                    let iter = Iter.filter<(Text, Common.Module)>(
-                        package3.modules.entries(),
-                        func ((_k, m): (Text, Common.Module)): Bool = m.installByDefault,
-                    );
-                    (iter, package3.modules.size()); // TODO: efficient?
-                };
-                // case (#simplyModules ms) { // TODO
-                //     let iter = Iter.map<(Text, Common.SharedModule), (Text, Common.Module)>(
-                //         ms.vals(),
-                //         func ((k, v): (Text, Common.SharedModule)): (Text, Common.Module) = (k, Common.unshareModule(v)),
-                //     );
-                //     (iter, ms.size()); // TODO: efficient?
-                // };
-            };
-            let realModulesToInstall2 = Iter.toArray(realModulesToInstall); // Iter to be used two times, convert to array.
 
             // two clones of identical data:
             let preinstalledModules = HashMap.fromIter<Text, Principal>(
@@ -747,6 +717,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 user;
                                 packageManagerOrBootstrapper; // TODO: Remove?
                                 module_;
+                                moduleNumber;
                             });
                             error = #abort;
                         }]);
@@ -1085,10 +1056,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func _installModulesGroup({
         mainIndirect: MainIndirect.MainIndirect;
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
-        };
         minInstallationId: Common.InstallationId;
         packages: [{
             repo: Common.RepositoryRO;
@@ -1106,7 +1073,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         : async* {minInstallationId: Common.InstallationId}
     {
         mainIndirect.installPackageWrapper({
-            whatToInstall;
             minInstallationId;
             packages;
             pmPrincipal;
