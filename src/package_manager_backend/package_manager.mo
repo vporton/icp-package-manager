@@ -30,9 +30,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     // };
 
     public type HalfInstalledPackageInfo = {
-        // modulesToInstall: HashMap.HashMap<Text, Common.Module>;
-        // #simplyModules : [(Text, SharedModule)]; // TODO
-        // modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         package: Common.PackageInfo;
         installedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
         allModules: Buffer.Buffer<Principal>;
@@ -40,8 +37,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
-        // var alreadyCalledAllCanistersCreated: Bool;
-        // var totalNumberOfModulesRemainingToInstall: Nat;
         bootstrapping: Bool;
         var remainingModules: Nat;
     };
