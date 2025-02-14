@@ -567,7 +567,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
             let numModules = realPackage.modules.size();
 
-            // two clones of identical data:
             let preinstalledModules = HashMap.fromIter<Text, Principal>(
                 p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
 
