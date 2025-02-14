@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
             installArg;
             packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
             // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
-            indirectCaller = Principal.fromText("aaaaa-aa");
+            mainIndirect = Principal.fromText("aaaaa-aa");
             simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
         });
@@ -76,10 +76,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                indirectCaller = indirect_canister_id;
+                mainIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper;
-            indirectCaller = indirect_canister_id;
+            mainIndirect = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
@@ -89,10 +89,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                indirectCaller = indirect_canister_id;
+                mainIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
-            indirectCaller = indirect_canister_id;
+            mainIndirect = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
@@ -102,10 +102,10 @@ actor class Bootstrapper() = this {
             wasmModule = Common.unshareModule(simpleIndirectWasmModule);
             installArg = to_candid({
                 installationId = 0; // TODO
-                indirectCaller = indirect_canister_id;
+                mainIndirect = indirect_canister_id;
             });
             packageManagerOrBootstrapper = backend_canister_id;
-            indirectCaller = indirect_canister_id;
+            mainIndirect = indirect_canister_id;
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
@@ -118,7 +118,7 @@ actor class Bootstrapper() = this {
 
         // let _backend = actor (Principal.toText(backend_canister_id)) : actor {
         //     // setOwners: (newOwners: [Principal]) -> async ();
-        //     setIndirectCaller: (indirect_caller: IndirectCaller) -> async (); 
+        //     setMainIndirect: (indirect_caller: MainIndirect) -> async (); 
         //     addOwner: (newOwner: Principal) -> async (); 
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
@@ -155,7 +155,7 @@ actor class Bootstrapper() = this {
                 version: Common.Version;
                 repo: Common.RepositoryRO; 
                 user: Principal;
-                indirectCaller: Principal;
+                mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
                 additionalPackages: [{
                     packageName: Common.PackageName;
@@ -177,7 +177,7 @@ actor class Bootstrapper() = this {
           ];
           repo = repo;
           user;
-          indirectCaller = indirect_canister_id;
+          mainIndirect = indirect_canister_id;
           additionalPackages;
         });
 

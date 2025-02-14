@@ -84,7 +84,7 @@ module {
     public type Module = {
         code: ModuleCode;
         installByDefault: Bool;
-        forceReinstall: Bool; // used with such canisters as `IndirectCaller`.
+        forceReinstall: Bool; // used with such canisters as `MainIndirect`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 

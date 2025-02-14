@@ -13,12 +13,12 @@ import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
 import Common "../common";
-import IndirectCaller "indirect_caller";
+import MainIndirect "indirect_caller";
 import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
-    indirectCaller: Principal; // TODO: Rename.
+    mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
@@ -116,7 +116,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.fromIter(
             [
                 (packageManagerOrBootstrapper, ()),
-                (indirectCaller, ()), // temporary
+                (mainIndirect, ()), // temporary
                 (simpleIndirect, ()), // TODO: superfluous?
                 (user, ()),
             ].vals(), // TODO: Are all required?
@@ -171,7 +171,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("package_manager: not initialized");
         };
         // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
-        let a = getIndirectCaller().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+        let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
         // FIXME: https://github.com/dfinity/motoko/issues/4837
         // let c = do {
@@ -187,10 +187,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
-    stable var indirect_caller_: ?IndirectCaller.IndirectCaller = ?actor(Principal.toText(indirectCaller)); // TODO: Remove `?`.
+    stable var indirect_caller_: ?MainIndirect.MainIndirect = ?actor(Principal.toText(mainIndirect)); // TODO: Remove `?`.
     stable var simple_indirect_: ?SimpleIndirect.SimpleIndirect = ?actor(Principal.toText(simpleIndirect)); // TODO: Remove `?`.
 
-    private func getIndirectCaller(): IndirectCaller.IndirectCaller {
+    private func getMainIndirect(): MainIndirect.MainIndirect {
         let ?indirect_caller_2 = indirect_caller_ else {
             Debug.trap("indirect_caller_ not initialized");
         };
@@ -205,8 +205,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO: too low-level?
-    public shared({caller}) func setIndirectCaller(indirect_caller_v: IndirectCaller.IndirectCaller): async () {
-        onlyOwner(caller, "setIndirectCaller");
+    public shared({caller}) func setMainIndirect(indirect_caller_v: MainIndirect.MainIndirect): async () {
+        onlyOwner(caller, "setMainIndirect");
 
         indirect_caller_ := ?indirect_caller_v;
     };
@@ -272,7 +272,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         nextInstallationId += packages.size();
 
         await* _installModulesGroup({
-            indirectCaller = getIndirectCaller();
+            mainIndirect = getMainIndirect();
             whatToInstall = #package;
             minInstallationId;
             packages = Iter.toArray(Iter.map<
@@ -486,7 +486,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         version: Common.Version;
         repo: Common.RepositoryRO; 
         user: Principal;
-        indirectCaller: Principal;
+        mainIndirect: Principal;
         /// Additional packages to install after bootstrapping.
         additionalPackages: [{
             packageName: Common.PackageName;
@@ -504,7 +504,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
-            indirectCaller = actor(Principal.toText(indirectCaller));
+            mainIndirect = actor(Principal.toText(mainIndirect));
             whatToInstall;
             minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
@@ -620,7 +620,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             for ((p0, pkg) in halfInstalledPackages.entries()) {
-                // getIndirectCaller().;
+                // getMainIndirect().;
                 await* doInstallFinish(p0, pkg);
             };
         };
@@ -651,7 +651,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         let bi = if (pkg.bootstrapping) {
             // TODO: hack (instead should base this list on package description)
-            [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getIndirectCaller())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
+            [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getMainIndirect())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
         } else {
             let ?pkg0 = installedPackages.get(0) else {
                 Debug.trap("package manager not installed");
@@ -673,7 +673,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
             // Starting installation of all modules in parallel:
-            getIndirectCaller().installModule({
+            getMainIndirect().installModule({
                 // FIXME: arguments
                 installPackages = true/*whatToInstall == #package*/; // TODO: correct?
                 moduleNumber;
@@ -684,7 +684,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }); // TODO: Add more arguments.
                 installationId = p0;
                 packageManagerOrBootstrapper = backend;
-                indirectCaller = indirect;
+                mainIndirect = indirect;
                 simpleIndirect = simple_indirect;
                 preinstalledCanisterId = coreModules.get(name);
                 user; // TODO: `!`
@@ -850,7 +850,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     while (/*ourHalfInstalled.modules.size()*/0 != 0) {
     //         let vals = []; //Iter.toArray(ourHalfInstalled.modules.vals());
     //         let canister_id = vals[vals.size() - 1].0;
-    //         getIndirectCaller().callAllOneWay([
+    //         getMainIndirect().callAllOneWay([
     //             {
     //                 canister = Principal.fromActor(IC);
     //                 name = "stop_canister";
@@ -1085,7 +1085,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     private func _installModulesGroup({
-        indirectCaller: IndirectCaller.IndirectCaller;
+        mainIndirect: MainIndirect.MainIndirect;
         whatToInstall: {
             #package;
             // #simplyModules : [(Text, Common.SharedModule)]; // TODO
@@ -1106,7 +1106,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        indirectCaller.installPackageWrapper({
+        mainIndirect.installPackageWrapper({
             whatToInstall;
             minInstallationId;
             packages;

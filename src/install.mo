@@ -51,7 +51,7 @@ module {
         wasmModule: Common.Module;
         installArg: Blob;
         packageManagerOrBootstrapper: Principal;
-        indirectCaller: Principal;
+        mainIndirect: Principal;
         simpleIndirect: Principal;
         user: Principal;
     }): async* () {
@@ -63,7 +63,7 @@ module {
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManagerOrBootstrapper;
-                indirectCaller;
+                mainIndirect;
                 simpleIndirect;
                 user;
                 installationId;

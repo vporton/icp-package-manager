@@ -11,9 +11,9 @@ import Common "../common";
 import Install "../install";
 import IC "mo:ic";
 
-shared({caller = initialCaller}) actor class IndirectCaller({
+shared({caller = initialCaller}) actor class MainIndirect({
     packageManagerOrBootstrapper: Principal;
-    indirectCaller: Principal; // TODO: Rename.
+    mainIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
     // installationId: Common.InstallationId;
@@ -31,7 +31,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         HashMap.fromIter(
             [
                 (packageManagerOrBootstrapper, ()),
-                (indirectCaller, ()),
+                (mainIndirect, ()),
                 (simpleIndirect, ()),
                 (user, ()),
             ].vals(),
@@ -215,7 +215,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        indirectCaller: Principal;
+        mainIndirect: Principal;
         simpleIndirect: Principal;
         preinstalledCanisterId: ?Principal;
         installArg: Blob;
@@ -252,7 +252,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
                         installPackages;
                         installArg;
                         packageManagerOrBootstrapper;
-                        indirectCaller;
+                        mainIndirect;
                         simpleIndirect;
                         user;
                         afterInstallCallback;
@@ -275,7 +275,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
-        indirectCaller: Principal;
+        mainIndirect: Principal;
         simpleIndirect: Principal;
         installArg: Blob;
         user: Principal;
@@ -286,7 +286,7 @@ shared({caller = initialCaller}) actor class IndirectCaller({
         let {canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)];
             user;
-            indirectCaller;
+            mainIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
         });
 
@@ -298,13 +298,13 @@ shared({caller = initialCaller}) actor class IndirectCaller({
             wasmModule;
             installArg;
             packageManagerOrBootstrapper;
-            indirectCaller;
+            mainIndirect;
             simpleIndirect;
             user;
         });
 
-        // Remove `indirectCaller` as a controller, because it's costly to replace it in every canister after new version of `indirectCaller`..
-        // Note that packageManagerOrBootstrapper calls it on getIndirectCaller(), not by itself, so doesn't freeze.
+        // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+        // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
         await IC.ic.update_settings({
             canister_id;
             sender_canister_version = null;

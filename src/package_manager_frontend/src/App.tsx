@@ -16,7 +16,7 @@ import { createActor as createBackendActor } from "../../declarations/package_ma
 import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/Repository/Repository.did';
 import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
-import { IndirectCaller, PackageManager } from '../../declarations/package_manager/package_manager.did';
+import { MainIndirect, PackageManager } from '../../declarations/package_manager/package_manager.did';
 import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
 import { ErrorProvider } from './ErrorContext';
 import { waitTillInitialized } from '../../lib/install';
@@ -72,10 +72,10 @@ function GlobalUI() {
         let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
-        const bootstrapperIndirectCaller: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
+        const bootstrapperMainIndirect: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperIndirectCaller.bootstrapBackend({
+        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
           simpleIndirectWasmModule: modules.get("simple_indirect")!,
