@@ -31,7 +31,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
-        installedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
+        namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
         allModules: Buffer.Buffer<Principal>;
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
@@ -43,7 +43,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type SharedHalfInstalledPackageInfo = {
         package: Common.SharedPackageInfo;
-        installedModules: [(Text, Principal)];
+        namedModules: [(Text, Principal)];
         allModules: [Principal];
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
@@ -55,7 +55,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
         package = Common.sharePackageInfo(x.package);
-        installedModules = Iter.toArray(x.installedModules.entries());
+        namedModules = Iter.toArray(x.namedModules.entries());
         allModules = Buffer.toArray(x.allModules);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
@@ -65,7 +65,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
-        installedModules = HashMap.fromIter(x.installedModules.vals(), x.installedModules.size(), Text.equal, Text.hash);
+        namedModules = HashMap.fromIter(x.namedModules.vals(), x.namedModules.size(), Text.equal, Text.hash);
         allModules = Buffer.fromArray(x.allModules);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
@@ -609,7 +609,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
-                installedModules = preinstalledModules;
+                namedModules = preinstalledModules;
                 allModules = Buffer.Buffer(0);
                 minInstallationId;
                 afterInstallCallback;
@@ -720,7 +720,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         switch (moduleName) {
             case (?name) {
-                inst.installedModules.put(name, canister);
+                inst.namedModules.put(name, canister);
             };
             case null {};
         };
@@ -736,7 +736,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        let ?cbPrincipal = inst.installedModules.get(moduleName2) else {
+                        let ?cbPrincipal = inst.namedModules.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
                         ignore getSimpleIndirect().callAll([{
@@ -780,7 +780,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             name = ourHalfInstalled.package.base.name;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = ourHalfInstalled.installedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
+            modules = ourHalfInstalled.namedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
             allModules = ourHalfInstalled.allModules;
             var pinned = false;
         });
@@ -1081,7 +1081,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("no such package");
         };
         // TODO: May be a little bit slow.
-        Iter.toArray<(Text, Principal)>(res.installedModules.entries());
+        Iter.toArray<(Text, Principal)>(res.namedModules.entries());
     };
 
     private func _installModulesGroup({
