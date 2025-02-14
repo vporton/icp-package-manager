@@ -676,7 +676,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             case null {};
         };
-        inst.allModules.add(canister);
+        inst.allModules.add(canister); // TODO: automated test for this
         let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
