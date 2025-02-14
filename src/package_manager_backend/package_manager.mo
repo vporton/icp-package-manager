@@ -349,6 +349,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         {minUninstallationId};
     };
 
+    /// We first add new and upgrade existing modules (including executing hooks)
+    /// and only then delete modules to be deleted. That's because deleted modules may contain
+    /// important data that needs to be imported. Also having deleting modules at the end
+    /// does not prevent the package to start fully function before this.
     // public shared({caller}) func upgradePackages({
     //     packages: [{
     //         installationId: Common.InstallationId;
