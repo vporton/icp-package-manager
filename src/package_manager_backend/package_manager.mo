@@ -627,7 +627,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 // FIXME: arguments
-                installPackages = true/*whatToInstall == #package*/; // TODO: correct?
+                installPackages = true; // TODO: correct?
                 moduleNumber;
                 moduleName = ?name;
                 installArg = to_candid({
