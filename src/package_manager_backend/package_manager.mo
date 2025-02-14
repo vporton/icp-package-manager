@@ -579,7 +579,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 bootstrapping;
                 var remainingModules = numModules;
             };
-            Debug.print("remainingModules: " # debug_show(ourHalfInstalled.remainingModules)); // TODO: Remove.
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             for ((p0, pkg) in halfInstalledPackages.entries()) {
