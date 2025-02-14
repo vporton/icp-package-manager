@@ -616,6 +616,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 bootstrapping;
                 var remainingModules = numModules;
             };
+            Debug.print("remainingModules: " # debug_show(ourHalfInstalled.remainingModules)); // TODO: Remove.
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             for ((p0, pkg) in halfInstalledPackages.entries()) {
@@ -720,7 +721,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
-        let inst3: HashMap.HashMap<Text, Principal> = HashMap.HashMap(inst.installedModules.size(), Text.equal, Text.hash);
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
@@ -729,7 +729,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        let ?cbPrincipal = inst3.get(moduleName2) else {
+                        let ?cbPrincipal = inst.installedModules.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
                         ignore getSimpleIndirect().callAll([{
