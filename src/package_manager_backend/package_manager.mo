@@ -135,7 +135,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
         owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
 
-        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
         initialized := true;
     };
 
