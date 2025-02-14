@@ -270,7 +270,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
-        await* _installModulesGroup({
+        await* _installModulesGroup({ // TODO: Rename this function.
             mainIndirect = getMainIndirect();
             minInstallationId;
             packages = Iter.toArray(Iter.map<
@@ -295,7 +295,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 version = p.version;
                 preinstalledModules = [];
             }));
-            installPackages = true;
+            installPackages = true; // TODO: What is it?
             pmPrincipal = Principal.fromActor(this);
             // objectToInstall = #package {packageName; version}; // TODO
             user;
