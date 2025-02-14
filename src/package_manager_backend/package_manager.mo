@@ -476,10 +476,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// Internal used for bootstrapping.
     public shared({caller}) func installPackageWithPreinstalledModules({
-        whatToInstall: {
-            #package;
-            // #simplyModules : [(Text, Common.SharedModule)]; // TODO
-        };
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryRO; 
@@ -503,7 +499,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
             mainIndirect = actor(Principal.toText(mainIndirect));
-            whatToInstall;
             minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
             installPackages = true; // TODO
