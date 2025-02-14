@@ -34,7 +34,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         // #simplyModules : [(Text, SharedModule)]; // TODO
         // modulesWithoutCode: Buffer.Buffer<?(?Text, Principal)>;
         package: Common.PackageInfo;
-        installedModules: HashMap.HashMap<Text, Principal>;
+        installedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
+        allModules: Buffer.Buffer<Principal>;
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -48,6 +49,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfInstalledPackageInfo = {
         package: Common.SharedPackageInfo;
         installedModules: [(Text, Principal)];
+        allModules: [Principal];
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -59,6 +61,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
         package = Common.sharePackageInfo(x.package);
         installedModules = Iter.toArray(x.installedModules.entries());
+        allModules = Buffer.toArray(x.allModules);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -68,6 +71,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
         installedModules = HashMap.fromIter(x.installedModules.vals(), x.installedModules.size(), Text.equal, Text.hash);
+        allModules = Buffer.fromArray(x.allModules);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -611,6 +615,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
                 installedModules = preinstalledModules;
+                allModules = Buffer.Buffer(0);
                 minInstallationId;
                 afterInstallCallback;
                 bootstrapping;
@@ -718,6 +723,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
+        switch (moduleName) {
+            case (?name) {
+                inst.installedModules.put(name, canister);
+            };
+            case null {};
+        };
+        inst.allModules.add(canister);
         let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
@@ -774,7 +786,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
             modules = ourHalfInstalled.installedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
-            allModules = Buffer.Buffer<Principal>(0);
+            allModules = ourHalfInstalled.allModules;
             var pinned = false;
         });
         let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);

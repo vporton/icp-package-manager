@@ -26,6 +26,7 @@ export default function InstalledPackage(props: {}) {
             return;
         }
         glob.packageManager.getInstalledPackage(BigInt(installationId!)).then(pkg => {
+            console.log("X", pkg);
             setPkg(pkg);
             setPinned(pkg.pinned);
         });
@@ -37,21 +38,26 @@ export default function InstalledPackage(props: {}) {
         }
 
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
+        console.log("piReal", piReal); // FIXME: Remove.
         if (piReal.frontendModule[0] !== undefined) { // There is a frontend module.
             glob.packageManager!.getInstalledPackage(BigInt(0)).then(pkg0 => {
                 const piReal0: SharedRealPackageInfo = (pkg0.package.specific as any).real;
+                console.log("pkg0.modules", pkg0.modules); // FIXME: Remove.
+                console.log("pkg.modules", pkg.modules); // FIXME: Remove.
                 const modules0 = new Map(pkg0.modules);
                 const modules = new Map(pkg.modules);
-                const frontendStr = modules.get(piReal.frontendModule[0]!)!.toString();
-                let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
-                url += `?_pm_inst=${installationId}`;
-                for (let m of piReal.modules) {
-                    url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;
+                const frontendStr = modules.get(piReal.frontendModule[0]!)?.toString(); // `?` because `pkg` may be not yet set
+                if (frontendStr !== undefined) {
+                    let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
+                    url += `?_pm_inst=${installationId}`;
+                    for (let m of piReal.modules) {
+                        url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;
+                    }
+                    for (let m of piReal0.modules) {
+                        url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
+                    }
+                    setFrontend(url);
                 }
-                for (let m of piReal0.modules) {
-                    url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
-                }
-                setFrontend(url);
             });
         }
     }, [glob.packageManager, glob.backend, pkg]);
