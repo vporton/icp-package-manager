@@ -7,7 +7,7 @@ import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/Bootstrapper';
 import { createActor as createRepositoryIndexActor } from "../src/declarations/Repository";
-import { createActor as createIndirectActor } from '../src/declarations/indirect_caller';
+import { createActor as createIndirectActor } from '../src/declarations/main_indirect';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { createActor as createPMFrontend } from '../src/declarations/package_manager_frontend';
 import { createActor as createExampleFrontend } from '../src/declarations/example_frontend';

@@ -55,7 +55,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            Debug.trap("indirect_caller: not initialized");
+            Debug.trap("main_indirect: not initialized");
         };
     };
 
@@ -129,7 +129,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
-                // unsafe operation, run in indirect_caller:
+                // unsafe operation, run in main_indirect:
                 let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
                 packages2[i] := ?(Common.unsharePackageInfo(pkg));
             };

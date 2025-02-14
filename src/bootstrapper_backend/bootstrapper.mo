@@ -118,7 +118,7 @@ actor class Bootstrapper() = this {
 
         // let _backend = actor (Principal.toText(backend_canister_id)) : actor {
         //     // setOwners: (newOwners: [Principal]) -> async ();
-        //     setMainIndirect: (indirect_caller: MainIndirect) -> async (); 
+        //     setMainIndirect: (main_indirect: MainIndirect) -> async (); 
         //     addOwner: (newOwner: Principal) -> async (); 
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };

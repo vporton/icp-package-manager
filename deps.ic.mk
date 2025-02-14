@@ -4,11 +4,11 @@ DEPLOY_FLAGS ?=
 
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: build@Bootstrapper build@BootstrapperData build@Repository build@bookmark build@bootstrapper_frontend build@cycles_ledger build@example_backend build@example_frontend build@indirect_caller build@internet_identity build@package_manager build@package_manager_frontend build@simple_indirect
+.PHONY: build@Bootstrapper build@BootstrapperData build@Repository build@bookmark build@bootstrapper_frontend build@cycles_ledger build@example_backend build@example_frontend build@main_indirect build@internet_identity build@package_manager build@package_manager_frontend build@simple_indirect
 
-.PHONY: deploy@Bootstrapper deploy@BootstrapperData deploy@Repository deploy@bookmark deploy@bootstrapper_frontend deploy@cycles_ledger deploy@example_backend deploy@example_frontend deploy@indirect_caller deploy@internet_identity deploy@package_manager deploy@package_manager_frontend deploy@simple_indirect
+.PHONY: deploy@Bootstrapper deploy@BootstrapperData deploy@Repository deploy@bookmark deploy@bootstrapper_frontend deploy@cycles_ledger deploy@example_backend deploy@example_frontend deploy@main_indirect deploy@internet_identity deploy@package_manager deploy@package_manager_frontend deploy@simple_indirect
 
-.PHONY: generate@Bootstrapper generate@BootstrapperData generate@Repository generate@bookmark generate@bootstrapper_frontend generate@cycles_ledger generate@example_backend generate@example_frontend generate@indirect_caller generate@internet_identity generate@package_manager generate@package_manager_frontend generate@simple_indirect
+.PHONY: generate@Bootstrapper generate@BootstrapperData generate@Repository generate@bookmark generate@bootstrapper_frontend generate@cycles_ledger generate@example_backend generate@example_frontend generate@main_indirect generate@internet_identity generate@package_manager generate@package_manager_frontend generate@simple_indirect
 
 build@Bootstrapper: \
   .dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.wasm .dfx/$(NETWORK)/canisters/Bootstrapper/Bootstrapper.did
@@ -46,10 +46,10 @@ build@example_backend: \
 build@example_frontend: \
   .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
 
-build@indirect_caller: \
-  .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did
+build@main_indirect: \
+  .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did
 
-.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did: src/package_manager_backend/indirect_caller.mo
+.dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/package_manager_backend/main_indirect.mo
 
 build@internet_identity: \
   .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
@@ -115,11 +115,11 @@ generate@example_frontend: build@example_frontend \
 src/declarations/example_frontend/example_frontend.did.js src/declarations/example_frontend/index.js src/declarations/example_frontend/example_frontend.did.d.ts src/declarations/example_frontend/index.d.ts src/declarations/example_frontend/example_frontend.did: .dfx/$(NETWORK)/canisters/example_frontend/service.did
 	dfx generate --no-compile --network $(NETWORK) example_frontend
 
-generate@indirect_caller: build@indirect_caller \
-  src/declarations/indirect_caller/indirect_caller.did.js src/declarations/indirect_caller/index.js src/declarations/indirect_caller/indirect_caller.did.d.ts src/declarations/indirect_caller/index.d.ts src/declarations/indirect_caller/indirect_caller.did
+generate@main_indirect: build@main_indirect \
+  src/declarations/main_indirect/main_indirect.did.js src/declarations/main_indirect/index.js src/declarations/main_indirect/main_indirect.did.d.ts src/declarations/main_indirect/index.d.ts src/declarations/main_indirect/main_indirect.did
 
-src/declarations/indirect_caller/indirect_caller.did.js src/declarations/indirect_caller/index.js src/declarations/indirect_caller/indirect_caller.did.d.ts src/declarations/indirect_caller/index.d.ts src/declarations/indirect_caller/indirect_caller.did: .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did
-	dfx generate --no-compile --network $(NETWORK) indirect_caller
+src/declarations/main_indirect/main_indirect.did.js src/declarations/main_indirect/index.js src/declarations/main_indirect/main_indirect.did.d.ts src/declarations/main_indirect/index.d.ts src/declarations/main_indirect/main_indirect.did: .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did
+	dfx generate --no-compile --network $(NETWORK) main_indirect
 
 generate@package_manager: build@package_manager \
   src/declarations/package_manager/package_manager.did.js src/declarations/package_manager/index.js src/declarations/package_manager/package_manager.did.d.ts src/declarations/package_manager/index.d.ts src/declarations/package_manager/package_manager.did
@@ -152,12 +152,12 @@ src/install.mo: src/copy_assets.mo
 .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
 .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/Repository/Repository.wasm .dfx/$(NETWORK)/canisters/Repository/Repository.did
 .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/example_backend/example_backend.wasm .dfx/$(NETWORK)/canisters/example_backend/example_backend.did
-.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did: src/common.mo
-.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did: src/install.mo
+.dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/common.mo
+.dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/install.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/common.mo
-src/package_manager_backend/indirect_caller.mo: src/common.mo
-src/package_manager_backend/indirect_caller.mo: src/install.mo
-.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/indirect_caller.mo
+src/package_manager_backend/main_indirect.mo: src/common.mo
+src/package_manager_backend/main_indirect.mo: src/install.mo
+.dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/main_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/simple_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
@@ -258,16 +258,16 @@ deploy-self@bookmark: build@bookmark
 
 deploy@bookmark: deploy-self@bookmark
 
-.dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.wasm .dfx/$(NETWORK)/canisters/indirect_caller/indirect_caller.did:
-	dfx canister create --network $(NETWORK) indirect_caller
-	dfx build --no-deps --network $(NETWORK) indirect_caller
+.dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did:
+	dfx canister create --network $(NETWORK) main_indirect
+	dfx build --no-deps --network $(NETWORK) main_indirect
 
 
-deploy-self@indirect_caller: build@indirect_caller
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.indirect_caller) indirect_caller
+deploy-self@main_indirect: build@main_indirect
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.main_indirect) main_indirect
 
-deploy@indirect_caller: deploy@Bootstrapper deploy@cycles_ledger \
-  deploy-self@indirect_caller
+deploy@main_indirect: deploy@Bootstrapper deploy@cycles_ledger \
+  deploy-self@main_indirect
 
 .PHONY: .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
 .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz:

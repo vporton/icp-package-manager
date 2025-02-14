@@ -49,13 +49,13 @@ Remaining things TODO:
 
 - Paid soft.
 
-- Reconcile different naming schemes: `indirect_caller` but `Repository`.
+- Reconcile different naming schemes: `main_indirect` but `Repository`.
 
 - Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
 
 - Wait curtains.
 
-- For initializing a package, add `packageInit` function (not sure in backend or indirect_caller).
+- For initializing a package, add `packageInit` function (not sure in backend or main_indirect).
   that could be used to init dependencies from dependent packages (because they may be not yet initialized).
 
 - When user adds a new repository canister, check that it is an index canister.

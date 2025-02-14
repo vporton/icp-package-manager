@@ -13,7 +13,7 @@ import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/Repository";
 import { createActor as createBackendActor } from "../../declarations/package_manager";
-import { createActor as createIndirectActor } from "../../declarations/indirect_caller";
+import { createActor as createIndirectActor } from "../../declarations/main_indirect";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/Repository/Repository.did';
 import { Bootstrapper } from '../../declarations/Bootstrapper/Bootstrapper.did';
 import { MainIndirect, PackageManager } from '../../declarations/package_manager/package_manager.did';

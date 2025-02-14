@@ -13,7 +13,7 @@ import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
 import Common "../common";
-import MainIndirect "indirect_caller";
+import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class PackageManager({
@@ -187,14 +187,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
-    stable var indirect_caller_: ?MainIndirect.MainIndirect = ?actor(Principal.toText(mainIndirect)); // TODO: Remove `?`.
+    stable var main_indirect_: ?MainIndirect.MainIndirect = ?actor(Principal.toText(mainIndirect)); // TODO: Remove `?`.
     stable var simple_indirect_: ?SimpleIndirect.SimpleIndirect = ?actor(Principal.toText(simpleIndirect)); // TODO: Remove `?`.
 
     private func getMainIndirect(): MainIndirect.MainIndirect {
-        let ?indirect_caller_2 = indirect_caller_ else {
-            Debug.trap("indirect_caller_ not initialized");
+        let ?main_indirect_2 = main_indirect_ else {
+            Debug.trap("main_indirect_ not initialized");
         };
-        indirect_caller_2;
+        main_indirect_2;
     };
 
     private func getSimpleIndirect(): SimpleIndirect.SimpleIndirect {
@@ -205,10 +205,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO: too low-level?
-    public shared({caller}) func setMainIndirect(indirect_caller_v: MainIndirect.MainIndirect): async () {
+    public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
         onlyOwner(caller, "setMainIndirect");
 
-        indirect_caller_ := ?indirect_caller_v;
+        main_indirect_ := ?main_indirect_v;
     };
 
     stable var nextInstallationId: Common.InstallationId = 0;

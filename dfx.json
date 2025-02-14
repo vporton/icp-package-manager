@@ -16,9 +16,9 @@
         "name": "candid:service"
       }]
     },
-    "indirect_caller": {
+    "main_indirect": {
       "type": "motoko",
-      "main": "src/package_manager_backend/indirect_caller.mo",
+      "main": "src/package_manager_backend/main_indirect.mo",
       "dependencies": ["Bootstrapper", "cycles_ledger"],
       "metadata": [{
         "name": "candid:service"
