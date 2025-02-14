@@ -259,7 +259,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryRO;
         }];
         user: Principal;
-        afterInstallCallback: ?{
+        afterInstallCallback: ?{ // TODO: Remove it from this function?
             canister: Principal; name: Text; data: Blob;
         };
     })
@@ -297,7 +297,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             }));
             installPackages = true; // TODO: What is it?
             pmPrincipal = Principal.fromActor(this);
-            // objectToInstall = #package {packageName; version}; // TODO
             user;
             afterInstallCallback;
             bootstrapping = false;
@@ -418,6 +417,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         uninstallationId: Common.UninstallationId;
     }): async () {
         Debug.print("onDeleteCanister");
+
         onlyOwner(caller, "onDeleteCanister");
 
         let ?uninst = halfUninstalledPackages.get(uninstallationId) else {
