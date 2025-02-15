@@ -319,8 +319,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
     };
 
-    public shared({caller}) func uninstallPackages({ // TODO: Rename.
-        packages: [Common.InstallationId];
+    public shared({caller}) func uninstallPackages({
+        packages: [Common.InstallationId]; // TODO: Use `packageIds` argument name here and in other functions.
         user: Principal;
     })
         : async {minUninstallationId: Common.UninstallationId}
