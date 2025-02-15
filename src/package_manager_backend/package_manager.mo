@@ -398,13 +398,13 @@ shared({caller = initialCaller}) actor class PackageManager({
     //             //     canister = Principal.fromText("aaaaa-aa");
     //             //     name = "stop_canister";
     //             //     data = to_candid({canister_id});
-    //             //     error = #keepDoing; // need to reach `onDeleteCanister`
+    //             //     error = #abort;
     //             // },
     //             {
     //                 canister = Principal.fromText("aaaaa-aa");
     //                 name = "install_code";
     //                 data = to_candid({arg; wasm_module; mode = #upgrade; canister_id});
-    //                 error = #keepDoing; // need to reach `onUpgradeCanister`
+    //                 error = #abort;
     //             }, {
     //                 canister = Principal.fromActor(this);
     //                 name = "onUpgradeCanister";
