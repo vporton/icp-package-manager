@@ -328,17 +328,16 @@ shared({caller = initialCaller}) actor class PackageManager({
             });
             let modules = pkg.modules;
             for (canister_id in modules.vals()) {
-                // FIXME: If we reach `onDeleteCanister` after an `aaaaa-aa` failure, we will have wrong data.
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
                     data = to_candid({canister_id});
-                    error = #keepDoing; // need to reach `onDeleteCanister`
+                    error = #abort;
                 }, {
                     canister = Principal.fromText("aaaaa-aa");
                     name = "delete_canister";
                     data = to_candid({canister_id});
-                    error = #keepDoing; // need to reach `onDeleteCanister`
+                    error = #abort;
                 }, {
                     canister = Principal.fromActor(this);
                     name = "onDeleteCanister";
