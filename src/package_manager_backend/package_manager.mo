@@ -94,6 +94,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public type HalfUpgradedPackageInfo = {
+        // TODO
         var remainingModules: Nat;
     };
 
@@ -327,6 +328,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             });
             let modules = pkg.modules;
             for (canister_id in modules.vals()) {
+                // FIXME: If we reach `onDeleteCanister` after an `aaaaa-aa` failure, we will have wrong data.
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
