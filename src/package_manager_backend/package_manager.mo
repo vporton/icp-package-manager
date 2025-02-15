@@ -94,19 +94,30 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public type HalfUpgradedPackageInfo = {
-        // TODO
+        package: Common.PackageInfo;
+        namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
+        allModules: Buffer.Buffer<Principal>;
         var remainingModules: Nat;
     };
 
     public type SharedHalfUpgradedPackageInfo = {
+        package: Common.SharedPackageInfo;
+        namedModules: [(Text, Principal)]; // TODO: Rename.
+        allModules: [Principal];
         remainingModules: Nat;
     };
 
     private func shareHalfUpgradedPackageInfo(x: HalfUpgradedPackageInfo): SharedHalfUpgradedPackageInfo = {
+        package = Common.sharePackageInfo(x.package);
+        namedModules = Iter.toArray(x.namedModules.entries());
+        allModules = Buffer.toArray(x.allModules);
         remainingModules = x.remainingModules;
     };
 
     private func unshareHalfUpgradedPackageInfo(x: SharedHalfUpgradedPackageInfo): HalfUpgradedPackageInfo = {
+        package = Common.unsharePackageInfo(x.package);
+        namedModules = HashMap.fromIter(x.namedModules.vals(), x.namedModules.size(), Text.equal, Text.hash);
+        allModules = Buffer.fromArray(x.allModules);
         var remainingModules = x.remainingModules;
     };
 
