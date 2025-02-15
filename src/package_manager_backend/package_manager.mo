@@ -268,7 +268,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    public shared({caller}) func installPackages({ // TODO: Rename.
+    public shared({caller}) func installPackages({
         packages: [{
             packageName: Common.PackageName;
             version: Common.Version;
