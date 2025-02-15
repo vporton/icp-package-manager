@@ -15,3 +15,11 @@ ul.checklist > li {
   list-style-type: none;
 }
 
+.danger .accordion-button:not(.collapsed) {
+  background-color: rgb(255, 186, 186);
+}
+
+.danger .accordion-button.collapsed {
+  background-color: rgb(255, 0, 0);
+  color: white
+}

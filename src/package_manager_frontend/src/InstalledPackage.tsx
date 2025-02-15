@@ -96,7 +96,7 @@ export default function InstalledPackage(props: {}) {
                 <p><strong>Short description:</strong> {pkg.package.base.shortDescription}</p>
                 <p><strong>Long description:</strong> {pkg.package.base.longDescription}</p>
                 <Accordion defaultActiveKey={undefined}> {/* TODO: https://stackoverflow.com/q/79367323/856090 */}
-                    <Accordion.Item eventKey="dangerZone" className="bg-red-500">
+                    <Accordion.Item eventKey="dangerZone" className="danger ">
                         <Accordion.Header
                             onClick={() => setShowDanger(!showDanger)}                           
                         >{showDanger ? "Hide danger zone" : "Show danger zone"}
