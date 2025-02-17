@@ -37,6 +37,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
+    
         bootstrapping: Bool;
         var remainingModules: Nat;
     };
@@ -389,50 +390,166 @@ shared({caller = initialCaller}) actor class PackageManager({
         var ourNextUpgradeId = minUpgradeId;
 
         label cycle for (package in packages.vals()) {
+            // FIXME: upgradeId vs (un)installationId
             let installationId = package.installationId;
-            let uninstallationId = ourNextUpgradeId;
+            let upgradeId = ourNextUpgradeId;
             ourNextUpgradeId += 1;
-            let ?pkg = installedPackages.get(installationId) else {
-                continue cycle; // already uninstalled
-            };
-            halfUpgradedPackages.put(uninstallationId, {
-                installationId = package.installationId;
-                package = pkg.package;
-                namedModules = pkg.modules;
-                var remainingModules = pkg.modules.size();
+            await* upgradePackage({
+                upgradeId;
+                installationId;
+                packageName = package.packageName;
+                version = package.version;
+                repo = package.repo;
+                user;
+                arg;
             });
-            let modules = pkg.modules;
-            // FIXME: delete removed modules, create new modules
-            // FIXME: update assets
-            for (canister_id in modules.vals()) {
-                let m: Common.Module = Common.shareModule(pkg.package.modules); // FIXME
+        };
 
-                let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-                let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-                let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+        {minUpgradeId};
+    };
+
+    // FIXME: Rewrite.
+    private func upgradePackage({
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        repo: Common.RepositoryRO;
+        user: Principal;
+        arg: [Nat8];
+    }): async* () {
+        // FIXME: upgrading a real package into virtual or vice versa
+        let ?oldPkg = installedPackages.get(installationId) else {
+            return; // FIXME
+        };
+        let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
+        // TODO: virtual packages
+        let #specific oldPkgSpecific = oldPkg.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let #specific newPkgSpecific = newPkg.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        let oldPkgModules = newPkgSpecific.modules;
+        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
+        let newPkgModules = newPkgSpecific.modules;
+        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+        let modulesToDelete = Iter.filter<(Text, Common.Module)>(
+            oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+        );
+        halfUpgradedPackages.put(upgradeId, {
+            upgradeId;
+            installationId;
+            package = newPkg;
+            namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
+            allModules = Buffer.Buffer(0);
+            var remainingModules = newPkgModules.size() - modulesToDelete.size();
+        });
+        // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
+        //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
+        // );
+        // FIXME: delete removed modules, create new modules
+            await* this.upgradeOrInstallModule({ // FIXME: arguments
+        var posTmp = 0;
+        for (canister_id in newPkgModules.vals()) {
+            let pos = posTmp;
+            posTmp += 1;
+            let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
+            
+            let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
+            let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+            let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+            let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+            await* upgradeOrInstallModule({ // FIXME: arguments
+                upgradeId;
+                installationId;
+                canister_id;
+                user;
+                wasm_module;
+                mode = if (isUpgrade) { #upgrade } else { #install };
+                // afterInstallCallback = ?{
+                //     canister = Principal.fromActor(this);
+                //     name = "onUpgradeCanisterHalfWay";
+                //     data = to_candid({upgradeId});
+                // };
+            });
+        };
+    };
+
+    // FIXME: Rewrite.
+    // FIXME: Protect against the non-returning-function attack.
+    private func upgradeOrInstallModule({
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
+        canister_id: Principal;
+        user: Principal;
+        wasm_module: Blob;
+        mode: {#upgrade; #install};
+    }): async* () {
+        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+            Debug.trap("no such upgrade");
+        };
+        let ?pkg = installedPackages.get(installationId) else {
+            Debug.trap("no such package");
+        };
+        switch (mode) {
+            case (#upgrade) {
                 // TODO: user's callback
-                ignore getSimpleIndirect().callAll([
-                // {
-                //     canister = Principal.fromText("aaaaa-aa");
-                //     name = "stop_canister";
-                //     data = to_candid({canister_id});
-                //     error = #abort;
-                // },
-                {
+                // TODO: Simplify:
+                ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "install_code";
                     data = to_candid({arg; wasm_module; mode = #upgrade; canister_id});
                     error = #abort;
+                }]);
+                // FIXME
+            };
+            case (#install) {
+                await* Install.myInstallCode({
+                    installationId;
+                    canister_id;
+                    wasmModule;
+                    installArg;
+                    packageManagerOrBootstrapper;
+                    mainIndirect;
+                    simpleIndirect;
+                    user;
+                });
+
+                // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+                // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+                await IC.ic.update_settings({
+                    canister_id;
+                    sender_canister_version = null;
+                    settings = {
+                        compute_allocation = null;
+                        controllers = ?[simpleIndirect, user];
+                        freezing_threshold = null;
+                        log_visibility = null;
+                        memory_allocation = null;
+                        reserved_cycles_limit = null;
+                        wasm_memory_limit = null;
+                    };
+                });
+            };
+        };
+        upgrade.remainingModules -= 1;
+        if (upgrade.remainingModules == 0) {
+            for (m in modulesToDelete.vals()) {
+                ignore getSimpleIndirect().callAll([{
+                    canister = Principal.fromText("aaaaa-aa");
+                    name = "stop_canister";
+                    data = to_candid({canister_id});
+                    error = #abort;
                 }, {
-                    canister = Principal.fromActor(this);
-                    name = "onUpgradeCanister";
-                    data = to_candid({uninstallationId});
+                    canister = Principal.fromText("aaaaa-aa");
+                    name = "delete_canister";
+                    data = to_candid({canister_id});
                     error = #abort;
                 }]);
             };
+            halfUpgradedPackages.delete(upgradeId);
         };
-
-        {minUpgradeId};
     };
 
     /// Internal
