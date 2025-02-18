@@ -35,7 +35,7 @@ module {
 
     /// Common properties of package and virtual package.
     public type CommonPackageInfo = {
-        // FIXME: Add repo canister here.
+        // FIXME: Add repo canister here. // FIXME: This would contradict to uploading the same package to multiple repos.
         guid: Blob;
         name: PackageName;
         version: Version;
