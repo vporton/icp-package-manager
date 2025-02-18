@@ -24,6 +24,8 @@ Remaining things TODO:
 
 - FIXME: rejecting (i.e. throw) does 'not' rollback state changes done before, while trapping (e.g. Debug.trap, assert…, out of cycle conditions) does.
 
+- Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
+
 - TODO: future compaitibility in package format.
 
 - Prevent using Tab key to circumvent “busy” overlay.
