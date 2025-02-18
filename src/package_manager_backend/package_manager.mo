@@ -486,8 +486,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                     name = "install_code";
                     data = to_candid({arg; wasm_module; mode = #upgrade; canister_id});
                     error = #abort;
+                }, {
+                    canister = Principal.fromText("aaaaa-aa");
+                    name = "onUpgradeOrInstallModule";
+                    data = to_candid({canister_id}); // FIXME
+                    error = #abort;
                 }]);
-                // FIXME
             };
             case (#install) {
                 upgradeOrInstallModuleFinish({
@@ -499,8 +503,13 @@ shared({caller = initialCaller}) actor class PackageManager({
                 });
             };
         };
-        // FIXME: Call the below in event handler:
-        upgrade.remainingModules -= 1;
+    };
+
+    /// Internal
+    public shared({caller}) func onUpgradeOrInstallModule({
+        upgradeId: Common.UpgradeId;
+    }): async () {
+        upgrade.remainingModules -= 1; // FIXME: Before or after install/upgrade module?
         if (upgrade.remainingModules == 0) {
             for (m in modulesToDelete.vals()) {
                 ignore getSimpleIndirect().callAll([{
@@ -517,6 +526,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfUpgradedPackages.delete(upgradeId);
         };
+        // FIXME: call user's callback.
     };
 
     /// Internal

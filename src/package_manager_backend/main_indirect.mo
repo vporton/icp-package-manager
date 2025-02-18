@@ -400,6 +400,13 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 wasm_memory_limit = null;
             };
         });
+
+        backend.onUpgradeOrInstallModule({ // FIXME
+            upgradeId;
+            installationId;
+            canister_id;
+            user;
+        });
     }
 
 
