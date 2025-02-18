@@ -389,7 +389,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         nextUpgradeId += Array.size(packages);
         var ourNextUpgradeId = minUpgradeId;
 
-        label cycle for (package in packages.vals()) {
+        for (package in packages.vals()) {
             // FIXME: upgradeId vs (un)installationId
             let installationId = package.installationId;
             let upgradeId = ourNextUpgradeId;
