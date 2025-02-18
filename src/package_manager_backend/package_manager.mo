@@ -397,7 +397,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?oldPkg = installedPackages.get(installationId) else {
                 return; // FIXME
             };
-            await* upgradePackage({
+            upgradePackage({
                 oldPkg;
                 upgradeId;
                 installationId;

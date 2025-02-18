@@ -327,7 +327,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     // FIXME: Rewrite.
-    private func upgradePackage({
+    shared({caller}) func upgradePackage({
         oldPkg: Common.SharedPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
@@ -338,6 +338,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
         arg: [Nat8];
         backend: Principal;
     }): () {
+        onlyOwner(caller, "upgradePackage");
+
         // FIXME: upgrading a real package into virtual or vice versa
         let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
         // TODO: virtual packages
