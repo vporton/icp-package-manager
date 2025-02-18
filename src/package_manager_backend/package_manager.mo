@@ -397,7 +397,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?oldPkg = installedPackages.get(installationId) else {
                 Debug.trap("no such installed package"); // FIXME
             };
-            upgradePackage({
+            getMainIndirect().upgradePackage({
                 oldPkg;
                 upgradeId;
                 installationId;
