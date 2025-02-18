@@ -394,7 +394,11 @@ shared({caller = initialCaller}) actor class PackageManager({
             let installationId = package.installationId;
             let upgradeId = ourNextUpgradeId;
             ourNextUpgradeId += 1;
+            let ?oldPkg = installedPackages.get(installationId) else {
+                return; // FIXME
+            };
             await* upgradePackage({
+                oldPkg;
                 upgradeId;
                 installationId;
                 packageName = package.packageName;
@@ -408,8 +412,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         {minUpgradeId};
     };
 
-    // FIXME: Rewrite.
-    private func upgradePackage({
+    /// Internal.
+    func upgradePackageFinish({
+        oldPkg: Common.SharedPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         packageName: Common.PackageName;
@@ -417,26 +422,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         repo: Common.RepositoryRO;
         user: Principal;
         arg: [Nat8];
-    }): async* () {
-        // FIXME: upgrading a real package into virtual or vice versa
-        let ?oldPkg = installedPackages.get(installationId) else {
-            return; // FIXME
-        };
-        let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
-        // TODO: virtual packages
-        let #specific oldPkgSpecific = oldPkg.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
-        };
-        let #specific newPkgSpecific = newPkg.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        let oldPkgModules = newPkgSpecific.modules;
-        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
-        let newPkgModules = newPkgSpecific.modules;
-        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-        let modulesToDelete = Iter.filter<(Text, Common.Module)>(
-            oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
-        );
+    }): async () {
         halfUpgradedPackages.put(upgradeId, {
             upgradeId;
             installationId;
@@ -449,7 +435,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
         // );
         // FIXME: delete removed modules, create new modules
-            await* this.upgradeOrInstallModule({ // FIXME: arguments
         var posTmp = 0;
         for (canister_id in newPkgModules.vals()) {
             let pos = posTmp;
@@ -505,34 +490,16 @@ shared({caller = initialCaller}) actor class PackageManager({
                 // FIXME
             };
             case (#install) {
-                await* Install.myInstallCode({
+                upgradeOrInstallModuleFinish({
+                    upgradeId;
                     installationId;
                     canister_id;
-                    wasmModule;
-                    installArg;
-                    packageManagerOrBootstrapper;
-                    mainIndirect;
-                    simpleIndirect;
                     user;
-                });
-
-                // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-                // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
-                await IC.ic.update_settings({
-                    canister_id;
-                    sender_canister_version = null;
-                    settings = {
-                        compute_allocation = null;
-                        controllers = ?[simpleIndirect, user];
-                        freezing_threshold = null;
-                        log_visibility = null;
-                        memory_allocation = null;
-                        reserved_cycles_limit = null;
-                        wasm_memory_limit = null;
-                    };
+                    wasm_module;
                 });
             };
         };
+        // FIXME: Call the below in event handler:
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
             for (m in modulesToDelete.vals()) {

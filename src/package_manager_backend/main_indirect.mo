@@ -7,6 +7,7 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
+import Option "mo:base/Option";
 import Common "../common";
 import Install "../install";
 import IC "mo:ic";
@@ -324,6 +325,83 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
         canister_id;
     };
+
+    // FIXME: Rewrite.
+    private func upgradePackage({
+        oldPkg: Common.SharedPackageInfo;
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        repo: Common.RepositoryRO;
+        user: Principal;
+        arg: [Nat8];
+        backend: Principal;
+    }): () {
+        // FIXME: upgrading a real package into virtual or vice versa
+        let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
+        // TODO: virtual packages
+        let oldPkg2 = Common.unsharePackageInfo(oldPkg);
+        let #specific oldPkgSpecific = oldPkg2.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let #specific newPkgSpecific = newPkg.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        let oldPkgModules = newPkgSpecific.modules;
+        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
+        let newPkgModules = newPkgSpecific.modules;
+        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+        let modulesToDelete = Iter.filter<(Text, Common.Module)>(
+            oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+        );
+
+        backend.upgradePackageFinish({
+            upgradeId;
+            installationId;
+            package = newPkg;
+            namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
+            allModules = Buffer.Buffer(0);
+            var remainingModules = newPkgModules.size() - modulesToDelete.size();
+        });
+    };
+
+    private func upgradeOrInstallModuleFinish({
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
+        canister_id: Principal;
+        user: Principal;
+        wasm_module: Blob;
+        mode: {#upgrade; #install};
+    }): () {
+        await* Install.myInstallCode({
+            installationId;
+            canister_id;
+            wasmModule;
+            installArg;
+            packageManagerOrBootstrapper;
+            mainIndirect;
+            simpleIndirect;
+            user;
+        });
+
+        // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+        // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+        await IC.ic.update_settings({
+            canister_id;
+            sender_canister_version = null;
+            settings = {
+                compute_allocation = null;
+                controllers = ?[simpleIndirect, user];
+                freezing_threshold = null;
+                log_visibility = null;
+                memory_allocation = null;
+                reserved_cycles_limit = null;
+                wasm_memory_limit = null;
+            };
+        });
+    }
+
 
 //     public composite query({caller}) func checkCodeInstalled({
 //         canister_ids: [Principal];

@@ -5,6 +5,8 @@ import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
 import Blob "mo:base/Blob";
+import HashMap "mo:base/HashMap";
+import Iter "mo:base/Iter";
 import Sha256 "mo:sha2/Sha256";
 import Settings "Settings";
 import Common "common";
