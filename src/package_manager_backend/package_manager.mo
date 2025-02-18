@@ -97,8 +97,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
-        namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
-        allModules: Buffer.Buffer<Principal>;
+        namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename. // FIXME: Fill.
+        allModules: Buffer.Buffer<Principal>; // FIXME: Fill.
+        modulesToDelete: [Principal];
         var remainingModules: Nat;
     };
 
@@ -107,6 +108,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         namedModules: [(Text, Principal)]; // TODO: Rename.
         allModules: [Principal];
+        modulesToDelete: [Principal];
         remainingModules: Nat;
     };
 
@@ -115,6 +117,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package = Common.sharePackageInfo(x.package);
         namedModules = Iter.toArray(x.namedModules.entries());
         allModules = Buffer.toArray(x.allModules);
+        modulesToDelete = x.modulesToDelete;
         remainingModules = x.remainingModules;
     };
 
@@ -123,6 +126,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package = Common.unsharePackageInfo(x.package);
         namedModules = HashMap.fromIter(x.namedModules.vals(), x.namedModules.size(), Text.equal, Text.hash);
         allModules = Buffer.fromArray(x.allModules);
+        modulesToDelete = x.modulesToDelete;
         var remainingModules = x.remainingModules;
     };
 
@@ -397,7 +401,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("no such installed package"); // FIXME
             };
             getMainIndirect().upgradePackage({
-                oldPkg;
+                oldPkg = Common.installedPackageInfoShare(oldPkg);
                 upgradeId;
                 installationId;
                 packageName = package.packageName;
@@ -413,23 +417,54 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// Internal.
     public shared({caller}) func upgradePackageFinish({
-        oldPkg: Common.SharedPackageInfo;
+        oldPkg: Common.SharedInstalledPackageInfo;
+        newPkg: Common.SharedPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        packageName: Common.PackageName;
-        version: Common.Version;
-        repo: Common.RepositoryRO;
+        // packageName: Common.PackageName;
+        // version: Common.Version;
+        // repo: Common.RepositoryRO;
         user: Principal;
         arg: [Nat8];
     }): async () {
         onlyOwner(caller, "uninstallPackages");
 
+        let #specific newPkgSpecific = newPkg.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        // FIXME: upgrading a real package into virtual or vice versa
+        let newPkgModules = newPkgSpecific.modules;
+        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+        // TODO: virtual packages
+        let oldPkg2 = Common.installedPackageInfoUnshare(oldPkg);
+        let #specific oldPkgSpecific = oldPkg2.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let oldPkgModules = newPkgSpecific.modules;
+        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
+
+        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
+            Iter.filter<(Text, Common.Module)>(
+                oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+            ),
+            oldPkgSpecific.modules.size(), // FIXME: Wrong size
+            Text.equal,
+            Text.hash
+        );
+        let modulesToDelete = Iter.toArray(Iter.map<Text, Principal>(modulesToDelete0.keys(), func (name: Text) {
+            let ?m = oldPkgSpecific.modules.get(name) else {
+                Debug.trap("programming error");
+            };
+            m.canister;
+        }));
+
         halfUpgradedPackages.put(upgradeId, {
             upgradeId;
             installationId;
-            package = newPkg;
+            package = Common.unsharePackageInfo(newPkg); // TODO: Do it earlier above?
             namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
             allModules = Buffer.Buffer(0);
+            modulesToDelete;
             var remainingModules = newPkgModules.size() - modulesToDelete.size();
         });
         // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
@@ -450,6 +485,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 user;
                 wasmModule;
                 mode = if (isUpgrade) { #upgrade } else { #install };
+                arg;
                 // afterInstallCallback = ?{
                 //     canister = Principal.fromActor(this);
                 //     name = "onUpgradeCanisterHalfWay";
@@ -468,15 +504,20 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         wasmModule: Common.Module;
         mode: {#upgrade; #install};
+        arg: [Nat8]; // FIXME: correct?
     }): async* () {
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade");
-        };
-        let ?pkg = installedPackages.get(installationId) else {
-            Debug.trap("no such package");
-        };
+        // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+        //     Debug.trap("no such upgrade");
+        // };
+        // let ?pkg = installedPackages.get(installationId) else {
+        //     Debug.trap("no such package");
+        // };
         switch (mode) {
             case (#upgrade) {
+                let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+                let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+                let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+
                 // TODO: user's callback
                 // TODO: Simplify:
                 ignore getSimpleIndirect().callAll([{
@@ -492,12 +533,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }]);
             };
             case (#install) {
-                upgradeOrInstallModuleFinish({
+                getMainIndirect().upgradeOrInstallModuleFinish({
                     upgradeId;
                     installationId;
                     canister_id;
                     user;
-                    wasmModule;
+                    wasmModule = Common.shareModule(wasmModule);
                 });
             };
         };
@@ -507,12 +548,14 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onUpgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
     }): async () {
+        onlyOwner(caller, "onUpgradeOrInstallModule");
+
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
         upgrade.remainingModules -= 1; // FIXME: Before or after install/upgrade module?
         if (upgrade.remainingModules == 0) {
-            for (m in modulesToDelete.vals()) {
+            for (canister_id in upgrade.modulesToDelete.vals()) {
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
@@ -529,16 +572,35 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         
         // Call the user's callback if provided // FIXME: Another callback for newly installed modules?
-        switch (upgrade.afterUpgradeCallback) {
-            case (?callback) {
-                ignore getSimpleIndirect().callAll([{
-                    canister = callback.canister;
-                    name = callback.name;
-                    data = callback.data;
-                    error = #abort;
-                }]);
+        let #real specific = upgrade.package.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        let ?inst = halfInstalledPackages.get(upgrade.installationId) else {
+            Debug.trap("no such installed package");
+        };
+        for ((moduleName2, module4) in specific.modules.entries()) {
+            switch (module4.callbacks.get(#CodeUpgradedForAllCanisters)) {
+                case (?callbackName) {
+                    let ?cbPrincipal = inst.namedModules.get(moduleName2) else {
+                        Debug.trap("programming error 3");
+                    };
+                    ignore getSimpleIndirect().callAll([{
+                        canister = cbPrincipal;
+                        name = callbackName.method;
+                        data = to_candid({ // TODO
+                            upgradeId;
+                            installationId = upgrade.installationId;
+                            // canister = canister_id; // FIXME
+                            user;
+                            packageManagerOrBootstrapper; // TODO: Remove?
+                            // module_; // FIXME
+                            // moduleNumber; // FIXME
+                        });
+                        error = #abort;
+                    }]);
+                };
+                case (null) {};
             };
-            case null {};
         };
     };
 
@@ -1015,7 +1077,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         ));
 
         _halfUpgradedPackagesSave := Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), (Common.UpgradeId, SharedHalfUpgradedPackageInfo)>(
-            halfUninstalledPackages.entries(),
+            halfUpgradedPackages.entries(),
             func (elt: (Common.UpgradeId, HalfUpgradedPackageInfo)) = (elt.0, shareHalfUpgradedPackageInfo(elt.1)),
         ));
     };

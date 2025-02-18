@@ -56,11 +56,13 @@ module {
 
     public type ModuleEvent = {
         #CodeInstalledForAllCanisters;
+        #CodeUpgradedForAllCanisters;
     };
 
     private func moduleEventHash(e: ModuleEvent): Hash.Hash =
         switch (e) {
             case (#CodeInstalledForAllCanisters) 0;
+            case (#CodeUpgradedForAllCanisters) 1;
         };
 
     /// Shared/query method name.
@@ -84,7 +86,7 @@ module {
     public type Module = {
         code: ModuleCode;
         installByDefault: Bool;
-        forceReinstall: Bool; // used with such canisters as `MainIndirect`.
+        forceReinstall: Bool; // used with such canisters as `MainIndirect`. // FIXME: I forgot to use it.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 

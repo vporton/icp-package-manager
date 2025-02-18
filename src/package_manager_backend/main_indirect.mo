@@ -7,7 +7,6 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
-import Option "mo:base/Option";
 import Common "../common";
 import Install "../install";
 import IC "mo:ic";
@@ -328,7 +327,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
     // FIXME: Rewrite.
     public shared({caller}) func upgradePackage({
-        oldPkg: Common.SharedPackageInfo;
+        oldPkg: Common.SharedInstalledPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         packageName: Common.PackageName;
@@ -340,61 +339,42 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): () {
         onlyOwner(caller, "upgradePackage");
 
-        // FIXME: upgrading a real package into virtual or vice versa
-        let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
-        // TODO: virtual packages
-        let oldPkg2 = Common.unsharePackageInfo(oldPkg);
-        let #specific oldPkgSpecific = oldPkg2.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
-        };
-        let #specific newPkgSpecific = newPkg.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        let oldPkgModules = newPkgSpecific.modules;
-        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
-        let newPkgModules = newPkgSpecific.modules;
-        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-        let modulesToDelete = Iter.filter<(Text, Common.Module)>(
-            oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
-        );
-
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
             upgradePackageFinish: shared ({
-                oldPkg: Common.SharedPackageInfo;
+                oldPkg: Common.SharedInstalledPackageInfo;
+                newPkg: Common.SharedPackageInfo;
                 upgradeId: Common.UpgradeId;
                 installationId: Common.InstallationId;
-                packageName: Common.PackageName;
-                version: Common.Version;
-                repo: Common.RepositoryRO;
                 user: Principal;
                 arg: [Nat8];
             }) -> async ();
         };
         await backendObj.upgradePackageFinish({
             oldPkg;
+            newPkg = await repo.getPackage(packageName, version);
             upgradeId;
             installationId;
-            packageName;
-            version;
-            repo;
+            // packageName;
+            // version;
+            // repo;
             user;
             arg;
         });
     };
 
-    public shared({caller}) func upgradeOrInstallModuleFinish({
+    public shared({caller}) func upgradeOrInstallModuleFinish({ // FIXME: Rename.
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         canister_id: Principal;
         user: Principal;
         wasmModule: Common.SharedModule;
-        mode: {#upgrade; #install};
+        // mode: {#upgrade; #install};
     }): () {
         onlyOwner(caller, "upgradeOrInstallModuleFinish");
 
-        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1); // FIXME: Move this line.
+        // let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+        // let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        // let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1); // FIXME: Move this line.
         await* Install.myInstallCode({
             installationId;
             canister_id;
