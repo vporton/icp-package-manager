@@ -509,6 +509,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onUpgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
     }): async () {
+        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+            Debug.trap("no such upgrade");
+        };
         upgrade.remainingModules -= 1; // FIXME: Before or after install/upgrade module?
         if (upgrade.remainingModules == 0) {
             for (m in modulesToDelete.vals()) {
@@ -526,7 +529,19 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfUpgradedPackages.delete(upgradeId);
         };
-        // FIXME: call user's callback.
+        
+        // Call the user's callback if provided // FIXME: Another callback for newly installed modules?
+        switch (upgrade.afterUpgradeCallback) {
+            case (?callback) {
+                ignore getSimpleIndirect().callAll([{
+                    canister = callback.canister;
+                    name = callback.name;
+                    data = callback.data;
+                    error = #abort;
+                }]);
+            };
+            case null {};
+        };
     };
 
     /// Internal
