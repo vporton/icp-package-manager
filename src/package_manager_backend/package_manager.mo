@@ -395,7 +395,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let upgradeId = ourNextUpgradeId;
             ourNextUpgradeId += 1;
             let ?oldPkg = installedPackages.get(installationId) else {
-                return; // FIXME
+                Debug.trap("no such installed package"); // FIXME
             };
             upgradePackage({
                 oldPkg;
@@ -413,7 +413,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// Internal.
-    func upgradePackageFinish({
+    public shared({caller}) func upgradePackageFinish({
         oldPkg: Common.SharedPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
@@ -423,6 +423,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         arg: [Nat8];
     }): async () {
+        onlyOwner(caller, "uninstallPackages");
+
         halfUpgradedPackages.put(upgradeId, {
             upgradeId;
             installationId;
@@ -442,15 +444,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
             
             let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
-            let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-            let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-            let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
             await* upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId;
                 installationId;
                 canister_id;
                 user;
-                wasm_module;
+                wasmModule;
                 mode = if (isUpgrade) { #upgrade } else { #install };
                 // afterInstallCallback = ?{
                 //     canister = Principal.fromActor(this);
@@ -468,7 +467,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         canister_id: Principal;
         user: Principal;
-        wasm_module: Blob;
+        wasmModule: Common.Module;
         mode: {#upgrade; #install};
     }): async* () {
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
@@ -499,7 +498,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     installationId;
                     canister_id;
                     user;
-                    wasm_module;
+                    wasmModule;
                 });
             };
         };

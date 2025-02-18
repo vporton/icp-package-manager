@@ -327,7 +327,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     // FIXME: Rewrite.
-    shared({caller}) func upgradePackage({
+    public shared({caller}) func upgradePackage({
         oldPkg: Common.SharedPackageInfo;
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
@@ -336,7 +336,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         repo: Common.RepositoryRO;
         user: Principal;
         arg: [Nat8];
-        backend: Principal;
+        // backend: Principal; // TODO
     }): () {
         onlyOwner(caller, "upgradePackage");
 
@@ -358,29 +358,48 @@ shared({caller = initialCaller}) actor class MainIndirect({
             oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
         );
 
-        backend.upgradePackageFinish({
+        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
+            upgradePackageFinish: shared ({
+                oldPkg: Common.SharedPackageInfo;
+                upgradeId: Common.UpgradeId;
+                installationId: Common.InstallationId;
+                packageName: Common.PackageName;
+                version: Common.Version;
+                repo: Common.RepositoryRO;
+                user: Principal;
+                arg: [Nat8];
+            }) -> async ();
+        };
+        await backendObj.upgradePackageFinish({
+            oldPkg;
             upgradeId;
             installationId;
-            package = newPkg;
-            namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
-            allModules = Buffer.Buffer(0);
-            var remainingModules = newPkgModules.size() - modulesToDelete.size();
+            packageName;
+            version;
+            repo;
+            user;
+            arg;
         });
     };
 
-    private func upgradeOrInstallModuleFinish({
+    public shared({caller}) func upgradeOrInstallModuleFinish({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         canister_id: Principal;
         user: Principal;
-        wasm_module: Blob;
+        wasmModule: Common.SharedModule;
         mode: {#upgrade; #install};
     }): () {
+        onlyOwner(caller, "upgradeOrInstallModuleFinish");
+
+        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1); // FIXME: Move this line.
         await* Install.myInstallCode({
             installationId;
             canister_id;
-            wasmModule;
-            installArg;
+            wasmModule = Common.unshareModule(wasmModule);
+            installArg = to_candid({}); // FIXME
             packageManagerOrBootstrapper;
             mainIndirect;
             simpleIndirect;
@@ -403,7 +422,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
             };
         });
 
-        backend.onUpgradeOrInstallModule({ // FIXME
+        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
+            onUpgradeOrInstallModule: shared ({
+                upgradeId: Common.UpgradeId;
+           }) -> async ();
+        };
+        await backendObj.onUpgradeOrInstallModule({ // FIXME
             upgradeId;
             installationId;
             canister_id;
