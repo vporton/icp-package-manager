@@ -390,7 +390,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         var ourNextUpgradeId = minUpgradeId;
 
         for (package in packages.vals()) {
-            // FIXME: upgradeId vs (un)installationId
             let installationId = package.installationId;
             let upgradeId = ourNextUpgradeId;
             ourNextUpgradeId += 1;
