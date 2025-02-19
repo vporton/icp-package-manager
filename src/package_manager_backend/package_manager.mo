@@ -522,12 +522,17 @@ shared({caller = initialCaller}) actor class PackageManager({
                 let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
                 let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
 
+                let mode = if (wasmModule.forceReinstall) { // FIXME: Don't duplicate outer block var name!
+                    #reinstall
+                } else {
+                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // FIXME: Check modes carefully.
+                };
                 // TODO: user's callback
                 // TODO: Simplify:
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "install_code";
-                    data = to_candid({arg; wasm_module; mode = #upgrade; canister_id});
+                    data = to_candid({arg; wasm_module; mode; canister_id});
                     error = #abort;
                 }, {
                     canister = Principal.fromText("aaaaa-aa");

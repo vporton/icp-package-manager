@@ -85,7 +85,7 @@ module {
     public type Module = {
         code: ModuleCode;
         installByDefault: Bool;
-        forceReinstall: Bool; // used with such canisters as `MainIndirect`. // FIXME: I forgot to use it.
+        forceReinstall: Bool; // used with such canisters as `MainIndirect`.
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 
