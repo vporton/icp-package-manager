@@ -474,7 +474,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
         //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
         // );
-        // FIXME: delete removed modules, create new modules
         var posTmp = 0;
         for (canister_id in newPkgModules.vals()) {
             let pos = posTmp;
