@@ -89,7 +89,7 @@ export class InitializedChecker {
                         // Note that it is easier to do here, in frontend.
             }
             const cb = real.checkInitializedCallback[0];
-            const canister = pkg.modules.filter(([name, _m]) => name === cb.moduleName)[0][1];
+            const canister = pkg.namedModules.filter(([name, _m]) => name === cb.moduleName)[0][1];
 
             const methodName: string | undefined = (cb.how as any).methodName;
                 if (methodName !== undefined) {

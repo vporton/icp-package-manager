@@ -344,9 +344,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfUninstalledPackages.put(uninstallationId, {
                 installationId;
-                var remainingModules = pkg.modules.size();
+                var remainingModules = pkg.namedModules.size();
             });
-            let modules = pkg.modules;
+            let modules = pkg.namedModules;
             for (canister_id in modules.vals()) {
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
@@ -800,7 +800,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?pkg0 = installedPackages.get(0) else {
                 Debug.trap("package manager not installed");
             };
-            Iter.toArray(pkg0.modules.entries()); // TODO: inefficient?
+            Iter.toArray(pkg0.namedModules.entries()); // TODO: inefficient?
         };
         let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
         var moduleNumber = 0;
@@ -925,7 +925,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             name = ourHalfInstalled.package.base.name;
             package = ourHalfInstalled.package;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
-            modules = ourHalfInstalled.namedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
+            namedModules = ourHalfInstalled.namedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
             allModules = ourHalfInstalled.allModules;
             var pinned = false;
         });
