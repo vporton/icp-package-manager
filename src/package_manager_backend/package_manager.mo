@@ -101,7 +101,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
-        namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename. // FIXME: Fill.
+        namedModules: HashMap.HashMap<Text, Principal>; // FIXME: Fill.
         allModules: Buffer.Buffer<Principal>; // FIXME: Fill.
         modulesToDelete: [Principal];
         var remainingModules: Nat;
