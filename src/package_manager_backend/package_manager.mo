@@ -436,7 +436,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #specific newPkgSpecific = newPkg.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        // FIXME: upgrading a real package into virtual or vice versa
+        // TODO: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgSpecific.modules;
         let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
         // TODO: virtual packages
