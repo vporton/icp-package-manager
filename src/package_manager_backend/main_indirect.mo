@@ -372,9 +372,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): () {
         onlyOwner(caller, "upgradeOrInstallModuleFinish");
 
-        // let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        // let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-        // let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1); // FIXME: Move this line.
         await* Install.myInstallCode({
             installationId;
             canister_id;
