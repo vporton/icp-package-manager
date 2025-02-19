@@ -536,7 +536,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }, {
                     canister = Principal.fromText("aaaaa-aa");
                     name = "onUpgradeOrInstallModule";
-                    data = to_candid({canister_id}); // FIXME
+                    data = to_candid({upgradeId});
                     error = #abort;
                 }]);
             };
