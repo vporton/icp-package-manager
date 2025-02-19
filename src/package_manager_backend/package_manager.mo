@@ -31,6 +31,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
+        packageRepoCanister: Principal;
         namedModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
         allModules: Buffer.Buffer<Principal>;
         minInstallationId: Nat; // hack 
@@ -44,6 +45,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type SharedHalfInstalledPackageInfo = {
         package: Common.SharedPackageInfo;
+        packageRepoCanister: Principal;
         namedModules: [(Text, Principal)];
         allModules: [Principal];
         minInstallationId: Nat; // hack 
@@ -56,6 +58,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
         package = Common.sharePackageInfo(x.package);
+        packageRepoCanister = x.packageRepoCanister;
         namedModules = Iter.toArray(x.namedModules.entries());
         allModules = Buffer.toArray(x.allModules);
         minInstallationId = x.minInstallationId;
@@ -66,6 +69,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
+        packageRepoCanister = x.packageRepoCanister;
         namedModules = HashMap.fromIter(x.namedModules.vals(), x.namedModules.size(), Text.equal, Text.hash);
         allModules = Buffer.fromArray(x.allModules);
         minInstallationId = x.minInstallationId;
@@ -764,6 +768,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
+                packageRepoCanister = Principal.fromActor(p.repo); // TODO: Make packageRepoCanister to be of actor type.
                 namedModules = preinstalledModules;
                 allModules = Buffer.Buffer(0);
                 minInstallationId;
@@ -924,6 +929,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             id = installationId;
             name = ourHalfInstalled.package.base.name;
             package = ourHalfInstalled.package;
+            packageRepoCanister = ourHalfInstalled.packageRepoCanister;
             version = ourHalfInstalled.package.base.version; // TODO: needed?
             namedModules = ourHalfInstalled.namedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
             allModules = ourHalfInstalled.allModules;

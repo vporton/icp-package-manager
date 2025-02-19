@@ -289,7 +289,7 @@ module {
     public type InstalledPackageInfo = {
         id: InstallationId;
         package: PackageInfo;
-        // packageRepoCanister: Principal; // FIXME
+        packageRepoCanister: Principal;
         namedModules: HashMap.HashMap<Text, Principal>;
         allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
         var pinned: Bool;
@@ -298,6 +298,7 @@ module {
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         package: SharedPackageInfo;
+        packageRepoCanister: Principal;
         namedModules: [(Text, Principal)];
         allModules: [Principal];
         pinned: Bool;
@@ -306,6 +307,7 @@ module {
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
         id = info.id;
         package = sharePackageInfo(info.package);
+        packageRepoCanister = info.packageRepoCanister;
         namedModules = Iter.toArray(info.namedModules.entries());
         allModules = Buffer.toArray(info.allModules);
         pinned = info.pinned;
@@ -314,6 +316,7 @@ module {
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
         id = info.id;
         package = unsharePackageInfo(info.package);
+        packageRepoCanister = info.packageRepoCanister;
         namedModules = HashMap.fromIter(info.namedModules.vals(), Array.size(info.namedModules), Text.equal, Text.hash);
         allModules = Buffer.fromArray(info.allModules);
         var pinned = info.pinned;
