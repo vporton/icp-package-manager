@@ -31,11 +31,11 @@ function InstalledPackageLine(props: {
     if (packages0 === undefined) { // TODO: needed?
         return ""; // hack
     }
-    const versionsSet = new Set(packages0.all.map(p => p.version));
+    const versionsSet = new Set(packages0.all.map(p => p.package.base.version));
     const versions = Array.from(versionsSet); // TODO: Sort appropriately.
     const byVersion = new Map<string, SharedInstalledPackageInfo[]>();
     for (const v of versions) {
-        byVersion.set(v, packages0.all.filter(p => p.version === v));
+        byVersion.set(v, packages0.all.filter(p => p.package.base.version === v));
     }
     const glob = useContext(GlobalContext);
     function setDefault(k: bigint) {
@@ -81,7 +81,7 @@ export default function InstalledPackages(props: {}) {
             return;
         }
         glob.packageManager.getAllInstalledPackages().then(async allPackages => {
-            const guids2Set = await Promise.all(new Set(allPackages.map(p => { return {guid: p[1].package.base.guid, name: p[1].name} }) as Array<{guid: Uint8Array, name: string}>));
+            const guids2Set = await Promise.all(new Set(allPackages.map(p => { return {guid: p[1].package.base.guid, name: p[1].package.base.name} }) as Array<{guid: Uint8Array, name: string}>));
             const guids2 = Array.from(guids2Set);
             // guids2.sort(); // TODO: wrong order
             Promise.all(guids2.map(async guid2 => {
@@ -115,9 +115,9 @@ export default function InstalledPackages(props: {}) {
                     {installedVersions !== undefined &&
                         Array.from(installedVersions.values()).map((info) =>
                             <InstalledPackageLine
-                                packageName={info.all[0].name}
+                                packageName={info.all[0].package.base.name}
                                 guid={info.all[0].package.base.guid as Uint8Array}
-                                key={info.all[0].name}
+                                key={info.all[0].package.base.name}
                                 allInstalled={installedVersions}/>
                     )}
                 </ul>

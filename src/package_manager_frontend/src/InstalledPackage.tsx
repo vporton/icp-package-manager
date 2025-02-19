@@ -91,8 +91,8 @@ export default function InstalledPackage(props: {}) {
                 </p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>
-                <p><strong>Package name:</strong> {pkg.name}</p>
-                <p><strong>Package version:</strong> {pkg.version}</p>
+                <p><strong>Package name:</strong> {pkg.package.base.name}</p>
+                <p><strong>Package version:</strong> {pkg.package.base.version}</p>
                 <p><strong>Short description:</strong> {pkg.package.base.shortDescription}</p>
                 <p><strong>Long description:</strong> {pkg.package.base.longDescription}</p>
                 <Accordion defaultActiveKey={undefined}> {/* TODO: https://stackoverflow.com/q/79367323/856090 */}

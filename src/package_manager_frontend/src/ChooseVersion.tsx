@@ -35,7 +35,7 @@ export default function ChooseVersion(props: {}) {
             setGUIDInfo(fullInfo.packages[0][1].base.guid as Uint8Array);
             if (versions !== undefined) {
                 glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guidInfo!).then(installed => {
-                    setInstalledVersions(new Map(installed.all.map(e => [e.version, 1])));
+                    setInstalledVersions(new Map(installed.all.map(e => [e.package.base.version, 1])));
                 });
             }
         });
@@ -91,7 +91,7 @@ export default function ChooseVersion(props: {}) {
                         ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                         : installedVersions.has(chosenVersion ?? "")
                         ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
-                        : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined    }>Install it in addition to other versions of this package</Button></>
+                        : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install it in addition to other versions of this package</Button></>
                     }
                 </p>
             </>}
