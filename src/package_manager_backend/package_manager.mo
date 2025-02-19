@@ -451,7 +451,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Iter.filter<(Text, Common.Module)>(
                 oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
             ),
-            oldPkgSpecific.modules.size(), // FIXME: Wrong size
+            oldPkgSpecific.modules.size(), // TODO: It can be smaller.
             Text.equal,
             Text.hash
         );
