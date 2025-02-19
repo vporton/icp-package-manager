@@ -198,13 +198,13 @@ describe('My Test Suite', () => {
 
         const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
         for (const moduleName of ['example1', 'example2']) {
-            const examplePrincipal = examplePkg.modules.filter(([name, _principal]) => name === moduleName)[0][1];
+            const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === moduleName)[0][1];
             const exampleInfo = await simpleIndirect.canister_info(
                 {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
             expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
         }
 
-        const examplePrincipal = examplePkg.modules.filter(([name, _principal]) => name === 'example1')[0][1];
+        const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === 'example1')[0][1];
         const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
         console.log("Checking example frontend owners...");
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
