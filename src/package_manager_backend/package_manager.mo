@@ -524,7 +524,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 let mode = if (wasmModule.forceReinstall) { // FIXME: Don't duplicate outer block var name!
                     #reinstall
                 } else {
-                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // FIXME: Check modes carefully.
+                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
                 };
                 // TODO: user's callback
                 // TODO: Simplify:
