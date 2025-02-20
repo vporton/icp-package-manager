@@ -402,13 +402,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
             onUpgradeOrInstallModule: shared ({
                 upgradeId: Common.UpgradeId;
-           }) -> async ();
+            }) -> async ();
         };
-        await backendObj.onUpgradeOrInstallModule({ // FIXME
+        await backendObj.onUpgradeOrInstallModule({
             upgradeId;
-            installationId;
-            canister_id;
-            user;
         });
     }
 
