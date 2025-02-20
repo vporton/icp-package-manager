@@ -12,7 +12,7 @@ import Install "../install";
 import IC "mo:ic";
 
 shared({caller = initialCaller}) actor class MainIndirect({
-    packageManagerOrBootstrapper: Principal;
+    packageManagerOrBootstrapper: Principal; // TODO: Rename to just `packageManager`?.
     mainIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
@@ -325,7 +325,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         canister_id;
     };
 
-    // FIXME: Rewrite.
     public shared({caller}) func upgradePackage({
         oldPkg: Common.SharedInstalledPackageInfo;
         upgradeId: Common.UpgradeId;
@@ -339,7 +338,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): () {
         onlyOwner(caller, "upgradePackage");
 
-        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
+        let newPkg = await repo.getPackage(packageName, version);
+        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
             upgradePackageFinish: shared ({
                 oldPkg: Common.SharedInstalledPackageInfo;
                 newPkg: Common.SharedPackageInfo;
@@ -351,7 +351,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         };
         await backendObj.upgradePackageFinish({
             oldPkg;
-            newPkg = await repo.getPackage(packageName, version);
+            newPkg;
             upgradeId;
             installationId;
             // packageName;
@@ -362,13 +362,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
         });
     };
 
-    public shared({caller}) func upgradeOrInstallModuleFinish({ // FIXME: Rename.
+    public shared({caller}) func upgradeOrInstallModuleFinish({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         canister_id: Principal;
         user: Principal;
         wasmModule: Common.SharedModule;
         // mode: {#upgrade; #install};
+        installArg: [Nat8];
     }): () {
         onlyOwner(caller, "upgradeOrInstallModuleFinish");
 
@@ -376,7 +377,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             installationId;
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
-            installArg = to_candid({}); // FIXME
+            installArg = to_candid(installArg); // FIXME
             packageManagerOrBootstrapper;
             mainIndirect;
             simpleIndirect;
@@ -399,7 +400,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             };
         });
 
-        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor { // FIXME: `OrBootstrapper`?
+        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
             onUpgradeOrInstallModule: shared ({
                 upgradeId: Common.UpgradeId;
             }) -> async ();

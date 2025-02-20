@@ -101,8 +101,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
-        namedModules: HashMap.HashMap<Text, Principal>; // FIXME: Fill.
-        allModules: Buffer.Buffer<Principal>; // FIXME: Fill.
+        namedModules: HashMap.HashMap<Text, Principal>;
+        allModules: Buffer.Buffer<Principal>;
         modulesToDelete: [Principal];
         var remainingModules: Nat;
     };
@@ -547,6 +547,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     canister_id;
                     user;
                     wasmModule = Common.shareModule(wasmModule);
+                    installArg = Blob.toArray(to_candid({})); // FIXME: Its own for each module?
                 });
             };
         };
@@ -587,11 +588,11 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("no such installed package");
         };
         for ((moduleName2, module4) in specific.modules.entries()) {
+            let ?cbPrincipal = inst.namedModules.get(moduleName2) else {
+                Debug.trap("programming error 3");
+            };
             switch (module4.callbacks.get(#CodeUpgradedForAllCanisters)) {
                 case (?callbackName) {
-                    let ?cbPrincipal = inst.namedModules.get(moduleName2) else {
-                        Debug.trap("programming error 3");
-                    };
                     ignore getSimpleIndirect().callAll([{
                         canister = cbPrincipal;
                         name = callbackName.method;
@@ -609,6 +610,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case (null) {};
             };
+            // FIXME: Is `cbPrincipal` here correct value?
+            upgrade.namedModules.put(moduleName2, cbPrincipal);
+            upgrade.allModules.add(cbPrincipal);
         };
     };
 
@@ -931,10 +935,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         installedPackages.put(installationId, {
             id = installationId;
-            name = ourHalfInstalled.package.base.name;
             package = ourHalfInstalled.package;
             packageRepoCanister = ourHalfInstalled.packageRepoCanister;
-            version = ourHalfInstalled.package.base.version; // TODO: needed?
             namedModules = ourHalfInstalled.namedModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
             allModules = ourHalfInstalled.allModules;
             var pinned = false;
