@@ -534,7 +534,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     data = to_candid({arg; wasm_module; mode; canister_id});
                     error = #abort;
                 }, {
-                    canister = Principal.fromText("aaaaa-aa");
+                    canister = Principal.fromActor(this);
                     name = "onUpgradeOrInstallModule";
                     data = to_candid({upgradeId});
                     error = #abort;
