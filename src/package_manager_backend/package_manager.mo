@@ -393,7 +393,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
-        onlyOwner(caller, "uninstallPackages");
+        onlyOwner(caller, "upgradePackages");
 
         let minUpgradeId = nextUpgradeId;
         nextUpgradeId += Array.size(packages);
@@ -420,7 +420,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryRO;
         }];
     }): async () {
-        onlyOwner(caller, "uninstallPackages");
+        onlyOwner(caller, "upgradeStart");
 
         for (p0 in packages.keys()) {
             let p = Common.unsharePackageInfo(packages[p0].package); // Need to unshare the entire variable?
@@ -476,7 +476,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     
             // FIXME: Use it to finish upgrading:
             for ((p0, pkg) in halfUpgradedPackages.entries()) {
-                await* doUpgradeFinish(p0, pkg, packages[p0].installationId); // TODO: named rather than positional arguments
+                await* doUpgradeFinish(p0, pkg, packages[p0].installationId, user); // TODO: named rather than positional arguments
             };
         };
     };
@@ -527,9 +527,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         data = to_candid({ // TODO
                             upgradeId;
                             installationId = upgrade.installationId;
-                            // canister = canister_id; // FIXME
-                            user;
-                            packageManagerOrBootstrapper; // TODO: Remove?
+                            packageManagerOrBootstrapper = Principal.fromActor(this);
                             // module_; // FIXME
                             // moduleNumber; // FIXME
                         });
@@ -814,9 +812,11 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId = p0; // FIXME: ` + moduleNumber`?
+            getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
+                upgradeId = p0; // FIXME: ` + moduleNumber`?
                 installationId;
                 canister_id;
-                user;
+                user = user;
                 wasmModule = Common.shareModule(wasmModule);
                 arg = to_candid({}); // FIXME
                 installArg = to_candid({}); // FIXME
@@ -826,8 +826,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 packageManagerOrBootstrapper = Principal.fromActor(this);
                 simpleIndirect;
             });
-        };
-    };
 
     /// Internal
     public shared({caller}) func onInstallCode({
