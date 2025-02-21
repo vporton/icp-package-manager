@@ -807,7 +807,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("no such module"); // FIXME: What to do in this case?
             };
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
-                upgradeId = p0; // FIXME: ` + moduleNumber`?
+                upgradeId = p0 + pos;
                 installationId;
                 canister_id;
                 user;
