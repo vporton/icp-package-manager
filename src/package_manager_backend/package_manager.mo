@@ -374,7 +374,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         {minUninstallationId};
     };
 
-    /// FIXME: Rewrite.
     /// We first add new and upgrade existing modules (including executing hooks)
     /// and only then delete modules to be deleted. That's because deleted modules may contain
     /// important data that needs to be imported. Also having deleting modules at the end
