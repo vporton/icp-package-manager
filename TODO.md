@@ -94,6 +94,8 @@ Remaining things TODO:
 
   - Every package should have owner(s) to specify who is able to change it.
 
+- https://dashboard.internetcomputer.org/sns/l7ra6-uqaaa-aaaaq-aadea-cai
+
 - Package's and/or user's option to stop all canisters of a package before upgrading.
 
 - "Add distro" at distro's site.
