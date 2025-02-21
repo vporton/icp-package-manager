@@ -380,7 +380,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// important data that needs to be imported. Also having deleting modules at the end
     /// does not prevent the package to start fully function before this.
     public shared({caller}) func upgradePackages({
-        minUpgradeId: Common.UpgradeId;
         packages: [{
             installationId: Common.InstallationId;
             packageName: Common.PackageName;
@@ -781,7 +780,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo, installationId: Common.InstallationId): async* () {
+    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo, installationId: Common.InstallationId, user: Principal): async* () {
         // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
         //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
         // );
@@ -814,7 +813,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 upgradeId = p0; // FIXME: ` + moduleNumber`?
                 installationId;
                 canister_id;
-                user = user;
+                user;
                 wasmModule = Common.shareModule(wasmModule);
                 arg = to_candid({}); // FIXME
                 installArg = to_candid({}); // FIXME
