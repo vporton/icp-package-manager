@@ -812,8 +812,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId = p0; // FIXME: ` + moduleNumber`?
-            getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
-                upgradeId = p0; // FIXME: ` + moduleNumber`?
                 installationId;
                 canister_id;
                 user = user;
@@ -826,6 +824,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                 packageManagerOrBootstrapper = Principal.fromActor(this);
                 simpleIndirect;
             });
+        };
+    };
 
     /// Internal
     public shared({caller}) func onInstallCode({
