@@ -396,7 +396,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         let minUpgradeId = nextUpgradeId;
         nextUpgradeId += Array.size(packages);
-        var ourNextUpgradeId = minUpgradeId;
 
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
