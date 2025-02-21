@@ -812,7 +812,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 wasmModule = Common.shareModule(wasmModule);
                 arg = to_candid({}); // FIXME
                 installArg = to_candid({ // TODO: Add more arguments.
-                    installArg = to_candid({
                     installationId = p0;
                     packageManagerOrBootstrapper = backend;
                 });
