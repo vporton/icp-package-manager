@@ -429,6 +429,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // version: Common.Version;
         // repo: Common.RepositoryRO;
         user: Principal;
+        wasm_module: Blob;
         arg: Blob;
     }): async () {
         onlyOwner(caller, "uninstallPackages");
@@ -480,13 +481,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             posTmp += 1;
             let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
             
-            let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
             await* upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId;
                 installationId;
                 canister_id;
                 user;
-                wasmModule;
+                wasm_module;
                 mode = if (isUpgrade) { #upgrade } else { #install };
                 arg;
                 // afterInstallCallback = ?{
@@ -505,7 +505,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         canister_id: Principal;
         user: Principal;
-        wasmModule: Common.Module;
+        wasm_module: Blob;
         mode: {#upgrade; #install};
         arg: Blob;
     }): async* () {
@@ -517,10 +517,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         // };
         switch (mode) {
             case (#upgrade) {
-                let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-                let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-                let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-
                 let mode2 = if (wasmModule.forceReinstall) {
                     #reinstall
                 } else {
