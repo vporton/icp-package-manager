@@ -404,16 +404,17 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?oldPkg = installedPackages.get(installationId) else {
                 Debug.trap("no such installed package");
             };
-            getMainIndirect().upgradePackage({
-                oldPkg = Common.installedPackageInfoShare(oldPkg);
-                upgradeId;
-                installationId;
-                packageName = package.packageName;
-                version = package.version;
-                repo = package.repo;
-                user;
-                arg;
-            });
+            // FIXME: Uncomment:
+            // getMainIndirect().upgradePackage({
+            //     oldPkg = Common.installedPackageInfoShare(oldPkg);
+            //     upgradeId;
+            //     installationId;
+            //     packageName = package.packageName;
+            //     version = package.version;
+            //     repo = package.repo;
+            //     user;
+            //     arg;
+            // });
         };
 
         {minUpgradeId};
@@ -517,7 +518,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // };
         switch (mode) {
             case (#upgrade) {
-                let mode2 = if (wasmModule.forceReinstall) {
+                let mode2 = if (false/*wasmModule.forceReinstall*/) { // FIXME
                     #reinstall
                 } else {
                     #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
@@ -537,14 +538,15 @@ shared({caller = initialCaller}) actor class PackageManager({
                 }]);
             };
             case (#install) {
-                getMainIndirect().upgradeOrInstallModuleFinish({
-                    upgradeId;
-                    installationId;
-                    canister_id;
-                    user;
-                    wasmModule = Common.shareModule(wasmModule);
-                    installArg = Blob.toArray(to_candid({})); // FIXME: Its own for each module?
-                });
+                // FIXME: Uncomment:
+                // getMainIndirect().upgradeOrInstallModuleFinish({
+                //     upgradeId;
+                //     installationId;
+                //     canister_id;
+                //     user;
+                //     wasmModule = Common.shareModule(wasmModule);
+                //     installArg = Blob.toArray(to_candid({})); // FIXME: Its own for each module?
+                // });
             };
         };
     };

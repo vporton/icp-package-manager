@@ -325,56 +325,56 @@ shared({caller = initialCaller}) actor class MainIndirect({
         canister_id;
     };
 
-    public shared({caller}) func upgradePackage({
-        oldPkg: Common.SharedInstalledPackageInfo;
-        upgradeId: Common.UpgradeId;
-        installationId: Common.InstallationId;
-        packageName: Common.PackageName;
-        version: Common.Version;
-        repo: Common.RepositoryRO;
-        user: Principal;
-        arg: [Nat8]; // FIXME: Blob instead
-        // backend: Principal; // TODO
-    }): () {
-        onlyOwner(caller, "upgradePackage");
+    // public shared({caller}) func upgradePackage({
+    //     oldPkg: Common.SharedInstalledPackageInfo;
+    //     upgradeId: Common.UpgradeId;
+    //     installationId: Common.InstallationId;
+    //     packageName: Common.PackageName;
+    //     version: Common.Version;
+    //     repo: Common.RepositoryRO;
+    //     user: Principal;
+    //     arg: [Nat8]; // FIXME: Blob instead
+    //     // backend: Principal; // TODO
+    // }): () {
+    //     onlyOwner(caller, "upgradePackage");
 
-        let newPkg = await repo.getPackage(packageName, version);
-        let #specific newPkgSpecific = newPkg.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        // TODO: upgrading a real package into virtual or vice versa
-        let newPkgModules = newPkgSpecific.modules;
+    //     let newPkg = await repo.getPackage(packageName, version);
+    //     let #specific newPkgSpecific = newPkg.specific else {
+    //         Debug.trap("trying to directly install a virtual package");
+    //     };
+    //     // TODO: upgrading a real package into virtual or vice versa
+    //     let newPkgModules = newPkgSpecific.modules;
 
-        // Do it here to avoid non-returning-function attack.
-        let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
-        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+    //     // Do it here to avoid non-returning-function attack.
+    //     let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
+    //     let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+    //     let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+    //     let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
 
-        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
-            upgradePackageFinish: shared ({
-                oldPkg: Common.SharedInstalledPackageInfo;
-                newPkg: Common.SharedPackageInfo;
-                upgradeId: Common.UpgradeId;
-                installationId: Common.InstallationId;
-                user: Principal;
-                wasm_module: Blob;
-                arg: [Nat8];
-            }) -> async ();
-        };
-        await backendObj.upgradePackageFinish({
-            oldPkg;
-            newPkg;
-            upgradeId;
-            installationId;
-            // packageName;
-            // version;
-            // repo;
-            user;
-            wasm_module;
-            arg;
-        });
-    };
+    //     let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
+    //         upgradePackageFinish: shared ({
+    //             oldPkg: Common.SharedInstalledPackageInfo;
+    //             newPkg: Common.SharedPackageInfo;
+    //             upgradeId: Common.UpgradeId;
+    //             installationId: Common.InstallationId;
+    //             user: Principal;
+    //             wasm_module: Blob;
+    //             arg: [Nat8];
+    //         }) -> async ();
+    //     };
+    //     await backendObj.upgradePackageFinish({
+    //         oldPkg;
+    //         newPkg;
+    //         upgradeId;
+    //         installationId;
+    //         // packageName;
+    //         // version;
+    //         // repo;
+    //         user;
+    //         wasm_module;
+    //         arg;
+    //     });
+    // };
 
     public shared({caller}) func upgradeOrInstallModuleFinish({
         upgradeId: Common.UpgradeId;
