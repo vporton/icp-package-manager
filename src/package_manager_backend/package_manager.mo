@@ -389,6 +389,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         }];
         pmPrincipal: Principal;
         user: Principal;
+        arg: Blob;
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
@@ -403,6 +404,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packages;
             pmPrincipal;
             user;
+            arg;
         });
 
         {minUpgradeId};
@@ -416,24 +418,56 @@ shared({caller = initialCaller}) actor class PackageManager({
             installationId: Common.InstallationId;
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
-            preinstalledModules: [(Text, Principal)];
         }];
     }): async () {
         onlyOwner(caller, "uninstallPackages");
 
         for (p0 in packages.keys()) {
-            let p = packages[p0];
-            let #real realPackage = p.package.specific else {
+            let p = Common.unsharePackageInfo(packages[p0].package); // Need to unshare the entire variable?
+            let #real realPackage = p.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
+            let newPkg = p; // TODO
+            let #real newPkgSpecific = p.specific else {
+                Debug.trap("trying to directly install a virtual package");
+            };
+            // TODO: upgrading a real package into virtual or vice versa
+            let newPkgModules = newPkgSpecific.modules;
+            let newPkgModulesHash = newPkgSpecific.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+            // TODO: virtual packages
+            let ?oldPkg = installedPackages.get(packages[p0].installationId) else {
+                Debug.trap("no such package installation");
+            };
+            let oldPkg2 = oldPkg; // TODO
+            let #specific oldPkgSpecific = oldPkg2.package.specific else {
+                Debug.trap("trying to directly upgrade a virtual package");
+            };
+            let oldPkgModules = newPkgSpecific.modules;
+            let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
-            let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
+            let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
+                Iter.filter<(Text, Common.Module)>(
+                    oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+                ),
+                oldPkgSpecific.modules.size(), // TODO: It can be smaller.
+                Text.equal,
+                Text.hash
+            );
+            let modulesToDelete = Iter.toArray(Iter.map<Text, Principal>(modulesToDelete0.keys(), func (name: Text) {
+                let ?m = oldPkgSpecific.modules.get(name) else {
+                    Debug.trap("programming error");
+                };
+                m.canister;
+            }));
+
+
+            let package2 = Common.unsharePackageInfo(packages[p0].package); // TODO: why used twice below? seems to be a mis-programming.
             let numModules = realPackage.modules.size();
 
             halfUpgradedPackages.put(minUpgradeId + p0, {
-                upgradeId;
-                installationId;
-                package = Common.unsharePackageInfo(newPkg); // TODO: Do it earlier above?
+                upgradeId = minUpgradeId + p0;
+                installationId = packages[p0].installationId;
+                package = newPkg;
                 namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
                 allModules = Buffer.Buffer(0);
                 modulesToDelete;
@@ -442,7 +476,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     
             // FIXME: Use it to finish upgrading:
             for ((p0, pkg) in halfUpgradedPackages.entries()) {
-                await* doUpgradeFinish(p0, pkg);
+                await* doUpgradeFinish(p0, pkg, packages[p0].installationId); // TODO: named rather than positional arguments
             };
         };
     };
@@ -749,56 +783,28 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo): async* () {
-        let p = pkg.package;
-        let newPkg = p; // TODO
-        let #specific newPkgSpecific = newPkg.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        // TODO: upgrading a real package into virtual or vice versa
-        let newPkgModules = newPkgSpecific.modules;
-        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-        // TODO: virtual packages
-        let oldPkg = installedPackages.get(pkg.installationId);
-        let oldPkg2 = Common.installedPackageInfoUnshare(oldPkg);
-        let #specific oldPkgSpecific = oldPkg2.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
-        };
-        let oldPkgModules = newPkgSpecific.modules;
-        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
-
-        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
-            Iter.filter<(Text, Common.Module)>(
-                oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
-            ),
-            oldPkgSpecific.modules.size(), // TODO: It can be smaller.
-            Text.equal,
-            Text.hash
-        );
-        let modulesToDelete = Iter.toArray(Iter.map<Text, Principal>(modulesToDelete0.keys(), func (name: Text) {
-            let ?m = oldPkgSpecific.modules.get(name) else {
-                Debug.trap("programming error");
-            };
-            m.canister;
-        }));
-
+    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo, installationId: Common.InstallationId): async* () {
         // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
         //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
         // );
         var posTmp = 0;
+        let #real newPkgSpecific = pkg.package.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        // TODO: upgrading a real package into virtual or vice versa
+        let newPkgModules = newPkgSpecific.modules;
         for (canister_id in newPkgModules.vals()) {
             let pos = posTmp;
             posTmp += 1;
             
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
-                upgradeId;
+                upgradeId = p0; // FIXME: ` + moduleNumber`?
                 installationId;
                 canister_id;
                 user;
                 wasm_module;
                 mode = if (isUpgrade) { #upgrade } else { #install };
                 arg;
-                canister_id = oldPkgModulesHash.get(canister_id);
             });
         };
     };
