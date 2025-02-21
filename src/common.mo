@@ -373,6 +373,7 @@ module {
     public type canister_id = Principal;
     public type wasm_module = Blob;
 
+    // TODO: Remove.
     public type CanisterCreator = actor {
         // create_canister : shared { settings : ?canister_settings } -> async {
         //     canister_id : canister_id;

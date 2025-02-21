@@ -789,7 +789,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         for (canister_id in newPkgModules.vals()) {
             let pos = posTmp;
             posTmp += 1;
-            let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
             
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId;
@@ -799,6 +798,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 wasm_module;
                 mode = if (isUpgrade) { #upgrade } else { #install };
                 arg;
+                canister_id = oldPkgModulesHash.get(canister_id);
             });
         };
     };

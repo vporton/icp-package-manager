@@ -335,6 +335,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         }];
         pmPrincipal: Principal;
         user: Principal;
+        arg: Blob;
     }): () {
         onlyOwner(caller, "upgradePackageWrapper");
 
@@ -352,31 +353,24 @@ shared({caller = initialCaller}) actor class MainIndirect({
         // // TODO: upgrading a real package into virtual or vice versa
         // let newPkgModules = newPkgSpecific.modules;
 
-        // FIXME: Move to `upgradeOrInstallModule`.
-        // Do it here to avoid non-returning-function attack.
-        let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
-        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
             upgradeStart: shared ({
-                oldPkg: Common.SharedInstalledPackageInfo;
-                newPkg: Common.SharedPackageInfo;
-                upgradeId: Common.UpgradeId;
-                installationId: Common.InstallationId;
+                minUpgradeId: Common.UpgradeId;
                 user: Principal;
-                wasm_module: Blob;
-                arg: [Nat8];
+                packages: [{
+                    installationId: Common.InstallationId;
+                    package: Common.SharedPackageInfo;
+                    repo: Common.RepositoryRO;
+                }];
             }) -> async ();
         };
         await backendObj.upgradeStart({
             minUpgradeId;
             user;
             packages = Iter.toArray(Iter.map<Nat, {
+                installationId: Common.InstallationId;
                 package: Common.SharedPackageInfo;
                 repo: Common.RepositoryRO;
-                preinstalledModules: [(Text, Principal)];
             }>(
                 packages.keys(),
                 func (i: Nat) = do {
@@ -384,18 +378,19 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         Debug.trap("programming error");
                     };
                     {
+                        installationId = packages[i].installationId;
                         package = Common.sharePackageInfo(pkg);
                         repo = packages[i].repo;
-                        preinstalledModules = packages[i].preinstalledModules;
                     };
                 },
             ));
-            bootstrapping;
+            arg;
         });
     };
 
     public shared({caller}) func upgradeOrInstallModule({
-        upgradeId: Common.InstallationId;
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
         moduleNumber: Nat;
         moduleName: ?Text;
         wasmModule: Common.SharedModule;
@@ -405,6 +400,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
         simpleIndirect: Principal;
         installArg: Blob;
         upgradeArg: Blob;
+        mode: { #upgrade; #install };
+        arg: Blob; // TODO
+        canister_id: ?Principal;
+        pmPrincipal: Principal;
     }): () {
         // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
         //     Debug.trap("no such upgrade");
@@ -412,9 +411,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
         // let ?pkg = installedPackages.get(installationId) else {
         //     Debug.trap("no such package");
         // };
-        switch (mode) {
-            case (#upgrade) {
-                let mode2 = if (false/*wasmModule.forceReinstall*/) { // FIXME
+        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+        switch (canister_id) {
+            case (?canister_id) {
+                let mode2 = if (wasmModule.forceReinstall) { // FIXME
                     #reinstall
                 } else {
                     #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
@@ -427,9 +429,18 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     mode = mode2;
                     canister_id
                 });
-                await backend.onUpgradeOrInstallModule({upgradeId}); // FIXME: superfluous
+                let pm = actor(Principal.toText(pmPrincipal)) : actor {
+                    onUpgradeOrInstallModule: ({upgradeId: Common.UpgradeId}) -> async ();
+                };
+                await pm.onUpgradeOrInstallModule({upgradeId}); // FIXME: superfluous, call this by parts
             };
-            case (#install) {
+            case null {
+                let {canister_id} = await* Install.myCreateCanister({
+                    mainControllers = ?[Principal.fromActor(this)];
+                    user;
+                    mainIndirect;
+                    cyclesAmount = await ourPM.getNewCanisterCycles();
+                });
                 await* Install.myInstallCode({
                     installationId;
                     canister_id;
