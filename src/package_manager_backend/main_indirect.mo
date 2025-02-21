@@ -199,7 +199,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     public shared({caller}) func installModule({
-        installPackages: Bool;
         installationId: Common.InstallationId;
         moduleNumber: Nat;
         moduleName: ?Text;
@@ -223,7 +222,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 case (?preinstalledCanisterId) {
                     let cb: Callbacks = actor (Principal.toText(packageManagerOrBootstrapper));
                     await cb.onInstallCode({
-                        installPackages;
                         installationId;
                         moduleNumber;
                         moduleName;
@@ -240,7 +238,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         moduleNumber;
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
-                        installPackages;
                         installArg;
                         packageManagerOrBootstrapper;
                         mainIndirect;
@@ -262,7 +259,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
     private func _installModuleCode({
         moduleNumber: Nat;
         moduleName: ?Text;
-        installPackages: Bool;
         installationId: Common.InstallationId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
@@ -311,7 +307,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         });
 
         await pm.onInstallCode({
-            installPackages; // Bool
             moduleNumber;
             moduleName;
             module_ = Common.shareModule(wasmModule);
