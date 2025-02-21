@@ -1237,6 +1237,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         Iter.toArray<(Text, Principal)>(res.namedModules.entries());
     };
 
+    // TODO: Rearrage functions, possible rename:
     private func _installModulesGroup({
         mainIndirect: MainIndirect.MainIndirect;
         minInstallationId: Common.InstallationId;
