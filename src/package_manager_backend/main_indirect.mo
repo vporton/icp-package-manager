@@ -325,105 +325,149 @@ shared({caller = initialCaller}) actor class MainIndirect({
         canister_id;
     };
 
-    // public shared({caller}) func upgradePackage({
-    //     oldPkg: Common.SharedInstalledPackageInfo;
-    //     upgradeId: Common.UpgradeId;
-    //     installationId: Common.InstallationId;
-    //     packageName: Common.PackageName;
-    //     version: Common.Version;
-    //     repo: Common.RepositoryRO;
-    //     user: Principal;
-    //     arg: [Nat8]; // FIXME: Blob instead
-    //     // backend: Principal; // TODO
-    // }): () {
-    //     onlyOwner(caller, "upgradePackage");
-
-    //     let newPkg = await repo.getPackage(packageName, version);
-    //     let #specific newPkgSpecific = newPkg.specific else {
-    //         Debug.trap("trying to directly install a virtual package");
-    //     };
-    //     // TODO: upgrading a real package into virtual or vice versa
-    //     let newPkgModules = newPkgSpecific.modules;
-
-    //     // Do it here to avoid non-returning-function attack.
-    //     let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
-    //     let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-    //     let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
-    //     let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-
-    //     let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
-    //         upgradePackageFinish: shared ({
-    //             oldPkg: Common.SharedInstalledPackageInfo;
-    //             newPkg: Common.SharedPackageInfo;
-    //             upgradeId: Common.UpgradeId;
-    //             installationId: Common.InstallationId;
-    //             user: Principal;
-    //             wasm_module: Blob;
-    //             arg: [Nat8];
-    //         }) -> async ();
-    //     };
-    //     await backendObj.upgradePackageFinish({
-    //         oldPkg;
-    //         newPkg;
-    //         upgradeId;
-    //         installationId;
-    //         // packageName;
-    //         // version;
-    //         // repo;
-    //         user;
-    //         wasm_module;
-    //         arg;
-    //     });
-    // };
-
-    public shared({caller}) func upgradeOrInstallModuleFinish({
-        upgradeId: Common.UpgradeId;
-        installationId: Common.InstallationId;
-        canister_id: Principal;
+    public shared({caller}) func upgradePackageWrapper({
+        minUpgradeId: Common.UpgradeId;
+        packages: [{
+            installationId: Common.InstallationId;
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+        }];
+        pmPrincipal: Principal;
         user: Principal;
-        wasmModule: Common.SharedModule;
-        // mode: {#upgrade; #install};
-        installArg: [Nat8];
     }): () {
-        onlyOwner(caller, "upgradeOrInstallModuleFinish");
+        onlyOwner(caller, "upgradePackageWrapper");
 
-        await* Install.myInstallCode({
-            installationId;
-            canister_id;
-            wasmModule = Common.unshareModule(wasmModule);
-            installArg = to_candid(installArg); // FIXME
-            packageManagerOrBootstrapper;
-            mainIndirect;
-            simpleIndirect;
-            user;
-        });
+        let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+        for (i in packages.keys()) {
+            // unsafe operation, run in main_indirect:
+            let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
+            packages2[i] := ?(Common.unsharePackageInfo(pkg));
+        };
 
-        // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-        // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
-        await IC.ic.update_settings({
-            canister_id;
-            sender_canister_version = null;
-            settings = {
-                compute_allocation = null;
-                controllers = ?[simpleIndirect, user];
-                freezing_threshold = null;
-                log_visibility = null;
-                memory_allocation = null;
-                reserved_cycles_limit = null;
-                wasm_memory_limit = null;
-            };
-        });
+        // let newPkg = await repo.getPackage(packageName, version);
+        // let #specific newPkgSpecific = newPkg.specific else {
+        //     Debug.trap("trying to directly install a virtual package");
+        // };
+        // // TODO: upgrading a real package into virtual or vice versa
+        // let newPkgModules = newPkgSpecific.modules;
+
+        // FIXME: Move to `upgradeOrInstallModule`.
+        // Do it here to avoid non-returning-function attack.
+        let wasmModule: Common.Module = Common.unshareModule(newPkgModules[pos]);
+        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
 
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
-            onUpgradeOrInstallModule: shared ({
+            upgradeStart: shared ({
+                oldPkg: Common.SharedInstalledPackageInfo;
+                newPkg: Common.SharedPackageInfo;
                 upgradeId: Common.UpgradeId;
+                installationId: Common.InstallationId;
+                user: Principal;
+                wasm_module: Blob;
+                arg: [Nat8];
             }) -> async ();
         };
-        await backendObj.onUpgradeOrInstallModule({
-            upgradeId;
+        await backendObj.upgradeStart({
+            minUpgradeId;
+            user;
+            packages = Iter.toArray(Iter.map<Nat, {
+                package: Common.SharedPackageInfo;
+                repo: Common.RepositoryRO;
+                preinstalledModules: [(Text, Principal)];
+            }>(
+                packages.keys(),
+                func (i: Nat) = do {
+                    let ?pkg = packages2[i] else {
+                        Debug.trap("programming error");
+                    };
+                    {
+                        package = Common.sharePackageInfo(pkg);
+                        repo = packages[i].repo;
+                        preinstalledModules = packages[i].preinstalledModules;
+                    };
+                },
+            ));
+            bootstrapping;
         });
-    }
+    };
 
+    public shared({caller}) func upgradeOrInstallModule({
+        upgradeId: Common.InstallationId;
+        moduleNumber: Nat;
+        moduleName: ?Text;
+        wasmModule: Common.SharedModule;
+        user: Principal;
+        packageManagerOrBootstrapper: Principal;
+        mainIndirect: Principal;
+        simpleIndirect: Principal;
+        installArg: Blob;
+        upgradeArg: Blob;
+    }): () {
+        // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+        //     Debug.trap("no such upgrade");
+        // };
+        // let ?pkg = installedPackages.get(installationId) else {
+        //     Debug.trap("no such package");
+        // };
+        switch (mode) {
+            case (#upgrade) {
+                let mode2 = if (false/*wasmModule.forceReinstall*/) { // FIXME
+                    #reinstall
+                } else {
+                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
+                };
+                // TODO: user's callback
+                await IC.ic.install_code({
+                    sender_canister_version = null; // TODO
+                    arg = arg;
+                    wasm_module;
+                    mode = mode2;
+                    canister_id
+                });
+                await backend.onUpgradeOrInstallModule({upgradeId}); // FIXME: superfluous
+            };
+            case (#install) {
+                await* Install.myInstallCode({
+                    installationId;
+                    canister_id;
+                    wasmModule = Common.unshareModule(wasmModule);
+                    installArg = to_candid(installArg); // FIXME
+                    packageManagerOrBootstrapper;
+                    mainIndirect;
+                    simpleIndirect;
+                    user;
+                });
+
+                // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+                // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+                await IC.ic.update_settings({
+                    canister_id;
+                    sender_canister_version = null;
+                    settings = {
+                        compute_allocation = null;
+                        controllers = ?[simpleIndirect, user];
+                        freezing_threshold = null;
+                        log_visibility = null;
+                        memory_allocation = null;
+                        reserved_cycles_limit = null;
+                        wasm_memory_limit = null;
+                    };
+                });
+
+                let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
+                    onUpgradeOrInstallModule: shared ({
+                        upgradeId: Common.UpgradeId;
+                    }) -> async ();
+                };
+                await backendObj.onUpgradeOrInstallModule({
+                    upgradeId;
+                });
+            };
+        };
+    };
 
 //     public composite query({caller}) func checkCodeInstalled({
 //         canister_ids: [Principal];

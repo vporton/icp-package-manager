@@ -380,14 +380,15 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// important data that needs to be imported. Also having deleting modules at the end
     /// does not prevent the package to start fully function before this.
     public shared({caller}) func upgradePackages({
+        minUpgradeId: Common.UpgradeId;
         packages: [{
             installationId: Common.InstallationId;
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
+        pmPrincipal: Principal;
         user: Principal;
-        arg: [Nat8];
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
@@ -397,156 +398,51 @@ shared({caller = initialCaller}) actor class PackageManager({
         nextUpgradeId += Array.size(packages);
         var ourNextUpgradeId = minUpgradeId;
 
-        for (package in packages.vals()) {
-            let installationId = package.installationId;
-            let upgradeId = ourNextUpgradeId;
-            ourNextUpgradeId += 1;
-            let ?oldPkg = installedPackages.get(installationId) else {
-                Debug.trap("no such installed package");
-            };
-            // FIXME: Uncomment:
-            // getMainIndirect().upgradePackage({
-            //     oldPkg = Common.installedPackageInfoShare(oldPkg);
-            //     upgradeId;
-            //     installationId;
-            //     packageName = package.packageName;
-            //     version = package.version;
-            //     repo = package.repo;
-            //     user;
-            //     arg;
-            // });
-        };
+        getMainIndirect().upgradePackageWrapper({
+            minUpgradeId;
+            packages;
+            pmPrincipal;
+            user;
+        });
 
         {minUpgradeId};
     };
 
     /// Internal.
-    public shared({caller}) func upgradePackageFinish({
-        oldPkg: Common.SharedInstalledPackageInfo;
-        newPkg: Common.SharedPackageInfo;
-        upgradeId: Common.UpgradeId;
-        installationId: Common.InstallationId;
-        // packageName: Common.PackageName;
-        // version: Common.Version;
-        // repo: Common.RepositoryRO;
+    public shared({caller}) func upgradeStart({
+        minUpgradeId: Common.UpgradeId;
         user: Principal;
-        wasm_module: Blob;
-        arg: Blob;
+        packages: [{
+            installationId: Common.InstallationId;
+            package: Common.SharedPackageInfo;
+            repo: Common.RepositoryRO;
+            preinstalledModules: [(Text, Principal)];
+        }];
     }): async () {
         onlyOwner(caller, "uninstallPackages");
 
-        let #specific newPkgSpecific = newPkg.specific else {
-            Debug.trap("trying to directly install a virtual package");
-        };
-        // TODO: upgrading a real package into virtual or vice versa
-        let newPkgModules = newPkgSpecific.modules;
-        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-        // TODO: virtual packages
-        let oldPkg2 = Common.installedPackageInfoUnshare(oldPkg);
-        let #specific oldPkgSpecific = oldPkg2.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
-        };
-        let oldPkgModules = newPkgSpecific.modules;
-        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
-
-        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
-            Iter.filter<(Text, Common.Module)>(
-                oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
-            ),
-            oldPkgSpecific.modules.size(), // TODO: It can be smaller.
-            Text.equal,
-            Text.hash
-        );
-        let modulesToDelete = Iter.toArray(Iter.map<Text, Principal>(modulesToDelete0.keys(), func (name: Text) {
-            let ?m = oldPkgSpecific.modules.get(name) else {
-                Debug.trap("programming error");
+        for (p0 in packages.keys()) {
+            let p = packages[p0];
+            let #real realPackage = p.package.specific else {
+                Debug.trap("trying to directly install a virtual package");
             };
-            m.canister;
-        }));
 
-        halfUpgradedPackages.put(upgradeId, {
-            upgradeId;
-            installationId;
-            package = Common.unsharePackageInfo(newPkg); // TODO: Do it earlier above?
-            namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
-            allModules = Buffer.Buffer(0);
-            modulesToDelete;
-            var remainingModules = newPkgModules.size() - modulesToDelete.size();
-        });
-        // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
-        //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
-        // );
-        var posTmp = 0;
-        for (canister_id in newPkgModules.vals()) {
-            let pos = posTmp;
-            posTmp += 1;
-            let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
-            
-            await* upgradeOrInstallModule({ // FIXME: arguments
+            let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
+            let numModules = realPackage.modules.size();
+
+            halfUpgradedPackages.put(minUpgradeId + p0, {
                 upgradeId;
                 installationId;
-                canister_id;
-                user;
-                wasm_module;
-                mode = if (isUpgrade) { #upgrade } else { #install };
-                arg;
-                // afterInstallCallback = ?{
-                //     canister = Principal.fromActor(this);
-                //     name = "onUpgradeCanisterHalfWay";
-                //     data = to_candid({upgradeId});
-                // };
+                package = Common.unsharePackageInfo(newPkg); // TODO: Do it earlier above?
+                namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
+                allModules = Buffer.Buffer(0);
+                modulesToDelete;
+                var remainingModules = newPkgModules.size() - modulesToDelete.size();
             });
-        };
-    };
-
-    // FIXME: Rewrite.
-    // FIXME: Protect against the non-returning-function attack.
-    private func upgradeOrInstallModule({
-        upgradeId: Common.UpgradeId;
-        installationId: Common.InstallationId;
-        canister_id: Principal;
-        user: Principal;
-        wasm_module: Blob;
-        mode: {#upgrade; #install};
-        arg: Blob;
-    }): async* () {
-        // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-        //     Debug.trap("no such upgrade");
-        // };
-        // let ?pkg = installedPackages.get(installationId) else {
-        //     Debug.trap("no such package");
-        // };
-        switch (mode) {
-            case (#upgrade) {
-                let mode2 = if (false/*wasmModule.forceReinstall*/) { // FIXME
-                    #reinstall
-                } else {
-                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
-                };
-                // TODO: user's callback
-                // TODO: Simplify:
-                ignore getSimpleIndirect().callAll([{
-                    canister = Principal.fromText("aaaaa-aa");
-                    name = "install_code";
-                    data = to_candid({arg = Blob.toArray(arg); wasm_module; mode = mode2; canister_id});
-                    error = #abort;
-                }, {
-                    canister = Principal.fromActor(this);
-                    name = "onUpgradeOrInstallModule";
-                    data = to_candid({upgradeId});
-                    error = #abort;
-                }]);
-            };
-            case (#install) {
-                // FIXME: Uncomment:
-                // getMainIndirect().upgradeOrInstallModuleFinish({
-                //     upgradeId;
-                //     installationId;
-                //     canister_id;
-                //     user;
-                //     wasmModule = Common.shareModule(wasmModule);
-                //     installArg = Blob.toArray(to_candid({})); // FIXME: Its own for each module?
-                // });
+    
+            // FIXME: Use it to finish upgrading:
+            for ((p0, pkg) in halfUpgradedPackages.entries()) {
+                await* doUpgradeFinish(p0, pkg);
             };
         };
     };
@@ -784,6 +680,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
+            // FIXME: Use it to finish installation:
             for ((p0, pkg) in halfInstalledPackages.entries()) {
                 await* doInstallFinish(p0, pkg);
             };
@@ -849,6 +746,60 @@ shared({caller = initialCaller}) actor class PackageManager({
             // TODO: Do two following variables duplicate each other?
             moduleNumber += 1;
             i += 1;
+        };
+    };
+
+    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo): async* () {
+        let p = pkg.package;
+        let newPkg = p; // TODO
+        let #specific newPkgSpecific = newPkg.specific else {
+            Debug.trap("trying to directly install a virtual package");
+        };
+        // TODO: upgrading a real package into virtual or vice versa
+        let newPkgModules = newPkgSpecific.modules;
+        let newPkgModulesHash = HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+        // TODO: virtual packages
+        let oldPkg = installedPackages.get(pkg.installationId);
+        let oldPkg2 = Common.installedPackageInfoUnshare(oldPkg);
+        let #specific oldPkgSpecific = oldPkg2.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let oldPkgModules = newPkgSpecific.modules;
+        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.vals(), oldPkgModules.size(), Text.equal, Text.hash);
+
+        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
+            Iter.filter<(Text, Common.Module)>(
+                oldPkgSpecific.modules, func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+            ),
+            oldPkgSpecific.modules.size(), // TODO: It can be smaller.
+            Text.equal,
+            Text.hash
+        );
+        let modulesToDelete = Iter.toArray(Iter.map<Text, Principal>(modulesToDelete0.keys(), func (name: Text) {
+            let ?m = oldPkgSpecific.modules.get(name) else {
+                Debug.trap("programming error");
+            };
+            m.canister;
+        }));
+
+        // let modulesToAdd = Iter.filter<(Text, Common.Module)>(
+        //     newPkgModules.entries(), func (x: (Text, Common.Module)) = Option.isSome(oldPkgModulesHash.get(x.0))
+        // );
+        var posTmp = 0;
+        for (canister_id in newPkgModules.vals()) {
+            let pos = posTmp;
+            posTmp += 1;
+            let isUpgrade = Option.isSome(oldPkgModulesHash.get(canister_id));
+            
+            getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
+                upgradeId;
+                installationId;
+                canister_id;
+                user;
+                wasm_module;
+                mode = if (isUpgrade) { #upgrade } else { #install };
+                arg;
+            });
         };
     };
 
