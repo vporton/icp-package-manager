@@ -822,7 +822,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 mainIndirect;
                 simpleIndirect;
             });
-        });
+        };
     };
 
     /// Internal
