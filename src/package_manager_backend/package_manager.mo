@@ -429,7 +429,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // version: Common.Version;
         // repo: Common.RepositoryRO;
         user: Principal;
-        arg: [Nat8];
+        arg: Blob;
     }): async () {
         onlyOwner(caller, "uninstallPackages");
 
@@ -507,7 +507,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         wasmModule: Common.Module;
         mode: {#upgrade; #install};
-        arg: [Nat8]; // FIXME: correct?
+        arg: Blob;
     }): async* () {
         // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
         //     Debug.trap("no such upgrade");
@@ -531,7 +531,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "install_code";
-                    data = to_candid({arg; wasm_module; mode = mode2; canister_id});
+                    data = to_candid({arg = Blob.toArray(arg); wasm_module; mode = mode2; canister_id});
                     error = #abort;
                 }, {
                     canister = Principal.fromActor(this);
