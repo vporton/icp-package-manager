@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" version="26.0.15">
+  <diagram name="Page-1" id="0-yv6A6n49uS_1keauYF">
+    <mxGraphModel dx="943" dy="518" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="yhu626VlGzJRChlpP-3W-2" value="PackageMananger.installPackages:&lt;br&gt;Create installationId" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2130" y="850" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-3" value="&lt;div&gt;IndirectCaller.InstallPackageWrapper:&lt;/div&gt;&lt;div&gt;Retrieve package data&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2120" y="940" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1" source="yhu626VlGzJRChlpP-3W-2" target="yhu626VlGzJRChlpP-3W-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2230" y="950" as="sourcePoint" />
+            <mxPoint x="2280" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-7" value="&lt;div&gt;PackageManager.installStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2110" y="1040" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="yhu626VlGzJRChlpP-3W-3" target="yhu626VlGzJRChlpP-3W-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2330" y="1110" as="sourcePoint" />
+            <mxPoint x="2380" y="1060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-9" value="&lt;div&gt;IndirectCaller.installModule:&lt;/div&gt;&lt;div&gt;[create_canister, install_code]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2410" y="1040" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-10" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1" source="yhu626VlGzJRChlpP-3W-7" target="yhu626VlGzJRChlpP-3W-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2370" y="1170" as="sourcePoint" />
+            <mxPoint x="2370" y="1260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-11" value="&lt;div&gt;PackageManager.onCreateCanister&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2620" y="980" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-14" value="&lt;div&gt;PackageManager.onInstallCode&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;&lt;div&gt;If it is a package and the last module, mark the package as installed.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="2625" y="1090" width="190" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="yhu626VlGzJRChlpP-3W-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2570" y="1060" as="sourcePoint" />
+            <mxPoint x="2620" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-21" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="yhu626VlGzJRChlpP-3W-14">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2570" y="1070" as="sourcePoint" />
+            <mxPoint x="2620" y="1020" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-22" value="" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2540" y="854.66" as="sourcePoint" />
+            <mxPoint x="2580" y="855" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-23" value="" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2540" y="879.66" as="sourcePoint" />
+            <mxPoint x="2580" y="880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-24" value="One-way call" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="2590" y="840" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-25" value="Regular call" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="2590" y="865" width="80" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
