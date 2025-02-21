@@ -80,7 +80,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type HalfUninstalledPackageInfo = {
         installationId: Common.InstallationId;
-        var remainingModules: Nat; // FIXME: It does not finish uninstallation, if some module was already uninstalled.
+        var remainingModules: Nat;
     };
 
     public type SharedHalfUninstalledPackageInfo = {
@@ -494,6 +494,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         upgrade.remainingModules -= 1; // FIXME: Before or after install/upgrade module?
         if (upgrade.remainingModules == 0) {
             for (canister_id in upgrade.modulesToDelete.vals()) {
+                // `ignore` protects against non-returning-function attack.
+                // Another purpose of `ignore` to finish the uninstallation even if a module was previously remove.
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
@@ -813,7 +815,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 arg = to_candid({}); // FIXME
                 installArg = to_candid({ // TODO: Add more arguments.
                     installationId = p0;
-                    packageManagerOrBootstrapper = backend;
+                    packageManagerOrBootstrapper = Principal.fromActor(this);
                 });
                 upgradeArg = to_candid({}); // FIXME
                 moduleName = ?name; // FIXME: Can be null?
