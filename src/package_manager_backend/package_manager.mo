@@ -793,18 +793,38 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         // TODO: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgSpecific.modules;
-        for (canister_id in newPkgModules.vals()) {
+
+        // TODO: repeated calculation
+        let ?oldPkg = installedPackages.get(pkg.installationId) else {
+            Debug.trap("no such package installation");
+        };
+        let #specific oldPkgSpecific = oldPkg.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let oldPkgModules = newPkgSpecific.modules;
+        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
+
+        for ((name, m) in newPkgModules.entries()) {
             let pos = posTmp;
             posTmp += 1;
             
+            let canister_id = oldPkg.namedModules.get(name);
+            let ?wasmModule = oldPkgModulesHash.get(name) else {
+                Debug.trap("no such module"); // FIXME: What to do in this case?
+            };
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId = p0; // FIXME: ` + moduleNumber`?
                 installationId;
                 canister_id;
                 user;
-                wasm_module;
-                mode = if (isUpgrade) { #upgrade } else { #install };
-                arg;
+                wasmModule = Common.shareModule(wasmModule);
+                arg = to_candid({}); // FIXME
+                installArg = to_candid({}); // FIXME
+                upgradeArg = to_candid({}); // FIXME
+                moduleName = ?name; // FIXME: Can be null?
+                moduleNumber = pos;
+                packageManagerOrBootstrapper = Principal.fromActor(this);
+                simpleIndirect;
             });
         };
     };

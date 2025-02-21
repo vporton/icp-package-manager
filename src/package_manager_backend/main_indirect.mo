@@ -396,14 +396,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
-        mainIndirect: Principal;
         simpleIndirect: Principal;
         installArg: Blob;
         upgradeArg: Blob;
-        mode: { #upgrade; #install };
         arg: Blob; // TODO
         canister_id: ?Principal;
-        pmPrincipal: Principal;
     }): () {
         // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
         //     Debug.trap("no such upgrade");
@@ -429,7 +426,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     mode = mode2;
                     canister_id
                 });
-                let pm = actor(Principal.toText(pmPrincipal)) : actor {
+                let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor {
                     onUpgradeOrInstallModule: ({upgradeId: Common.UpgradeId}) -> async ();
                 };
                 await pm.onUpgradeOrInstallModule({upgradeId}); // FIXME: superfluous, call this by parts
