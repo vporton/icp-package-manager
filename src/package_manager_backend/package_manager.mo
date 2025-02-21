@@ -491,7 +491,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
-        upgrade.remainingModules -= 1; // FIXME: Before or after install/upgrade module?
+        upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
             for (canister_id in upgrade.modulesToDelete.vals()) {
                 // `ignore` protects against non-returning-function attack.
