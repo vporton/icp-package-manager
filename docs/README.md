@@ -1,1 +1,1 @@
-* Read `.drawio` files using [this app](https://app.diagrams.net) (draw.io).    
+* Read `.drawio` files using [this app](https://app.diagrams.net) (draw.io).
