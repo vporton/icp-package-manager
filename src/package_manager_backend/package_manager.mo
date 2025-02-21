@@ -1256,7 +1256,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        mainIndirect.installPackageWrapper({
+        mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;
             pmPrincipal;

@@ -105,7 +105,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         ourPM := actor(Principal.toText(pm));
     };
 
-    public shared({caller}) func installPackageWrapper({ // TODO: Rename.
+    public shared({caller}) func installPackagesWrapper({ // TODO: Rename.
         pmPrincipal: Principal;
         packages: [{
             repo: Common.RepositoryRO;
@@ -121,7 +121,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
-            onlyOwner(caller, "installPackageWrapper");
+            onlyOwner(caller, "installPackagesWrapper");
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
@@ -172,7 +172,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             });
         }
         catch (e) {
-            Debug.print("installPackageWrapper: " # Error.message(e));
+            Debug.print("installPackagesWrapper: " # Error.message(e));
         };
     };
 
