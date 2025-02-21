@@ -320,7 +320,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 version = p.version;
                 preinstalledModules = [];
             }));
-            installPackages = true; // TODO: What is it?
             pmPrincipal = Principal.fromActor(this);
             user;
             afterInstallCallback;
@@ -631,7 +630,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             mainIndirect = actor(Principal.toText(mainIndirect));
             minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
-            installPackages = true; // TODO
             pmPrincipal = Principal.fromActor(this);
             // objectToInstall = #package {packageName; version}; // TODO
             user;
@@ -759,7 +757,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 // FIXME: arguments
-                installPackages = true; // TODO: correct?
                 moduleNumber;
                 moduleName = ?name;
                 installArg = to_candid({
