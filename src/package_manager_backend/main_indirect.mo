@@ -346,13 +346,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
             packages2[i] := ?(Common.unsharePackageInfo(pkg));
         };
 
-        // let newPkg = await repo.getPackage(packageName, version);
-        // let #specific newPkgSpecific = newPkg.specific else {
-        //     Debug.trap("trying to directly install a virtual package");
-        // };
-        // // TODO: upgrading a real package into virtual or vice versa
-        // let newPkgModules = newPkgSpecific.modules;
-
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
             upgradeStart: shared ({
                 minUpgradeId: Common.UpgradeId;
@@ -402,34 +395,32 @@ shared({caller = initialCaller}) actor class MainIndirect({
         arg: Blob; // TODO
         canister_id: ?Principal;
     }): () {
-        // let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-        //     Debug.trap("no such upgrade");
-        // };
-        // let ?pkg = installedPackages.get(installationId) else {
-        //     Debug.trap("no such package");
-        // };
+        onlyOwner(caller, "upgradeOrInstallModule");
+
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        let wasmModuleSourcePartition: Common.RepositoryRO =
+            actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
+
         let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
         switch (canister_id) {
             case (?canister_id) {
-                let mode2 = if (wasmModule.forceReinstall) { // FIXME
+                let mode2 = if (wasmModule.forceReinstall) {
                     #reinstall
                 } else {
                     #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
                 };
-                // TODO: user's callback
+                // TODO: consider invoking user's callback if needed.
                 await IC.ic.install_code({
-                    sender_canister_version = null; // TODO
+                    sender_canister_version = null; // TODO: set appropriate value if needed.
                     arg = arg;
                     wasm_module;
                     mode = mode2;
-                    canister_id
+                    canister_id;
                 });
-                let pm = actor(Principal.toText(packageManagerOrBootstrapper)) : actor {
+                let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
                     onUpgradeOrInstallModule: ({upgradeId: Common.UpgradeId}) -> async ();
                 };
-                await pm.onUpgradeOrInstallModule({upgradeId}); // FIXME: superfluous, call this by parts
+                await pm.onUpgradeOrInstallModule({upgradeId});
             };
             case null {
                 let {canister_id} = await* Install.myCreateCanister({
@@ -465,14 +456,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     };
                 });
 
-                let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
-                    onUpgradeOrInstallModule: shared ({
-                        upgradeId: Common.UpgradeId;
-                    }) -> async ();
+                let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+                    onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
                 };
-                await backendObj.onUpgradeOrInstallModule({
-                    upgradeId;
-                });
+                await backendObj.onUpgradeOrInstallModule({upgradeId});
             };
         };
     };
