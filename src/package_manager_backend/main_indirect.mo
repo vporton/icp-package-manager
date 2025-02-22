@@ -428,7 +428,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     installationId;
                     canister_id;
                     wasmModule = Common.unshareModule(wasmModule);
-                    installArg = to_candid(installArg); // FIXME
+                    installArg = to_candid(installArg); // TODO: per-module args (here and in other places)
                     packageManagerOrBootstrapper;
                     mainIndirect;
                     simpleIndirect;

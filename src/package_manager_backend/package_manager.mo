@@ -103,7 +103,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package: Common.PackageInfo;
         namedModules: HashMap.HashMap<Text, Principal>;
         allModules: Buffer.Buffer<Principal>;
-        modulesToDelete: [Principal];
+        modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
     };
 
@@ -112,7 +112,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         namedModules: [(Text, Principal)]; // TODO: Rename.
         allModules: [Principal];
-        modulesToDelete: [Principal];
+        modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
     };
 
@@ -451,13 +451,13 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Text.hash
             );
             let modulesToDelete = Iter.toArray(
-                Iter.map<Text, Principal>(
+                Iter.map<Text, (Text, Principal)>(
                     modulesToDelete0.keys(),
                     func (name: Text) {
                         let ?m = oldPkgSpecific.modules.get(name) else {
                             Debug.trap("programming error");
                         };
-                        m.canister;
+                        (name, m.canister);
                     }
                 )
             );
@@ -493,7 +493,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
-            for (canister_id in upgrade.modulesToDelete.vals()) {
+            for ((moduleName, canister_id) in upgrade.modulesToDelete.vals()) {
                 // `ignore` protects against non-returning-function attack.
                 // Another purpose of `ignore` to finish the uninstallation even if a module was previously remove.
                 ignore getSimpleIndirect().callAll([{
@@ -507,6 +507,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                     data = to_candid({canister_id});
                     error = #abort;
                 }]);
+                upgrade.namedModules.put(moduleName, canister_id);
+                upgrade.allModules.add(canister_id);
             };
             halfUpgradedPackages.delete(upgradeId);
         };
@@ -537,9 +539,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case (null) {};
             };
-            // FIXME: Is `cbPrincipal` here correct value?
-            upgrade.namedModules.put(moduleName2, cbPrincipal);
-            upgrade.allModules.add(cbPrincipal);
         };
     };
 
@@ -812,7 +811,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                 canister_id;
                 user;
                 wasmModule = Common.shareModule(wasmModule);
-                arg = to_candid({}); // FIXME
+                arg = to_candid({
+                    packageManagerOrBootstrapper;
+                    mainIndirect;
+                    simpleIndirect;
+                    user;
+                    installationId;
+                    // userArg = installArg; // TODO
+                });
                 installArg = to_candid({ // TODO: Add more arguments.
                     installationId = p0;
                     packageManagerOrBootstrapper = Principal.fromActor(this);
