@@ -818,7 +818,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     packageManagerOrBootstrapper = Principal.fromActor(this);
                 });
                 upgradeArg = to_candid({}); // FIXME
-                moduleName = ?name; // FIXME: Can be null?
+                moduleName = name;
                 moduleNumber = pos;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
                 mainIndirect;

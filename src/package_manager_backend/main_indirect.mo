@@ -380,7 +380,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
         moduleNumber: Nat;
-        moduleName: ?Text;
+        moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
