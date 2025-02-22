@@ -513,7 +513,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             halfUpgradedPackages.delete(upgradeId);
         };
 
-        // Call the user's callback if provided // FIXME: Another callback for newly installed modules?
+        // Call the user's callback if provided
         let #real specific = upgrade.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
@@ -823,7 +823,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                     installationId = p0;
                     packageManagerOrBootstrapper = Principal.fromActor(this);
                 });
-                upgradeArg = to_candid({}); // FIXME
+                upgradeArg = to_candid({ // TODO: Add more arguments.
+                    installationId = p0;
+                    packageManagerOrBootstrapper = Principal.fromActor(this);
+                });
                 moduleName = name;
                 moduleNumber = pos;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
