@@ -413,14 +413,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "upgradeStart");
 
         for (p0 in packages.keys()) {
-            let newPkg = Common.unsharePackageInfo(packages[p0].package); // Need to unshare the entire variable?
+            let pkg = packages[p0];
+            let newPkg = Common.unsharePackageInfo(pkg.package); // Need to unshare the entire variable?
             let #real newPkgSpecific = newPkg.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
             // TODO: virtual packages; upgrading a real package into virtual or vice versa
             let newPkgModules = newPkgSpecific.modules;
             let newPkgModulesHash = newPkgSpecific.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-            let ?oldPkg = installedPackages.get(packages[p0].installationId) else {
+            let ?oldPkg = installedPackages.get(pkg.installationId) else {
                 Debug.trap("no such package installation");
             };
             let #specific oldPkgSpecific = oldPkg.package.specific else {
@@ -450,12 +451,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                 )
             );
 
-            // let package2 = Common.unsharePackageInfo(packages[p0].package); // Possibly redundant.
+            // let package2 = Common.unsharePackageInfo(pkg.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
             halfUpgradedPackages.put(minUpgradeId + p0, {
                 upgradeId = minUpgradeId + p0;
-                installationId = packages[p0].installationId;
+                installationId = pkg.installationId;
                 package = newPkg;
                 namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
                 allModules = Buffer.Buffer(0);
@@ -464,8 +465,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             });
 
             // Finish upgrading packages.
-            for ((p0, pkg) in halfUpgradedPackages.entries()) {
-                await* doUpgradeFinish(p0, pkg, packages[p0].installationId, user); // TODO: Use named arguments.
+            for ((p1, pkg2) in halfUpgradedPackages.entries()) {
+                await* doUpgradeFinish(p1, pkg2, packages[p1].installationId, user); // TODO: Use named arguments.
             };
         };
     };
