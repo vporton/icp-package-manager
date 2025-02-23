@@ -211,28 +211,22 @@ shared({caller = initialCaller}) actor class PackageManager({
         ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
-    stable var main_indirect_: ?MainIndirect.MainIndirect = ?actor(Principal.toText(mainIndirect)); // TODO: Remove `?`.
-    stable var simple_indirect_: ?SimpleIndirect.SimpleIndirect = ?actor(Principal.toText(simpleIndirect)); // TODO: Remove `?`.
+    stable var main_indirect_: MainIndirect.MainIndirect = actor(Principal.toText(mainIndirect));
+    stable var simple_indirect_: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
 
     private func getMainIndirect(): MainIndirect.MainIndirect {
-        let ?main_indirect_2 = main_indirect_ else {
-            Debug.trap("main_indirect_ not initialized");
-        };
-        main_indirect_2;
+        main_indirect_;
     };
 
     private func getSimpleIndirect(): SimpleIndirect.SimpleIndirect {
-        let ?simple_indirect_2 = simple_indirect_ else {
-            Debug.trap("simple_indirect_ not initialized");
-        };
-        simple_indirect_2;
+        simple_indirect_;
     };
 
     // TODO: too low-level?
     public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
         onlyOwner(caller, "setMainIndirect");
 
-        main_indirect_ := ?main_indirect_v;
+        main_indirect_ := main_indirect_v;
     };
 
     stable var nextInstallationId: Common.InstallationId = 0;
