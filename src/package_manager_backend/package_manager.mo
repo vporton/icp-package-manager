@@ -791,7 +791,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // let oldPkgModules = oldPkgSpecific.modules; // Corrected: Use oldPkgSpecific modules.
         // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
-        for ((name, _) in newPkgModules.entries()) {
+        for (name in newPkgModules.keys()) {
             let pos = posTmp;
             posTmp += 1;
             
