@@ -791,11 +791,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?oldPkg = installedPackages.get(pkg.installationId) else {
             Debug.trap("no such package installation");
         };
-        let #specific oldPkgSpecific = oldPkg.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
-        };
-        let oldPkgModules = oldPkgSpecific.modules; // Corrected: Use oldPkgSpecific modules.
-        let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
+        // let #specific oldPkgSpecific = oldPkg.package.specific else {
+        //     Debug.trap("trying to directly upgrade a virtual package");
+        // };
+        // let oldPkgModules = oldPkgSpecific.modules; // Corrected: Use oldPkgSpecific modules.
+        // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
         for ((name, _) in newPkgModules.entries()) {
             let pos = posTmp;
