@@ -506,7 +506,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #real real = upgrade.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        let ?inst = halfInstalledPackages.get(upgrade.installationId) else {
+        Debug.print("halfInstalledPackages.get("  # debug_show(upgrade.installationId) # ")"); // FIXME: Remove.
+        let ?inst = installedPackages.get(upgrade.installationId) else {
             Debug.trap("no such installed package");
         };
         for ((moduleName, module_) in real.modules.entries()) {
@@ -698,6 +699,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 bootstrapping;
                 var remainingModules = numModules;
             };
+            Debug.print("halfInstalledPackages.put(" # debug_show(minInstallationId) # " + " # debug_show(p0) # ")"); // FIXME: Remove.
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             // TODO: Use it to be able to finish an interrupted installation:
