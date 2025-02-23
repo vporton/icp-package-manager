@@ -423,7 +423,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
                 Debug.trap("no such package installation");
             };
-            let #specific oldPkgReal = oldPkg.package.specific else {
+            let #real oldPkgReal = oldPkg.package.specific else {
                 Debug.trap("trying to directly upgrade a virtual package");
             };
             // let oldPkgModules = oldPkgReal.modules;
@@ -442,10 +442,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Iter.map<Text, (Text, Principal)>(
                     modulesToDelete0.keys(),
                     func (name: Text) {
-                        let ?m = oldPkgReal.modules.get(name) else {
+                        let ?m = oldPkg.namedModules.get(name) else {
                             Debug.trap("programming error");
                         };
-                        (name, m.canister);
+                        (name, m);
                     },
                 )
             );
@@ -775,7 +775,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?oldPkg = installedPackages.get(pkg.installationId) else {
             Debug.trap("no such package installation");
         };
-        // let #specific oldPkgReal = oldPkg.package.specific else {
+        // let #real oldPkgReal = oldPkg.package.specific else {
         //     Debug.trap("trying to directly upgrade a virtual package");
         // };
         // let oldPkgModules = oldPkgReal.modules; // Corrected: Use oldPkgReal modules.
