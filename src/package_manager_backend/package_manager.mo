@@ -414,7 +414,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         for (newPkgNum in packages.keys()) {
             let newPkgData = packages[newPkgNum];
-            let newPkg = Common.unsharePackageInfo(newPkgData.package); // Need to unshare the entire variable?
+            let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO: Need to unshare the entire variable?
             let #real newPkgReal = newPkg.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
