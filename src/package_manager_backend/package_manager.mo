@@ -508,11 +508,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = halfInstalledPackages.get(upgrade.installationId) else {
             Debug.trap("no such installed package");
         };
-        for ((moduleName2, module4) in real.modules.entries()) {
-            let ?cbPrincipal = inst.namedModules.get(moduleName2) else {
+        for ((moduleName, module_) in real.modules.entries()) {
+            let ?cbPrincipal = inst.namedModules.get(moduleName) else {
                 Debug.trap("programming error 3");
             };
-            switch (module4.callbacks.get(#CodeUpgradedForAllCanisters)) {
+            switch (module_.callbacks.get(#CodeUpgradedForAllCanisters)) {
                 case (?callbackName) {
                     ignore getSimpleIndirect().callAll([{
                         canister = cbPrincipal;
