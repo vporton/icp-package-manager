@@ -420,7 +420,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             // TODO: virtual packages; upgrading a real package into virtual or vice versa
             let newPkgModules = newPkgReal.modules;
-            let newPkgModulesHash = newPkgReal.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
             let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
                 Debug.trap("no such package installation");
             };
@@ -433,7 +432,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
                     oldPkgSpecific.modules.entries(),
-                    func (x: (Text, Common.Module)) = Option.isNull(newPkgModulesHash.get(x.0))
+                    func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
                 ),
                 oldPkgSpecific.modules.size(), // TODO: It can be smaller.
                 Text.equal,
