@@ -802,8 +802,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             posTmp += 1;
             
             let canister_id = oldPkg.namedModules.get(name);
-            let ?wasmModule = oldPkgModulesHash.get(name) else {
-                Debug.trap("no such module"); // FIXME: What to do in this case?
+            let ?wasmModule = newPkgModules.get(name) else {
+                Debug.trap("programming error: no such module");
             };
             getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
                 upgradeId = p0 + pos;
