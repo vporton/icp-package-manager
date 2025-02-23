@@ -10,6 +10,7 @@ import Array "mo:base/Array";
 import Common "../common";
 import Install "../install";
 import IC "mo:ic";
+import SimpleIndirectActor "canister:simple_indirect";
 
 shared({caller = initialCaller}) actor class MainIndirect({
     packageManagerOrBootstrapper: Principal; // TODO: Rename to just `packageManager`?.
@@ -417,7 +418,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
                     };
                     // TODO: consider invoking user's callback if needed.
-                    await IC.ic.install_code({
+                    await SimpleIndirectActor.install_code({
                         sender_canister_version = null; // TODO: set appropriate value if needed.
                         arg = to_candid({
                             packageManagerOrBootstrapper;
@@ -430,11 +431,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         wasm_module;
                         mode = mode2;
                         canister_id;
-                    });
+                    }, 1000_000_000_000); // TODO
                 };
                 case null {
                     let {canister_id} = await* Install.myCreateCanister({
-                        mainControllers = ?[Principal.fromActor(this)];
+                        mainControllers = ?[Principal.fromActor(this), simpleIndirect];
                         user;
                         mainIndirect;
                         cyclesAmount = await ourPM.getNewCanisterCycles();
@@ -453,7 +454,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                     // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
                     // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
-                    await IC.ic.update_settings({
+                    await SimpleIndirectActor.update_settings({ // the actor that is a controller
                         canister_id;
                         sender_canister_version = null;
                         settings = {
@@ -465,7 +466,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             reserved_cycles_limit = null;
                             wasm_memory_limit = null;
                         };
-                    });
+                    }, 1000_000_000_000); // TODO
                 };
             };
             let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
