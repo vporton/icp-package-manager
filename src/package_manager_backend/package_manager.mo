@@ -502,7 +502,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
 
         // Call the user's callback if provided
-        let #real real = upgrade.package.real else {
+        let #real real = upgrade.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
         let ?inst = halfInstalledPackages.get(upgrade.installationId) else {
