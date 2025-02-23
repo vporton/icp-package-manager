@@ -799,7 +799,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?wasmModule = newPkgModules.get(name) else {
                 Debug.trap("programming error: no such module");
             };
-            getMainIndirect().upgradeOrInstallModule({ // FIXME: arguments
+            getMainIndirect().upgradeOrInstallModule({
                 upgradeId = p0 + pos;
                 installationId;
                 canister_id;
@@ -811,7 +811,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     simpleIndirect;
                     user;
                     installationId;
-                    // userArg = installArg; // TODO
+                    userArg = to_candid({}); // TODO
                 });
                 installArg = to_candid({ // TODO: Add more arguments.
                     installationId = p0;
