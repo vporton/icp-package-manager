@@ -403,7 +403,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             // FIXME: Remove:
             Debug.print("X: upgradeId \""# debug_show(upgradeId) # "\"");
-            Debug.print("upgradeOrInstallModule \""# debug_show(moduleName) # "\"");
+            Debug.print("upgradeOrInstallModule " # debug_show(moduleName));
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
             let wasmModuleSourcePartition: Common.RepositoryRO =
