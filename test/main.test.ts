@@ -153,97 +153,93 @@ describe('My Test Suite', () => {
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
         const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
 
-        it("controllers and owners", async function () {
-            console.log("Testing controllers of the PM modules...");
-            const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
-            for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, frontendPrincipal]) {
-                const simpleIndirectInfo = await simpleIndirect.canister_info(
-                    {canister_id, num_requested_changes: []}, 1000_000_000_000n);
-                // `indirectPrincipal` here is only for the package manager package:
-                expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
-                    new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
-                );
-            }
-            for (const [principal, create] of [
-                [simpleIndirectPrincipal, createSimpleIndirectActor],
-                [indirectPrincipal, createIndirectActor],
-                [backendPrincipal, createPackageManager]
-            ]) {
-                const canister = (create as any)(principal, {agent: backendAgent});
-                const owners = await canister.getOwners();
-                console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
-                expect(new Set(owners)).to.equalPrincipalSet(
-                    new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
-                );
-            }
-            console.log("Checking PM frontend owners...");
-            const pmFrontend = createPMFrontend(frontendPrincipal, {agent: backendAgent});
-            for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
-                const owners = await pmFrontend.list_permitted({permission});
-                expect(new Set(owners)).to.equalPrincipalSet(
-                    new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
-                );
-            }
+        console.log("Testing controllers of the PM modules...");
+        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
+        for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, frontendPrincipal]) {
+            const simpleIndirectInfo = await simpleIndirect.canister_info(
+                {canister_id, num_requested_changes: []}, 1000_000_000_000n);
+            // `indirectPrincipal` here is only for the package manager package:
+            expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
+        }
+        for (const [principal, create] of [
+            [simpleIndirectPrincipal, createSimpleIndirectActor],
+            [indirectPrincipal, createIndirectActor],
+            [backendPrincipal, createPackageManager]
+        ]) {
+            const canister = (create as any)(principal, {agent: backendAgent});
+            const owners = await canister.getOwners();
+            console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
+            expect(new Set(owners)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
+        }
+        console.log("Checking PM frontend owners...");
+        const pmFrontend = createPMFrontend(frontendPrincipal, {agent: backendAgent});
+        for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
+            const owners = await pmFrontend.list_permitted({permission});
+            expect(new Set(owners)).to.equalPrincipalSet(
+                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+            );
+        }
 
-            console.log("Installing `example` package...");
-            const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
-                packages: [{
-                    packageName: "example",
-                    version: "0.0.1",
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-                }],
-                user: backendUser,
-                afterInstallCallback: [],
-            });
-            await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
-
-            const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
-            for (const moduleName of ['example1', 'example2']) {
-                const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === moduleName)[0][1];
-                const exampleInfo = await simpleIndirect.canister_info(
-                    {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
-                expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
-            }
-
-            const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === 'example1')[0][1];
-            const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
-            console.log("Checking example frontend owners...");
-            for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
-                const owners = await exampleFrontend.list_permitted({permission});
-                expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
-            }
+        console.log("Installing `example` package...");
+        const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
+            packages: [{
+                packageName: "example",
+                version: "0.0.1",
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            }],
+            user: backendUser,
+            afterInstallCallback: [],
         });
+        await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
 
-        it("upgrading packages", async function () {
-            console.log("Installing `upgradeable` package...");
-            const {minInstallationId: upgradeableInstallationId} = await packageManager.installPackages({
-                packages: [{
-                    packageName: "upgradeable",
-                    version: "0.0.1",
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-                }],
-                user: backendUser,
-                afterInstallCallback: [],
-            });
-            await waitTillInitialized(backendAgent, backendPrincipal, upgradeableInstallationId);
-            console.log("Upgrading `upgradeable` package...");
-            await packageManager.upgradePackages({
-                packages: [{
-                    installationId: upgradeableInstallationId,
-                    packageName: "upgradeable",
-                    version: "0.0.2",
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-                }],
-                user: backendUser,
-            });
-            console.log("Testing upgraded package `upgradeable`...");
-            await sleep(10000); // TODO: more effiecient way to wait for the upgrade
-            // TODO: More detailed test:
-            const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
-            console.log('XX', upgradeablePkg.namedModules)
-            expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm1')[0]).to.be.undefined;
-            expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm2')[0]).to.not.be.undefined;
-            expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm3')[0]).to.not.be.undefined;
+        const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
+        for (const moduleName of ['example1', 'example2']) {
+            const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === moduleName)[0][1];
+            const exampleInfo = await simpleIndirect.canister_info(
+                {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
+            expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+        }
+
+        const examplePrincipal = examplePkg.namedModules.filter(([name, _principal]) => name === 'example1')[0][1];
+        const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
+        console.log("Checking example frontend owners...");
+        for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
+            const owners = await exampleFrontend.list_permitted({permission});
+            expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+        }
+
+        console.log("Installing `upgradeable` package...");
+        const {minInstallationId: upgradeableInstallationId} = await packageManager.installPackages({
+            packages: [{
+                packageName: "upgradeable",
+                version: "0.0.1",
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            }],
+            user: backendUser,
+            afterInstallCallback: [],
         });
+        await waitTillInitialized(backendAgent, backendPrincipal, upgradeableInstallationId);
+        console.log("Upgrading `upgradeable` package...");
+        await packageManager.upgradePackages({
+            packages: [{
+                installationId: upgradeableInstallationId,
+                packageName: "upgradeable",
+                version: "0.0.2",
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            }],
+            user: backendUser,
+        });
+        console.log("Testing upgraded package `upgradeable`...");
+        await sleep(10000); // TODO: more effiecient way to wait for the upgrade
+        // TODO: More detailed test:
+        const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
+        console.log('XX', upgradeablePkg.namedModules)
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm1')[0]).to.be.undefined;
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm2')[0]).to.not.be.undefined;
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm3')[0]).to.not.be.undefined;
     });
 });

@@ -400,6 +400,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
         try {
             onlyOwner(caller, "upgradeOrInstallModule");
 
+            // FIXME: Remove:
+            Debug.print("X: upgradeId \""# debug_show(upgradeId) # "\"");
             Debug.print("upgradeOrInstallModule \""# debug_show(moduleName) # "\"");
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);

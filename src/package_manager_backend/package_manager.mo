@@ -453,6 +453,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
+            Debug.print("minUpgradeId + newPkgNum: " # debug_show(minUpgradeId + newPkgNum)); // FIXME: Remove.
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
                 upgradeId = minUpgradeId + newPkgNum;
                 installationId = newPkgData.installationId;
@@ -790,7 +791,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("programming error: no such module");
             };
             getMainIndirect().upgradeOrInstallModule({
-                upgradeId = p0 + pos;
+                upgradeId = p0;
                 installationId;
                 canister_id;
                 user;
