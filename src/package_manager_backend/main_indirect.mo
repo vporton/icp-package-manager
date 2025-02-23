@@ -404,22 +404,17 @@ shared({caller = initialCaller}) actor class MainIndirect({
             Debug.print("upgradeOrInstallModule " # debug_show(moduleName));
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-            Debug.print("A1"); // FIXME: Remove.
             let wasmModuleSourcePartition: Common.RepositoryRO =
                 actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
-            Debug.print("A2"); // FIXME: Remove.
 
             let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-            Debug.print("A3"); // FIXME: Remove.
             switch (canister_id) {
                 case (?canister_id) {
-                    Debug.print("A4"); // FIXME: Remove.
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
                     } else {
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
                     };
-                    Debug.print("A5"); // FIXME: Remove.
                     // TODO: consider invoking user's callback if needed.
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     await simple.install_code({
@@ -436,17 +431,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         mode = mode2;
                         canister_id;
                     }, 1000_000_000_000); // TODO
-                    Debug.print("A6"); // FIXME: Remove.
                 };
                 case null {
-                    Debug.print("A7"); // FIXME: Remove.
                     let {canister_id} = await* Install.myCreateCanister({
                         mainControllers = ?[Principal.fromActor(this), simpleIndirect];
                         user;
                         mainIndirect;
                         cyclesAmount = await ourPM.getNewCanisterCycles();
                     });
-                    Debug.print("A8"); // FIXME: Remove.
                     await* Install.myInstallCode({
                         installationId;
                         upgradeId = null;
@@ -458,7 +450,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         simpleIndirect;
                         user;
                     });
-                    Debug.print("A9"); // FIXME: Remove.
 
                     // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
                     // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
@@ -479,13 +470,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     Debug.print("A10"); // FIXME: Remove.
                 };
             };
-            Debug.print("A11"); // FIXME: Remove.
             let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
                 onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
             };
-            Debug.print("A12"); // FIXME: Remove.
             await backendObj.onUpgradeOrInstallModule({upgradeId});
-            Debug.print("A13"); // FIXME: Remove.
+            // FIXME: Update assets, if any
         }
         catch (e) {
             Debug.print("upgradeOrInstallModule: " # Error.message(e));
