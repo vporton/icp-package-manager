@@ -436,7 +436,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 ),
                 oldPkgSpecific.modules.size(), // TODO: It can be smaller.
                 Text.equal,
-                Text.hash
+                Text.hash,
             );
             let modulesToDelete = Iter.toArray(
                 Iter.map<Text, (Text, Principal)>(
@@ -446,7 +446,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                             Debug.trap("programming error");
                         };
                         (name, m.canister);
-                    }
+                    },
                 )
             );
 
