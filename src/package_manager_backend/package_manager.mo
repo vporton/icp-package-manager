@@ -413,12 +413,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "upgradeStart");
 
         for (p0 in packages.keys()) {
-            let p = Common.unsharePackageInfo(packages[p0].package); // Need to unshare the entire variable?
-            // let #real realPackage = p.specific else {
-            //     Debug.trap("trying to directly install a virtual package");
-            // };
-            let newPkg = p; // TODO
-            let #real newPkgSpecific = p.specific else {
+            let newPkg = Common.unsharePackageInfo(packages[p0].package); // Need to unshare the entire variable?
+            let #real newPkgSpecific = newPkg.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
             // TODO: virtual packages; upgrading a real package into virtual or vice versa
