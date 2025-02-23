@@ -427,15 +427,13 @@ shared({caller = initialCaller}) actor class PackageManager({
             let #real newPkgSpecific = p.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
-            // TODO: upgrading a real package into virtual or vice versa
+            // TODO: virtual packages; upgrading a real package into virtual or vice versa
             let newPkgModules = newPkgSpecific.modules;
             let newPkgModulesHash = newPkgSpecific.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-            // TODO: virtual packages
             let ?oldPkg = installedPackages.get(packages[p0].installationId) else {
                 Debug.trap("no such package installation");
             };
-            let oldPkg2 = oldPkg; // TODO
-            let #specific oldPkgSpecific = oldPkg2.package.specific else {
+            let #specific oldPkgSpecific = oldPkg.package.specific else {
                 Debug.trap("trying to directly upgrade a virtual package");
             };
             let oldPkgModules = oldPkgSpecific.modules;
