@@ -794,7 +794,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         for (name in newPkgModules.keys()) {
             let pos = posTmp;
             posTmp += 1;
-            
+
             let canister_id = oldPkg.namedModules.get(name);
             let ?wasmModule = newPkgModules.get(name) else {
                 Debug.trap("programming error: no such module");
