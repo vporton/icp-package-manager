@@ -47,6 +47,7 @@ module {
 
     public func myInstallCode({
         installationId: Common.InstallationId;
+        upgradeId: ?Common.UpgradeId;
         canister_id: Principal;
         wasmModule: Common.Module;
         installArg: Blob;
@@ -67,6 +68,7 @@ module {
                 simpleIndirect;
                 user;
                 installationId;
+                upgradeId;
                 userArg = installArg;
             });
             wasm_module;

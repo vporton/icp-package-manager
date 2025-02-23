@@ -25,6 +25,7 @@ actor class Bootstrapper() = this {
         });
         await* Install.myInstallCode({
             installationId = 0;
+            upgradeId = null;
             canister_id;
             wasmModule = Common.unshareModule(wasmModule);
             installArg;
@@ -72,6 +73,7 @@ actor class Bootstrapper() = this {
 
         await* Install.myInstallCode({
             installationId = 0;
+            upgradeId = null;
             canister_id = backend_canister_id;
             wasmModule = Common.unshareModule(backendWasmModule);
             installArg = to_candid({
@@ -85,6 +87,7 @@ actor class Bootstrapper() = this {
         });
         await* Install.myInstallCode({
             installationId = 0;
+            upgradeId = null;
             canister_id = indirect_canister_id;
             wasmModule = Common.unshareModule(indirectWasmModule);
             installArg = to_candid({
@@ -98,6 +101,7 @@ actor class Bootstrapper() = this {
         });
         await* Install.myInstallCode({
             installationId = 0;
+            upgradeId = null;
             canister_id = simple_indirect_canister_id;
             wasmModule = Common.unshareModule(simpleIndirectWasmModule);
             installArg = to_candid({

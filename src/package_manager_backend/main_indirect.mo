@@ -235,6 +235,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 case null {
                     ignore await* _installModuleCode({
                         installationId;
+                        upgradeId = null;
                         moduleNumber;
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
@@ -260,6 +261,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         moduleNumber: Nat;
         moduleName: ?Text;
         installationId: Common.InstallationId;
+        upgradeId: ?Common.UpgradeId;
         wasmModule: Common.Module;
         packageManagerOrBootstrapper: Principal;
         mainIndirect: Principal;
@@ -281,6 +283,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     
         await* Install.myInstallCode({
             installationId;
+            upgradeId;
             canister_id;
             wasmModule;
             installArg;
@@ -387,7 +390,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         simpleIndirect: Principal;
         installArg: Blob;
         upgradeArg: Blob;
-        arg: Blob; // TODO
         canister_id: ?Principal;
     }): () {
         onlyOwner(caller, "upgradeOrInstallModule");
@@ -407,7 +409,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 // TODO: consider invoking user's callback if needed.
                 await IC.ic.install_code({
                     sender_canister_version = null; // TODO: set appropriate value if needed.
-                    arg = arg;
+                    arg = to_candid({
+                        packageManagerOrBootstrapper;
+                        simpleIndirect;
+                        user;
+                        installationId;
+                        upgradeId;
+                        userArg = ?upgradeArg;
+                    });
                     wasm_module;
                     mode = mode2;
                     canister_id;
@@ -422,6 +431,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 });
                 await* Install.myInstallCode({
                     installationId;
+                    upgradeId = null;
                     canister_id;
                     wasmModule = Common.unshareModule(wasmModule);
                     installArg = to_candid(installArg); // TODO: per-module args (here and in other places)
@@ -447,11 +457,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     };
                 });
             };
-            let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-                onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
-            };
-            await backendObj.onUpgradeOrInstallModule({upgradeId});
         };
+        let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+            onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
+        };
+        await backendObj.onUpgradeOrInstallModule({upgradeId});
     };
 
 //     public composite query({caller}) func checkCodeInstalled({

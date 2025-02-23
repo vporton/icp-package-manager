@@ -755,13 +755,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         for ((name, m): (Text, Common.Module) in modules) {
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
-                // FIXME: arguments
                 moduleNumber;
                 moduleName = ?name;
-                installArg = to_candid({
-                    installationId = p0;
-                    packageManagerOrBootstrapper = backend;
-                }); // TODO: Add more arguments.
+                installArg = to_candid({}); // TODO: Add more arguments.
                 installationId = p0;
                 packageManagerOrBootstrapper = backend;
                 mainIndirect = indirect;
