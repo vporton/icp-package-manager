@@ -467,7 +467,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 var remainingModules = newPkgModules.size() - modulesToDelete.size();
             });
 
-            // Finish upgrading modules.
+            // Finish upgrading packages.
             for ((p0, pkg) in halfUpgradedPackages.entries()) {
                 await* doUpgradeFinish(p0, pkg, packages[p0].installationId, user); // TODO: Use named arguments.
             };
