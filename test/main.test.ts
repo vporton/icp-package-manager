@@ -139,7 +139,7 @@ describe('My Test Suite', () => {
                 indirectWasmModule: icPackModules.get("indirect")!,
                 simpleIndirectWasmModule: icPackModules.get("simple_indirect")!,
                 user: backendUser,
-                packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
+                packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
                 repo,
