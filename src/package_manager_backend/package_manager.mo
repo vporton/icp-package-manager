@@ -436,8 +436,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             let #specific oldPkgSpecific = oldPkg.package.specific else {
                 Debug.trap("trying to directly upgrade a virtual package");
             };
-            let oldPkgModules = oldPkgSpecific.modules;
-            let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
+            // let oldPkgModules = oldPkgSpecific.modules;
+            // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
@@ -460,8 +460,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                 )
             );
 
-            let package2 = Common.unsharePackageInfo(packages[p0].package); // Possibly redundant.
-            let numModules = realPackage.modules.size();
+            // let package2 = Common.unsharePackageInfo(packages[p0].package); // Possibly redundant.
+            // let numModules = realPackage.modules.size();
 
             halfUpgradedPackages.put(minUpgradeId + p0, {
                 upgradeId = minUpgradeId + p0;
