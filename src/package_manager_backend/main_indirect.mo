@@ -328,7 +328,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-        pmPrincipal: Principal;
+        // pmPrincipal: Principal; // TODO
         user: Principal;
         arg: Blob;
     }): () {
@@ -379,8 +379,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
     public shared({caller}) func upgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        moduleNumber: Nat;
-        moduleName: Text;
+        // moduleNumber: Nat; // TODO
+        // moduleName: Text; // TODO
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
@@ -412,10 +412,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     mode = mode2;
                     canister_id;
                 });
-                let pm = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-                    onUpgradeOrInstallModule: ({upgradeId: Common.UpgradeId}) -> async ();
-                };
-                await pm.onUpgradeOrInstallModule({upgradeId});
             };
             case null {
                 let {canister_id} = await* Install.myCreateCanister({
@@ -450,12 +446,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         wasm_memory_limit = null;
                     };
                 });
-
-                let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-                    onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
-                };
-                await backendObj.onUpgradeOrInstallModule({upgradeId});
             };
+            let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+                onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
+            };
+            await backendObj.onUpgradeOrInstallModule({upgradeId});
         };
     };
 
