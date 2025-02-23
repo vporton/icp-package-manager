@@ -412,16 +412,16 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "upgradeStart");
 
-        for (p0 in packages.keys()) {
-            let pkg = packages[p0];
-            let newPkg = Common.unsharePackageInfo(pkg.package); // Need to unshare the entire variable?
-            let #real newPkgSpecific = newPkg.specific else {
+        for (newPkgNum in packages.keys()) {
+            let newPkgData = packages[newPkgNum];
+            let newPkg = Common.unsharePackageInfo(newPkgData.package); // Need to unshare the entire variable?
+            let #real newPkgReal = newPkg.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
             // TODO: virtual packages; upgrading a real package into virtual or vice versa
-            let newPkgModules = newPkgSpecific.modules;
-            let newPkgModulesHash = newPkgSpecific.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
-            let ?oldPkg = installedPackages.get(pkg.installationId) else {
+            let newPkgModules = newPkgReal.modules;
+            let newPkgModulesHash = newPkgReal.modules; // TODO: HashMap.fromIter<Text, Common.Module>(newPkgModules.vals(), newPkgModules.size(), Text.equal, Text.hash);
+            let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
                 Debug.trap("no such package installation");
             };
             let #specific oldPkgSpecific = oldPkg.package.specific else {
@@ -451,12 +451,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                 )
             );
 
-            // let package2 = Common.unsharePackageInfo(pkg.package); // Possibly redundant.
+            // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
-            halfUpgradedPackages.put(minUpgradeId + p0, {
-                upgradeId = minUpgradeId + p0;
-                installationId = pkg.installationId;
+            halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
+                upgradeId = minUpgradeId + newPkgNum;
+                installationId = newPkgData.installationId;
                 package = newPkg;
                 namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
                 allModules = Buffer.Buffer(0);
@@ -766,11 +766,11 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo, installationId: Common.InstallationId, user: Principal): async* () {
         var posTmp = 0;
-        let #real newPkgSpecific = pkg.package.specific else {
+        let #real newPkgReal = pkg.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
         // TODO: upgrading a real package into virtual or vice versa
-        let newPkgModules = newPkgSpecific.modules;
+        let newPkgModules = newPkgReal.modules;
 
         // TODO: repeated calculation
         let ?oldPkg = installedPackages.get(pkg.installationId) else {
