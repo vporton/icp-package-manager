@@ -38,7 +38,7 @@ dotenv_config({ path: '.env' });
 //     }));
 // }
 
-// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
 //     if (a === b) return true;
@@ -211,5 +211,36 @@ describe('My Test Suite', () => {
             const owners = await exampleFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
         }
+
+        console.log("Installing `upgradeable` package...");
+        const {minInstallationId: upgradeableInstallationId} = await packageManager.installPackages({
+            packages: [{
+                packageName: "upgradeable",
+                version: "0.0.1",
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            }],
+            user: backendUser,
+            afterInstallCallback: [],
+        });
+        await waitTillInitialized(backendAgent, backendPrincipal, upgradeableInstallationId);
+        console.log("Upgrading `upgradeable` package...");
+        await packageManager.upgradePackages({
+            packages: [{
+                installationId: upgradeableInstallationId,
+                packageName: "upgradeable",
+                version: "0.0.2",
+                repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            }],
+            user: backendUser,
+        });
+        console.log("Testing upgraded package `upgradeable`...");
+        await sleep(10000); // TODO: more effiecient way to wait for the upgrade
+        // TODO: More detailed test:
+        const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
+        console.log('XX', upgradeablePkg.namedModules)
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm1')[0]).to.be.undefined;
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm2')[0]).to.not.be.undefined;
+        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm3')[0]).to.not.be.undefined;
+
     });
 });

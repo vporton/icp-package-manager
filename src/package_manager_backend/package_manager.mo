@@ -378,9 +378,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-        pmPrincipal: Principal;
+        // pmPrincipal: Principal;
         user: Principal;
-        arg: Blob;
+        // arg: Blob;
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
@@ -392,9 +392,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
             packages;
-            pmPrincipal;
+            pmPrincipal = Principal.fromActor(this); // TODO
             user;
-            arg;
+            arg = to_candid({}); // TODO
         });
 
         {minUpgradeId};

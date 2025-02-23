@@ -36,6 +36,11 @@ async function main() {
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
     const pmExampleBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_backend/example_backend.wasm"));
 
+    const pmUpgradeable1V1Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm"));
+    const pmUpgradeable2V1Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm"));
+    const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm"));
+    const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm"));
+
     const agent = new HttpAgent({host: "http://localhost:4943", identity})
     if (process.env.DFX_NETWORK === 'local') {
         agent.fetchRootKey();
@@ -90,6 +95,31 @@ async function main() {
     });
     const pmExampleBackend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleBackendBlob},
+        installByDefault: true,
+        forceReinstall: false,
+        callbacks: [],
+    });
+
+    const pmUpgradeable1V1 = await repositoryIndex.uploadModule({
+        code: {Wasm: pmUpgradeable1V1Blob},
+        installByDefault: true,
+        forceReinstall: false,
+        callbacks: [],
+    });
+    const pmUpgradeable2V1 = await repositoryIndex.uploadModule({
+        code: {Wasm: pmUpgradeable2V1Blob},
+        installByDefault: true,
+        forceReinstall: false,
+        callbacks: [],
+    });
+    const pmUpgradeable2V2 = await repositoryIndex.uploadModule({
+        code: {Wasm: pmUpgradeable2V2Blob},
+        installByDefault: true,
+        forceReinstall: false,
+        callbacks: [],
+    });
+    const pmUpgradeable3V2 = await repositoryIndex.uploadModule({
+        code: {Wasm: pmUpgradeable3V2Blob},
         installByDefault: true,
         forceReinstall: false,
         callbacks: [],
@@ -155,6 +185,58 @@ async function main() {
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.setFullPackageInfo("example", pmEFFullInfo);
+
+    const upgradeableV1Real: SharedRealPackageInfo = {
+        modules: [
+            ['m1', pmUpgradeable1V1],
+            ['m2', pmUpgradeable2V1],
+        ],
+        dependencies: [],
+        suggests: [],
+        recommends: [],
+        functions: [],
+        permissions: [],
+        checkInitializedCallback: [],
+        frontendModule: [],
+    };
+    const upgradeableV1Info: SharedPackageInfo = {
+        base: {
+            name: "upgradeable",
+            version: "0.0.1",
+            shortDescription: "Example upgradeable package",
+            longDescription: "Used as an example",
+            guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
+        },
+        specific: {real: upgradeableV1Real},
+    };
+    const upgradeableV2Real: SharedRealPackageInfo = {
+        modules: [
+            ['m2', pmUpgradeable2V2],
+            ['m3', pmUpgradeable3V2],
+        ],
+        dependencies: [],
+        suggests: [],
+        recommends: [],
+        functions: [],
+        permissions: [],
+        checkInitializedCallback: [],
+        frontendModule: [],
+    };
+    const upgradeableV2Info: SharedPackageInfo = {
+        base: {
+            name: "upgradeable",
+            version: "0.0.2",
+            shortDescription: "Example upgradeable package",
+            longDescription: "Used as an example",
+            guid: Uint8Array.from([249, 146, 53, 77, 52, 192, 178, 47, 180, 152, 136, 54, 84, 181, 213, 1]),
+        },
+        specific: {real: upgradeableV2Real},
+    };
+    const upgradeableFullInfo: SharedFullPackageInfo = {
+        packages: [["0.0.1", upgradeableV1Info], ["0.0.2", upgradeableV2Info]],
+        versionsMap: [["stable", "0.0.1"], ["beta", "0.0.2"]],
+    };
+    await repositoryIndex.setFullPackageInfo("upgradeable", upgradeableFullInfo);
 }
 
 main()

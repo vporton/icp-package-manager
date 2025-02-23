@@ -26,4 +26,9 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 	-dfx ledger fabricate-cycles --t 2000000 --canister Repository
 	-dfx canister call Repository init "()"
 	-dfx canister call BootstrapperData setOwner "(principal \"`dfx canister id Bootstrapper`\")"
-	npx tsx scripts/prepare.ts
+
+.PHONY: deploy-test
+deploy-test: deploy \
+  deploy@upgrade_example_backend1_v1 deploy@upgrade_example_backend2_v1 \
+  deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
+	npx tsx scripts/prepare-test.ts

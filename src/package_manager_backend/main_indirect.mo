@@ -335,55 +335,60 @@ shared({caller = initialCaller}) actor class MainIndirect({
         user: Principal;
         arg: Blob;
     }): () {
-        onlyOwner(caller, "upgradePackageWrapper");
+        try {
+            onlyOwner(caller, "upgradePackageWrapper");
 
-        let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
-        for (i in packages.keys()) {
-            // unsafe operation, run in main_indirect:
-            let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
-            newPackages[i] := ?(Common.unsharePackageInfo(pkg));
-        };
+            let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+            for (i in packages.keys()) {
+                // unsafe operation, run in main_indirect:
+                let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
+                newPackages[i] := ?(Common.unsharePackageInfo(pkg));
+            };
 
-        let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
-            upgradeStart: shared ({
-                minUpgradeId: Common.UpgradeId;
-                user: Principal;
-                packages: [{
+            let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
+                upgradeStart: shared ({
+                    minUpgradeId: Common.UpgradeId;
+                    user: Principal;
+                    packages: [{
+                        installationId: Common.InstallationId;
+                        package: Common.SharedPackageInfo;
+                        repo: Common.RepositoryRO;
+                    }];
+                }) -> async ();
+            };
+            await backendObj.upgradeStart({
+                minUpgradeId;
+                user;
+                packages = Iter.toArray(Iter.map<Nat, {
                     installationId: Common.InstallationId;
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
-                }];
-            }) -> async ();
+                }>(
+                    packages.keys(),
+                    func (i: Nat) = do {
+                        let ?pkg = newPackages[i] else {
+                            Debug.trap("programming error");
+                        };
+                        {
+                            installationId = packages[i].installationId;
+                            package = Common.sharePackageInfo(pkg);
+                            repo = packages[i].repo;
+                        };
+                    },
+                ));
+                arg;
+            });
+        }
+        catch (e) {
+            Debug.print("upgradePackageWrapper: " # Error.message(e));
         };
-        await backendObj.upgradeStart({
-            minUpgradeId;
-            user;
-            packages = Iter.toArray(Iter.map<Nat, {
-                installationId: Common.InstallationId;
-                package: Common.SharedPackageInfo;
-                repo: Common.RepositoryRO;
-            }>(
-                packages.keys(),
-                func (i: Nat) = do {
-                    let ?pkg = newPackages[i] else {
-                        Debug.trap("programming error");
-                    };
-                    {
-                        installationId = packages[i].installationId;
-                        package = Common.sharePackageInfo(pkg);
-                        repo = packages[i].repo;
-                    };
-                },
-            ));
-            arg;
-        });
     };
 
     public shared({caller}) func upgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        // moduleNumber: Nat; // TODO
-        // moduleName: Text; // TODO
+        moduleNumber: Nat; // TODO
+        moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
@@ -392,76 +397,83 @@ shared({caller = initialCaller}) actor class MainIndirect({
         upgradeArg: Blob;
         canister_id: ?Principal;
     }): () {
-        onlyOwner(caller, "upgradeOrInstallModule");
+        try {
+            onlyOwner(caller, "upgradeOrInstallModule");
 
-        let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let wasmModuleSourcePartition: Common.RepositoryRO =
-            actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
+            Debug.print("upgradeOrInstallModule \""# debug_show(moduleName) # "\"");
 
-        let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-        switch (canister_id) {
-            case (?canister_id) {
-                let mode2 = if (wasmModule.forceReinstall) {
-                    #reinstall
-                } else {
-                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
+            let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
+            let wasmModuleSourcePartition: Common.RepositoryRO =
+                actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
+
+            let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+            switch (canister_id) {
+                case (?canister_id) {
+                    let mode2 = if (wasmModule.forceReinstall) {
+                        #reinstall
+                    } else {
+                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
+                    };
+                    // TODO: consider invoking user's callback if needed.
+                    await IC.ic.install_code({
+                        sender_canister_version = null; // TODO: set appropriate value if needed.
+                        arg = to_candid({
+                            packageManagerOrBootstrapper;
+                            simpleIndirect;
+                            user;
+                            installationId;
+                            upgradeId;
+                            userArg = ?upgradeArg;
+                        });
+                        wasm_module;
+                        mode = mode2;
+                        canister_id;
+                    });
                 };
-                // TODO: consider invoking user's callback if needed.
-                await IC.ic.install_code({
-                    sender_canister_version = null; // TODO: set appropriate value if needed.
-                    arg = to_candid({
+                case null {
+                    let {canister_id} = await* Install.myCreateCanister({
+                        mainControllers = ?[Principal.fromActor(this)];
+                        user;
+                        mainIndirect;
+                        cyclesAmount = await ourPM.getNewCanisterCycles();
+                    });
+                    await* Install.myInstallCode({
+                        installationId;
+                        upgradeId = null;
+                        canister_id;
+                        wasmModule = Common.unshareModule(wasmModule);
+                        installArg = to_candid(installArg); // TODO: per-module args (here and in other places)
                         packageManagerOrBootstrapper;
+                        mainIndirect;
                         simpleIndirect;
                         user;
-                        installationId;
-                        upgradeId;
-                        userArg = ?upgradeArg;
                     });
-                    wasm_module;
-                    mode = mode2;
-                    canister_id;
-                });
-            };
-            case null {
-                let {canister_id} = await* Install.myCreateCanister({
-                    mainControllers = ?[Principal.fromActor(this)];
-                    user;
-                    mainIndirect;
-                    cyclesAmount = await ourPM.getNewCanisterCycles();
-                });
-                await* Install.myInstallCode({
-                    installationId;
-                    upgradeId = null;
-                    canister_id;
-                    wasmModule = Common.unshareModule(wasmModule);
-                    installArg = to_candid(installArg); // TODO: per-module args (here and in other places)
-                    packageManagerOrBootstrapper;
-                    mainIndirect;
-                    simpleIndirect;
-                    user;
-                });
 
-                // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-                // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
-                await IC.ic.update_settings({
-                    canister_id;
-                    sender_canister_version = null;
-                    settings = {
-                        compute_allocation = null;
-                        controllers = ?[simpleIndirect, user];
-                        freezing_threshold = null;
-                        log_visibility = null;
-                        memory_allocation = null;
-                        reserved_cycles_limit = null;
-                        wasm_memory_limit = null;
-                    };
-                });
+                    // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+                    // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+                    await IC.ic.update_settings({
+                        canister_id;
+                        sender_canister_version = null;
+                        settings = {
+                            compute_allocation = null;
+                            controllers = ?[simpleIndirect, user];
+                            freezing_threshold = null;
+                            log_visibility = null;
+                            memory_allocation = null;
+                            reserved_cycles_limit = null;
+                            wasm_memory_limit = null;
+                        };
+                    });
+                };
             };
+            let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+                onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
+            };
+            await backendObj.onUpgradeOrInstallModule({upgradeId});
+        }
+        catch (e) {
+            Debug.print("upgradeOrInstallModule: " # Error.message(e));
         };
-        let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-            onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
-        };
-        await backendObj.onUpgradeOrInstallModule({upgradeId});
     };
 
 //     public composite query({caller}) func checkCodeInstalled({

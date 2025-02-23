@@ -62,6 +62,34 @@
         "name": "candid:service"
       }]
     },
+    "upgrade_example_backend1_v1": {
+      "type": "motoko",
+      "main": "src/upgrade_example_backend/0.0.1/main1.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
+    "upgrade_example_backend2_v1": {
+      "type": "motoko",
+      "main": "src/upgrade_example_backend/0.0.1/main2.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
+    "upgrade_example_backend2_v2": {
+      "type": "motoko",
+      "main": "src/upgrade_example_backend/0.0.2/main2.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
+    "upgrade_example_backend3_v2": {
+      "type": "motoko",
+      "main": "src/upgrade_example_backend/0.0.2/main3.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
     "package_manager_frontend": {
       "dependencies": [
         "package_manager", "internet_identity"
