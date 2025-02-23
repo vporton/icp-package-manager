@@ -337,11 +337,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): () {
         onlyOwner(caller, "upgradePackageWrapper");
 
-        let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+        let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
         for (i in packages.keys()) {
             // unsafe operation, run in main_indirect:
             let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
-            packages2[i] := ?(Common.unsharePackageInfo(pkg));
+            newPackages[i] := ?(Common.unsharePackageInfo(pkg));
         };
 
         let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
@@ -365,7 +365,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             }>(
                 packages.keys(),
                 func (i: Nat) = do {
-                    let ?pkg = packages2[i] else {
+                    let ?pkg = newPackages[i] else {
                         Debug.trap("programming error");
                     };
                     {
