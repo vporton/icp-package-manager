@@ -423,18 +423,18 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
                 Debug.trap("no such package installation");
             };
-            let #specific oldPkgSpecific = oldPkg.package.specific else {
+            let #specific oldPkgReal = oldPkg.package.specific else {
                 Debug.trap("trying to directly upgrade a virtual package");
             };
-            // let oldPkgModules = oldPkgSpecific.modules;
+            // let oldPkgModules = oldPkgReal.modules;
             // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
-                    oldPkgSpecific.modules.entries(),
+                    oldPkgReal.modules.entries(),
                     func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
                 ),
-                oldPkgSpecific.modules.size(), // TODO: It can be smaller.
+                oldPkgReal.modules.size(), // TODO: It can be smaller.
                 Text.equal,
                 Text.hash,
             );
@@ -442,7 +442,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Iter.map<Text, (Text, Principal)>(
                     modulesToDelete0.keys(),
                     func (name: Text) {
-                        let ?m = oldPkgSpecific.modules.get(name) else {
+                        let ?m = oldPkgReal.modules.get(name) else {
                             Debug.trap("programming error");
                         };
                         (name, m.canister);
@@ -775,10 +775,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?oldPkg = installedPackages.get(pkg.installationId) else {
             Debug.trap("no such package installation");
         };
-        // let #specific oldPkgSpecific = oldPkg.package.specific else {
+        // let #specific oldPkgReal = oldPkg.package.specific else {
         //     Debug.trap("trying to directly upgrade a virtual package");
         // };
-        // let oldPkgModules = oldPkgSpecific.modules; // Corrected: Use oldPkgSpecific modules.
+        // let oldPkgModules = oldPkgReal.modules; // Corrected: Use oldPkgReal modules.
         // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
         for (name in newPkgModules.keys()) {
