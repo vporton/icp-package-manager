@@ -140,7 +140,7 @@ function App2() {
           <Routes>
             <Route path="/" element={<MainPage/>}/>
             <Route path="/choose-version/:repo/:packageName" element={<ChooseVersion/>}/>
-            <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO: repo can be deduces from installationId */}
+            <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO: repo and packageName can be deduces from installationId */}
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>

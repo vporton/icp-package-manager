@@ -471,7 +471,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             // Finish upgrading packages.
             for ((p1, pkg2) in halfUpgradedPackages.entries()) {
-                await* doUpgradeFinish(p1, pkg2, packages[p1].installationId, user); // TODO: Use named arguments.
+                await* doUpgradeFinish(p1, pkg2, packages[newPkgNum].installationId, user); // TODO: Use named arguments.
             };
         };
     };
