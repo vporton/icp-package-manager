@@ -460,7 +460,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
-            Debug.print("halfUpgradedPackages.put(" # debug_show(minUpgradeId) # " + " # debug_show(newPkgNum) # ")"); // FIXME: Remove.
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
                 upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
                 installationId = newPkgData.installationId;
@@ -486,14 +485,12 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "onUpgradeOrInstallModule");
 
-        Debug.print("halfUpgradedPackages.get(" # debug_show(upgradeId) # ")"); // FIXME: Remove.
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
         upgrade.namedModules.put(moduleName, canister_id);
         upgrade.allModules.add(canister_id);
 
-        Debug.print("XX: upgrade.remainingModules = " # debug_show(upgrade.remainingModules)); // FIXME: Remove.
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
             for ((moduleName, canister_id) in upgrade.modulesToDelete.vals()) {
@@ -522,7 +519,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 allModules = upgrade.allModules;
                 var pinned = inst.pinned;
             });
-            Debug.print("halfUpgradedPackages.delete(" # debug_show(upgradeId) # ")"); // FIXME: Remove.
             halfUpgradedPackages.delete(upgradeId);
         };
 
@@ -723,7 +719,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 bootstrapping;
                 var remainingModules = numModules;
             };
-            Debug.print("halfInstalledPackages.put(" # debug_show(minInstallationId) # " + " # debug_show(p0) # ")"); // FIXME: Remove.
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
             // TODO: Use it to be able to finish an interrupted installation:
