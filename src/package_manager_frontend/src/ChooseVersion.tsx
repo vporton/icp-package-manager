@@ -28,7 +28,7 @@ export default function ChooseVersion(props: {}) {
     // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
-        let fullInfo = index.getFullPackageInfo(packageName!).then(fullInfo => {
+        index.getFullPackageInfo(packageName!).then(fullInfo => {
             const versionsMap = new Map(fullInfo.versionsMap);
             const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
             setVersions(fullInfo.versionsMap.concat(p2));
