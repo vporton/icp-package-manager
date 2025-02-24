@@ -505,9 +505,21 @@ shared({caller = initialCaller}) actor class PackageManager({
                     data = to_candid({canister_id});
                     error = #abort;
                 }]);
+                // TODO: It seems that there is no need to keep values in long-living `upgrade` variable.
                 upgrade.namedModules.put(moduleName, canister_id);
                 upgrade.allModules.add(canister_id);
             };
+            let ?inst = installedPackages.get(upgrade.installationId) else {
+                Debug.trap("no such installed package");
+            };
+            installedPackages.put(upgrade.installationId, {
+                id = inst.id;
+                packageRepoCanister = inst.packageRepoCanister; // FIXME: wrong value
+                package = upgrade.package;
+                namedModules = upgrade.namedModules;
+                allModules = upgrade.allModules;
+                var pinned = inst.pinned;
+            });
             Debug.print("halfUpgradedPackages.delete(" # debug_show(upgradeId) # ")"); // FIXME: Remove.
             halfUpgradedPackages.delete(upgradeId);
         };

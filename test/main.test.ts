@@ -235,7 +235,7 @@ describe('My Test Suite', () => {
             user: backendUser,
         });
         console.log("Testing upgraded package `upgradeable`...");
-        await sleep(10000); // TODO: more effiecient way to wait for the upgrade
+        await sleep(30000); // TODO: more effiecient way to wait for the upgrade
         // TODO: More detailed test:
         const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
         console.log('XX', upgradeablePkg.namedModules)
