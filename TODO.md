@@ -28,6 +28,8 @@ Remaining things TODO:
 
 - TODO: future compaitibility in package format.
 
+- Ability to bootstrap backend without frontend (for AI agents and other API users).
+
 - Prevent using Tab key to circumvent “busy” overlay.
 
 - A button to copy repository's principal.
