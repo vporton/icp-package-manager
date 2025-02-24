@@ -453,9 +453,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
-            Debug.print("minUpgradeId + newPkgNum: " # debug_show(minUpgradeId + newPkgNum)); // FIXME: Remove.
+            Debug.print("halfUpgradedPackages.put(" # debug_show(minUpgradeId) # " + " # debug_show(newPkgNum) # ")"); // FIXME: Remove.
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
-                upgradeId = minUpgradeId + newPkgNum;
+                upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
                 installationId = newPkgData.installationId;
                 package = newPkg;
                 namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
@@ -477,6 +477,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         onlyOwner(caller, "onUpgradeOrInstallModule");
 
+        Debug.print("halfUpgradedPackages.get(" # debug_show(upgradeId) # ")"); // FIXME: Remove.
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
@@ -499,6 +500,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 upgrade.namedModules.put(moduleName, canister_id);
                 upgrade.allModules.add(canister_id);
             };
+            Debug.print("halfUpgradedPackages.delete(" # debug_show(upgradeId) # ")"); // FIXME: Remove.
             halfUpgradedPackages.delete(upgradeId);
         };
 
@@ -506,13 +508,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #real real = upgrade.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        Debug.print("halfInstalledPackages.get("  # debug_show(upgrade.installationId) # ")"); // FIXME: Remove.
         let ?inst = installedPackages.get(upgrade.installationId) else {
             Debug.trap("no such installed package");
         };
-        for ((moduleName, module_) in real.modules.entries()) {
+        label r for ((moduleName, module_) in real.modules.entries()) {
             let ?cbPrincipal = inst.namedModules.get(moduleName) else {
-                Debug.trap("programming error 3");
+                // Debug.trap("programming error 3");
+                break r; // FIXME: correct?
             };
             switch (module_.callbacks.get(#CodeUpgradedForAllCanisters)) {
                 case (?callbackName) {
@@ -527,7 +529,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         error = #abort;
                     }]);
                 };
-                case (null) {};
+                case null {};
             };
         };
     };
