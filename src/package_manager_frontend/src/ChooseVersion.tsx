@@ -16,8 +16,10 @@ import { InitializedChecker, waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "./ErrorContext.js";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
+import { Alert } from "react-bootstrap";
 
-export default function ChooseVersion(props: {}) {
+/// `currentVersion === undefined` means that the package is newly installed rather than upgraded.
+export default function ChooseVersion(props: {currentVersion?: string}) {
     const { packageName, repo } = useParams();
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
@@ -31,15 +33,17 @@ export default function ChooseVersion(props: {}) {
         index.getFullPackageInfo(packageName!).then(fullInfo => {
             const versionsMap = new Map(fullInfo.versionsMap);
             const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-            setVersions(fullInfo.versionsMap.concat(p2));
-            setGUIDInfo(fullInfo.packages[0][1].base.guid as Uint8Array);
-            if (versions !== undefined) {
-                glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guidInfo!).then(installed => {
+            const v = fullInfo.versionsMap.concat(p2);
+            setVersions(v);
+            const guid2 = fullInfo.packages[0][1].base.guid as Uint8Array;
+            setGUIDInfo(guid2);
+            if (v !== undefined && glob.packageManager !== undefined) {
+                glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guid2).then(installed => {
                     setInstalledVersions(new Map(installed.all.map(e => [e.package.base.version, 1])));
                 });
             }
         });
-    }, []);
+    }, [glob.packageManager]);
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
@@ -77,9 +81,17 @@ export default function ChooseVersion(props: {}) {
     return (
         <>
             <h2>Choose package version for installation</h2>
+            {props.currentVersion !== undefined &&
+                <Alert variant="warning">
+                    <p>Downgrading to a lower version than the current may lead to data loss!</p>
+                    <p>You are strongly recommended to upgrade only to higher versions.</p>
+                </Alert>
+            }
             <p>Package: {packageName}</p> {/* TODO: no "No such package." message, while the package loads */}
             {versions === undefined ? <p>No such package.</p> : <>
-                <p>Version:{" "}
+                <p>
+                    {props.currentVersion !== undefined && <>Current version: {props.currentVersion}{" "}</>}
+                    Version to install:{" "}
                     <select>
                         {Array.from(versions!.entries()).map(([i, [k, v]]) =>
                             <option onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)} key={i} value={v}>{k}</option>)}
