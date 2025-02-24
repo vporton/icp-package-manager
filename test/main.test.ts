@@ -254,4 +254,5 @@ describe('My Test Suite', () => {
         }
         await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
     });
+    // TODO: Test `removeStalled()`.
 });
