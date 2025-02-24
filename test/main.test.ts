@@ -40,16 +40,27 @@ dotenv_config({ path: '.env' });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
-//     if (a === b) return true;
-//     if (a.size !== b.size) return false;
-//     for (const value of a) if (!b.has(value)) return false;
-//     return true;
-// }
+function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
+    if (a === b) return true;
+    if (a.size !== b.size) return false;
+    for (const value of a) if (!b.has(value)) return false;
+    return true;
+}
+
+async function waitForValue(fn: () => any, expectedValue: any, compare: (x: any, y: any) => boolean = (x, y) => x === y, timeout = 5000, interval = 1000) {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+        const value = await fn(); // Call the async function
+        if (compare(value, expectedValue)) {
+            return value;
+        }
+        await new Promise((resolve) => setTimeout(resolve, interval)); // Wait before retrying
+    }
+    throw new Error(`Timed out waiting for value: ${expectedValue}`);
+}
 
 /// Human-readable canister names.
 const canisterNames = new Map<string, string>(); // anti-pattern: a global variable
-
 function getCanisterNameFromPrincipal(principal: Principal): string {
     if (canisterNames.has(principal.toText())) {
         return canisterNames.get(principal.toText())! + ' ' + principal.toText();
@@ -235,12 +246,13 @@ describe('My Test Suite', () => {
             user: backendUser,
         });
         console.log("Testing upgraded package `upgradeable`...");
-        await sleep(30000); // TODO: more effiecient way to wait for the upgrade
+        // We will wait till `m1` is removed, because this signifie the upgrade is done.
+        // await sleep(30000);
         // TODO: More detailed test:
-        const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
-        console.log('XX', upgradeablePkg.namedModules)
-        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm1')[0]).to.be.undefined;
-        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm2')[0]).to.not.be.undefined;
-        expect(upgradeablePkg.namedModules.filter(([name, _principal]) => name === 'm3')[0]).to.not.be.undefined;
+        async function myNamedModules() {
+            const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
+            return new Set(upgradeablePkg.namedModules.keys());
+        }
+        waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
     });
 });
