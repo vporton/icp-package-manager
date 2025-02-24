@@ -147,9 +147,9 @@ function ChooseVersion2(props: {
                 <p>
                     {props.oldInstallation !== undefined && <>Current version: {props.currentVersion}{" "}</>}
                     Version to install:{" "}
-                    <select>
+                    <select onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)}>
                         {Array.from(versions!.entries()).map(([i, [k, v]]) =>
-                            <option onChange={e => setChosenVersion((e.target as HTMLSelectElement).value)} key={i} value={v}>{k}</option>)}
+                            <option key={i} value={v}>{k}</option>)}
                     </select>
                 </p>
                 <p>
