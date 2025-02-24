@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";

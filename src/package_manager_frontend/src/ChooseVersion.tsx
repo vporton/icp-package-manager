@@ -24,12 +24,14 @@ export default function ChooseVersion(props: {}) {
     const [packageName2, setPackageName2] = useState<string | undefined>(packageName);
     const [repo2, setRepo2] = useState<Principal | undefined>(repo === undefined ? undefined : Principal.fromText(repo));
     const [version2, setVersion2] = useState<string | undefined>();
+    const [guid0, setGuid0] = useState<any | undefined>(); // TODO: inconsistent
     useEffect(() => {
         if (oldInstallation !== undefined && glob.packageManager !== undefined) {
             glob.packageManager.getInstalledPackage(BigInt(oldInstallation)).then(installation => {
                 setPackageName2(installation.package.base.name);
                 setRepo2(installation.packageRepoCanister);
                 setVersion2(installation.package.base.version);
+                setGuid0(installation.package.base.guid);
             });
         }
     }, [oldInstallation, glob.packageManager]);
@@ -38,7 +40,8 @@ export default function ChooseVersion(props: {}) {
             packageName={packageName2}
             repo={repo2}
             oldInstallation={oldInstallation === undefined ? undefined : BigInt(parseInt(oldInstallation))}
-            currentVersion={version2}/>
+            currentVersion={version2}
+            guid0={guid0}/>
     );
 }
 
@@ -47,6 +50,7 @@ function ChooseVersion2(props: {
     repo: Principal | undefined,
     oldInstallation: InstallationId | undefined,
     currentVersion: Version | undefined,
+    guid0: any | undefined,
 }) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
@@ -120,7 +124,15 @@ function ChooseVersion2(props: {
                 }],
                 user: principal!,
             });
-            navigate(`/installed/show/${props.oldInstallation}`); // TODO: Tell user to reload the page.
+            for (;;) {
+                const cur = await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0);
+                if (cur.all.find(v => v.package.base.version === chosenVersion) !== undefined) {
+                    break;
+                }
+                console.log("Waiting till package upgrade...");
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+            navigate(`/installed/show/${props.oldInstallation}`);
         }
         catch(e) {
             console.log(e);
