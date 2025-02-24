@@ -37,8 +37,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
-        };
-    
+        };    
         bootstrapping: Bool;
         var remainingModules: Nat;
     };

@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode, useContext } from "react";
 import { ErrorContext } from "./ErrorContext";
-import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 

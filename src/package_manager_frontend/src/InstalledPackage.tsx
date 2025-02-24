@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
@@ -8,9 +8,10 @@ import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
 import { Alert, Modal } from "react-bootstrap";
+import { myUseNavigate } from "./MyNavigate";
 
 export default function InstalledPackage(props: {}) {
-    const navigate = useNavigate();
+    const navigate = myUseNavigate();
     const { installationId } = useParams();
     const {agent, isAuthenticated, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
@@ -88,6 +89,12 @@ export default function InstalledPackage(props: {}) {
                         Pin.
                     </label>{" "}
                     <small>Pinned packages cannot be upgraded or removed.</small>
+                </p>
+                <p>
+                    <Button
+                        disabled={pkg === undefined || pkg.packageRepoCanister === undefined || pkg.package.base.name === ''}
+                        onClick={() => navigate(`/choose-upgrade/${pkg.packageRepoCanister}/${installationId}`)}
+                    >Upgrade</Button>
                 </p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>

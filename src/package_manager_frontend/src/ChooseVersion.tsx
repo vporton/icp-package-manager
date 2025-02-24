@@ -18,15 +18,23 @@ import { InstallationId, PackageName, PackageManager, Version, SharedRealPackage
 import { BusyContext } from "../../lib/busy.js";
 import { Alert } from "react-bootstrap";
 
-/// `currentVersion === undefined` means that the package is newly installed rather than upgraded.
-export default function ChooseVersion(props: {currentVersion?: string}) {
-    const { packageName, repo } = useParams();
+/// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
+export default function ChooseVersion(props: {}) {
+    const { packageName, repo, installationId: oldInstallation } = useParams();
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
-    const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
+    const [currentVersion, setCurrentVersion] = useState<string | undefined>();
+    useEffect(() => {
+        if (oldInstallation !== undefined && glob.packageManager !== undefined) {
+            glob.packageManager.getInstalledPackage(BigInt(oldInstallation)).then(installation => {
+                setCurrentVersion(installation.package.base.version);
+            });
+        }
+    }, [oldInstallation, glob.packageManager]);
+    // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: repo!, agent: defaultAgent});
@@ -36,7 +44,7 @@ export default function ChooseVersion(props: {currentVersion?: string}) {
             const v = fullInfo.versionsMap.concat(p2);
             setVersions(v);
             const guid2 = fullInfo.packages[0][1].base.guid as Uint8Array;
-            setGUIDInfo(guid2);
+            // setGUIDInfo(guid2);
             if (v !== undefined && glob.packageManager !== undefined) {
                 glob.packageManager!.getInstalledPackagesInfoByName(packageName!, guid2).then(installed => {
                     setInstalledVersions(new Map(installed.all.map(e => [e.package.base.version, 1])));
@@ -59,7 +67,7 @@ export default function ChooseVersion(props: {currentVersion?: string}) {
                 packages: [{
                     packageName: packageName!,
                     version: chosenVersion!,
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+                    repo: Principal.fromText(repo!),
                 }],
                 user: principal!,
                 afterInstallCallback: [],
@@ -75,13 +83,39 @@ export default function ChooseVersion(props: {currentVersion?: string}) {
             setBusy(false);
         }
     }
+    async function upgrade() {
+        try {
+            setBusy(true);
+            setInstalling(true);
+
+            // TODO: hack
+            const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
+            const {minUpgradeId: id} = await package_manager.upgradePackages({
+                packages: [{
+                    installationId: BigInt(oldInstallation!),
+                    packageName: packageName!,
+                    version: chosenVersion!,
+                    repo: Principal.fromText(repo!),
+                }],
+                user: principal!,
+            });
+            navigate(`/installed/show/${id}`); // TODO: Tell user to reload the page.
+        }
+        catch(e) {
+            console.log(e);
+            throw e; // TODO
+        }
+        finally {
+            setBusy(false);
+        }
+    }
     useEffect(() => {
         setChosenVersion(versions !== undefined && versions[0] ? versions[0][1] : undefined); // If there are zero versions, sets `undefined`.
     }, [versions]);
     return (
         <>
             <h2>Choose package version for installation</h2>
-            {props.currentVersion !== undefined &&
+            {oldInstallation !== undefined &&
                 <Alert variant="warning">
                     <p>Downgrading to a lower version than the current may lead to data loss!</p>
                     <p>You are strongly recommended to upgrade only to higher versions.</p>
@@ -90,7 +124,7 @@ export default function ChooseVersion(props: {currentVersion?: string}) {
             <p>Package: {packageName}</p> {/* TODO: no "No such package." message, while the package loads */}
             {versions === undefined ? <p>No such package.</p> : <>
                 <p>
-                    {props.currentVersion !== undefined && <>Current version: {props.currentVersion}{" "}</>}
+                    {oldInstallation !== undefined && <>Current version: {currentVersion}{" "}</>}
                     Version to install:{" "}
                     <select>
                         {Array.from(versions!.entries()).map(([i, [k, v]]) =>
@@ -99,7 +133,9 @@ export default function ChooseVersion(props: {currentVersion?: string}) {
                 </p>
                 <p>
                     {/* TODO: Disable the button when executing it. */}
-                    {installedVersions.size == 0
+                    {oldInstallation !== undefined ?
+                        <Button onClick={upgrade} disabled={installing || chosenVersion === undefined}>Upgrade package</Button>
+                        : installedVersions.size == 0
                         ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                         : installedVersions.has(chosenVersion ?? "")
                         ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>

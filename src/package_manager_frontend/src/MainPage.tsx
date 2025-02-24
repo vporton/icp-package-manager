@@ -2,7 +2,6 @@ import { ChangeEvent, createRef, useContext, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
-import { useNavigate } from "react-router-dom";
 import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { InstallationId, SharedPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";

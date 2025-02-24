@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
 import { AuthProvider } from './auth/use-auth-client';
+import { myUseNavigate } from "./MyNavigate";
 
 const packagesToRepair = [ // TODO
   {installationId: 3, name: "fineedit", version: "2.3.5"}
@@ -32,7 +33,7 @@ function App() {
 }
 
 function App2() {
-  const navigate = useNavigate();
+  const navigate = myUseNavigate();
 
   return (
     <main id="main">
