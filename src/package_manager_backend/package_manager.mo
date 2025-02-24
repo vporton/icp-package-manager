@@ -481,6 +481,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// Internal
     public shared({caller}) func onUpgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
+        moduleName: Text;
+        canister_id: Principal;
     }): async () {
         onlyOwner(caller, "onUpgradeOrInstallModule");
 
@@ -488,6 +490,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
+        upgrade.namedModules.put(moduleName, canister_id);
+        upgrade.allModules.add(canister_id);
+
         Debug.print("XX: upgrade.remainingModules = " # debug_show(upgrade.remainingModules)); // FIXME: Remove.
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
@@ -505,9 +510,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     data = to_candid({canister_id});
                     error = #abort;
                 }]);
-                // TODO: It seems that there is no need to keep values in long-living `upgrade` variable.
-                upgrade.namedModules.put(moduleName, canister_id);
-                upgrade.allModules.add(canister_id);
             };
             let ?inst = installedPackages.get(upgrade.installationId) else {
                 Debug.trap("no such installed package");

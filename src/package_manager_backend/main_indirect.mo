@@ -408,7 +408,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
 
             let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
-            switch (canister_id) {
+            let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
@@ -431,6 +431,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         mode = mode2;
                         canister_id;
                     }, 1000_000_000_000); // TODO
+                    canister_id;
                 };
                 case null {
                     let {canister_id} = await* Install.myCreateCanister({
@@ -467,12 +468,17 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             wasm_memory_limit = null;
                         };
                     }, 1000_000_000_000); // TODO
+                    canister_id;
                 };
             };
             let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
-                onUpgradeOrInstallModule: shared ({upgradeId: Common.UpgradeId}) -> async ();
+                onUpgradeOrInstallModule: shared ({
+                    upgradeId: Common.UpgradeId;
+                    moduleName: Text;
+                    canister_id: Principal;
+                }) -> async ();
             };
-            await backendObj.onUpgradeOrInstallModule({upgradeId});
+            await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId});
             // FIXME: Update assets, if any
         }
         catch (e) {
