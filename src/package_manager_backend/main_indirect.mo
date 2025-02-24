@@ -467,7 +467,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             wasm_memory_limit = null;
                         };
                     }, 1000_000_000_000); // TODO
-                    Debug.print("A10"); // FIXME: Remove.
                 };
             };
             let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {

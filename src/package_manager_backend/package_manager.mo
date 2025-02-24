@@ -450,6 +450,13 @@ shared({caller = initialCaller}) actor class PackageManager({
                 )
             );
 
+            let allModules = HashMap.fromIter<Text, ()>(
+                Iter.map<Text, (Text, ())>(Iter.concat(oldPkg.namedModules.keys(), newPkgModules.keys()), func (x: Text) = (x, ())),
+                oldPkg.namedModules.size() + newPkgModules.size(),
+                Text.equal,
+                Text.hash,
+            );
+
             // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
             // let numModules = realPackage.modules.size();
 
@@ -461,7 +468,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 namedModules = HashMap.HashMap(0, Text.equal, Text.hash);
                 allModules = Buffer.Buffer(0);
                 modulesToDelete;
-                var remainingModules = newPkgModules.size() - modulesToDelete.size();
+                var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
             });
 
             // Finish upgrading packages.
@@ -481,6 +488,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
+        Debug.print("XX: upgrade.remainingModules = " # debug_show(upgrade.remainingModules)); // FIXME: Remove.
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
             for ((moduleName, canister_id) in upgrade.modulesToDelete.vals()) {
