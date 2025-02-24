@@ -26,7 +26,7 @@ function commandOutput(command: string): Promise<string> {
 }
 
 async function main() {
-    const key = await commandOutput("dfx identity export Zon");
+    const key = await commandOutput("dfx identity export Zon"); // secret key
     const identity = decodeFile(key);
 
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
