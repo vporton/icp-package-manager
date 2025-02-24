@@ -340,14 +340,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
             onlyOwner(caller, "upgradePackageWrapper");
 
             let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
-            Debug.print("A1"); // FIXME: Remove.
             for (i in packages.keys()) {
                 // unsafe operation, run in main_indirect:
-                Debug.print("A2"); // FIXME: Remove.
                 let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
-                Debug.print("A3"); // FIXME: Remove.
                 newPackages[i] := ?(Common.unsharePackageInfo(pkg));
-                Debug.print("A4"); // FIXME: Remove.
             };
 
             let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
@@ -361,7 +357,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     }];
                 }) -> async ();
             };
-            Debug.print("A5"); // FIXME: Remove.
             await backendObj.upgradeStart({
                 minUpgradeId;
                 user;
@@ -384,7 +379,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 ));
                 arg;
             });
-            Debug.print("A6"); // FIXME: Remove.
         }
         catch (e) {
             Debug.print("upgradePackageWrapper: " # Error.message(e));
