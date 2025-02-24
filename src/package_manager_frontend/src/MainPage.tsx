@@ -52,12 +52,26 @@ export default function MainPage() {
     const [distroVersions, setDistroVersions] = useState<string[]>([]);
     const [curDistroVersion, setCurDistroVersion] = useState(0);
     const [packageName, setPackageName] = useState("");
-    const [packagesToRepair, setPackagesToRepair] = useState<{installationId: bigint, package: SharedPackageInfo}[]>();
+    const [packagesToRepair, setPackagesToRepair] = useState<{
+        install: {installationId: bigint, package: SharedPackageInfo}[],
+        uninstall: {uninstallationId: bigint, package: SharedPackageInfo}[],
+        upgrade: {upgradeId: bigint, package: SharedPackageInfo}[],
+    }>();
+    const [repairedPackages, setRepairedPackages] = useState<{
+        install: bigint[],
+        uninstall: bigint[],
+        upgrade: bigint[],
+    }>({install: [], uninstall: [], upgrade: []});
     const [bookmarked, setBookmarked] = useState(true);
     useEffect(() => {
         if (glob.packageManager !== undefined) {
-            glob.packageManager.getHalfInstalledPackages().then(h => {
-                setPackagesToRepair(h);
+            const promise = Promise.all([
+                glob.packageManager.getHalfInstalledPackages(),
+                glob.packageManager.getHalfUninstalledPackages(),
+                glob.packageManager.getHalfUpgradedPackages(),
+            ]);
+            promise.then(([ins, un, up]) => {
+                setPackagesToRepair({install: ins, uninstall: un, upgrade: up});
             });
         }
     }, [glob.packageManager]);
@@ -95,29 +109,8 @@ export default function MainPage() {
     };
     useEffect(reloadDistros, [glob.packageManager, glob.backend]);
 
-    const [checkedHalfInstalled, setCheckedHalfInstalled] = useState<Set<InstallationId>>();
-    async function installChecked() {
-        // TODO: hack
-        // TODO
-        // for (const p of packagesToRepair!) {
-        //     if (checkedHalfInstalled?.has(p.installationId)) {
-        //         await glob.packageManager!.installPackages({
-        //             repo: index,
-        //             packageName: p.name,
-        //             version: p.version,
-        //             user: principal!,
-        //             afterInstallCallback: [],
-        //         });
-        //     }
-        // }
-    }
     async function deleteChecked() {
-        for (const p of packagesToRepair!) {
-            // TODO
-            // if (checkedHalfInstalled?.has(p.installationId)) {
-            //     await glob.packageManager!.uninstallPackage(BigInt(p.installationId));
-            // }
-        }
+        await glob.packageManager!.removeStalled(repairedPackages);
     }
     async function removeRepository() {
         if (confirm("Remove installation media?")) {
@@ -176,28 +169,64 @@ export default function MainPage() {
                 <input id="name" alt="Name" type="text" onInput={(event: any) => setPackageName((event.target as HTMLInputElement).value)}/>{" "}
                 <Button disabled={!curDistro || packageName === ''} onClick={() => navigate(`/choose-version/${curDistro!.toString()}/${packageName}`)}>Start installation</Button>
             </p>
-            {packagesToRepair !== undefined && packagesToRepair.length !== 0 ?
+            {packagesToRepair !== undefined &&
+                packagesToRepair.install.length + packagesToRepair.uninstall.length + packagesToRepair.upgrade.length !== 0 ?
             <>
-                <h2>Partially Installed</h2>
+                <h2>Partially Ran Operations</h2>
                 <Alert variant="warning">
                     If you recently started an operation, wait for it to complete,{" "}
-                    rather than using this form to force it, because this way you spend some extra money{" "}
+                    rather than using this form to stop it, because this way you spend some extra money{" "}
                     for duplicate operations on your packages.
                 </Alert>
-                <ul className='checklist'>
-                {packagesToRepair.map(p =>
+                <h3>Ongoing Installations</h3>
+                <ul className='checklist' id="terminateInstall">
+                {packagesToRepair.install.map(p =>
                     <li key={p.installationId}>
-                    <input
-                        type='checkbox'
-                        onClick={event => {
-                            (event.target as HTMLInputElement).checked ? checkedHalfInstalled!.add(p.installationId) : checkedHalfInstalled!.delete(p.installationId);
-                            setCheckedHalfInstalled(checkedHalfInstalled);
-                        } }/>{" "}
-                    <code>{p.package.base.name}</code> {p.package.base.version}
+                        <input
+                            type='checkbox'
+                            data-value={p.installationId}
+                            onClick={event => {
+                                const checkedBoxes = document.querySelectorAll('input[id=terminateInstall]:checked');
+                                const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
+                                setRepairedPackages({...repairedPackages, install: ids});
+                            } }/>{" "}
+                        <code>{p.package.base.name}</code> {p.package.base.version}
                     </li>
                 )}
                 </ul>
-                <p><Button onClick={installChecked}>Install checked</Button> <Button onClick={deleteChecked}>Delete checked</Button></p>
+                <h3>Ongoing Uninstallations</h3>
+                <ul className='checklist' id="terminateUninstall">
+                {packagesToRepair.uninstall.map(p =>
+                    <li key={p.uninstallationId}>
+                        <input
+                            type='checkbox'
+                            data-value={p.uninstallationId}
+                            onClick={event => {
+                                const checkedBoxes = document.querySelectorAll('input[id=terminateUninstall]:checked');
+                                const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
+                                setRepairedPackages({...repairedPackages, uninstall: ids});
+                            } }/>{" "}
+                        <code>{p.package.base.name}</code> {p.package.base.version}
+                    </li>
+                )}
+                </ul>
+                <h3>Ongoing Upgrades</h3>
+                <ul className='checklist' id="terminateUpgrade">
+                {packagesToRepair.upgrade.map(p =>
+                    <li key={p.upgradeId}>
+                        <input
+                            type='checkbox'
+                            data-value={p.upgradeId}
+                            onClick={event => {
+                                const checkedBoxes = document.querySelectorAll('input[id=terminateUpgrade]:checked');
+                                const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
+                                setRepairedPackages({...repairedPackages, upgrade: ids});
+                            } }/>{" "}
+                        <code>{p.package.base.name}</code> {p.package.base.version}
+                    </li>
+                )}
+                </ul>
+                <p><Button onClick={deleteChecked}>Stop checked processes</Button> (money not refunded!)</p>
             </>
             : ""}
         </>

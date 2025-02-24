@@ -77,6 +77,20 @@ module {
             sender_canister_version = null; // TODO
         });
 
+        await* copyAssetsIfAny({
+            wasmModule;
+            canister_id;
+            simpleIndirect;
+            user;
+        });
+    };
+
+    public func copyAssetsIfAny({
+        wasmModule: Common.Module;
+        canister_id: Principal;
+        simpleIndirect: Principal;
+        user: Principal;
+    }): async* () {
         switch (wasmModule.code) {
             case (#Assets {assets}) {
                 Debug.print("Copy assets " # debug_show(assets) # " -> " # debug_show(canister_id));

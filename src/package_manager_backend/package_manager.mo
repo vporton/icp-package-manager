@@ -79,21 +79,25 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public type HalfUninstalledPackageInfo = {
         installationId: Common.InstallationId;
+        package: Common.PackageInfo;
         var remainingModules: Nat;
     };
 
     public type SharedHalfUninstalledPackageInfo = {
         installationId: Common.InstallationId;
+        package: Common.SharedPackageInfo;
         remainingModules: Nat;
     };
 
     private func shareHalfUninstalledPackageInfo(x: HalfUninstalledPackageInfo): SharedHalfUninstalledPackageInfo = {
         installationId = x.installationId;
+        package = Common.sharePackageInfo(x.package);
         remainingModules = x.remainingModules;
     };
 
     private func unshareHalfUninstalledPackageInfo(x: SharedHalfUninstalledPackageInfo): HalfUninstalledPackageInfo = {
         installationId = x.installationId;
+        package = Common.unsharePackageInfo(x.package);
         var remainingModules = x.remainingModules;
     };
 
@@ -340,6 +344,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfUninstalledPackages.put(uninstallationId, {
                 installationId;
+                package = pkg.package;
                 var remainingModules = pkg.namedModules.size();
             });
             let modules = pkg.namedModules;
@@ -1217,6 +1222,48 @@ shared({caller = initialCaller}) actor class PackageManager({
         ));
     };
 
+    /// Internal.
+    public query({caller}) func getHalfUninstalledPackages(): async [{
+        uninstallationId: Common.UninstallationId;
+        package: Common.SharedPackageInfo;
+    }] {
+        onlyOwner(caller, "getHalfUninstalledPackages");
+
+        Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), {
+            uninstallationId: Common.UninstallationId;
+            package: Common.SharedPackageInfo;
+        }>(halfUninstalledPackages.entries(), func (x: (Common.UninstallationId, HalfUninstalledPackageInfo)): {
+            uninstallationId: Common.UninstallationId;
+            package: Common.SharedPackageInfo;
+        } =
+            {
+                uninstallationId = x.0;
+                package = Common.sharePackageInfo(x.1.package);
+            },
+        ));
+    };
+
+    /// Internal.
+    public query({caller}) func getHalfUpgradedPackages(): async [{
+        upgradeId: Common.UpgradeId;
+        package: Common.SharedPackageInfo;
+    }] {
+        onlyOwner(caller, "getHalfUpgradedPackages");
+
+        Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), {
+            upgradeId: Common.UpgradeId;
+            package: Common.SharedPackageInfo;
+        }>(halfUpgradedPackages.entries(), func (x: (Common.UpgradeId, HalfUpgradedPackageInfo)): {
+            upgradeId: Common.UpgradeId;
+            package: Common.SharedPackageInfo;
+        } =
+            {
+                upgradeId = x.0;
+                package = Common.sharePackageInfo(x.1.package);
+            },
+        ));
+    };
+
     /// TODO: very unstable API.
     public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
         onlyOwner(caller, "getHalfInstalledPackageModulesById");
@@ -1268,7 +1315,23 @@ shared({caller = initialCaller}) actor class PackageManager({
         inst.pinned := pinned;
     };
 
-    // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
+    public shared({caller}) func removeStalled(
+        {install: [Common.InstallationId]; uninstall: [Common.UninstallationId]; upgrade: [Common.UpgradeId]}
+    ): async () {
+        onlyOwner(caller, "removeStalled");
+
+        for (i in install.vals()) {
+            halfInstalledPackages.delete(i);
+        };
+        for (i in uninstall.vals()) {
+            halfUninstalledPackages.delete(i);
+        };
+        for (i in upgrade.vals()) {
+            halfUpgradedPackages.delete(i);
+        };
+    };
+
+   // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
     // Adjustable values //
 

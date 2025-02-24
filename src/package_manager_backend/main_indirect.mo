@@ -479,7 +479,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 }) -> async ();
             };
             await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId});
-            // FIXME: Update assets, if any
+            await* Install.copyAssetsIfAny({
+                wasmModule = Common.unshareModule(wasmModule); // TODO: duplicate call above
+                canister_id = newCanisterId;
+                simpleIndirect;
+                user;
+            });
         }
         catch (e) {
             Debug.print("upgradeOrInstallModule: " # Error.message(e));
