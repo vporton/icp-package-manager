@@ -1,6 +1,5 @@
 import { Agent, HttpAgent } from "@dfinity/agent";
-import { exec, execSync } from "child_process";
-import { readFileSync } from "fs";
+import { inspect } from "util";
 import node_fetch from 'node-fetch';
 import { Principal } from "@dfinity/principal";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
@@ -47,16 +46,17 @@ function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
     return true;
 }
 
-async function waitForValue(fn: () => any, expectedValue: any, compare: (x: any, y: any) => boolean = (x, y) => x === y, timeout = 5000, interval = 1000) {
+async function waitForValue(fn: () => any, expectedValue: any, compare: (x: any, y: any) => boolean = (x, y) => x === y, timeout = 10000, interval = 1000) {
     const startTime = Date.now();
+    let value;
     while (Date.now() - startTime < timeout) {
-        const value = await fn(); // Call the async function
+        value = await fn(); // Call the async function
         if (compare(value, expectedValue)) {
             return value;
         }
         await new Promise((resolve) => setTimeout(resolve, interval)); // Wait before retrying
     }
-    throw new Error(`Timed out waiting for value: ${expectedValue}`);
+    throw new Error(`Timed out waiting for value: ${inspect(expectedValue)}. Latest value produced was ${inspect(value)}`);
 }
 
 /// Human-readable canister names.
@@ -246,13 +246,12 @@ describe('My Test Suite', () => {
             user: backendUser,
         });
         console.log("Testing upgraded package `upgradeable`...");
-        // We will wait till `m1` is removed, because this signifie the upgrade is done.
-        // await sleep(30000);
+        // We will wait till `m1` is removed, because this signifie the upgrade is done. // TODO: a better way
         // TODO: More detailed test:
-        async function myNamedModules() {
+        async function myNamedModules(): Promise<Set<string>> {
             const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
-            return new Set(upgradeablePkg.namedModules.keys());
+            return new Set(Array.from(upgradeablePkg.namedModules.values()).map(([name, _principal]) => name));
         }
-        waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
+        await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
     });
 });
