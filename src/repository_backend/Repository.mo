@@ -12,6 +12,7 @@ import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
   var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+  var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
   
   var nextWasmId = 0;
   // var nextPackageId = 0; // TODO: unused
@@ -30,9 +31,22 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     Iter.toArray(owners.keys());
   };
 
+  public query func getPackageCreators(): async [Principal] {
+    Iter.toArray(packageCreators.keys());
+  };
+
   public shared({caller}) func setOwners(newOwners: [Principal]): async () {
     onlyOwner(caller);
     owners := HashMap.fromIter(
+      Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
+      newOwners.size(),
+      Principal.equal,
+      Principal.hash);
+  };
+
+  public shared({caller}) func setPackageCreators(newOwners: [Principal]): async () {
+    onlyOwner(caller);
+    packageCreators := HashMap.fromIter(
       Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
       newOwners.size(),
       Principal.equal,
@@ -44,9 +58,19 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     owners.put(newOwner, ());
   };
 
-  public shared({caller}) func deleteOwner(newOwner: Principal): async () {
+  public shared({caller}) func addPackageCreator(newCreator: Principal): async () {
     onlyOwner(caller);
-    owners.delete(newOwner);
+    packageCreators.put(newCreator, ());
+  };
+
+  public shared({caller}) func deleteOwner(oldOwner: Principal): async () {
+    onlyOwner(caller);
+    owners.delete(oldOwner);
+  };
+
+  public shared({caller}) func deletePackageCreator(oldPackageCreator: Principal): async () {
+    onlyOwner(caller);
+    packageCreators.delete(oldPackageCreator);
   };
 
   // TODO: not needed
