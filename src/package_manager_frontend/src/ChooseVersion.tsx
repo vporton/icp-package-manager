@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SharedFullPackageInfo } from '../../declarations/Repository/Repository.did.js';
+import { SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "./auth/use-auth-client";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
-import { _SERVICE as Repository } from '../../declarations/Repository/Repository.did';
-import { idlFactory as repositoryIndexIdl } from '../../declarations/Repository';
+import { _SERVICE as Repository } from '../../declarations/repository/repository.did';
+import { idlFactory as repositoryIndexIdl } from '../../declarations/repository';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";

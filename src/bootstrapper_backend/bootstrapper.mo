@@ -1,5 +1,5 @@
 /// This module is legible to non-returning-function attack. Throw it away if it fails this way.
-/// Data is stored in `BootstrapperData` instead.
+/// Data is stored in `bootstrapper_data` instead.
 import Asset "mo:assets-api";
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
@@ -7,10 +7,10 @@ import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
-import Data "canister:BootstrapperData";
+import Data "canister:bootstrapper_data";
 
 actor class Bootstrapper() = this {
-    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `BootstrapperData`?)
+    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;

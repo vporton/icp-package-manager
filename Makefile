@@ -2,7 +2,7 @@
 
 NETWORK = local
 USER = $(shell dfx identity get-principal)
-DEPLOY_FLAGS.BootstrapperData = --argument "principal \"$(USER)\""
+DEPLOY_FLAGS.bootstrapper_data = --argument "principal \"$(USER)\""
 
 .PHONY: deploy
 deploy:
@@ -21,11 +21,11 @@ deps:
 INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"
 
 .PHONY: deploy
-deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy@example_frontend deploy@Repository \
+deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy@example_frontend deploy@repository \
   deploy@internet_identity generate@example_frontend generate@package_manager_frontend
-	-dfx ledger fabricate-cycles --t 2000000 --canister Repository
-	-dfx canister call Repository init "()"
-	-dfx canister call BootstrapperData setOwner "(principal \"`dfx canister id Bootstrapper`\")"
+	-dfx ledger fabricate-cycles --t 2000000 --canister repository
+	-dfx canister call repository init "()"
+	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 
 .PHONY: deploy-test
 deploy-test: deploy \

@@ -1,14 +1,14 @@
 {
   "canisters": {
-    "Bootstrapper": {
+    "bootstrapper": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["cycles_ledger", "BootstrapperData", "Repository"],
+      "dependencies": ["cycles_ledger", "bootstrapper_data", "repository"],
       "metadata": [{
         "name": "candid:service"
       }]
     },
-    "BootstrapperData": {
+    "bootstrapper_data": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/BootstrapperData.mo",
       "dependencies": [],
@@ -19,7 +19,7 @@
     "main_indirect": {
       "type": "motoko",
       "main": "src/package_manager_backend/main_indirect.mo",
-      "dependencies": ["Bootstrapper", "cycles_ledger"],
+      "dependencies": ["bootstrapper", "cycles_ledger"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -35,7 +35,7 @@
     "package_manager": {
       "type": "motoko",
       "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": ["Bootstrapper", "cycles_ledger", "Repository"],
+      "dependencies": ["bootstrapper", "cycles_ledger", "repository"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -48,7 +48,7 @@
         "name": "candid:service"
       }]
     },
-    "Repository": {
+    "repository": {
       "type": "motoko",
       "main": "src/repository_backend/Repository.mo",
       "metadata": [{
@@ -105,10 +105,10 @@
     },
     "bootstrapper_frontend": {
       "dependencies": [
-        "Bootstrapper",
+        "bootstrapper",
         "bookmark",
         "internet_identity",
-        "Repository"
+        "repository"
       ],
       "source": [
         "src/bootstrapper_frontend/dist"

@@ -953,7 +953,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     let ?installation = installedPackages.get(installationId) else {
     //         Debug.trap("no such installed installation");
     //     };
-    //     let part: Repository.Repository = actor (Principal.toText(installation.packageRepoCanister));
+    //     let part: repository.repository = actor (Principal.toText(installation.packageRepoCanister));
     //     let packageInfo = await part.getPackage(installation.name, installation.version);
 
     //     let ourHalfInstalled: HalfInstalledPackageInfo = {

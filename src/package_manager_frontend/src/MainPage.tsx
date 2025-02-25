@@ -6,11 +6,11 @@ import { getIsLocal, useAuth } from "./auth/use-auth-client";
 import { InstallationId, SharedPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
 import Alert from "react-bootstrap/esm/Alert";
-import { createActor as createRepoIndexActor } from "../../declarations/Repository";
-import { createActor as repoPartitionCreateActor } from '../../declarations/Repository';
+import { createActor as createRepoIndexActor } from "../../declarations/repository";
+import { createActor as repoPartitionCreateActor } from '../../declarations/repository';
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { myUseNavigate } from "./MyNavigate";
-import { Repository } from "../../declarations/Repository/Repository.did";
+import { Repository } from "../../declarations/repository/repository.did";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("(Unnamed)"); // TODO: button to rename it

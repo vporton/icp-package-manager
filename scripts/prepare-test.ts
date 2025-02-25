@@ -3,11 +3,11 @@ import { exec, execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { SharedRealPackageInfo } from '../src/declarations/Repository/Repository.did';
-import { _SERVICE as Repository } from '../src/declarations/Repository/Repository.did';
-import { idlFactory as repositoryIndexIdl } from '../src/declarations/Repository';
-import { SharedPackageInfo } from '../src/declarations/Repository/Repository.did';
-import { SharedFullPackageInfo } from '../src/declarations/Repository/Repository.did';
+import { SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
+import { _SERVICE as repository } from '../src/declarations/repository/repository.did';
+import { idlFactory as repositoryIndexIdl } from '../src/declarations/repository';
+import { SharedPackageInfo } from '../src/declarations/repository/repository.did';
+import { SharedFullPackageInfo } from '../src/declarations/repository/repository.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
 
@@ -16,8 +16,8 @@ dotenv_config({ path: '.env' });
 global.fetch = node_fetch as any;
 
 if (process.env.DFX_NETWORK === 'local') {
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Repository");
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister Bootstrapper");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister repository");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
 }
 
@@ -46,8 +46,8 @@ async function main() {
         agent.fetchRootKey();
     }
 
-    const repositoryIndex: Repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORY!});
-    console.log("Repository init...");
+    const repositoryIndex: repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORY!});
+    console.log("repository init...");
     try {
         await repositoryIndex.init();
     }

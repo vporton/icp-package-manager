@@ -19,7 +19,7 @@ actor class BootstrapperData(initialOwner: Principal) {
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
-            Debug.trap("BootstrapperData: not the owner");
+            Debug.trap("bootstrapper_data: not the owner");
         };
     };
 

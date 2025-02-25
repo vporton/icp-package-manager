@@ -4,8 +4,8 @@ import { InstallationId, PackageManager, SharedRealPackageInfo, SharedModule } f
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { createActor as createFrontendActor } from '../declarations/example_frontend';
 import { Actor, Agent } from '@dfinity/agent';
-import { createActor as createBootstrapperIndirectActor } from "../declarations/Bootstrapper";
-import { createActor as createRepositoryIndexActor } from "../declarations/Repository";
+import { createActor as createBootstrapperIndirectActor } from "../declarations/bootstrapper";
+import { createActor as createRepositoryIndexActor } from "../declarations/repository";
 import { IDL } from "@dfinity/candid";
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
