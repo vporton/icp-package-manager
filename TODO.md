@@ -3,6 +3,7 @@ Remaining things TODO:
 - On clicking Upgrade button, ask the user whether really wants to upgrade.
 
 - Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
+  Use SHA-256 to identify blobs.  
 
 - Update some packages automatically (every day).
 
