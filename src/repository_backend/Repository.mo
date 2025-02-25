@@ -27,6 +27,22 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     }
   };
 
+  private func onlyPackageCreator(caller: Principal) {
+    if (Option.isNull(owners.get(caller)) and Option.isNull(packageCreators.get(caller))) {
+      Debug.trap("not an owner");
+    }
+  };
+
+  private func onlyPackageOwner(caller: Principal, name: Text) {
+    if (Option.isSome(owners.get(caller))) {
+      return;
+    };
+    if (Option.isSome(do ? { packages.get(name)!.owners.get(caller) })) {
+      return;
+    };
+    Debug.trap("not an owner");
+  };
+
   public query func getOwners(): async [Principal] {
     Iter.toArray(owners.keys());
   };
@@ -207,10 +223,19 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   /// TODO: Put a barrier to make the update atomic.
   /// TODO: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
+    let p = packages.get(name);
+    switch (p) {
+      case (?p) {
+        onlyPackageOwner(caller, name); // TODO: queries by name second time.
+      };
+      case null {
+        onlyPackageCreator(caller);
+      };
+    };
     onlyOwner(caller); // TODO: Who has the right to create a package?
 
     // TODO: Check that package exists?
-    let owners = switch (packages.get(name)) {
+    let owners = switch (p) {
       case (?{pkg = _; owners}) {
         owners;
       };

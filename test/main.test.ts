@@ -144,7 +144,7 @@ describe('My Test Suite', () => {
 
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} =
+        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} =
             await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
                 indirectWasmModule: icPackModules.get("indirect")!,
@@ -157,7 +157,7 @@ describe('My Test Suite', () => {
                 additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
             });
         canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
-        canisterNames.set(indirectPrincipal.toText(), 'indirectPrincipal');
+        canisterNames.set(mainIndirectPrincipal.toText(), 'mainIndirectPrincipal');
         canisterNames.set(simpleIndirectPrincipal.toText(), 'simpleIndirectPrincipal');
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
@@ -166,24 +166,24 @@ describe('My Test Suite', () => {
 
         console.log("Testing controllers of the PM modules...");
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
-        for (const canister_id of [simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, frontendPrincipal]) {
+        for (const canister_id of [simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, frontendPrincipal]) {
             const simpleIndirectInfo = await simpleIndirect.canister_info(
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
-            // `indirectPrincipal` here is only for the package manager package:
+            // `mainIndirectPrincipal` here is only for the package manager package:
             expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
             );
         }
         for (const [principal, create] of [
             [simpleIndirectPrincipal, createSimpleIndirectActor],
-            [indirectPrincipal, createIndirectActor],
+            [mainIndirectPrincipal, createIndirectActor],
             [backendPrincipal, createPackageManager]
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
             );
         }
         console.log("Checking PM frontend owners...");
@@ -191,7 +191,7 @@ describe('My Test Suite', () => {
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await pmFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, indirectPrincipal, backendPrincipal, backendUser])
+                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
             );
         }
 

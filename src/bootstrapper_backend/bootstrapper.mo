@@ -54,7 +54,7 @@ actor class Bootstrapper() = this {
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-    }): async {backendPrincipal: Principal; indirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
+    }): async {backendPrincipal: Principal; mainIndirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
             user;
@@ -185,7 +185,7 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
-        {backendPrincipal = backend_canister_id; indirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
+        {backendPrincipal = backend_canister_id; mainIndirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
     };
 
     public type PubKey = Blob;

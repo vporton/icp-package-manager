@@ -75,7 +75,7 @@ function GlobalUI() {
         const bootstrapperMainIndirect: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const {backendPrincipal, indirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
+        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
           simpleIndirectWasmModule: modules.get("simple_indirect")!,
