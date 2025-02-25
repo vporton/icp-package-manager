@@ -3,7 +3,7 @@ import { exec, execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
-import { SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
+import { Repository, SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
 import { _SERVICE as repository } from '../src/declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/repository';
 import { SharedPackageInfo } from '../src/declarations/repository/repository.did';
