@@ -164,13 +164,16 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   // TODO: `removeWasmModule`
 
-  let packages = TrieMap.TrieMap<Text, Common.FullPackageInfo>(Text.equal, Text.hash);
+  let packages = TrieMap.TrieMap<Text, {
+    pkg: Common.FullPackageInfo;
+    owners: HashMap.HashMap<Principal, ()>;
+  }>(Text.equal, Text.hash);
 
   private func _getFullPackageInfo(name: Common.PackageName): Common.SharedFullPackageInfo {
     let ?v = packages.get(name) else {
       Debug.trap("no such package");
     };
-    Common.shareFullPackageInfo(v);
+    Common.shareFullPackageInfo(v.pkg);
   };
 
   public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
@@ -180,19 +183,22 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   /// TODO: Put a barrier to make the update atomic.
   /// TODO: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
-    onlyOwner(caller);
+    onlyOwner(caller); // TODO: Who has the right to create a package?
 
     // TODO: Check that package exists?
-    packages.put(name, Common.unshareFullPackageInfo(info));
-  };
-
-  public shared({caller}) func createPackage(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
-    onlyOwner(caller);
-
-    if (Option.isSome(packages.get(name))) {
-      Debug.trap("package already exists");
+    let owners = switch (packages.get(name)) {
+      case (?{pkg = _; owners}) {
+        owners;
+      };
+      case null {
+        HashMap.fromIter<Principal, ()>(
+          [(caller, ())].vals(),
+          1,
+          Principal.equal,
+          Principal.hash);
+      };
     };
-    packages.put(name, Common.unshareFullPackageInfo(info));
+    packages.put(name, {owners; pkg = Common.unshareFullPackageInfo(info)});
   };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
