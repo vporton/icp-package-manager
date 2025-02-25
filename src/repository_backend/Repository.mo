@@ -6,10 +6,12 @@ import Blob "mo:base/Blob";
 import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
 import Option "mo:base/Option";
+import Iter "mo:base/Iter";
+import HashMap "mo:base/HashMap";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
-  var owner = initialOwner;
+  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
   
   var nextWasmId = 0;
   // var nextPackageId = 0; // TODO: unused
@@ -19,18 +21,32 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   stable var initialized: Bool = false;
 
   private func onlyOwner(caller: Principal) {
-    if (caller != owner) {
+    if (Option.isNull(owners.get(caller))) {
       Debug.trap("not an owner");
     }
   };
 
-  public query func getOwner(): async Principal {
-    owner;
+  public query func getOwners(): async [Principal] {
+    Iter.toArray(owners.keys());
   };
 
-  public shared({caller}) func setOwner(newOwner: Principal): async () {
+  public shared({caller}) func setOwners(newOwners: [Principal]): async () {
     onlyOwner(caller);
-    owner := newOwner;
+    owners := HashMap.fromIter(
+      Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
+      newOwners.size(),
+      Principal.equal,
+      Principal.hash);
+  };
+
+  public shared({caller}) func addOwner(newOwner: Principal): async () {
+    onlyOwner(caller);
+    owners.put(newOwner, ());
+  };
+
+  public shared({caller}) func deleteOwner(newOwner: Principal): async () {
+    onlyOwner(caller);
+    owners.delete(newOwner);
   };
 
   // TODO: not needed
