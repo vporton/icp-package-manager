@@ -14,8 +14,8 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     mainIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
-    // installationId: Common.InstallationId;
-    // userArg: Blob;
+    // installationId = _: Common.InstallationId;
+    userArg = _: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
     // } = from_candid(userArg) else {
