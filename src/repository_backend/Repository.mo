@@ -164,13 +164,13 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   // TODO: `removeWasmModule`
 
-  let packages = TrieMap.TrieMap<Text, Common.SharedFullPackageInfo>(Text.equal, Text.hash);
+  let packages = TrieMap.TrieMap<Text, Common.FullPackageInfo>(Text.equal, Text.hash);
 
   private func _getFullPackageInfo(name: Common.PackageName): Common.SharedFullPackageInfo {
     let ?v = packages.get(name) else {
       Debug.trap("no such package");
     };
-    v;
+    Common.shareFullPackageInfo(v);
   };
 
   public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
@@ -183,7 +183,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     onlyOwner(caller);
 
     // TODO: Check that package exists?
-    packages.put(name, info);
+    packages.put(name, Common.unshareFullPackageInfo(info));
   };
 
   public shared({caller}) func createPackage(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
@@ -192,7 +192,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     if (Option.isSome(packages.get(name))) {
       Debug.trap("package already exists");
     };
-    packages.put(name, info);
+    packages.put(name, Common.unshareFullPackageInfo(info));
   };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
