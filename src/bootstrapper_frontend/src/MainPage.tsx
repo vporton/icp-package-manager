@@ -50,7 +50,6 @@ export default function MainPage() {
       });
     }, [props.isAuthenticated, props.principal]);
     // TODO: Allow to change the bootstrap repo:
-    // console.log("process.env.CANISTER_ID_REPOSITORY", process.env.CANISTER_ID_REPOSITORY);
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     async function bootstrap() { // TODO: Move to `useEffect`.
       try {
@@ -90,7 +89,9 @@ export default function MainPage() {
     return (
       <>
         {installations.length === 0 &&
-          <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>}
+          <>
+            <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>
+          </>}
         <h2>Installed Package Manager</h2>
         {!props.isAuthenticated ? <i>Not logged in</i> : installations.length === 0 ? <i>None</i> :
           <ul>
