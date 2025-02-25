@@ -46,7 +46,7 @@ async function main() {
         agent.fetchRootKey();
     }
 
-    const repositoryIndex: repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORY!});
+    const repositoryIndex: Repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORY!});
     console.log("repository init...");
     try {
         await repositoryIndex.init();
