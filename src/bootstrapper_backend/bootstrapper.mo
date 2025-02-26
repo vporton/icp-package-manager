@@ -151,10 +151,6 @@ actor class Bootstrapper() = this {
 
         let backend = actor(Principal.toText(backend_canister_id)): actor {
             installPackageWithPreinstalledModules: shared ({
-                whatToInstall: {
-                    #package;
-                    // #simplyModules : [(Text, Common.SharedModule)]; // TODO
-                };
                 packageName: Common.PackageName;
                 version: Common.Version;
                 repo: Common.RepositoryRO; 
