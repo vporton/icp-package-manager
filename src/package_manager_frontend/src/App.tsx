@@ -84,6 +84,7 @@ function GlobalUI() {
           ? JSON.parse(searchParams.get('additionalPackages')!)
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
+        // TODO: Use "version" field from `additionalPackages`.
         const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
