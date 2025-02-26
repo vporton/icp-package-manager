@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- When deleting a module, withdraw its cycles.
+
 - Add/delete a package one-by-one in addition to `setFullPackageInfo`.
 
 - Meta descriptions for packages.
