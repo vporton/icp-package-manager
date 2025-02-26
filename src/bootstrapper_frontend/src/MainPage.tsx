@@ -14,6 +14,7 @@ import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/rep
 import { IDL } from "@dfinity/candid";
 import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
+import { Link, useSearchParams } from "react-router-dom";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -36,17 +37,17 @@ export default function MainPage() {
   
   function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const { setBusy } = useContext(BusyContext)!;
-    const [installations, setInstallations] = useState<Bookmark[]>([]);
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
       if (!props.isAuthenticated || props.agent === undefined) {
-        setInstallations([]);
+        setBookmarks([]);
         return;
       }
       // console.log("process.env.CANISTER_ID_BOOKMARK", process.env.CANISTER_ID_BOOKMARK);
       const bookmark = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: props.agent});
       bookmark.getUserBookmarks().then(list => {
-        setInstallations(list);
+        setBookmarks(list);
       });
     }, [props.isAuthenticated, props.principal]);
     // TODO: Allow to change the bootstrap repo:
@@ -66,7 +67,12 @@ export default function MainPage() {
           : `https://${frontendPrincipal}.icp0.io`;
         // gives the right to set frontend owner and controller to backend:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
-        open(url + "?frontendTweakPrivKey=" + frontendTweakPrivKeyEncoded, '_self');
+        const packages2 = additionalPackages;
+        if (addExample) {
+          packages2.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
+        }
+        const packages3 = packages2.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
+        open(`${url}?frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&additionalPackages=${JSON.stringify(packages3)}`, '_self');
       }
       catch(e) {
         console.log(e);
@@ -86,38 +92,73 @@ export default function MainPage() {
       }
     }
 
+    // TODO: Move below variables to the top.
+    const [searchParams, _] = useSearchParams();
+    const [addExample, setAddExample] = useState(false);
+    const additionalPackagesStr = (searchParams as any).get('additionalPackages');
+    const additionalPackages: {
+      packageName: string;
+      version: string;
+      repo: Principal;
+    }[] = additionalPackagesStr === null ? []
+      : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
+    // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
+
+    const b = bookmarks[0];
+
     return (
       <>
-        {installations.length === 0 &&
+        {bookmarks.length === 0 ?
           <>
             <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>
+            <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
+            <p>
+              <label>
+                <input type="checkbox" checked={addExample} onChange={e => setAddExample(e.target.checked)}/>{" "}
+                Add example package
+              </label>{" "}
+              <small>(for testing)</small>
+            </p>
+          </> :
+          <>
+            {additionalPackages.length !== 0 &&
+              additionalPackages.map(p =>
+                <p>
+                  <Link to={`https://${b.frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                    Install package {p.packageName}
+                  </Link>
+                </p>
+              )}
           </>}
-        <h2>Installed Package Manager</h2>
-        {!props.isAuthenticated ? <i>Not logged in</i> : installations.length === 0 ? <i>None</i> :
-          <ul>
-            {installations.map(inst => {
-              const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
-              const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
-              return <li key={url}><a href={url}>{url}</a></li>;
-            })}
-          </ul>
-        }
-        {installations.length !== 0 &&
-          <Accordion defaultActiveKey={undefined}>
-            <Accordion.Item eventKey="advanced">
-              <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
-              <Accordion.Body>
-                <Alert variant="warning">
-                  You are not recommended to install package manager more than once.{" "}
-                  <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several installations of the package manager.
-                  Also note that multiple package managers will be totally separate, each having its own set of installed packages.
-                </Alert>
-                <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-        }
-        <BootstrapAgainDialog/>
+        {bookmarks.length === 0 &&
+        <>
+          <h2>Installed Package Manager</h2>
+          {!props.isAuthenticated ? <i>Not logged in</i> : bookmarks.length === 0 ? <i>None</i> :
+            <ul>
+              {bookmarks.map(inst => {
+                const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
+                const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
+                return <li key={url}><a href={url}>{url}</a></li>;
+              })}
+            </ul>
+          }
+          {bookmarks.length !== 0 &&
+            <Accordion defaultActiveKey={undefined}>
+              <Accordion.Item eventKey="advanced">
+                <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
+                <Accordion.Body>
+                  <Alert variant="warning">
+                    You are not recommended to install package manager more than once.{" "}
+                    <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several bookmarks of the package manager.
+                    Also note that multiple package managers will be totally separate, each having its own set of installed packages.
+                  </Alert>
+                  <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
+                </Accordion.Body>
+              </Accordion.Item>
+            </Accordion>
+          }
+          <BootstrapAgainDialog/>
+        </>}
       </>
     );
   }

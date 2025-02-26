@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useSearchParams } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
@@ -64,6 +64,7 @@ function GlobalUI() {
   const glob = useContext(GlobalContext);
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
+  const [searchParams, _] = useSearchParams();
   if (glob.backend === undefined) {
     async function installBackend() {
       try {
@@ -75,6 +76,14 @@ function GlobalUI() {
         const bootstrapperMainIndirect: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
         const modules = new Map(pkgReal.modules);
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
+        const additionalPackages: {
+          packageName: string;
+          version: string;
+          repo: Principal;
+        }[] = searchParams.get('additionalPackages')
+          ? JSON.parse(searchParams.get('additionalPackages')!)
+            .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
+          : [];
         const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
@@ -84,7 +93,7 @@ function GlobalUI() {
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
           repo,
-          additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
+          additionalPackages: additionalPackages,
         });
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);
