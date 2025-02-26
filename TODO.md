@@ -2,6 +2,8 @@ Remaining things TODO:
 
 - Add/delete a package one-by-one in addition to `setFullPackageInfo`.
 
+- Meta descriptions for packages.
+
 - On clicking Upgrade button, ask the user whether really wants to upgrade.
 
 - Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
