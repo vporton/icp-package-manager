@@ -1,5 +1,8 @@
 Remaining things TODO:
 
+- FIXME: Apparently, I will use `simple_indirect` to delete a canister.
+  Then `simple_indirect` receives its cycles and cycles need to be transferred to `battery`.
+
 - When deleting a module, withdraw its cycles.
 
 - Add/delete a package one-by-one in addition to `setFullPackageInfo`.
