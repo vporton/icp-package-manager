@@ -15,6 +15,7 @@ import { IDL } from "@dfinity/candid";
 import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
 import { Link, useSearchParams } from "react-router-dom";
+import { get } from "http";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -104,8 +105,9 @@ export default function MainPage() {
       : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
     // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
 
-    const b = bookmarks[0];
+    const b = bookmarks[0]; // TODO
 
+    // TODO: Give user freedom to change whether bootstrap or install.
     return (
       <>
         {bookmarks.length === 0 ?
@@ -120,16 +122,14 @@ export default function MainPage() {
               <small>(for testing)</small>
             </p>
           </> :
-          <>
-            {additionalPackages.length !== 0 &&
-              additionalPackages.map(p =>
-                <p>
-                  <Link to={`https://${b.frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
-                    Install package {p.packageName}
-                  </Link>
-                </p>
-              )}
-          </>}
+          additionalPackages.map(p => {
+            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
+            return <p>
+              <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                Install package <code>{p.packageName}</code>
+              </Link>
+            </p>
+        })}
         {bookmarks.length === 0 &&
         <>
           <h2>Installed Package Manager</h2>
