@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
+
 - FIXME: Apparently, I will use `simple_indirect` to delete a canister.
   Then `simple_indirect` receives its cycles and cycles need to be transferred to `battery`.
 
