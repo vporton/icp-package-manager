@@ -49,8 +49,8 @@ function App2() {
         </nav>
         <BrowserRouter>
           <Routes>
-          <Route path="/" element={<MainPage/>}/>
-          <Route path="/bookmark" element={<Bookmark/>}/>
+            <Route path="/" element={<MainPage/>}/>
+            <Route path="/bookmark" element={<Bookmark/>}/>
           </Routes>
         </BrowserRouter>        
       </Container>
