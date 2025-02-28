@@ -4,7 +4,7 @@ import Debug "mo:base/Debug";
 import Hash "mo:base/Hash";
 import Text "mo:base/Text";
 import Error "mo:base/Error";
-import StableHashMap "mo:stablehashmap/FunctionalStableHashMap";
+import OrderedMap "mo:base/OrderedMap";
 
 module {
   public type CanisterFulfillmentInfo = {
@@ -23,9 +23,9 @@ module {
 
   public type CanisterKind = Text;
 
-  public type CanisterMap = StableHashMap.StableHashMap<Principal, CanisterKind>;
+  public type CanisterMap = OrderedMap.Make<Principal, CanisterKind>;
 
-  public type CanisterKindsMap = StableHashMap.StableHashMap<CanisterKind, CanisterFulfillmentInfo>;
+  public type CanisterKindsMap = OrderedMap.Map<CanisterKind, CanisterFulfillmentInfo>;
 
   /// Battery API ///
 
@@ -36,8 +36,8 @@ module {
 
   public func newBattery(): Battery {
     {
-      canisterMap = StableHashMap.init<Principal, CanisterKind>();
-      canisterKindsMap = StableHashMap.init<CanisterKind, CanisterFulfillmentInfo>();
+      canisterMap = OrderedMap.init<Principal, CanisterKind>();
+      canisterKindsMap = OrderedMap.init<CanisterKind, CanisterFulfillmentInfo>();
     };
   };
 
@@ -46,8 +46,8 @@ module {
   private func canisterKindHash(x: CanisterKind): Hash.Hash = Text.hash(x);
 
   public func topUpOneCanister(battery: Battery, canisterId: Principal): async* () {
-    let kind = StableHashMap.get(battery.canisterMap, Principal.equal, Principal.hash, canisterId);
-    let info0 = do ? { StableHashMap.get(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind!)! };
+    let kind = OrderedMap.get(battery.canisterMap, Principal.equal, Principal.hash, canisterId);
+    let info0 = do ? { OrderedMap.get(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind!)! };
     let ?info = info0 else {
       Debug.trap("no such canister record");
     };
@@ -78,17 +78,17 @@ module {
   };
 
   public func topUpAllCanisters(battery: Battery): async* () {
-    for (canisterId in StableHashMap.keys(battery.canisterMap)) {
+    for (canisterId in OrderedMap.keys(battery.canisterMap)) {
       await* topUpOneCanister(battery, canisterId);
     };
   };
 
   public func addCanister(battery: Battery, canisterId: Principal, kind: Text) {
-    StableHashMap.put(battery.canisterMap, Principal.equal, Principal.hash, canisterId, kind);
+    OrderedMap.put(battery.canisterMap, Principal.equal, Principal.hash, canisterId, kind);
   };
 
   public func insertCanisterKind(battery: Battery, kind: Text, info: CanisterFulfillmentInfo) {
-    StableHashMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
+    OrderedMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
   };
 
   /// ChildActor API ///

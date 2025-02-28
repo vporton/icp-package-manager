@@ -3,8 +3,8 @@ import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
-import CyclesSimple "mo:cycles-simple";
 import StableHashMap "mo:stablehashmap/FunctionalStableHashMap";
+import CyclesSimple "../lib/battery";
 
 shared({caller = initialOwner}) actor class Battery() = this {
     stable var owners = [initialOwner];
@@ -57,10 +57,6 @@ shared({caller = initialOwner}) actor class Battery() = this {
     public shared({caller}) func addCanister(principal: Principal, kind: Text) {
         checkCaller(caller);
         CyclesSimple.addCanister(battery, principal, kind);
-    };
-
-    public query func getCanistersList(): async [Principal] {
-        Iter.toArray(StableHashMap.keys(battery.canisterMap));
     };
 
     private func topUpAllCanisters(): async () {

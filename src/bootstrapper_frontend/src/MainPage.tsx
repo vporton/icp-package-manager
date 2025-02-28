@@ -110,30 +110,10 @@ export default function MainPage() {
     // TODO: Give user freedom to change whether bootstrap or install.
     return (
       <>
-        {bookmarks.length === 0 ?
-          <>
-            <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>
-            <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
-            <p>
-              <label>
-                <input type="checkbox" checked={addExample} onChange={e => setAddExample(e.target.checked)}/>{" "}
-                Add example package
-              </label>{" "}
-              <small>(for testing)</small>
-            </p>
-          </> :
-          additionalPackages.map(p => {
-            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
-            return <p>
-              <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
-                Install package <code>{p.packageName}</code>
-              </Link>
-            </p>
-        })}
-        {bookmarks.length === 0 &&
+        {bookmarks.length !== 0 ?
         <>
           <h2>Installed Package Manager</h2>
-          {!props.isAuthenticated ? <i>Not logged in</i> : bookmarks.length === 0 ? <i>None</i> :
+          {!props.isAuthenticated ? <i>Not logged in</i> :
             <ul>
               {bookmarks.map(inst => {
                 const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
@@ -142,22 +122,44 @@ export default function MainPage() {
               })}
             </ul>
           }
-          {bookmarks.length !== 0 &&
-            <Accordion defaultActiveKey={undefined}>
-              <Accordion.Item eventKey="advanced">
-                <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
-                <Accordion.Body>
-                  <Alert variant="warning">
-                    You are not recommended to install package manager more than once.{" "}
-                    <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several bookmarks of the package manager.
-                    Also note that multiple package managers will be totally separate, each having its own set of installed packages.
-                  </Alert>
-                  <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
-                </Accordion.Body>
-              </Accordion.Item>
-            </Accordion>
-          }
+          <p>
+            {additionalPackages.map(p => {
+              const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
+              return (
+                <p>
+                  <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                    Install package <code>{p.packageName}</code>
+                  </Link>
+                </p>
+              );
+            })}
+          </p>
+          <Accordion defaultActiveKey={undefined}>
+            <Accordion.Item eventKey="advanced">
+              <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
+              <Accordion.Body>
+                <Alert variant="warning">
+                  You are not recommended to install package manager more than once.{" "}
+                  <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several bookmarks of the package manager.
+                  Also note that multiple package managers will be totally separate, each having its own set of installed packages.
+                </Alert>
+                <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
           <BootstrapAgainDialog/>
+        </>
+        :
+        <>
+          <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
+          <p>
+            <label>
+              <input type="checkbox" checked={addExample} onChange={e => setAddExample(e.target.checked)}/>{" "}
+              Add example package
+            </label>{" "}
+            <small>(for testing)</small>
+          </p>
+          <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>
         </>}
       </>
     );
