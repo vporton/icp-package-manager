@@ -228,7 +228,7 @@ async function main() {
             version: "0.0.2",
             shortDescription: "Example upgradeable package",
             longDescription: "Used as an example",
-            guid: Uint8Array.from([249, 146, 53, 77, 52, 192, 178, 47, 180, 152, 136, 54, 84, 181, 213, 1]),
+            guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
         },
         specific: {real: upgradeableV2Real},
     };
