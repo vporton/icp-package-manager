@@ -285,30 +285,94 @@ module {
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
     };
 
+    public type InstalledModule = {
+        #defaultInstalled : Principal;
+        #additional : Buffer.Buffer<Principal>;
+    };
+
+    public type SharedInstalledModule = {
+        #defaultInstalled : Principal;
+        #additional : [Principal];
+    };
+
     public type InstalledPackageInfo = {
         id: InstallationId;
         package: PackageInfo;
         packageRepoCanister: Principal;
-        namedModules: HashMap.HashMap<Text, Principal>;
-        allModules: Buffer.Buffer<Principal>; // for uninstallation and cycles managment
+        namedModules: HashMap.HashMap<Text, InstalledModule>;
         var pinned: Bool;
+    };
+
+    // Tested in `modulesIter.test.mo`.
+    /// Iterate over all modules in `pkg.namedModules`.
+    public class ModulesIterator(namedModules: HashMap.HashMap<Text, InstalledModule>) {
+        var baseIter = namedModules.entries();
+        var sub: ?{
+            iter: Iter.Iter<Principal>;
+            name: Text;
+        } = null;
+        public func next(): ?(Text, Principal) {
+            loop {
+                switch (sub) {
+                    case (?sub) {
+                        switch (sub.iter.next()) {
+                            case (?res) {
+                                return ?(sub.name, res);
+                            };
+                            case null {};
+                        };
+                    };
+                    case null {};
+                };
+                let elt = baseIter.next();
+                switch (elt) {
+                    case (?elt) {
+                        switch (elt.1) {
+                            case (#additional buf) {
+                                sub := ?{iter = buf.vals(); name = elt.0};
+                            };
+                            case (#defaultInstalled m) {
+                                sub := null;
+                                return ?(elt.0, m);
+                            };
+                        };
+                    };
+                    case null {
+                        return null;
+                    };
+                };
+            };
+        };
     };
 
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         package: SharedPackageInfo;
         packageRepoCanister: Principal;
-        namedModules: [(Text, Principal)];
-        allModules: [Principal];
+        namedModules: [(Text, SharedInstalledModule)];
         pinned: Bool;
     };
+
+    public func shareInstalledModule(info: InstalledModule): SharedInstalledModule =
+        switch (info) {
+            case (#defaultInstalled canister) #defaultInstalled canister;
+            case (#additional canisters) #additional(Buffer.toArray(canisters));
+        };
+
+    public func unshareInstalledModule(info: SharedInstalledModule): InstalledModule =
+        switch (info) {
+            case (#defaultInstalled canister) #defaultInstalled canister;
+            case (#additional canisters) #additional(Buffer.fromArray(canisters));
+        };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
         id = info.id;
         package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        namedModules = Iter.toArray(info.namedModules.entries());
-        allModules = Buffer.toArray(info.allModules);
+        namedModules = Iter.toArray(Iter.map<(Text, InstalledModule), (Text, SharedInstalledModule)>(
+            info.namedModules.entries(),
+            func ((k, v): (Text, InstalledModule)): (Text, SharedInstalledModule) = (k, shareInstalledModule(v))),
+        );
         pinned = info.pinned;
     };
 
@@ -316,8 +380,12 @@ module {
         id = info.id;
         package = unsharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        namedModules = HashMap.fromIter(info.namedModules.vals(), Array.size(info.namedModules), Text.equal, Text.hash);
-        allModules = Buffer.fromArray(info.allModules);
+        namedModules = HashMap.fromIter(
+            Iter.map<(Text, SharedInstalledModule), (Text, InstalledModule)>(
+            info.namedModules.vals(),
+            func ((k, v): (Text, SharedInstalledModule)): (Text, InstalledModule) = (k, unshareInstalledModule(v))),
+            Array.size(info.namedModules),
+            Text.equal, Text.hash);
         var pinned = info.pinned;
     };
 
