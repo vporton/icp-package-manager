@@ -10,6 +10,7 @@ import Nat32 "mo:base/Nat32";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Sha256 "mo:sha2/Sha256";
+import Itertools "mo:itertools/Iter";
 
 module {
     public func IntHash(value: Int): Hash.Hash { // TODO: letter casing
@@ -299,50 +300,26 @@ module {
         id: InstallationId;
         package: PackageInfo;
         packageRepoCanister: Principal;
-        namedModules: HashMap.HashMap<Text, InstalledModule>;
+        defaultInstalledModules: HashMap.HashMap<Text, Principal>;
+        additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>;
         var pinned: Bool;
+    };
+
+    private func additionalModulesIter(additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>)
+        : Iter.Iter<(Text, Principal)>
+    {
+        Itertools.flatten(
+            Iter.map<(Text, Buffer.Buffer<Principal>), Iter.Iter<(Text, Principal)>>(
+                additionalModules.entries(),
+                func ((name, buf): (Text, Buffer.Buffer<Principal>)) = Itertools.zip(Iter.make(name), buf.vals()),
+            ),
+        );
     };
 
     // Tested in `modulesIter.test.mo`.
     /// Iterate over all modules in `pkg.namedModules`.
-    public class ModulesIterator(namedModules: HashMap.HashMap<Text, InstalledModule>) {
-        var baseIter = namedModules.entries();
-        var sub: ?{
-            iter: Iter.Iter<Principal>;
-            name: Text;
-        } = null;
-        public func next(): ?(Text, Principal) {
-            loop {
-                switch (sub) {
-                    case (?sub) {
-                        switch (sub.iter.next()) {
-                            case (?res) {
-                                return ?(sub.name, res);
-                            };
-                            case null {};
-                        };
-                    };
-                    case null {};
-                };
-                let elt = baseIter.next();
-                switch (elt) {
-                    case (?elt) {
-                        switch (elt.1) {
-                            case (#additional buf) {
-                                sub := ?{iter = buf.vals(); name = elt.0};
-                            };
-                            case (#defaultInstalled m) {
-                                sub := null;
-                                return ?(elt.0, m);
-                            };
-                        };
-                    };
-                    case null {
-                        return null;
-                    };
-                };
-            };
-        };
+    public func modulesIterator(pkg: InstalledPackageInfo): Iter.Iter<(Text, Principal)> {
+        Iter.concat(pkg.defaultInstalledModules.entries(), additionalModulesIter(pkg.additionalModules));
     };
 
     public type SharedInstalledPackageInfo = {

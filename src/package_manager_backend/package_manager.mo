@@ -348,7 +348,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 var remainingModules = pkg.namedModules.size();
             });
             let modules = pkg.namedModules;
-            for (canister_id in Common.ModulesIterator(modules)) {
+            for (canister_id in Common.modulesIterator(modules)) {
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
@@ -443,7 +443,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Text.hash,
             );
             let modulesToDelete = Iter.toArray(
-                Common.ModulesIterator(modulesToDelete0),
+                Common.modulesIterator(modulesToDelete0),
                 // Iter.map<Text, (Text, Principal)>(
                 //     modulesToDelete0.keys(),
                 //     func (name: Text) {
