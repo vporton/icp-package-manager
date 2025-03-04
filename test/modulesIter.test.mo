@@ -40,7 +40,7 @@ let test3 = {
     arg = HashMap.fromIter<Text, Common.InstalledModule>([
         ("a", #defaultInstalled(princ[0])),
         ("b", #defaultInstalled(princ[1])),
-    ].vals(), 3, Text.equal, Text.hash);
+    ].vals(), 2, Text.equal, Text.hash);
     result = [("a", princ[0]), ("b", princ[1])];
 };
 
@@ -48,11 +48,27 @@ let test4 = {
     arg = HashMap.fromIter<Text, Common.InstalledModule>([
         ("a", #additional(Buffer.fromArray<Principal>([princ[0], princ[1]]))),
         ("b", #additional(Buffer.fromArray<Principal>([princ[2], princ[3]]))),
-    ].vals(), 3, Text.equal, Text.hash);
+    ].vals(), 2, Text.equal, Text.hash);
     result = [("a", princ[0]), ("a", princ[1]), ("b", princ[2]), ("b", princ[3])];
 };
 
-let testsData = [test1, test2, test3, test4];
+let test5 = {
+    arg = HashMap.fromIter<Text, Common.InstalledModule>([
+        ("a", #additional(Buffer.fromArray<Principal>([]))),
+        ("b", #defaultInstalled(princ[0])),
+    ].vals(), 2, Text.equal, Text.hash);
+    result = [("b", princ[0])];
+};
+
+let test6 = {
+    arg = HashMap.fromIter<Text, Common.InstalledModule>([
+        ("a", #defaultInstalled(princ[0])),
+        ("b", #additional(Buffer.fromArray<Principal>([]))),
+    ].vals(), 2, Text.equal, Text.hash);
+    result = [("a", princ[0])];
+};
+
+let testsData = [test1, test2, test3, test4, test5, test6];
 
 func pairCompare(a: (Text, Principal), b: (Text, Principal)): {#less; #equal; #greater} {
     switch (Text.compare(a.0, b.0)) {
