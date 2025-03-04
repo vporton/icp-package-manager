@@ -345,10 +345,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             halfUninstalledPackages.put(uninstallationId, {
                 installationId;
                 package = pkg.package;
-                var remainingModules = pkg.namedModules.size();
+                var remainingModules = Common.numberOfModules(pkg);
             });
-            let modules = pkg.namedModules;
-            for (canister_id in Common.modulesIterator(modules)) {
+            for (canister_id in Common.modulesIterator(pkg)) {
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";

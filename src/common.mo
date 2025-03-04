@@ -312,6 +312,10 @@ module {
         Iter.concat(pkg.defaultInstalledModules.entries(), additionalModulesIter(pkg.additionalModules));
     };
 
+    public func numberOfModules(pkg: InstalledPackageInfo): Nat {
+        pkg.defaultInstalledModules.size() + Iter.size(additionalModulesIter(pkg.additionalModules));
+    };
+
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         package: SharedPackageInfo;
