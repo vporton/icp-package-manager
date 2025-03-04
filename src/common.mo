@@ -286,16 +286,6 @@ module {
         // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
     };
 
-    public type InstalledModule = {
-        #defaultInstalled : Principal;
-        #additional : Buffer.Buffer<Principal>;
-    };
-
-    public type SharedInstalledModule = {
-        #defaultInstalled : Principal;
-        #additional : [Principal];
-    };
-
     public type InstalledPackageInfo = {
         id: InstallationId;
         package: PackageInfo;
@@ -326,29 +316,21 @@ module {
         id: InstallationId;
         package: SharedPackageInfo;
         packageRepoCanister: Principal;
-        namedModules: [(Text, SharedInstalledModule)];
+        defaultInstalledModules: [(Text, Principal)];
+        additionalModules: [(Text, [Principal])];
         pinned: Bool;
     };
-
-    public func shareInstalledModule(info: InstalledModule): SharedInstalledModule =
-        switch (info) {
-            case (#defaultInstalled canister) #defaultInstalled canister;
-            case (#additional canisters) #additional(Buffer.toArray(canisters));
-        };
-
-    public func unshareInstalledModule(info: SharedInstalledModule): InstalledModule =
-        switch (info) {
-            case (#defaultInstalled canister) #defaultInstalled canister;
-            case (#additional canisters) #additional(Buffer.fromArray(canisters));
-        };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
         id = info.id;
         package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        namedModules = Iter.toArray(Iter.map<(Text, InstalledModule), (Text, SharedInstalledModule)>(
-            info.namedModules.entries(),
-            func ((k, v): (Text, InstalledModule)): (Text, SharedInstalledModule) = (k, shareInstalledModule(v))),
+        defaultInstalledModules = Iter.toArray(info.defaultInstalledModules.entries());
+        additionalModules = Iter.toArray(
+            Iter.map<(Text, Buffer.Buffer<Principal>), (Text, [Principal])>(
+                info.additionalModules.entries(),
+                func ((k, v): (Text, Buffer.Buffer<Principal>)): (Text, [Principal]) = (k, Buffer.toArray(v))
+            )
         );
         pinned = info.pinned;
     };
@@ -357,12 +339,21 @@ module {
         id = info.id;
         package = unsharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        namedModules = HashMap.fromIter(
-            Iter.map<(Text, SharedInstalledModule), (Text, InstalledModule)>(
-            info.namedModules.vals(),
-            func ((k, v): (Text, SharedInstalledModule)): (Text, InstalledModule) = (k, unshareInstalledModule(v))),
-            Array.size(info.namedModules),
-            Text.equal, Text.hash);
+        defaultInstalledModules = HashMap.fromIter(
+            info.defaultInstalledModules.vals(),
+            info.defaultInstalledModules.size(),
+            Text.equal,
+            Text.hash,
+        );
+        additionalModules = HashMap.fromIter(
+            Iter.map<(Text, [Principal]), (Text, Buffer.Buffer<Principal>)>(
+                info.additionalModules.vals(),
+                func ((k, v): (Text, [Principal])): (Text, Buffer.Buffer<Principal>) = (k, Buffer.fromArray(v))
+            ),
+            info.additionalModules.size(),
+            Text.equal,
+            Text.hash,
+        );
         var pinned = info.pinned;
     };
 
