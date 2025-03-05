@@ -11,7 +11,7 @@ import HashMap "mo:base/HashMap";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
-  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash); // FIXME: Save it.
   var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
   
   var nextWasmId = 0;
