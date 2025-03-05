@@ -338,7 +338,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 package = pkg.package;
                 var remainingModules = Common.numberOfModules(pkg);
             });
-            for (canister_id in Common.modulesIterator(pkg)) {
+            for ((_name, canister_id) in Common.modulesIterator(pkg)) {
                 ignore getSimpleIndirect().callAll([{
                     canister = Principal.fromText("aaaaa-aa");
                     name = "stop_canister";
