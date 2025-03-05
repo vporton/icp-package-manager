@@ -9,7 +9,7 @@ deploy:
 
 # Don't use dfx.json dependency, because package_manager is not to be installed.
 # example_frontend is used here to deploy an asset canister.
-build@bootstrapper_frontend: generate@example_frontend generate@package_manager generate@main_indirect generate@simple_indirect generate@bookmark
+build@bootstrapper_frontend: generate@example_frontend generate@package_manager generate@main_indirect generate@simple_indirect generate@bookmark generate@battery
 
 include deps.$(NETWORK).mk
 

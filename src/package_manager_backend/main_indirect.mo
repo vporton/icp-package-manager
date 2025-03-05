@@ -42,7 +42,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             Principal.hash);
 
     public shared({caller}) func init({
-        // installationId: Common.InstallationId;
+        installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;
         // packageManagerOrBootstrapper: Principal;
@@ -52,7 +52,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
-        let battery = await pm.getModulePrincipal(0, "battery");
+        let battery = await pm.getModulePrincipal(installationId, "battery");
         owners.put(battery, ()); // FIXME: unit test
 
         initialized := true;

@@ -11,7 +11,6 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
-import Itertools "mo:itertools/Iter";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
@@ -427,7 +426,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
-                    oldPkgReal.modules.entries(), // FIXME: Should be only installed modules.
+                    oldPkgReal.modules.entries(), // FIXME: Should be only installed modules. // FIXME: also additional modules
                     func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
                 ),
                 oldPkgReal.modules.size(), // TODO: It can be smaller.
@@ -1143,18 +1142,19 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // Accessor method //
 
-    /// Returns all (default installed and additional) modules canisters
-    public query({caller}) func getAllCanisters(): async [Principal] {
+    // TODO: needed?
+    /// Returns all (default installed and additional) modules canisters.
+    /// Internal.
+    public query({caller}) func getAllCanisters(): async [({packageName: Text; guid: Blob}, [(Text, Principal)])] {
         onlyOwner(caller, "getAllCanisters");
 
-        Iter.toArray(Itertools.flatten(
-            Iter.map<Common.InstalledPackageInfo, Iter.Iter<Principal>>(
-                installedPackages.vals(),
-                func (pkg: Common.InstalledPackageInfo) =
-                    Iter.map<(Text, Principal), Principal>(
-                        Common.modulesIterator(pkg), func ((_name: Text, value: Principal)) = value
-                    ),
-            ),
+        Iter.toArray(Iter.map<Common.InstalledPackageInfo, ({packageName: Text; guid: Blob}, [(Text, Principal)])>(
+            installedPackages.vals(),
+            func (pkg: Common.InstalledPackageInfo) =
+                (
+                    {packageName = pkg.package.base.name; guid = pkg.package.base.guid}, 
+                    Iter.toArray(Common.modulesIterator(pkg)),
+                ),
         ));
     };
 

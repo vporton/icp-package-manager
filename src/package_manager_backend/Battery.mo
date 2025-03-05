@@ -5,8 +5,10 @@ import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Map "mo:base/OrderedMap";
 import HashMap "mo:base/HashMap";
+import Text "mo:base/Text";
+import Blob "mo:base/Blob";
 import Common "../common";
-// import StableHashMap "mo:stablehashmap/FunctionalStableHashMap";
+import MainIndirect "main_indirect";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManagerOrBootstrapper: Principal;
@@ -23,17 +25,17 @@ shared({caller = initialOwner}) actor class Battery({
                 (packageManagerOrBootstrapper, ()),
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()), // TODO: superfluous?
-                (Principal.fromActor(this), ()), // TODO: Is it really needed to execute the timer?
+                (Principal.fromActor(this), ()), // to execute the timer
                 (user, ()),
             ].vals(), // TODO: Are all required?
             4,
             Principal.equal,
             Principal.hash);
 
-    func checkCaller(caller: Principal) {
-        if (Option.isNull(owners.get(caller))) {
-            Debug.trap("battery: not allowed");
-        }
+    func onlyOwner(caller: Principal, msg: Text) {
+        if (owners.get(caller) == null) {
+            Debug.trap("not the owner: " # msg);
+        };
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
@@ -66,16 +68,27 @@ shared({caller = initialOwner}) actor class Battery({
     stable var initialized = false;
 
     public shared({caller}) func init() : async () {
-        checkCaller(caller);
+        onlyOwner(caller, "init");
         if (initialized) {
             Debug.trap("already initialized");
         };
 
-        owners := _owners;
-
         initTimer<system>();
 
         initialized := true;
+    };
+
+    private type OurPMType = actor {
+        // getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
+        getAllCanisters: query () -> async [({packageName: Text; guid: Blob}, [(Text, Principal)])];
+    };
+
+    private func getPM(): OurPMType {
+        actor(Principal.toText(packageManagerOrBootstrapper));
+    };
+
+    private func getMainIndirect(): MainIndirect.MainIndirect {
+        actor(Principal.toText(mainIndirect));
     };
 
     public type ModuleLocation = {
@@ -112,10 +125,10 @@ shared({caller = initialOwner}) actor class Battery({
 
     public type CanisterKind = Text;
 
-    public let moduleLocationMap = Map.Make<ModuleLocation>(compareModuleLocation);
+    let moduleLocationMap = Map.Make<ModuleLocation>(compareModuleLocation);
     public type CanisterMap = Map.Map<ModuleLocation, CanisterKind>;
 
-    public let textMap = Map.Make<Text>(Text.compare);
+    let textMap = Map.Make<Text>(Text.compare);
     public type CanisterKindsMap = Map.Map<CanisterKind, Common.CanisterFulfillment>;
 
     public type Battery = {
@@ -143,16 +156,16 @@ shared({caller = initialOwner}) actor class Battery({
         timer := ?(Timer.recurringTimer<system>(#seconds 3600, topUpAllCanisters)); // TODO: editable period
     };
 
-    stable let battery = CyclesSimple.newBattery();
+    stable let battery = newBattery();
 
     stable var timer: ?Timer.TimerId = null;
 
-    private func topUpOneCanister(canister: ModuleLocation): async* () {
+    private func topUpOneCanister(canister: ModuleLocation, canister_id: Principal): async* () {
         let info0 = do ? {
             let kind = moduleLocationMap.get(battery.canisterMap, canister)!;
             textMap.get(battery.canisterKindsMap, kind)!;
         };
-        let ?fulfillment = switch (info0) {
+        let fulfillment = switch (info0) {
             case (?x) {
                 x;
             };
@@ -164,15 +177,33 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     private func topUpAllCanisters(): async () {
-        for ((name, m) in await getPM().getAllCanisters()) {
-            await* CyclesSimple.topUpAllCanisters(battery);
+        let allCanisters = await getPM().getAllCanisters();
+        
+        for (entry in allCanisters.vals()) {
+            let pkg = entry.0;
+            let modules = entry.1;
+            
+            for (moduleEntry in modules.vals()) {
+                let moduleName = moduleEntry.0;
+                let canister_id = moduleEntry.1;
+                
+                let location: ModuleLocation = {
+                    package = {
+                        packageName = pkg.packageName;
+                        guid = pkg.guid;
+                    };
+                    moduleName = moduleName;
+                };
+                
+                await* topUpOneCanister(location, canister_id);
+            };
         };
     };
 
     system func inspect({
         caller : Principal;
     }): Bool {
-        checkCaller(caller);
+        onlyOwner(caller, "inspect"/*TODO*/);
         true;
     };
 

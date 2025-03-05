@@ -31,8 +31,9 @@ async function main() {
 
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
     const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
-    const pmIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/main_indirect/main_indirect.wasm"));
+    const pmMainIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/main_indirect/main_indirect.wasm"));
     const pmSimpleIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/simple_indirect/simple_indirect.wasm"));
+    const pmBatteryBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/battery/battery.wasm"));
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
     const pmExampleBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_backend/example_backend.wasm"));
 
@@ -75,8 +76,8 @@ async function main() {
         forceReinstall: false,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
-    const pmIndirectModule = await repositoryIndex.uploadModule({
-        code: {Wasm: pmIndirectBlob},
+    const pmMainIndirectModule = await repositoryIndex.uploadModule({
+        code: {Wasm: pmMainIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
@@ -85,6 +86,12 @@ async function main() {
         code: {Wasm: pmSimpleIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
+        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+    });
+    const pmBatteryModule = await repositoryIndex.uploadModule({
+        code: {Wasm: pmBatteryBlob},
+        installByDefault: true,
+        forceReinstall: false,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmExampleFrontend = await repositoryIndex.uploadModule({
@@ -130,8 +137,9 @@ async function main() {
         modules: [
             ['backend', pmBackendModule],
             ['frontend', pmFrontendModule],
-            ['indirect', pmIndirectModule],
+            ['indirect', pmMainIndirectModule],
             ['simple_indirect', pmSimpleIndirectModule],
+            ['battery', pmBatteryModule],
         ],
         dependencies: [],
         suggests: [],

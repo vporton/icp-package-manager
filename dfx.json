@@ -55,6 +55,13 @@
         "name": "candid:service"
       }]
     },
+    "battery": {
+      "type": "motoko",
+      "main": "src/package_manager_backend/Battery.mo",
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
     "example_backend": {
       "type": "motoko",
       "main": "src/example_backend/main.mo",
