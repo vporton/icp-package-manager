@@ -1167,6 +1167,19 @@ shared({caller = initialCaller}) actor class PackageManager({
         Common.installedPackageInfoShare(result);
     };
 
+    /// Note that it applies only to default installed modules and fails for additional modules.
+    public query({caller}) func getModulePrincipal(installationId: Common.InstallationId, moduleName: Text): async Principal {
+        onlyOwner(caller, "getModulePrincipal");
+
+        let ?inst = installedPackages.get(installationId) else {
+            Debug.trap("no such installation");
+        };
+        let ?m = inst.defaultInstalledModules.get(moduleName) else {
+            Debug.trap("no such module");
+        };
+        m;
+    };
+
     public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
         : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
     {

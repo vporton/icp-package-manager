@@ -403,7 +403,7 @@ module {
             );
         };
 
-    public type canister_settings = {
+    public type canister_settings = { // TODO: Remove.
         freezing_threshold : ?Nat;
         controllers : ?[Principal];
         memory_allocation : ?Nat;

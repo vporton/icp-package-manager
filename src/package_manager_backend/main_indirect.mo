@@ -49,9 +49,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): async () {
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`.
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed?
 
-        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+        let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
+        let battery = await pm.getModulePrincipal(0, "battery");
+        owners.put(battery, ()); // FIXME: unit test
+
         initialized := true;
     };
 
@@ -95,7 +98,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     type OurPMType = actor {
-        getNewCanisterCycles: () -> async Nat;
+        getNewCanisterCycles: () -> async Nat; // TODO: seems unneeded
+        getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
     };
 
     /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper)); // actor("aaaaa-aa");

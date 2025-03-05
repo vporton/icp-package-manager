@@ -3,8 +3,10 @@ import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
+import Map "mo:base/OrderedMap";
+import HashMap "mo:base/HashMap";
+import Common "../common";
 // import StableHashMap "mo:stablehashmap/FunctionalStableHashMap";
-import CyclesSimple "../lib/battery";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManagerOrBootstrapper: Principal;
@@ -86,25 +88,25 @@ shared({caller = initialOwner}) actor class Battery({
 
     private func compareModuleLocation(a: ModuleLocation, b: ModuleLocation): {#less; #equal; #greater;} {
         switch (Text.compare(a.package.packageName, b.package.packageName)) {
-        case (#less) {
-            #less;
-        };
-        case (#equal) {
-            switch (Blob.compare(a.package.guid, b.package.guid)) {
             case (#less) {
                 #less;
             };
             case (#equal) {
-                Text.compare(a.moduleName, b.moduleName);
+                switch (Blob.compare(a.package.guid, b.package.guid)) {
+                case (#less) {
+                    #less;
+                };
+                case (#equal) {
+                    Text.compare(a.moduleName, b.moduleName);
+                };
+                case (#greater) {
+                    #greater;
+                };
+                };
             };
             case (#greater) {
                 #greater;
             };
-            };
-        };
-        case (#greater) {
-            #greater;
-        };
         };
     };
 
@@ -122,7 +124,7 @@ shared({caller = initialOwner}) actor class Battery({
         canisterKindsMap: CanisterKindsMap;
     };
 
-    public func newBattery(): Battery =
+    private func newBattery(): Battery =
         {
             defaultFulfillment = {
                 threshold = 3_000_000_000_000;
@@ -132,19 +134,10 @@ shared({caller = initialOwner}) actor class Battery({
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
         };
 
-    public func topUpAllCanisters(battery: Battery): async* () {
-        for (canisterId in OrderedMap.keys(battery.canisterMap)) {
-            await* topUpOneCanister(battery, canisterId);
-        };
-    };
-
-    public func addCanister(battery: Battery, canisterId: Principal, kind: Text) {
-        OrderedMap.put(battery.canisterMap, Principal.equal, Principal.hash, canisterId, kind);
-    };
-
-    public func insertCanisterKind(battery: Battery, kind: Text, info: Common.CanisterFulfillment) {
-        OrderedMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
-    };
+    // TODO:
+    // public func insertCanisterKind(battery: Battery, kind: Text, info: Common.CanisterFulfillment) {
+    //     OrderedMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
+    // };
 
     func initTimer<system>() {
         timer := ?(Timer.recurringTimer<system>(#seconds 3600, topUpAllCanisters)); // TODO: editable period
