@@ -7,6 +7,7 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
+import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import Install "../install";
 import IC "mo:ic";
@@ -488,6 +489,23 @@ shared({caller = initialCaller}) actor class MainIndirect({
         }
         catch (e) {
             Debug.print("upgradeOrInstallModule: " # Error.message(e));
+        };
+    };
+
+    /// Internal.
+    public shared({caller}) func topUpOneCanisterFinish(canister_id: Principal, fulfillment: Common.CanisterFulfillment): () {
+        try {
+            onlyOwner(caller, "topUpOneCanisterFinish");
+
+            let status = await IC.ic.canister_status({canister_id});
+            let remaining = status.cycles;
+            if (remaining <= fulfillment.threshold) {
+                Cycles.add<system>(fulfillment.installAmount);
+                await IC.ic.deposit_cycles({canister_id});
+            };
+        }
+        catch (e) {
+            Debug.print("topUpOneCanisterFinish: " # Error.message(e));
         };
     };
 

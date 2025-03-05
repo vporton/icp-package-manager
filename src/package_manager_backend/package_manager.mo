@@ -11,6 +11,7 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
+import Itertools "mo:itertools/Iter";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
@@ -1141,6 +1142,21 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // Accessor method //
+
+    /// Returns all (default installed and additional) modules canisters
+    public query({caller}) func getAllCanisters(): async [Principal] {
+        onlyOwner(caller, "getAllCanisters");
+
+        Iter.toArray(Itertools.flatten(
+            Iter.map<Common.InstalledPackageInfo, Iter.Iter<Principal>>(
+                installedPackages.vals(),
+                func (pkg: Common.InstalledPackageInfo) =
+                    Iter.map<(Text, Principal), Principal>(
+                        Common.modulesIterator(pkg), func ((_name: Text, value: Principal)) = value
+                    ),
+            ),
+        ));
+    };
 
     public query({caller}) func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
         onlyOwner(caller, "getInstalledPackage");

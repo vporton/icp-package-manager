@@ -445,4 +445,9 @@ module {
                 wasm;
             };
         };
+
+    public type CanisterFulfillment = {
+        threshold: Nat;
+        installAmount: Nat;
+    };
 }
