@@ -4,32 +4,24 @@ import Debug "mo:base/Debug";
 import Hash "mo:base/Hash";
 import Text "mo:base/Text";
 import Error "mo:base/Error";
-import OrderedMap "mo:base/OrderedMap";
+import Map "mo:base/OrderedMap";
 
 module {
-  public type CanisterFulfillmentInfo = {
+  public type CanisterFulfillment = {
     threshold: Nat;
     installAmount: Nat;
   };
 
-  /// It makes sense to provide only, if the battery is controlled by childs.
-  public type BatteryActor = actor {
-    cycles_simple_provideCycles: query (needy: Principal) -> async ();
-  };
-
-  public type ChildActor = actor {
-    cycles_simple_availableCycles: query () -> async Nat;
-  };
-
   public type CanisterKind = Text;
 
-  public type CanisterMap = OrderedMap.Make<Principal, CanisterKind>;
+  public type CanisterMap = Map.Map<Principal, CanisterKind>;
 
-  public type CanisterKindsMap = OrderedMap.Map<CanisterKind, CanisterFulfillmentInfo>;
+  public type CanisterKindsMap = Map.Map<CanisterKind, CanisterFulfillment>;
 
   /// Battery API ///
 
   public type Battery = {
+    defaultFulfillment: CanisterFulfillment;
     canisterMap: CanisterMap;
     canisterKindsMap: CanisterKindsMap;
   };
@@ -37,7 +29,7 @@ module {
   public func newBattery(): Battery {
     {
       canisterMap = OrderedMap.init<Principal, CanisterKind>();
-      canisterKindsMap = OrderedMap.init<CanisterKind, CanisterFulfillmentInfo>();
+      canisterKindsMap = OrderedMap.init<CanisterKind, CanisterFulfillment>();
     };
   };
 
@@ -87,7 +79,7 @@ module {
     OrderedMap.put(battery.canisterMap, Principal.equal, Principal.hash, canisterId, kind);
   };
 
-  public func insertCanisterKind(battery: Battery, kind: Text, info: CanisterFulfillmentInfo) {
+  public func insertCanisterKind(battery: Battery, kind: Text, info: CanisterFulfillment) {
     OrderedMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
   };
 

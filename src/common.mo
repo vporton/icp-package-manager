@@ -288,9 +288,9 @@ module {
 
     public type InstalledPackageInfo = {
         id: InstallationId;
-        package: PackageInfo;
-        packageRepoCanister: Principal;
-        defaultInstalledModules: HashMap.HashMap<Text, Principal>;
+        var package: PackageInfo;
+        var packageRepoCanister: Principal;
+        var defaultInstalledModules: HashMap.HashMap<Text, Principal>;
         additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>;
         var pinned: Bool;
     };
@@ -341,9 +341,9 @@ module {
 
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
         id = info.id;
-        package = unsharePackageInfo(info.package);
-        packageRepoCanister = info.packageRepoCanister;
-        defaultInstalledModules = HashMap.fromIter(
+        var package = unsharePackageInfo(info.package);
+        var packageRepoCanister = info.packageRepoCanister;
+        var defaultInstalledModules = HashMap.fromIter(
             info.defaultInstalledModules.vals(),
             info.defaultInstalledModules.size(),
             Text.equal,
