@@ -44,6 +44,7 @@ actor class Bootstrapper() = this {
         backendWasmModule: Common.SharedModule;
         indirectWasmModule: Common.SharedModule;
         simpleIndirectWasmModule: Common.SharedModule;
+        batteryWasmModule: Common.SharedModule;
         user: Principal;
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
@@ -54,7 +55,12 @@ actor class Bootstrapper() = this {
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-    }): async {backendPrincipal: Principal; mainIndirectPrincipal: Principal; simpleIndirectPrincipal: Principal} {
+    }): async {
+        backendPrincipal: Principal;
+        mainIndirectPrincipal: Principal;
+        simpleIndirectPrincipal: Principal;
+        batteryPrincipal: Principal;
+    } {
         let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
             user;
@@ -66,6 +72,11 @@ actor class Bootstrapper() = this {
             cyclesAmount = newCanisterCycles;
         });
         let {canister_id = simple_indirect_canister_id} = await* Install.myCreateCanister({
+            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+            user;
+            cyclesAmount = newCanisterCycles;
+        });
+        let {canister_id = battery_canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
             user;
             cyclesAmount = newCanisterCycles;
@@ -113,6 +124,20 @@ actor class Bootstrapper() = this {
             simpleIndirect = simple_indirect_canister_id;
             user;
         });
+        await* Install.myInstallCode({
+            installationId = 0;
+            upgradeId = null;
+            canister_id = battery_canister_id;
+            wasmModule = Common.unshareModule(batteryWasmModule);
+            installArg = to_candid({
+                installationId = 0; // TODO
+                mainIndirect = indirect_canister_id;
+            });
+            packageManagerOrBootstrapper = backend_canister_id;
+            mainIndirect = indirect_canister_id;
+            simpleIndirect = simple_indirect_canister_id;
+            user;
+        });
 
         // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
         //     addOwner: (newOwner: Principal) -> async ();
@@ -127,11 +152,12 @@ actor class Bootstrapper() = this {
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
 
+        Debug.print("XX: " # debug_show(frontend) # " " # debug_show(indirect_canister_id)); // FIXME: Remove.
         await* tweakFrontend(frontend, frontendTweakPrivKey, {
             simple_indirect_canister_id; indirect_canister_id; backend_canister_id; user;
         });
 
-        for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend].vals()) {
+        for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id, battery_canister_id, frontend].vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
@@ -174,6 +200,7 @@ actor class Bootstrapper() = this {
             ("frontend", frontend),
             ("indirect", indirect_canister_id),
             ("simple_indirect", simple_indirect_canister_id),
+            ("battery", battery_canister_id),
           ];
           repo = repo;
           user;
@@ -181,7 +208,12 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
-        {backendPrincipal = backend_canister_id; mainIndirectPrincipal = indirect_canister_id; simpleIndirectPrincipal = simple_indirect_canister_id};
+        {
+            backendPrincipal = backend_canister_id;
+            mainIndirectPrincipal = indirect_canister_id;
+            simpleIndirectPrincipal = simple_indirect_canister_id;
+            batteryPrincipal = battery_canister_id;
+        };
     };
 
     public type PubKey = Blob;

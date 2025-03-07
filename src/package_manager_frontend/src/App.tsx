@@ -89,6 +89,7 @@ function GlobalUI() {
           backendWasmModule: modules.get("backend")!,
           indirectWasmModule: modules.get("indirect")!,
           simpleIndirectWasmModule: modules.get("simple_indirect")!,
+          batteryWasmModule: modules.get("battery")!,
           user: principal!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,

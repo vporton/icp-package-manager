@@ -37,8 +37,9 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
+        const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
-            wasmModule: pkgReal.modules[1][1] as SharedModule,
+            wasmModule: frontendModule[1] as SharedModule,
             installArg: new Uint8Array(IDL.encode(
                 [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
                 [{user: props.user, installationId: 0 /* TODO */}],

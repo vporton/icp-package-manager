@@ -144,11 +144,12 @@ describe('My Test Suite', () => {
 
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} =
+        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal, batteryPrincipal} =
             await bootstrapper2.bootstrapBackend({
                 backendWasmModule: icPackModules.get("backend")!,
                 indirectWasmModule: icPackModules.get("indirect")!,
                 simpleIndirectWasmModule: icPackModules.get("simple_indirect")!,
+                batteryWasmModule: icPackModules.get("battery")!,
                 user: backendUser,
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
                 frontendTweakPrivKey,
@@ -159,6 +160,7 @@ describe('My Test Suite', () => {
         canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
         canisterNames.set(mainIndirectPrincipal.toText(), 'mainIndirectPrincipal');
         canisterNames.set(simpleIndirectPrincipal.toText(), 'simpleIndirectPrincipal');
+        canisterNames.set(batteryPrincipal.toText(), 'batteryPrincipal');
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
@@ -174,16 +176,21 @@ describe('My Test Suite', () => {
                 new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
             );
         }
+        // TODO: Check `batteryPrincipal` too.
         for (const [principal, create] of [
             [simpleIndirectPrincipal, createSimpleIndirectActor],
             [mainIndirectPrincipal, createIndirectActor],
-            [backendPrincipal, createPackageManager]
+            [backendPrincipal, createPackageManager],
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
+            const expectedOwners = [simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser];
+            if (principal === mainIndirectPrincipal) {
+                expectedOwners.push(batteryPrincipal); // FIXME: There was created two batteries.
+            }
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
+                new Set(expectedOwners)
             );
         }
         console.log("Checking PM frontend owners...");
