@@ -52,8 +52,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
-        let battery = await pm.getModulePrincipal(installationId, "battery");
-        owners.put(battery, ()); // FIXME: unit test
+        // FIXME: Uncomment:
+        // let battery = await pm.getModulePrincipal(installationId, "battery");
+        // owners.put(battery, ()); // FIXME: unit test
 
         initialized := true;
     };
