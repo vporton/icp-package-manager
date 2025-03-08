@@ -53,7 +53,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
         let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
         let battery = await pm.getModulePrincipal(installationId, "battery");
-        owners.put(battery, ()); // FIXME: unit test
+        owners.put(battery, ());
 
         initialized := true;
     };
