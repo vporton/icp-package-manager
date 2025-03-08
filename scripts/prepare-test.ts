@@ -94,13 +94,13 @@ async function main() {
         forceReinstall: false,
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
-    const pmExampleFrontend = await repositoryIndex.uploadModule({
+    const exampleFrontend = await repositoryIndex.uploadModule({
         code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
         callbacks: [],
     });
-    const pmExampleBackend = await repositoryIndex.uploadModule({
+    const exampleBackend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleBackendBlob},
         installByDefault: true,
         forceReinstall: false,
@@ -167,8 +167,8 @@ async function main() {
 
     const efReal: SharedRealPackageInfo = {
         modules: [
-            ['example1', pmExampleFrontend],
-            ['example2', pmExampleBackend],
+            ['example1', exampleFrontend],
+            ['example2', exampleBackend],
         ],
         dependencies: [],
         suggests: [],
