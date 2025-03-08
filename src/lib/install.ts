@@ -135,8 +135,7 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
             }
             catch (_) {} // TODO
             if (i == 30) {
-                alert("Cannot initilialize canisters");
-                return;
+                throw "Cannot initilialize canisters";
             }
             await new Promise<void>((resolve, _reject) => {
                 setTimeout(() => resolve(), 1000);
