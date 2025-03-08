@@ -68,13 +68,12 @@ shared({caller = initialOwner}) actor class Battery({
     stable var initialized = false;
 
     public shared({caller}) func init() : async () {
-        // FIXME: Uncomment:
-        // onlyOwner(caller, "init");
-        // if (initialized) {
-        //     Debug.trap("already initialized");
-        // };
+        onlyOwner(caller, "init");
+        if (initialized) {
+            Debug.trap("already initialized");
+        };
 
-        // initTimer<system>();
+        initTimer<system>();
 
         initialized := true;
     };
