@@ -152,7 +152,6 @@ actor class Bootstrapper() = this {
         //     removeOwner: (oldOwner: Principal) -> async (); 
         // };
 
-        Debug.print("XX: " # debug_show(frontend) # " " # debug_show(indirect_canister_id)); // FIXME: Remove.
         await* tweakFrontend(frontend, frontendTweakPrivKey, {
             simple_indirect_canister_id; indirect_canister_id; backend_canister_id; user;
         });
