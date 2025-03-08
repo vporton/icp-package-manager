@@ -187,7 +187,7 @@ describe('My Test Suite', () => {
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
             const expectedOwners = [simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser];
             if (principal === mainIndirectPrincipal) {
-                expectedOwners.push(batteryPrincipal); // FIXME: There have been created two batteries.
+                expectedOwners.push(batteryPrincipal);
             }
             expect(new Set(owners)).to.equalPrincipalSet(
                 new Set(expectedOwners)
