@@ -190,7 +190,6 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        Debug.print("BEFORE INSTALLING"); // FIXME: Remove.
         ignore await backend.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
@@ -207,7 +206,6 @@ actor class Bootstrapper() = this {
           mainIndirect = indirect_canister_id;
           additionalPackages;
         });
-        Debug.print("AFTER INITIALIZED INSTALLING"); // FIXME: Remove.
 
         {
             backendPrincipal = backend_canister_id;

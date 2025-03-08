@@ -427,7 +427,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
-                    oldPkgReal.modules.entries(), // FIXME: Should be only installed modules. // FIXME: also additional modules
+                    oldPkgReal.modules.entries(),
                     func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
                 ),
                 oldPkgReal.modules.size(), // TODO: It can be smaller.
