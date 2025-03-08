@@ -732,7 +732,12 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         let bi = if (pkg.bootstrapping) {
             // TODO: hack (instead should base this list on package description)
-            [("backend", Principal.fromActor(this)), ("indirect", Principal.fromActor(getMainIndirect())), ("simple_indirect", Principal.fromActor(getSimpleIndirect()))];
+            [
+                ("backend", Principal.fromActor(this)),
+                ("indirect", Principal.fromActor(getMainIndirect())),
+                ("simple_indirect", Principal.fromActor(getSimpleIndirect())),
+                ("battery", await getModulePrincipal(0/*TODO*/, "battery")), // TODO: Don't call shared.
+            ];
         } else {
             let ?pkg0 = installedPackages.get(0) else {
                 Debug.trap("package manager not installed");
