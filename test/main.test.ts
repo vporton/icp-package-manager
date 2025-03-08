@@ -241,7 +241,6 @@ describe('My Test Suite', () => {
             afterInstallCallback: [],
         });
         await waitTillInitialized(backendAgent, backendPrincipal, upgradeableInstallationId);
-        await sleep(10000); // FIXME: Should not be needed.
         console.log("Upgrading `upgradeable` package...");
         await packageManager.upgradePackages({
             packages: [{
