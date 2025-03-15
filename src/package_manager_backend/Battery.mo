@@ -7,6 +7,7 @@ import Map "mo:base/OrderedMap";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
+import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
 
@@ -173,6 +174,7 @@ shared({caller = initialOwner}) actor class Battery({
                 battery.defaultFulfillment;
             };
         };
+        Cycles.add<system>(2**128); // It will be only a part of it used.
         getMainIndirect().topUpOneCanisterFinish(canister_id, fulfillment);
     };
 
