@@ -159,7 +159,7 @@ function App2() {
               </Nav>
               <Nav>
                 {" "}Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
-                <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none'}}>&#x27F3;</a>
+                <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
               </Nav>
             </Navbar>
           </nav>
