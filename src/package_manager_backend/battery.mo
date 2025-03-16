@@ -174,7 +174,8 @@ shared({caller = initialOwner}) actor class Battery({
                 battery.defaultFulfillment;
             };
         };
-        Cycles.add<system>(2**128); // It will be only a part of it used.
+        // FIXME: Balance may decrease a little during the call.
+        Cycles.add<system>(Cycles.balance()); // It will be only a part of it used.
         getMainIndirect().topUpOneCanisterFinish(canister_id, fulfillment);
     };
 

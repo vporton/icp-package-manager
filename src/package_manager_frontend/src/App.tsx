@@ -1,8 +1,8 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Route, Routes, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Link, Route, Routes, useSearchParams } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider, useAuth, getIsLocal } from './auth/use-auth-client';
@@ -131,6 +131,17 @@ function GlobalUI() {
 }
 
 function App2() {
+  const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
+  const glob = useContext(GlobalContext);
+  function updateCyclesAmount() {
+    setCyclesAmount(undefined); 
+    if (glob.packageManager !== undefined) {
+      glob.packageManager.userBalance().then((amount) => {
+        setCyclesAmount(parseInt(amount.toString()))
+      });
+    }
+  }
+  useEffect(updateCyclesAmount, [glob.packageManager]);
   return (
     <main id="main">
       <div>
@@ -145,6 +156,10 @@ function App2() {
               </Nav>
               <Nav>
                 <AuthButton/>
+              </Nav>
+              <Nav>
+                {" "}Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
+                <a className='btn btn-primary' onClick={updateCyclesAmount} style={{padding: '0'}}>&#x27F3;</a>
               </Nav>
             </Navbar>
           </nav>

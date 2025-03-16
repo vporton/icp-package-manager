@@ -14,13 +14,15 @@ import RBTree "mo:base/RBTree";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
+import Battery "battery";
+import CyclesLedger "canister:cycles_ledger";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
     mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
-    installationId = _: Common.InstallationId;
+    installationId: Common.InstallationId;
     userArg = _: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
@@ -143,6 +145,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             Principal.equal,
             Principal.hash);
 
+    var battery: Battery.Battery = actor("aaaaa-aa");
+
     public shared({caller}) func init({
         // installationId: Common.InstallationId;
         // canister: Principal;
@@ -153,6 +157,14 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
         owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
+
+        let ?inst = installedPackages.get(installationId) else {
+            Debug.trap("error getting installation");
+        };
+        let ?b = inst.defaultInstalledModules.get("battery") else {
+            Debug.trap("error getting battery");
+        };
+        battery := actor(Principal.toText(b));
 
         initialized := true;
     };
@@ -1343,7 +1355,19 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-   // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
+    // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
+
+    private func userAccountBlob(user: Principal): Blob {
+        Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(user)));
+    };
+
+    private func userAccount(user: Principal): CyclesLedger.Account {
+        {owner = Principal.fromActor(battery); subaccount = ?(Principal.toBlob(user))};
+    };
+
+    public composite query({caller}) func userBalance(): async Nat {
+        await CyclesLedger.icrc1_balance_of(userAccount(caller));
+    };
 
     // Adjustable values //
 

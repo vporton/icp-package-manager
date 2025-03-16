@@ -152,7 +152,7 @@
       }]
     },
     "cycles_ledger": {
-      "main": "src/MockCreateCanister.mo",
+      "main": "src/MockCyclesLedger.mo",
       "type": "motoko",
       "remote": {
         "id": {

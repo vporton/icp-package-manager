@@ -6,7 +6,7 @@
 import Cycles "mo:base/ExperimentalCycles";
 import Principal "mo:base/Principal";
 
-actor MockCreateCanister {
+actor MockCyclesLedger {
     // Cycles Ledger API
 
     type BlockIndex = Nat;
@@ -92,5 +92,16 @@ actor MockCreateCanister {
             block_id = 0;
             canister_id;
         };
+    };
+
+    type Subaccount = Blob;
+
+    type Account = {
+        owner : Principal;
+        subaccount : ?Subaccount;
+    };
+
+	public query func icrc1_balance_of(_account: Account): async Nat {
+        10_000_000_000_000;
     };
 }
