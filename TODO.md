@@ -1,5 +1,9 @@
 Remaining things TODO:
 
+- To collect a fee, store in a `var` how much cycles it "processed".
+  Before distributing cycles to modules, pay fee from remaining cycles.
+  When withdrawing cycles, update the `var`.
+
 - Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
 
 - FIXME: "Choose package version for installation" should warn when user is not logged in.
