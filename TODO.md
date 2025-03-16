@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- Battery canister should not supply cycles to itself.  
+
 - Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
 - Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
