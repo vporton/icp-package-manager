@@ -136,6 +136,8 @@ shared({caller = initialOwner}) actor class Battery({
         defaultFulfillment: Common.CanisterFulfillment;
         canisterMap: CanisterMap;
         canisterKindsMap: CanisterKindsMap;
+        /// The number of cycles from which the fee has been already paid.
+        var activatedCycles;
     };
 
     private func newBattery(): Battery =
@@ -146,6 +148,7 @@ shared({caller = initialOwner}) actor class Battery({
             };
             canisterMap = moduleLocationMap.empty<CanisterKind>();
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
+            activatedCycles = 0;
         };
 
     // TODO:
@@ -180,6 +183,13 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     private func topUpAllCanisters(): async () {
+        let newCycles = Cycles.balance() - battery.activatedCycles;
+        if (newCycles != 0) {
+            let fee = newCycles * 0.05; // 5%
+            // TODO: Transfer the fee to the owner.
+            battery.activatedCycles += newCycles - fee;
+        };
+
         let allCanisters = await getPM().getAllCanisters();
         
         for (entry in allCanisters.vals()) {

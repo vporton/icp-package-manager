@@ -1,8 +1,6 @@
 Remaining things TODO:
 
-- To collect a fee, store in a `var` how much cycles it "processed".
-  Before distributing cycles to modules, pay fee from remaining cycles.
-  When withdrawing cycles, update the `var`.
+- Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
 - Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
 
