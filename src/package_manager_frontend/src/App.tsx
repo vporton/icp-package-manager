@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
+import { Button, Container, Dropdown, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Link, Route, Routes, useSearchParams } from 'react-router-dom';
@@ -132,6 +132,7 @@ function GlobalUI() {
 
 function App2() {
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
+  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
   function updateCyclesAmount() {
     setCyclesAmount(undefined); 
@@ -142,6 +143,20 @@ function App2() {
     }
   }
   useEffect(updateCyclesAmount, [glob.packageManager]);
+  useEffect(() => {
+    if (glob.packageManager !== undefined) {
+      glob.packageManager.userAccountBlob().then((b) => {
+        setCyclesPaymentAddress(b as Uint8Array);
+      });
+    }
+  }, [glob.packageManager]);
+  // const cyclesPaymentAddress = AccountIdentifier.fromPrincipal({ principal: Principal.fromText(process.env.CANISTER_ID_BATTERY!) });
+  function AddressPopup() {
+    return cyclesPaymentAddress !== undefined
+      ? <>Send cycles to <code>{Buffer.from(cyclesPaymentAddress).toString('hex')}</code>.</>
+      : undefined;
+    // TODO: QR-code
+  }
   return (
     <main id="main">
       <div>
@@ -158,7 +173,17 @@ function App2() {
                 <AuthButton/>
               </Nav>
               <Nav>
-                {" "}Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
+                {" "}
+                <Dropdown>
+                  <Dropdown.Toggle variant="success" id="dropdown-basic">
+                    Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item as="div" className="dropdown-item">
+                      <AddressPopup/>
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
                 <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
               </Nav>
             </Navbar>

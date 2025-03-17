@@ -1357,8 +1357,8 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
-    private func userAccountBlob(user: Principal): Blob {
-        Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(user)));
+    public composite query({caller}) func userAccountBlob(): async Blob {
+        Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(caller)));
     };
 
     private func userAccount(user: Principal): CyclesLedger.Account {
