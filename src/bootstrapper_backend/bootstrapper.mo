@@ -73,7 +73,7 @@ actor class Bootstrapper() = this {
             packageManagerOrBootstrapper;
             frontend;
             frontendTweakPrivKey;
-            repo;
+            // repo;
             additionalPackages;
         });
     };
