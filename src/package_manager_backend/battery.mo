@@ -1,16 +1,21 @@
 import Timer "mo:base/Timer";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
+import Int "mo:base/Int";
+import Float "mo:base/Float";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Map "mo:base/OrderedMap";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
+import Time "mo:base/Time";
+import Nat64 "mo:base/Nat64";
 import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
-import env "env";
+import CyclesLedger "canister:cycles_ledger";
+import env "mo:env";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManagerOrBootstrapper: Principal;
@@ -140,7 +145,7 @@ shared({caller = initialOwner}) actor class Battery({
         canisterMap: CanisterMap;
         canisterKindsMap: CanisterKindsMap;
         /// The number of cycles from which the fee has been already paid.
-        var activatedCycles;
+        var activatedCycles: Nat;
     };
 
     private func newBattery(): Battery =
@@ -151,7 +156,7 @@ shared({caller = initialOwner}) actor class Battery({
             };
             canisterMap = moduleLocationMap.empty<CanisterKind>();
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
-            activatedCycles = 0;
+            var activatedCycles = 0;
         };
 
     // TODO:
@@ -184,8 +189,22 @@ shared({caller = initialOwner}) actor class Battery({
     private func topUpAllCanisters(): async () {
         let newCycles = Cycles.balance() - battery.activatedCycles;
         if (newCycles != 0) {
-            let fee = newCycles * 0.05; // 5%
-            CyclesLedger.transferCycles(revenueRecipient, fee);
+            // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
+            let fee = newCycles / 20; // 5%
+            let res = await CyclesLedger.icrc1_transfer({
+                to = {owner = revenueRecipient; subaccount = null};
+                fee = null;
+                memo = null;
+                from_subaccount = null; // {owner = revenueRecipient; subaccount = ?null};
+                created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+                amount = fee;
+            });
+            switch (res) {
+                case (#Err err) {
+                    Debug.trap("cannot transfer fee: " # debug_show(err));
+                };
+                case (#Ok _) {};
+            };
             battery.activatedCycles += newCycles - fee;
         };
 

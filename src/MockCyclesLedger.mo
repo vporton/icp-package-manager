@@ -104,4 +104,51 @@ actor MockCyclesLedger {
 	public query func icrc1_balance_of(_account: Account): async Nat {
         10_000_000_000_000;
     };
+
+    type Timestamp = Nat64;
+
+    type TransferArgs = {
+        to : Account;
+        fee : ?Nat;
+        memo : ?Blob;
+        from_subaccount : ?Subaccount;
+        created_at_time : ?Timestamp;
+        amount : Nat;
+    };
+
+    type TransferError = {
+        #GenericError : {
+            message : Text;
+            error_code : Nat;
+        };
+        #TemporarilyUnavailable;
+        #BadBurn : {
+            min_burn_amount : Nat;
+        };
+        #Duplicate : {
+            duplicate_of : Nat;
+        };
+        #BadFee : {
+            expected_fee : Nat;
+        };
+        #CreatedInFuture : {
+            ledger_time : Timestamp;
+        };
+        #TooOld;
+        #InsufficientFunds : {
+            balance : Nat;
+        }
+    };
+
+    type TransferResult = {
+        #Ok : Nat;
+        #Err : TransferError;
+    };
+
+
+    public shared func icrc1_transfer(_args: TransferArgs): async TransferResult {
+        // Do nothing.
+        #Ok 1;
+    };
+
 }

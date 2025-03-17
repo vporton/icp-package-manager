@@ -6,7 +6,6 @@ import Int "mo:base/Int";
 import Time "mo:base/Time";
 import Blob "mo:base/Blob";
 import Sha256 "mo:sha2/Sha256";
-import Settings "Settings";
 import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";
@@ -28,11 +27,7 @@ module {
                 };
                 subnet_selection = null;
             };
-            from_subaccount = if (Settings.debugFunds) {
-                null;
-            } else {
-                ?Blob.toArray(Sha256.fromBlob(#sha256, to_candid(user))); // TODO: not the most efficient way (but is it standard?)
-            };
+            from_subaccount = ?Blob.toArray(Sha256.fromBlob(#sha256, to_candid(user))); // TODO: not the most efficient way (but is it standard?)
         });
         let canister_id = switch (res) {
             case (#Ok {canister_id}) canister_id;

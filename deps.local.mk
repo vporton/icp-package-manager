@@ -194,16 +194,10 @@ generate@upgrade_example_backend3_v2: build@upgrade_example_backend3_v2 \
 src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did.js src/declarations/upgrade_example_backend3_v2/index.js src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did.d.ts src/declarations/upgrade_example_backend3_v2/index.d.ts src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did: .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did
 	dfx generate --no-compile --network $(NETWORK) upgrade_example_backend3_v2
 
-.dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: src/common.mo
-src/package_manager_backend/main_indirect.mo: src/common.mo
+.dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did: src/common.mo
 src/install.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
-src/install.mo: src/Settings.mo
 src/install.mo: src/common.mo
 src/install.mo: src/copy_assets.mo
-src/package_manager_backend/main_indirect.mo: src/install.mo
-src/package_manager_backend/main_indirect.mo: src/package_manager_backend/simple_indirect.mo
-.dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: src/package_manager_backend/main_indirect.mo
-.dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did: src/common.mo
 .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did: src/install.mo
 .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did: .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did
 .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did
@@ -216,14 +210,25 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/simple
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/install.mo
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/package_manager_backend/simple_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/common.mo
+src/package_manager_backend/main_indirect.mo: src/common.mo
+src/package_manager_backend/main_indirect.mo: src/install.mo
+src/package_manager_backend/main_indirect.mo: src/package_manager_backend/simple_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/main_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/simple_indirect.mo
-src/package_manager_backend/battery.mo: src/common.mo
-src/package_manager_backend/battery.mo: src/package_manager_backend/main_indirect.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: src/package_manager_backend/battery.mo
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did
+.dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.did:
+	dfx canister create --network $(NETWORK) upgrade_example_backend2_v1
+	dfx build --no-deps --network $(NETWORK) upgrade_example_backend2_v1
+
+
+deploy-self@upgrade_example_backend2_v1: build@upgrade_example_backend2_v1
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.upgrade_example_backend2_v1) upgrade_example_backend2_v1
+
+deploy@upgrade_example_backend2_v1: deploy-self@upgrade_example_backend2_v1
+
 .PHONY: .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz:
 	dfx canister create --network $(NETWORK) package_manager_frontend
@@ -249,36 +254,15 @@ deploy-self@battery: build@battery
 
 deploy@battery: deploy-self@battery
 
-.dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did:
-	dfx canister create --network $(NETWORK) cycles_ledger
-	dfx build --no-deps --network $(NETWORK) cycles_ledger
+.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did:
+	dfx canister create --network $(NETWORK) bootstrapper_data
+	dfx build --no-deps --network $(NETWORK) bootstrapper_data
 
 
-deploy-self@cycles_ledger: build@cycles_ledger
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.cycles_ledger) cycles_ledger
+deploy-self@bootstrapper_data: build@bootstrapper_data
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_data) bootstrapper_data
 
-deploy@cycles_ledger: deploy-self@cycles_ledger
-
-.dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did:
-	dfx canister create --network $(NETWORK) upgrade_example_backend1_v1
-	dfx build --no-deps --network $(NETWORK) upgrade_example_backend1_v1
-
-
-deploy-self@upgrade_example_backend1_v1: build@upgrade_example_backend1_v1
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.upgrade_example_backend1_v1) upgrade_example_backend1_v1
-
-deploy@upgrade_example_backend1_v1: deploy-self@upgrade_example_backend1_v1
-
-.dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did:
-	dfx canister create --network $(NETWORK) bootstrapper
-	dfx build --no-deps --network $(NETWORK) bootstrapper
-
-
-deploy-self@bootstrapper: build@bootstrapper
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper) bootstrapper
-
-deploy@bootstrapper: deploy@cycles_ledger deploy@bootstrapper_data deploy@repository \
-  deploy-self@bootstrapper
+deploy@bootstrapper_data: deploy-self@bootstrapper_data
 
 .dfx/$(NETWORK)/canisters/package_manager/package_manager.wasm .dfx/$(NETWORK)/canisters/package_manager/package_manager.did:
 	dfx canister create --network $(NETWORK) package_manager
@@ -291,37 +275,6 @@ deploy-self@package_manager: build@package_manager
 deploy@package_manager: deploy@bootstrapper deploy@cycles_ledger deploy@repository \
   deploy-self@package_manager
 
-.dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did:
-	dfx canister create --network $(NETWORK) repository
-	dfx build --no-deps --network $(NETWORK) repository
-
-
-deploy-self@repository: build@repository
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.repository) repository
-
-deploy@repository: deploy-self@repository
-
-.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm .dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
-	dfx canister create --network $(NETWORK) bookmark
-	dfx build --no-deps --network $(NETWORK) bookmark
-
-
-deploy-self@bookmark: build@bookmark
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
-
-deploy@bookmark: deploy-self@bookmark
-
-.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
-	dfx canister create --network $(NETWORK) simple_indirect
-	dfx build --no-deps --network $(NETWORK) simple_indirect
-
-
-deploy-self@simple_indirect: build@simple_indirect
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
-
-deploy@simple_indirect: deploy@cycles_ledger \
-  deploy-self@simple_indirect
-
 .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did:
 	dfx canister create --network $(NETWORK) upgrade_example_backend3_v2
 	dfx build --no-deps --network $(NETWORK) upgrade_example_backend3_v2
@@ -332,15 +285,20 @@ deploy-self@upgrade_example_backend3_v2: build@upgrade_example_backend3_v2
 
 deploy@upgrade_example_backend3_v2: deploy-self@upgrade_example_backend3_v2
 
-.dfx/$(NETWORK)/canisters/example_backend/example_backend.wasm .dfx/$(NETWORK)/canisters/example_backend/example_backend.did:
-	dfx canister create --network $(NETWORK) example_backend
-	dfx build --no-deps --network $(NETWORK) example_backend
+.PHONY: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
+.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz:
+	dfx canister create --network $(NETWORK) bootstrapper_frontend
+	dfx build --no-deps --network $(NETWORK) bootstrapper_frontend
 
 
-deploy-self@example_backend: build@example_backend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.example_backend) example_backend
+deploy-self@bootstrapper_frontend: build@bootstrapper_frontend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
 
-deploy@example_backend: deploy-self@example_backend
+
+build@bootstrapper_frontend: \
+  generate@bootstrapper generate@bookmark generate@internet_identity generate@repository
+deploy@bootstrapper_frontend: deploy@bootstrapper deploy@bookmark deploy@internet_identity deploy@repository \
+  deploy-self@bootstrapper_frontend
 
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did:
 	dfx canister create --network $(NETWORK) main_indirect
@@ -363,15 +321,36 @@ deploy-self@upgrade_example_backend2_v2: build@upgrade_example_backend2_v2
 
 deploy@upgrade_example_backend2_v2: deploy-self@upgrade_example_backend2_v2
 
-.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did:
-	dfx canister create --network $(NETWORK) bootstrapper_data
-	dfx build --no-deps --network $(NETWORK) bootstrapper_data
+.dfx/$(NETWORK)/canisters/bookmark/bookmark.wasm .dfx/$(NETWORK)/canisters/bookmark/bookmark.did:
+	dfx canister create --network $(NETWORK) bookmark
+	dfx build --no-deps --network $(NETWORK) bookmark
 
 
-deploy-self@bootstrapper_data: build@bootstrapper_data
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_data) bootstrapper_data
+deploy-self@bookmark: build@bookmark
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) bookmark
 
-deploy@bootstrapper_data: deploy-self@bootstrapper_data
+deploy@bookmark: deploy-self@bookmark
+
+.dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did:
+	dfx canister create --network $(NETWORK) bootstrapper
+	dfx build --no-deps --network $(NETWORK) bootstrapper
+
+
+deploy-self@bootstrapper: build@bootstrapper
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper) bootstrapper
+
+deploy@bootstrapper: deploy@cycles_ledger deploy@bootstrapper_data deploy@repository \
+  deploy-self@bootstrapper
+
+.dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did:
+	dfx canister create --network $(NETWORK) cycles_ledger
+	dfx build --no-deps --network $(NETWORK) cycles_ledger
+
+
+deploy-self@cycles_ledger: build@cycles_ledger
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.cycles_ledger) cycles_ledger
+
+deploy@cycles_ledger: deploy-self@cycles_ledger
 
 .PHONY: .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz
 .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz:
@@ -388,30 +367,15 @@ build@example_frontend: \
 deploy@example_frontend: deploy@example_backend \
   deploy-self@example_frontend
 
-.dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.did:
-	dfx canister create --network $(NETWORK) upgrade_example_backend2_v1
-	dfx build --no-deps --network $(NETWORK) upgrade_example_backend2_v1
+.dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did:
+	dfx canister create --network $(NETWORK) repository
+	dfx build --no-deps --network $(NETWORK) repository
 
 
-deploy-self@upgrade_example_backend2_v1: build@upgrade_example_backend2_v1
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.upgrade_example_backend2_v1) upgrade_example_backend2_v1
+deploy-self@repository: build@repository
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.repository) repository
 
-deploy@upgrade_example_backend2_v1: deploy-self@upgrade_example_backend2_v1
-
-.PHONY: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
-.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz:
-	dfx canister create --network $(NETWORK) bootstrapper_frontend
-	dfx build --no-deps --network $(NETWORK) bootstrapper_frontend
-
-
-deploy-self@bootstrapper_frontend: build@bootstrapper_frontend
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bootstrapper_frontend) bootstrapper_frontend
-
-
-build@bootstrapper_frontend: \
-  generate@bootstrapper generate@bookmark generate@internet_identity generate@repository
-deploy@bootstrapper_frontend: deploy@bootstrapper deploy@bookmark deploy@internet_identity deploy@repository \
-  deploy-self@bootstrapper_frontend
+deploy@repository: deploy-self@repository
 
 .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.wasm.gz .dfx/$(NETWORK)/canisters/internet_identity/internet_identity.did:
 	dfx canister create --network $(NETWORK) internet_identity
@@ -422,4 +386,35 @@ deploy-self@internet_identity: build@internet_identity
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.internet_identity) internet_identity
 
 deploy@internet_identity: deploy-self@internet_identity
+
+.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did:
+	dfx canister create --network $(NETWORK) simple_indirect
+	dfx build --no-deps --network $(NETWORK) simple_indirect
+
+
+deploy-self@simple_indirect: build@simple_indirect
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.simple_indirect) simple_indirect
+
+deploy@simple_indirect: deploy@cycles_ledger \
+  deploy-self@simple_indirect
+
+.dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did:
+	dfx canister create --network $(NETWORK) upgrade_example_backend1_v1
+	dfx build --no-deps --network $(NETWORK) upgrade_example_backend1_v1
+
+
+deploy-self@upgrade_example_backend1_v1: build@upgrade_example_backend1_v1
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.upgrade_example_backend1_v1) upgrade_example_backend1_v1
+
+deploy@upgrade_example_backend1_v1: deploy-self@upgrade_example_backend1_v1
+
+.dfx/$(NETWORK)/canisters/example_backend/example_backend.wasm .dfx/$(NETWORK)/canisters/example_backend/example_backend.did:
+	dfx canister create --network $(NETWORK) example_backend
+	dfx build --no-deps --network $(NETWORK) example_backend
+
+
+deploy-self@example_backend: build@example_backend
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.example_backend) example_backend
+
+deploy@example_backend: deploy-self@example_backend
 
