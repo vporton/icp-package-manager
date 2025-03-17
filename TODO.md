@@ -1,6 +1,8 @@
 Remaining things TODO:
 
-- Battery canister should not supply cycles to itself.  
+- Battery canister should not supply cycles to itself.
+
+- The payment popup may not fit browser window.
 
 - Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
