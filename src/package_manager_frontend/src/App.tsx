@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Button, Container, Dropdown, Nav, NavDropdown, Navbar } from 'react-bootstrap';
+import { Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Link, Route, Routes, useSearchParams } from 'react-router-dom';
@@ -152,10 +152,40 @@ function App2() {
   }, [glob.packageManager]);
   // const cyclesPaymentAddress = AccountIdentifier.fromPrincipal({ principal: Principal.fromText(process.env.CANISTER_ID_BATTERY!) });
   function AddressPopup() {
+    const address = Buffer.from(cyclesPaymentAddress!).toString('hex');
+    const [copied, setCopied] = useState(false);
+    const copyToClipboard = async () => {
+      navigator.clipboard.writeText(address).then(() => {
+        try {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
+      });
+    }
+    const renderTooltip = (props: any) => (
+      <Tooltip {...props}>
+        {copied ? 'Copied!' : 'Copy to clipboard'}
+      </Tooltip>
+    );
     return cyclesPaymentAddress !== undefined
-      ? <>Send cycles to <code>{Buffer.from(cyclesPaymentAddress).toString('hex')}</code>.</>
+      ? (
+        // TODO: `stopPropagation` doesn't work in some reason.
+        <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+          <p>
+            Send cycles to{" "}
+            <OverlayTrigger placement="right" overlay={renderTooltip}>
+              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
+            </OverlayTrigger>
+          </p>
+          <p>
+            (<strong>Warning: 5% fee applied</strong>).
+          </p>
+          <p>TODO: QR-code</p>
+        </div>
+      )
       : undefined;
-    // TODO: QR-code
   }
   return (
     <main id="main">
