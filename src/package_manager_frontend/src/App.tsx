@@ -131,6 +131,7 @@ function GlobalUI() {
 }
 
 function App2() {
+  const {isAuthenticated} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
@@ -173,14 +174,12 @@ function App2() {
       ? (
         // TODO: `stopPropagation` doesn't work in some reason.
         <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+          <p><strong>Warning: 5% fee applied.</strong></p>
           <p>
             Send cycles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
               <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
             </OverlayTrigger>
-          </p>
-          <p>
-            (<strong>Warning: 5% fee applied</strong>).
           </p>
           <p>TODO: QR-code</p>
         </div>
@@ -202,7 +201,7 @@ function App2() {
               <Nav>
                 <AuthButton/>
               </Nav>
-              <Nav>
+              <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
                 {" "}
                 <Dropdown>
                   <Dropdown.Toggle variant="success" id="dropdown-basic">
