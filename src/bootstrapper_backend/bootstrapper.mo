@@ -8,6 +8,8 @@ import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 import Data "canister:bootstrapper_data";
+import Repository "../repository_backend/Repository";
+import Repository "canister:repository";
 
 actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
@@ -40,123 +42,92 @@ actor class Bootstrapper() = this {
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
+    ///
+    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining    cycles.
     public shared func bootstrapBackend({
-        backendWasmModule: Common.SharedModule;
-        indirectWasmModule: Common.SharedModule;
-        simpleIndirectWasmModule: Common.SharedModule;
-        batteryWasmModule: Common.SharedModule;
+        // backendWasmModule: Common.SharedModule;
+        // indirectWasmModule: Common.SharedModule;
+        // simpleIndirectWasmModule: Common.SharedModule;
+        // batteryWasmModule: Common.SharedModule;
+        modulesToInstall: [(Text, Common.SharedModule)];
         user: Principal;
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
-        repo: Common.RepositoryRO;
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
     }): async {
-        backendPrincipal: Principal;
-        mainIndirectPrincipal: Principal;
-        simpleIndirectPrincipal: Principal;
-        batteryPrincipal: Principal;
+        installedModules: [(Text, Principal)];
     } {
-        let {canister_id = backend_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+        let icPackPkg = await Repository.getPackage("icpack", "0.0.1"); // FIXME: instead `stable`
+        let #real icPackPkgReal = icPackPkg.specific else {
+            Debug.trap("icpack isn't a real package");
+        };
+        let modulesToInstall = icPackPkgReal.modules;
+        bootstrapBackendImpl({
+            modulesToInstall;
             user;
-            cyclesAmount = newCanisterCycles;
-        });
-        let {canister_id = indirect_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-            user;
-            cyclesAmount = newCanisterCycles;
-        });
-        let {canister_id = simple_indirect_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-            user;
-            cyclesAmount = newCanisterCycles;
-        });
-        let {canister_id = battery_canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-            user;
-            cyclesAmount = newCanisterCycles;
-        });
-
-        await* Install.myInstallCode({
-            installationId = 0;
-            upgradeId = null;
-            canister_id = backend_canister_id;
-            wasmModule = Common.unshareModule(backendWasmModule);
-            installArg = to_candid({
-                installationId = 0; // TODO
-                mainIndirect = indirect_canister_id;
-            });
             packageManagerOrBootstrapper;
-            mainIndirect = indirect_canister_id;
-            simpleIndirect = simple_indirect_canister_id;
-            user;
+            frontend;
+            frontendTweakPrivKey;
+            repo;
+            additionalPackages;
         });
-        await* Install.myInstallCode({
-            installationId = 0;
-            upgradeId = null;
-            canister_id = indirect_canister_id;
-            wasmModule = Common.unshareModule(indirectWasmModule);
-            installArg = to_candid({
-                installationId = 0; // TODO
-                mainIndirect = indirect_canister_id;
+    };
+
+    private func bootstrapBackendImpl({
+        modulesToInstall: HashMap.HashMap<Text, Common.SharedModule>;
+        user: Principal;
+        packageManagerOrBootstrapper: Principal;
+        frontend: Principal;
+        frontendTweakPrivKey: PrivKey;
+        additionalPackages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+        }];
+    }): async* {
+        installedModules: HashMap.HashMap<Text, Common.SharedModule>;
+    } {
+        // FIXME: At the beginning test that the user paid enough cycles.
+        let installedModules = HashMap.HashMap<Text, Common.SharedModule>(modulesToInstall.size(), Text.equals, Text.hash);
+        for (moduleName in modulesToInstall.keys()) {
+            let {canister_id} = await* Install.myCreateCanister({
+                mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+                user;
+                cyclesAmount = newCanisterCycles;
             });
-            packageManagerOrBootstrapper = backend_canister_id;
-            mainIndirect = indirect_canister_id;
-            simpleIndirect = simple_indirect_canister_id;
-            user;
-        });
-        await* Install.myInstallCode({
-            installationId = 0;
-            upgradeId = null;
-            canister_id = simple_indirect_canister_id;
-            wasmModule = Common.unshareModule(simpleIndirectWasmModule);
-            installArg = to_candid({
-                installationId = 0; // TODO
-                mainIndirect = indirect_canister_id;
+            installedModules.put(moduleName, canister_id);
+        };
+        for ((moduleName, canister_id) in installedModules.entries()) {
+            // TODO: I specify `indirect` two times.
+            await* Install.myInstallCode({
+                installationId = 0;
+                upgradeId = null;
+                canister_id;
+                wasmModule = Common.unshareModule(modulesToInstall.get(moduleName));
+                installArg = to_candid({
+                    installationId = 0; // TODO
+                    mainIndirect = installedModules.get("indirect");
+                });
+                packageManagerOrBootstrapper;
+                mainIndirect = installedModules.get("indirect");
+                simpleIndirect = installedModules.get("simple_indirect");
+                user;
             });
-            packageManagerOrBootstrapper = backend_canister_id;
-            mainIndirect = indirect_canister_id;
-            simpleIndirect = simple_indirect_canister_id;
-            user;
-        });
-        await* Install.myInstallCode({
-            installationId = 0;
-            upgradeId = null;
-            canister_id = battery_canister_id;
-            wasmModule = Common.unshareModule(batteryWasmModule);
-            installArg = to_candid({
-                installationId = 0; // TODO
-                mainIndirect = indirect_canister_id;
-            });
-            packageManagerOrBootstrapper = backend_canister_id;
-            mainIndirect = indirect_canister_id;
-            simpleIndirect = simple_indirect_canister_id;
-            user;
-        });
+        };
 
-        // let _indirect = actor (Principal.toText(indirect_canister_id)) : actor {
-        //     addOwner: (newOwner: Principal) -> async ();
-        //     setOurPM: (pm: Principal) -> async ();
-        //     removeOwner: (oldOwner: Principal) -> async (); 
-        // };
+        // TODO: Don't be explicit:
+        let simple_indirect_canister_id = installedModules.get("simple_indirect");
+        let indirect_canister_id = installedModules.get("indirect");
+        let backend_canister_id = installedModules.get("backend");
+        let controllers = [simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
+        await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
-        // let _backend = actor (Principal.toText(backend_canister_id)) : actor {
-        //     // setOwners: (newOwners: [Principal]) -> async ();
-        //     setMainIndirect: (main_indirect: MainIndirect) -> async (); 
-        //     addOwner: (newOwner: Principal) -> async (); 
-        //     removeOwner: (oldOwner: Principal) -> async (); 
-        // };
-
-        await* tweakFrontend(frontend, frontendTweakPrivKey, {
-            simple_indirect_canister_id; indirect_canister_id; backend_canister_id; user;
-        });
-
-        for (canister_id in [backend_canister_id, indirect_canister_id, simple_indirect_canister_id, battery_canister_id, frontend].vals()) {
+        for (canister_id in installedModules.vals()) {
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
@@ -164,7 +135,7 @@ actor class Bootstrapper() = this {
                 settings = {
                     compute_allocation = null;
                     // `indirect_canister_id` here is only for the package manager package:
-                    controllers = ?[simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
+                    controllers = ?controllers;
                     freezing_threshold = null;
                     log_visibility = null;
                     memory_allocation = null;
@@ -190,29 +161,19 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
+        // TODO: Transfer user cycles before this call:
         ignore await backend.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
           version = "0.0.1"; // TODO: should be `stable`.
-          preinstalledModules = [
-            ("backend", backend_canister_id),
-            ("frontend", frontend),
-            ("indirect", indirect_canister_id),
-            ("simple_indirect", simple_indirect_canister_id),
-            ("battery", battery_canister_id),
-          ];
-          repo = repo;
+          preinstalledModules = Iter.toArray(installedModules.entries());
+          repo;
           user;
           mainIndirect = indirect_canister_id;
           additionalPackages;
         });
 
-        {
-            backendPrincipal = backend_canister_id;
-            mainIndirectPrincipal = indirect_canister_id;
-            simpleIndirectPrincipal = simple_indirect_canister_id;
-            batteryPrincipal = battery_canister_id;
-        };
+        installedModules;
     };
 
     public type PubKey = Blob;
@@ -222,12 +183,7 @@ actor class Bootstrapper() = this {
     private func tweakFrontend(
         frontend: Principal,
         privKey: PrivKey,
-        {
-            backend_canister_id: Principal;
-            simple_indirect_canister_id: Principal;
-            indirect_canister_id: Principal;
-            user: Principal;
-        },
+        controllers: [Principal],
     ): async* () {
         let pubKey = await Data.getFrontendTweaker(frontend);
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
@@ -237,7 +193,7 @@ actor class Bootstrapper() = this {
         let owners = await assets.list_authorized();
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
-            for (principal in [simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user].vals()) {
+            for (principal in controllers.vals()) {
                 await assets.grant_permission({to_principal = principal; permission});
             };
             for (owner in owners.vals()) {
