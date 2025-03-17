@@ -10,6 +10,7 @@ import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
+import env "env";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManagerOrBootstrapper: Principal;
@@ -78,6 +79,8 @@ shared({caller = initialOwner}) actor class Battery({
 
         initialized := true;
     };
+
+    let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     private type OurPMType = actor {
         // getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
@@ -186,7 +189,7 @@ shared({caller = initialOwner}) actor class Battery({
         let newCycles = Cycles.balance() - battery.activatedCycles;
         if (newCycles != 0) {
             let fee = newCycles * 0.05; // 5%
-            // TODO: Transfer the fee to the owner.
+            CyclesLedger.transferCycles(revenueRecipient, fee);
             battery.activatedCycles += newCycles - fee;
         };
 

@@ -24,7 +24,7 @@ dist/
 
 # settings
 .env
-src/Settings.mo
+/.env-*.mo
 
 .mops
 .qodo
