@@ -173,12 +173,8 @@ shared({caller = initialOwner}) actor class Battery({
             textMap.get(battery.canisterKindsMap, kind)!;
         };
         let fulfillment = switch (info0) {
-            case (?x) {
-                x;
-            };
-            case (null) {
-                battery.defaultFulfillment;
-            };
+            case (?x) x;
+            case null battery.defaultFulfillment;
         };
         // FIXME: Balance may decrease a little during the call.
         Cycles.add<system>(Cycles.balance()); // It will be only a part of it used.
