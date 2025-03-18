@@ -54,9 +54,6 @@ Remaining things TODO:
 
 - A button to copy repository's principal.
 
-- FIXME: Ensure that clicking finishing install of a half-installing package doesn't interfere with its ongoing installation.
-  (It to be done by checking in writing a result that it has not been not yet written.)
-
 - Remove `indirectCaller` (remain only `simpleIndirect`) as controller.
 
 - Should we use 32-bytes hash as the ID of WASM value instead of number?
