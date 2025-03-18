@@ -10,10 +10,9 @@ import { createActor as createIndirectActor } from '../src/declarations/main_ind
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { createActor as createPMFrontend } from '../src/declarations/package_manager_frontend';
 import { createActor as createExampleFrontend } from '../src/declarations/example_frontend';
-import { SharedPackageInfo, SharedRealPackageInfo } from "../src/declarations/repository/repository.did";
+import { SharedRealPackageInfo } from "../src/declarations/repository/repository.did";
 import { config as dotenv_config } from 'dotenv';
-import { Bootstrapper } from "../src/declarations/bootstrapper/Bootstrapper.did";
-import { IDL } from "@dfinity/candid";
+import { Bootstrapper } from "../src/declarations/bootstrapper/bootstrapper.did";
 import { it } from "mocha";
 import { expect, Assertion } from "chai";
 import { SimpleIndirect } from "../src/declarations/simple_indirect/simple_indirect.did";
@@ -150,7 +149,6 @@ describe('My Test Suite', () => {
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
-                repo,
                 additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
             })).installedModules
         );
@@ -173,6 +171,7 @@ describe('My Test Suite', () => {
                 new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
             );
         }
+        console.log("Testing owners of the PM modules...");
         // TODO: Check `batteryPrincipal` too.
         for (const [principal, create] of [
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
@@ -183,7 +182,7 @@ describe('My Test Suite', () => {
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
             const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser];
-            if (principal === pmInst.get('backend')!) {
+            if (principal === pmInst.get('indirect')!) {
                 expectedOwners.push(pmInst.get('battery')!);
             }
             expect(new Set(owners)).to.equalPrincipalSet(
@@ -224,7 +223,7 @@ describe('My Test Suite', () => {
         console.log("Checking example frontend owners...");
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await exampleFrontend.list_permitted({permission});
-            expect(new Set(owners)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+            expect(new Set(owners)).to.equalPrincipalSet(new Set([pmInst.get('simple_indirect')!, backendUser]));
         }
 
         console.log("Installing `upgradeable` package...");
