@@ -107,7 +107,7 @@ export default function MainPage() {
             }
         });
     };
-    useEffect(reloadDistros, [glob.packageManager, glob.backend]);
+    useEffect(reloadDistros, [glob.packageManager, isAuthenticated]);
 
     async function deleteChecked() {
         await glob.packageManager!.removeStalled(repairedPackages);
