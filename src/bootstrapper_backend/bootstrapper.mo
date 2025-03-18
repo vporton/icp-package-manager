@@ -130,7 +130,11 @@ actor class Bootstrapper() = this {
                     installationId = 0; // TODO
                     mainIndirect;
                 });
-                packageManagerOrBootstrapper = backend;
+                packageManagerOrBootstrapper = if (moduleName == "backend") {
+                    packageManagerOrBootstrapper // to call `installPackageWithPreinstalledModules` below
+                } else {
+                    backend
+                };
                 mainIndirect;
                 simpleIndirect;
                 user;
@@ -142,20 +146,10 @@ actor class Bootstrapper() = this {
             });
         };
 
-        // TODO: Don't be explicit:
-        // let ?simple_indirect_canister_id = installedModules.get("simple_indirect") else {
-        //     Debug.trap("module not deployed");
-        // };
-        // let ?indirect_canister_id = installedModules.get("indirect") else {
-        //     Debug.trap("module not deployed");
-        // };
-        // let ?backend_canister_id = installedModules.get("backend") else {
-        //     Debug.trap("module not deployed");
-        // };
-        let controllers = [simpleIndirect, mainIndirect, backend, user];
+        let controllers = [simpleIndirect, mainIndirect, backend, user]; // FIXME: battery?
         await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
-        for (canister_id in installedModules.vals()) {
+        for (canister_id in installedModules.vals()) { // FIXME: update frontend?
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
