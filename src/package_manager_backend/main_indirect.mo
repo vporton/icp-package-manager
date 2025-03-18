@@ -127,9 +127,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
-            Debug.print("installPackagesWrapper: " # packages[0].packageName); // FIXME: Remove.
             onlyOwner(caller, "installPackagesWrapper");
-            Debug.print("A0"); // FIXME: Remove.
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
