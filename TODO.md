@@ -10,7 +10,7 @@ Remaining things TODO:
 
 - Replace unstable HashMap (and Trie?) by stable OrderedMap.
 
-- FIXME: Apparently, I will use `simple_indirect` to delete a canister.
+- TODO: Apparently, I will use `simple_indirect` to delete a canister.
   Then `simple_indirect` receives its cycles and cycles need to be transferred to `battery`.
 
 - When deleting a module, withdraw its cycles.
