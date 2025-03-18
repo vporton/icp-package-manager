@@ -8,8 +8,6 @@ Remaining things TODO:
 
 - Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
 
-- FIXME: "Choose package version for installation" should warn when user is not logged in.
-
 - Replace unstable HashMap (and Trie?) by stable OrderedMap.
 
 - FIXME: Apparently, I will use `simple_indirect` to delete a canister.

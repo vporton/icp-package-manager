@@ -54,6 +54,7 @@ function ChooseVersion2(props: {
 }) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
+    const {isAuthenticated} = useAuth();
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
@@ -171,9 +172,10 @@ function ChooseVersion2(props: {
                         : installedVersions.size == 0
                         ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                         : installedVersions.has(chosenVersion ?? "")
-                        ? <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
-                        : <>Already installed. <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install it in addition to other versions of this package</Button></>
+                        ? <>Already installed. <Button onClick={install} disabled={!isAuthenticated || installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
+                        : <>Already installed. <Button onClick={install} disabled={!isAuthenticated || installing || chosenVersion === undefined}>Install it in addition to other versions of this package</Button></>
                     }
+                    {!isAuthenticated && <p>Sign in to install or upgrade packages.</p>}
                 </p>
             </>}
         </>
