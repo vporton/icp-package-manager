@@ -645,7 +645,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         : async {minInstallationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackageWithPreinstalledModules");
-        Debug.print("installPackageWithPreinstalledModules: " # packageName); // FIXME: Remove.
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += additionalPackages.size();
@@ -1331,7 +1330,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        Debug.print("CALL mainIndirect.installPackagesWrapper: " # debug_show(Principal.fromActor(mainIndirect))); // FIXME: Remove.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;
