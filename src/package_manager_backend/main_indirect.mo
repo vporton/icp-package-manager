@@ -507,7 +507,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             if (remaining <= fulfillment.threshold) {
                 ignore Cycles.accept<system>(fulfillment.installAmount);
                 Cycles.add<system>(fulfillment.installAmount);
-                await IC.ic.deposit_cycles({canister_id}); // FIXME: Shouldn't cycles be instead in battery?
+                await IC.ic.deposit_cycles({canister_id});
             };
         }
         catch (e) {
