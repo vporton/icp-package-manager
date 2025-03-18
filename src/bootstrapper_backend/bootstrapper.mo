@@ -17,14 +17,21 @@ actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
-    ///
-    /// FIXME: Ensure that the module is not replaced.
     public shared func bootstrapFrontend({
-        wasmModule: Common.SharedModule;
         installArg: Blob;
         user: Principal;
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
+        let icPackPkg = await Repository.getPackage("icpack", "0.0.1"); // FIXME: instead `stable`
+        let #real icPackPkgReal = icPackPkg.specific else {
+            Debug.trap("icpack isn't a real package");
+        };
+        let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
+            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
+        );
+        let ?wasmModule = modulesToInstall.get("frontend") else {
+            Debug.trap("frontend module not found");
+        };
         let {canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)];
             user;
@@ -120,7 +127,6 @@ actor class Bootstrapper() = this {
                 Debug.trap("module not found");
             };
             // TODO: I specify `mainIndirect` two times.
-            Debug.print("YYY " # moduleName); // FIXME: Remove.
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
