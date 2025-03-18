@@ -42,8 +42,6 @@ Remaining things TODO:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
-- FIXME: If I login after changing the page between `/` and `/installed` and then reload, then login status is wrong.  
-
 - FIXME: rejecting (i.e. throw) does 'not' rollback state changes done before, while trapping (e.g. Debug.trap, assert…, out of cycle conditions) does.
 
 - Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
