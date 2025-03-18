@@ -144,50 +144,47 @@ describe('My Test Suite', () => {
 
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal, batteryPrincipal} =
-            await bootstrapper2.bootstrapBackend({
-                backendWasmModule: icPackModules.get("backend")!,
-                indirectWasmModule: icPackModules.get("indirect")!,
-                simpleIndirectWasmModule: icPackModules.get("simple_indirect")!,
-                batteryWasmModule: icPackModules.get("battery")!,
+        const pmInst = new Map<string, Principal>(
+            (await bootstrapper2.bootstrapBackend({
                 user: backendUser,
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,
                 repo,
                 additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
-            });
-        canisterNames.set(backendPrincipal.toText(), 'backendPrincipal');
-        canisterNames.set(mainIndirectPrincipal.toText(), 'mainIndirectPrincipal');
-        canisterNames.set(simpleIndirectPrincipal.toText(), 'simpleIndirectPrincipal');
-        canisterNames.set(batteryPrincipal.toText(), 'batteryPrincipal');
+            })).installedModules
+        );
+        for (const [name, m] of pmInst.entries()) {
+            canisterNames.set(m.toText(), name);
+        }
         const pmInstallationId = 0n; // TODO
         console.log("Wait till installed PM initializes...");
-        await waitTillInitialized(backendAgent, backendPrincipal, pmInstallationId);
-        const packageManager: PackageManager = createPackageManager(backendPrincipal, {agent: backendAgent});
+        await waitTillInitialized(backendAgent, pmInst.get('backend')!, pmInstallationId);
+        const packageManager: PackageManager = createPackageManager(pmInst.get('backend')!, {agent: backendAgent});
 
         console.log("Testing controllers of the PM modules...");
-        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(simpleIndirectPrincipal, {agent: backendAgent});
-        for (const canister_id of [simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, frontendPrincipal]) {
+        const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(pmInst.get('simple_indirect')!, {agent: backendAgent});
+        for (const canister_id of pmInst.values()) {
             const simpleIndirectInfo = await simpleIndirect.canister_info(
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
+            // FIXME: Depend on Battery:
             // `mainIndirectPrincipal` here is only for the package manager package:
             expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
+                new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
             );
         }
         // TODO: Check `batteryPrincipal` too.
         for (const [principal, create] of [
-            [simpleIndirectPrincipal, createSimpleIndirectActor],
-            [mainIndirectPrincipal, createIndirectActor],
-            [backendPrincipal, createPackageManager],
+            [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
+            [pmInst.get('indirect')!, createIndirectActor],
+            [pmInst.get('backend')!, createPackageManager],
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
-            const expectedOwners = [simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser];
-            if (principal === mainIndirectPrincipal) {
-                expectedOwners.push(batteryPrincipal);
+            const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser];
+            if (principal === pmInst.get('backend')!) {
+                expectedOwners.push(pmInst.get('battery')!);
             }
             expect(new Set(owners)).to.equalPrincipalSet(
                 new Set(expectedOwners)
@@ -198,7 +195,7 @@ describe('My Test Suite', () => {
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await pmFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([simpleIndirectPrincipal, mainIndirectPrincipal, backendPrincipal, backendUser])
+                new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
             );
         }
 
@@ -212,14 +209,14 @@ describe('My Test Suite', () => {
             user: backendUser,
             afterInstallCallback: [],
         });
-        await waitTillInitialized(backendAgent, backendPrincipal, exampleInstallationId);
+        await waitTillInitialized(backendAgent, pmInst.get('backend')!, exampleInstallationId);
 
         const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
         for (const moduleName of ['example1', 'example2']) {
             const examplePrincipal = examplePkg.defaultInstalledModules.filter(([name, _principal]) => name === moduleName)[0][1];
             const exampleInfo = await simpleIndirect.canister_info(
                 {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
-            expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([simpleIndirectPrincipal, backendUser]));
+            expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([pmInst.get('simple_indirect')!, backendUser]));
         }
 
         const examplePrincipal = examplePkg.defaultInstalledModules.filter(([name, _principal]) => name === 'example1')[0][1];
@@ -240,7 +237,7 @@ describe('My Test Suite', () => {
             user: backendUser,
             afterInstallCallback: [],
         });
-        await waitTillInitialized(backendAgent, backendPrincipal, upgradeableInstallationId);
+        await waitTillInitialized(backendAgent, pmInst.get('backend')!, upgradeableInstallationId);
         console.log("Upgrading `upgradeable` package...");
         await packageManager.upgradePackages({
             packages: [{

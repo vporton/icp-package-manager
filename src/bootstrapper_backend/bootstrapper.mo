@@ -1,19 +1,24 @@
 /// This module is legible to non-returning-function attack. Throw it away if it fails this way.
 /// Data is stored in `bootstrapper_data` instead.
 import Asset "mo:assets-api";
+import Iter "mo:base/Iter";
+import Text "mo:base/Text";
 import Principal "mo:base/Principal";
+import HashMap "mo:base/HashMap";
 import Debug "mo:base/Debug";
 import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 import Data "canister:bootstrapper_data";
-import Repository "../repository_backend/Repository";
 import Repository "canister:repository";
 
 actor class Bootstrapper() = this {
     stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
+    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
+    ///
+    /// FIXME: Ensure that the module is not replaced.
     public shared func bootstrapFrontend({
         wasmModule: Common.SharedModule;
         installArg: Blob;
@@ -43,13 +48,8 @@ actor class Bootstrapper() = this {
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
     ///
-    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining    cycles.
+    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared func bootstrapBackend({
-        // backendWasmModule: Common.SharedModule;
-        // indirectWasmModule: Common.SharedModule;
-        // simpleIndirectWasmModule: Common.SharedModule;
-        // batteryWasmModule: Common.SharedModule;
-        modulesToInstall: [(Text, Common.SharedModule)];
         user: Principal;
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
@@ -66,8 +66,12 @@ actor class Bootstrapper() = this {
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
-        let modulesToInstall = icPackPkgReal.modules;
-        bootstrapBackendImpl({
+        // Do a deep copy:
+        let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
+            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
+        );
+        modulesToInstall.delete("frontend"); // We bootstrap backend at this stage.
+        await* bootstrapBackendImpl({
             modulesToInstall;
             user;
             packageManagerOrBootstrapper;
@@ -90,10 +94,10 @@ actor class Bootstrapper() = this {
             repo: Common.RepositoryRO;
         }];
     }): async* {
-        installedModules: HashMap.HashMap<Text, Common.SharedModule>;
+        installedModules: [(Text, Principal)];
     } {
         // FIXME: At the beginning test that the user paid enough cycles.
-        let installedModules = HashMap.HashMap<Text, Common.SharedModule>(modulesToInstall.size(), Text.equals, Text.hash);
+        let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
             let {canister_id} = await* Install.myCreateCanister({
                 mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
@@ -102,29 +106,53 @@ actor class Bootstrapper() = this {
             });
             installedModules.put(moduleName, canister_id);
         };
+        let ?backend = installedModules.get("backend") else {
+            Debug.trap("module not deployed");
+        };
+        let ?mainIndirect = installedModules.get("indirect") else {
+            Debug.trap("module not deployed");
+        };
+        let ?simpleIndirect = installedModules.get("simple_indirect") else {
+            Debug.trap("module not deployed");
+        };
         for ((moduleName, canister_id) in installedModules.entries()) {
-            // TODO: I specify `indirect` two times.
+            let ?m = modulesToInstall.get(moduleName) else {
+                Debug.trap("module not found");
+            };
+            // TODO: I specify `mainIndirect` two times.
+            Debug.print("YYY " # moduleName); // FIXME: Remove.
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
                 canister_id;
-                wasmModule = Common.unshareModule(modulesToInstall.get(moduleName));
+                wasmModule = Common.unshareModule(m);
                 installArg = to_candid({
                     installationId = 0; // TODO
-                    mainIndirect = installedModules.get("indirect");
+                    mainIndirect;
                 });
-                packageManagerOrBootstrapper;
-                mainIndirect = installedModules.get("indirect");
-                simpleIndirect = installedModules.get("simple_indirect");
+                packageManagerOrBootstrapper = backend;
+                mainIndirect;
+                simpleIndirect;
                 user;
+                // TODO: Pass the following only to the `backend` module:
+                // frontend;
+                // frontendTweakPrivKey;
+                // repo = Repository;
+                // additionalPackages;
             });
         };
 
         // TODO: Don't be explicit:
-        let simple_indirect_canister_id = installedModules.get("simple_indirect");
-        let indirect_canister_id = installedModules.get("indirect");
-        let backend_canister_id = installedModules.get("backend");
-        let controllers = [simple_indirect_canister_id, indirect_canister_id, backend_canister_id, user];
+        // let ?simple_indirect_canister_id = installedModules.get("simple_indirect") else {
+        //     Debug.trap("module not deployed");
+        // };
+        // let ?indirect_canister_id = installedModules.get("indirect") else {
+        //     Debug.trap("module not deployed");
+        // };
+        // let ?backend_canister_id = installedModules.get("backend") else {
+        //     Debug.trap("module not deployed");
+        // };
+        let controllers = [simpleIndirect, mainIndirect, backend, user];
         await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
         for (canister_id in installedModules.vals()) {
@@ -145,7 +173,7 @@ actor class Bootstrapper() = this {
             });
         };
 
-        let backend = actor(Principal.toText(backend_canister_id)): actor {
+        let backendActor = actor(Principal.toText(backend)): actor {
             installPackageWithPreinstalledModules: shared ({
                 packageName: Common.PackageName;
                 version: Common.Version;
@@ -162,18 +190,18 @@ actor class Bootstrapper() = this {
             }) -> async {minInstallationId: Common.InstallationId};
         };
         // TODO: Transfer user cycles before this call:
-        ignore await backend.installPackageWithPreinstalledModules({
+        ignore await backendActor.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
           version = "0.0.1"; // TODO: should be `stable`.
           preinstalledModules = Iter.toArray(installedModules.entries());
-          repo;
+          repo = Repository;
           user;
-          mainIndirect = indirect_canister_id;
+          mainIndirect;
           additionalPackages;
         });
 
-        installedModules;
+        { installedModules = Iter.toArray(installedModules.entries()); }
     };
 
     public type PubKey = Blob;

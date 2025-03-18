@@ -153,20 +153,26 @@ shared({caller = initialCaller}) actor class PackageManager({
         // user: Principal;
         // packageManagerOrBootstrapper: Principal;
     }): async () {
-        onlyOwner(caller, "init");
+        try {
+            onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
-        owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
+            owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
+            owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
 
-        let ?inst = installedPackages.get(installationId) else {
-            Debug.trap("error getting installation");
+            let ?inst = installedPackages.get(installationId) else {
+                Debug.trap("error getting installation");
+            };
+            let ?b = inst.defaultInstalledModules.get("battery") else {
+                Debug.trap("error getting battery");
+            };
+            battery := actor(Principal.toText(b));
+
+            initialized := true;
+        }
+        catch(e) {
+            Debug.print("PM init: " # Error.message(e));
+            throw e;
         };
-        let ?b = inst.defaultInstalledModules.get("battery") else {
-            Debug.trap("error getting battery");
-        };
-        battery := actor(Principal.toText(b));
-
-        initialized := true;
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
@@ -197,25 +203,31 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public composite query func isAllInitialized(): async () {
-        if (not initialized) {
-            Debug.trap("package_manager: not initialized");
+        try {
+            if (not initialized) {
+                Debug.trap("package_manager: not initialized");
+            };
+            // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
+            let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            // FIXME: Also wait for Battery to be initialized.
+            // TODO: https://github.com/dfinity/motoko/issues/4837
+            // let c = do {
+            //     let ?pkg = installedPackages.get(installationId) else {
+            //         Debug.trap("package manager is not yet installed");
+            //     };
+            //     let ?frontend = pkg.modules.get("frontend") else {
+            //         Debug.trap("programming error 1");
+            //     };
+            //     let f: Asset.AssetCanister = actor(Principal.toText(frontend));
+            //     f.get({key = "/index.html"; accept_encodings = ["gzip"]});
+            // };
+            ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
+        }
+        catch(e) {
+            Debug.print("PM init: " # Error.message(e));
+            throw e;
         };
-        // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
-        let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-        let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-        // FIXME: Also wait for Battery to be initialized.
-        // TODO: https://github.com/dfinity/motoko/issues/4837
-        // let c = do {
-        //     let ?pkg = installedPackages.get(installationId) else {
-        //         Debug.trap("package manager is not yet installed");
-        //     };
-        //     let ?frontend = pkg.modules.get("frontend") else {
-        //         Debug.trap("programming error 1");
-        //     };
-        //     let f: Asset.AssetCanister = actor(Principal.toText(frontend));
-        //     f.get({key = "/index.html"; accept_encodings = ["gzip"]});
-        // };
-        ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
     };
 
     stable var main_indirect_: MainIndirect.MainIndirect = actor(Principal.toText(mainIndirect));
@@ -633,6 +645,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         : async {minInstallationId: Common.InstallationId}
     {
         onlyOwner(caller, "installPackageWithPreinstalledModules");
+        Debug.print("installPackageWithPreinstalledModules: " # packageName); // FIXME: Remove.
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += additionalPackages.size();
@@ -1318,6 +1331,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
+        Debug.print("CALL mainIndirect.installPackagesWrapper: " # debug_show(Principal.fromActor(mainIndirect))); // FIXME: Remove.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;

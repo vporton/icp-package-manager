@@ -85,18 +85,15 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         // TODO: Use "version" field from `additionalPackages`.
-        const {backendPrincipal, mainIndirectPrincipal, simpleIndirectPrincipal} = await bootstrapperMainIndirect.bootstrapBackend({
-          backendWasmModule: modules.get("backend")!,
-          indirectWasmModule: modules.get("indirect")!,
-          simpleIndirectWasmModule: modules.get("simple_indirect")!,
-          batteryWasmModule: modules.get("battery")!,
+        const {installedModules} = await bootstrapperMainIndirect.bootstrapBackend({
           user: principal!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
-          repo,
           additionalPackages: additionalPackages,
         });
+        const installedModulesMap = new Map(installedModules);
+        const backendPrincipal = installedModulesMap.get('backend')!;
         const installationId = 0n; // TODO
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);
         if (waitResult !== undefined) {
