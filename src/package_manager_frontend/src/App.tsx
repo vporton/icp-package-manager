@@ -200,11 +200,11 @@ function App2() {
               </Nav>
               <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
                 <Dropdown>
-                  <Dropdown.Toggle  >
+                  <Dropdown.Toggle>
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item as="div" className="dropdown-item">
+                    <Dropdown.Item as="div">
                       <AddressPopup/>
                     </Dropdown.Item>
                   </Dropdown.Menu>
