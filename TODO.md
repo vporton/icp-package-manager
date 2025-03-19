@@ -1,6 +1,7 @@
 Remaining things TODO:
 
 - FIXME: Which canister does upgrade use?
+  Also, prevent upgrading package to the same version as installed?
 
 - Battery canister should not supply cycles to itself.
 
