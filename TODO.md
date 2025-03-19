@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- FIXME: Which canister does upgrade use?
+
 - Battery canister should not supply cycles to itself.
 
 - The payment popup may not fit browser window. The menu is broken on mobile.

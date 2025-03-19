@@ -66,7 +66,7 @@ function ChooseVersion2(props: {
             index.getFullPackageInfo(props.packageName!).then(fullInfo => {
                 const versionsMap = new Map(fullInfo.versionsMap);
                 const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                const v = fullInfo.versionsMap.concat(p2);
+                const v = fullInfo.versionsMap.map(([name, version]) => [`${name} => ${version}`, version] as [string, string]).concat(p2);
                 setVersions(v);
                 const guid2 = fullInfo.packages[0][1].base.guid as Uint8Array;
                 // setGUIDInfo(guid2);

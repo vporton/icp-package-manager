@@ -22,7 +22,7 @@ actor class Bootstrapper() = this {
         user: Principal;
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
-        let icPackPkg = await Repository.getPackage("icpack", "0.0.1"); // FIXME: instead `stable`
+        let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
@@ -69,7 +69,7 @@ actor class Bootstrapper() = this {
     }): async {
         installedModules: [(Text, Principal)];
     } {
-        let icPackPkg = await Repository.getPackage("icpack", "0.0.1"); // FIXME: instead `stable`
+        let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };

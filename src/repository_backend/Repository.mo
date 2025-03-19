@@ -251,10 +251,12 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
-    let fullInfo = _getFullPackageInfo(name);
-    for ((curVersion, info) in fullInfo.packages.vals()) {
-      if (curVersion == version) {
-        return info;
+    let ?fullInfo = packages.get(name) else {
+      Debug.trap("no such package");
+    };
+    for ((curVersion, info) in fullInfo.pkg.packages.entries()) {
+      if (curVersion == version or fullInfo.pkg.versionsMap.get(version) == ?curVersion) {
+        return Common.sharePackageInfo(info);
       };
     };
     Debug.trap("no such package version");
