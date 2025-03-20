@@ -10,34 +10,26 @@ import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";
 import Asset "mo:assets-api";
+import Cycles "mo:base/ExperimentalCycles";
 
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
     public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
+        Cycles.add<system>(cyclesAmount); // FIXME: plus or override
         let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
-            amount = cyclesAmount;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            creation_args = ?{
-                settings = ?{
-                    freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
-                    // TODO: Should we remove control from `user` to protect against errors?
-                    controllers = mainControllers;
-                    compute_allocation = null; // TODO
-                    memory_allocation = null; // TODO (a low priority task)
-                };
-                subnet_selection = null;
+            settings = ?{
+                // TODO:
+                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
+                controllers = mainControllers;
+                reserved_cycles_limit = null;
+                log_visibility = null;
+                wasm_memory_limit = null;
+                memory_allocation = null;
+                compute_allocation = null;
             };
-            from_subaccount = ?(Blob.toArray(Principal.toBlob(user)));
+            sender_canister_version = null; // TODO
         });
-        let canister_id = switch (res) {
-            case (#Ok {canister_id}) canister_id;
-            case (#Err err) {
-                let msg = debug_show(err);
-                Debug.print("cannot create canister: " # msg);
-                Debug.trap("cannot create canister: " # msg);
-            };  
-        };
-        {canister_id};
+        res;
     };
 
     public func myInstallCode({

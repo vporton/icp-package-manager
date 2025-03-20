@@ -5,94 +5,47 @@
 /// TODO: Extract this to a separate MOPS package
 import Cycles "mo:base/ExperimentalCycles";
 import Principal "mo:base/Principal";
+import IC "mo:ic";
 
 actor MockCyclesLedger {
-    // Cycles Ledger API
 
-    type BlockIndex = Nat;
+    type CanisterId = Principal;
 
-    type CreateCanisterArgs = {
-        from_subaccount : ?[Nat8];
-        created_at_time : ?Nat64;
-        amount : Nat;
-        creation_args : ?CmcCreateCanisterArgs;
+    type CreateCanisterResult = {
+        canister_id : CanisterId;
     };
 
-    type CmcCreateCanisterArgs = {
-        settings : ?CanisterSettings;
-        subnet_selection : ?SubnetSelection;
+    type LogVisibility = {
+        #controllers;
+        #public_;
     };
 
     type CanisterSettings = {
-        controllers : ?[Principal];
-        compute_allocation : ?Nat;
-        memory_allocation : ?Nat;
         freezing_threshold : ?Nat;
+        controllers : ?[Principal];
+        reserved_cycles_limit : ?Nat;
+        log_visibility : ?LogVisibility;
+        wasm_memory_limit : ?Nat;
+        memory_allocation : ?Nat;
+        compute_allocation : ?Nat;
     };
 
-    type SubnetFilter = {
-        subnet_type : ?Text;
-    };
-
-    type SubnetSelection = {
-        /// Choose a specific subnet
-        #Subnet : {
-            subnet : Principal;
-        };
-        #Filter : SubnetFilter;
-    };
-
-    type CreateCanisterSuccess = {
-        block_id : BlockIndex;
-        canister_id : Principal;
-    };
-
-    type CreateCanisterError = {
-        #InsufficientFunds : { balance : Nat };
-        #TooOld;
-        #CreatedInFuture : { ledger_time : Nat64 };
-        #TemporarilyUnavailable;
-        #Duplicate : { duplicate_of : Nat };
-        #FailedToCreate : {
-            fee_block : ?BlockIndex;
-            refund_block : ?BlockIndex;
-            error : Text;
-        };
-        #GenericError : { message : Text; error_code : Nat };
+    type CreateCanisterArgs = {
+        settings : ?CanisterSettings;
+        sender_canister_version : ?Nat64;
     };
 
     // Mock implementation follows
 
-    type canister_id = Principal;
-
-    type CanisterCreator = actor { // TODO: Use `IC` module.
-        create_canister : shared { settings : ?canister_settings } -> async {
-            canister_id : canister_id;
-        };
-    };
-
-    let IC: CanisterCreator = actor("aaaaa-aa");
-
-    type canister_settings = {
-        freezing_threshold : ?Nat;
-        controllers : ?[Principal];
-        memory_allocation : ?Nat;
-        compute_allocation : ?Nat;
-    };
-
     // TODO: `args.amount`
-    public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
+    public shared func create_canister(args: CreateCanisterArgs): async CreateCanisterResult {
         ignore Cycles.accept<system>(10_000_000_000_000);
-        let sub = do ? { args.creation_args!.settings! };
+        let sub = do ? { args.settings! };
         Cycles.add<system>(10_000_000_000_000);
-        let { canister_id } = await IC.create_canister({
+        await IC.ic.create_canister({
             settings = sub;
-            // sender_canister_version = null; // TODO
+            sender_canister_version = null; // TODO
         });
-        #Ok {
-            block_id = 0;
-            canister_id;
-        };
     };
 
     type Subaccount = Blob;
@@ -151,5 +104,4 @@ actor MockCyclesLedger {
         // Do nothing.
         #Ok 1;
     };
-
 }
