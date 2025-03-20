@@ -288,7 +288,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   // };
     system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
-        _packageCreators := Iter.toArray(packageCreators.entries());
+        _packageCreatorsSave := Iter.toArray(packageCreators.entries());
     };
 
     system func postupgrade() {
@@ -301,7 +301,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
         _ownersSave := []; // Free memory.
 
         packageCreators := HashMap.fromIter(
-            _ownersSave.vals(),
+            _packageCreatorsSave.vals(),
             Array.size(_ownersSave),
             Principal.equal,
             Principal.hash,
