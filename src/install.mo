@@ -14,7 +14,9 @@ import Cycles "mo:base/ExperimentalCycles";
 
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
+    // FIXME: Check that a user cannot substitute another `user` in the `install_code` call.
     public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
+        // cmc.create_canister(); // TODO: https://forum.dfinity.org/t/contradiction-about-create-canister-subnet-selection/42726
         Cycles.add<system>(cyclesAmount); // FIXME: plus or override
         let res = await cycles_ledger.create_canister({ // Owner is set later in `bootstrapBackend`.
             settings = ?{
