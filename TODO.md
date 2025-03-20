@@ -46,11 +46,11 @@ Remaining things TODO:
 
 - Use remaining dev's cycles to store URLs of PMs.
 
-- TODO: rejecting (i.e. throw) does 'not' rollback state changes done before, while trapping (e.g. Debug.trap, assert…, out of cycle conditions) does.
+- rejecting (i.e. throw) does 'not' rollback state changes done before, while trapping (e.g. Debug.trap, assert…, out of cycle conditions) does.
 
 - Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
 
-- TODO: future compaitibility in package format.
+- future compaitibility in package format.
 
 - Ability to bootstrap backend without frontend (for AI agents and other API users).
 
