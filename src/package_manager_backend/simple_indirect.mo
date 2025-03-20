@@ -18,7 +18,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     installationId: Common.InstallationId;
     userArg = _: Blob;
 }) = this {
-    // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
+    // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
     //     Debug.trap("argument userArg is wrong");
     // };
