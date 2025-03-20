@@ -13,7 +13,7 @@ import Common "../common";
 shared ({caller = initialOwner}) actor class Repository() = this {
   var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash); // FIXME: Save it.
   var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash); // FIXME: Save it.
-  
+
   var nextWasmId = 0;
   // var nextPackageId = 0; // TODO: unused
 
