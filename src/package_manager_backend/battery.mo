@@ -84,6 +84,12 @@ shared({caller = initialOwner}) actor class Battery({
         initialized := true;
     };
 
+    public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
+        if (not initialized) {
+            Debug.trap("battery: not initialized");
+        };
+    };
+
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     private type OurPMType = actor {

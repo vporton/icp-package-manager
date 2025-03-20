@@ -210,7 +210,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
             let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-            // FIXME: Also wait for Battery to be initialized.
+            let c = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             // TODO: https://github.com/dfinity/motoko/issues/4837
             // let c = do {
             //     let ?pkg = installedPackages.get(installationId) else {
@@ -222,7 +222,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             //     let f: Asset.AssetCanister = actor(Principal.toText(frontend));
             //     f.get({key = "/index.html"; accept_encodings = ["gzip"]});
             // };
-            ignore {{a0 = await a; b0 = await b/*; c0 = await c*/}}; // run in parallel
+            ignore {{a0 = await a; b0 = await b; c0 = await c/*; c0 = await c*/}}; // run in parallel
         }
         catch(e) {
             Debug.print("PM init: " # Error.message(e));
