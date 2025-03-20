@@ -3,7 +3,7 @@
     "bootstrapper": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["cycles_ledger", "bootstrapper_data", "repository"],
+      "dependencies": ["cycles_ledger", "cmc", "bootstrapper_data", "repository"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -19,7 +19,7 @@
     "main_indirect": {
       "type": "motoko",
       "main": "src/package_manager_backend/main_indirect.mo",
-      "dependencies": ["bootstrapper", "cycles_ledger"],
+      "dependencies": ["bootstrapper", "cycles_ledger", "cmc"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -27,7 +27,6 @@
     "simple_indirect": {
       "type": "motoko",
       "main": "src/package_manager_backend/simple_indirect.mo",
-      "dependencies": ["cycles_ledger"],
       "metadata": [{
         "name": "candid:service"
       }]
@@ -157,6 +156,18 @@
       "remote": {
         "id": {
           "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
+        }
+      },
+      "metadata": [{
+        "name": "candid:service"
+      }]
+    },
+    "cmc": {
+      "main": "src/MockCMC.mo",
+      "type": "motoko",
+      "remote": {
+        "id": {
+          "ic": "rkp4c-7iaaa-aaaaa-aaaca-cai"
         }
       },
       "metadata": [{

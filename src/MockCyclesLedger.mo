@@ -65,7 +65,7 @@ actor MockCyclesLedger {
 
     type canister_id = Principal;
 
-    type CanisterCreator = actor {
+    type CanisterCreator = actor { // TODO: Use `IC` module.
         create_canister : shared { settings : ?canister_settings } -> async {
             canister_id : canister_id;
         };
@@ -87,6 +87,7 @@ actor MockCyclesLedger {
         Cycles.add<system>(10_000_000_000_000);
         let { canister_id } = await IC.create_canister({
             settings = sub;
+            // sender_canister_version = null; // TODO
         });
         #Ok {
             block_id = 0;
