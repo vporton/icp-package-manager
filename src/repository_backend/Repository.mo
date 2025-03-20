@@ -8,11 +8,14 @@ import Nat "mo:base/Nat";
 import Option "mo:base/Option";
 import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
+import Array "mo:base/Array";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
-  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash); // FIXME: Save it.
-  var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash); // FIXME: Save it.
+  stable var _ownersSave: [(Principal, ())] = [];
+  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+  stable var _packageCreatorsSave: [(Principal, ())] = [];
+  var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
   var nextWasmId = 0;
   // var nextPackageId = 0; // TODO: unused
@@ -283,4 +286,26 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   //     permissions = info.permissions;
   //   };
   // };
+    system func preupgrade() {
+        _ownersSave := Iter.toArray(owners.entries());
+        _packageCreators := Iter.toArray(packageCreators.entries());
+    };
+
+    system func postupgrade() {
+        owners := HashMap.fromIter(
+            _ownersSave.vals(),
+            Array.size(_ownersSave),
+            Principal.equal,
+            Principal.hash,
+        );
+        _ownersSave := []; // Free memory.
+
+        packageCreators := HashMap.fromIter(
+            _ownersSave.vals(),
+            Array.size(_ownersSave),
+            Principal.equal,
+            Principal.hash,
+        );
+        _packageCreatorsSave := []; // Free memory.
+    };
 }
