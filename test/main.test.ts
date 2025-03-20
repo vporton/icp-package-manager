@@ -177,12 +177,18 @@ describe('My Test Suite', () => {
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
             [pmInst.get('indirect')!, createIndirectActor],
             [pmInst.get('backend')!, createPackageManager],
+            [pmInst.get('battery')!, createPackageManager],
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
             const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser];
-            if ([pmInst.get('indirect')!, pmInst.get('simple_indirect')!].includes(principal as Principal)) {
+            // Battery is self-dependent:
+            if ([
+                pmInst.get('indirect')!,
+                pmInst.get('simple_indirect')!,
+                pmInst.get('battery')!
+            ].includes(principal as Principal)) {
                 expectedOwners.push(pmInst.get('battery')!);
             }
             expect(new Set(owners)).to.equalPrincipalSet(
