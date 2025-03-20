@@ -27,7 +27,7 @@ module {
                 };
                 subnet_selection = null;
             };
-            from_subaccount = ?Blob.toArray(Sha256.fromBlob(#sha256, to_candid(user))); // TODO: not the most efficient way (but is it standard?)
+            from_subaccount = ?(Blob.toArray(Principal.toBlob(user)));
         });
         let canister_id = switch (res) {
             case (#Ok {canister_id}) canister_id;
