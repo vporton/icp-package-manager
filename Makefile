@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 NETWORK = local
+export MOPS_ENV = $(NETWORK)
 USER = $(shell dfx identity get-principal)
 DEPLOY_FLAGS.bootstrapper_data = --argument "principal \"$(USER)\""
 

@@ -7,7 +7,7 @@ keywords = [ ]
 license = "MIT"
 
 [dependencies]
-env = "./env-{MOPS_ENV}"
+env = "./env/{MOPS_ENV}"
 base = "0.14.0"
 stable-rbtree = "1.0.0"
 itertools = "0.2.2"
