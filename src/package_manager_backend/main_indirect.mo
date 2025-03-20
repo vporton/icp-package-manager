@@ -15,13 +15,13 @@ import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class MainIndirect({
     packageManagerOrBootstrapper: Principal; // TODO: Rename to just `packageManager`?.
-    mainIndirect: Principal; // TODO: Rename.
+    mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
     installationId = _: Common.InstallationId;
     userArg = _: Blob;
 }) = this {
-    // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
+    // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
     //     Debug.trap("argument userArg is wrong");
     // };
