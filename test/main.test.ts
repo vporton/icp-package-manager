@@ -8,6 +8,7 @@ import { createActor as createBootstrapperActor } from '../src/declarations/boot
 import { createActor as createRepositoryIndexActor } from "../src/declarations/repository";
 import { createActor as createIndirectActor } from '../src/declarations/main_indirect';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
+import { createActor as createBattery } from '../src/declarations/battery';
 import { createActor as createPMFrontend } from '../src/declarations/package_manager_frontend';
 import { createActor as createExampleFrontend } from '../src/declarations/example_frontend';
 import { SharedRealPackageInfo } from "../src/declarations/repository/repository.did";
@@ -177,7 +178,7 @@ describe('My Test Suite', () => {
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
             [pmInst.get('indirect')!, createIndirectActor],
             [pmInst.get('backend')!, createPackageManager],
-            [pmInst.get('battery')!, createPackageManager],
+            [pmInst.get('battery')!, createBattery],
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
