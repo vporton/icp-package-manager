@@ -182,7 +182,7 @@ describe('My Test Suite', () => {
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
             const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser];
-            if (principal === pmInst.get('indirect')!) {
+            if ([pmInst.get('indirect')!, pmInst.get('simple_indirect')!].includes(principal as Principal)) {
                 expectedOwners.push(pmInst.get('battery')!);
             }
             expect(new Set(owners)).to.equalPrincipalSet(

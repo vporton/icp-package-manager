@@ -8,13 +8,14 @@ import Error "mo:base/Error";
 import Debug "mo:base/Debug";
 import Blob "mo:base/Blob";
 import IC "mo:ic";
+import Common "../common";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
     mainIndirect: Principal; // TODO: Rename.
     simpleIndirect: Principal;
     user: Principal;
-    // installationId = _: Common.InstallationId;
+    installationId: Common.InstallationId;
     userArg = _: Blob;
 }) = this {
     // let ?userArgValue: ?{ // TODO: Isn't this a too big "tower" of objects?
@@ -47,7 +48,13 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed here?
 
-        // ourPM := actor (Principal.toText(packageManagerOrBootstrapper)): OurPMType;
+        type OurPMType = actor {
+            getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
+        };
+        let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
+        let battery = await pm.getModulePrincipal(installationId, "battery");
+        owners.put(battery, ());
+
         initialized := true;
     };
 
