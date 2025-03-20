@@ -126,7 +126,6 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
-            // TODO: I specify `mainIndirect` two times.
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
