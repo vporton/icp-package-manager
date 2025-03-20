@@ -33,7 +33,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
         packageRepoCanister: Principal;
-        defaultInstalledModules: HashMap.HashMap<Text, Principal>; // TODO: Rename.
+        modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -45,7 +45,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfInstalledPackageInfo = {
         package: Common.SharedPackageInfo;
         packageRepoCanister: Principal;
-        defaultInstalledModules: [(Text, Principal)];
+        modulesInstalledByDefault: [(Text, Principal)];
         minInstallationId: Nat; // hack 
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -57,7 +57,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
         package = Common.sharePackageInfo(x.package);
         packageRepoCanister = x.packageRepoCanister;
-        defaultInstalledModules = Iter.toArray(x.defaultInstalledModules.entries());
+        modulesInstalledByDefault = Iter.toArray(x.modulesInstalledByDefault.entries());
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -67,7 +67,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
         packageRepoCanister = x.packageRepoCanister;
-        defaultInstalledModules = HashMap.fromIter(x.defaultInstalledModules.vals(), x.defaultInstalledModules.size(), Text.equal, Text.hash);
+        modulesInstalledByDefault = HashMap.fromIter(x.modulesInstalledByDefault.vals(), x.modulesInstalledByDefault.size(), Text.equal, Text.hash);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -102,7 +102,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
         newRepo: Principal;
-        defaultInstalledModules: HashMap.HashMap<Text, Principal>;
+        modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
         modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
     };
@@ -111,7 +111,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
         newRepo: Principal; // TODO: Use actor type?
-        defaultInstalledModules: [(Text, Principal)]; // TODO: Rename.
+        modulesInstalledByDefault: [(Text, Principal)]; // TODO: Rename.
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
     };
@@ -120,7 +120,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId = x.installationId;
         package = Common.sharePackageInfo(x.package);
         newRepo = x.newRepo;
-        defaultInstalledModules = Iter.toArray(x.defaultInstalledModules.entries());
+        modulesInstalledByDefault = Iter.toArray(x.modulesInstalledByDefault.entries());
         modulesToDelete = x.modulesToDelete;
         remainingModules = x.remainingModules;
     };
@@ -128,7 +128,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfUpgradedPackageInfo(x: SharedHalfUpgradedPackageInfo): HalfUpgradedPackageInfo = {
         installationId = x.installationId;
         package = Common.unsharePackageInfo(x.package);
-        defaultInstalledModules = HashMap.fromIter(x.defaultInstalledModules.vals(), x.defaultInstalledModules.size(), Text.equal, Text.hash);
+        modulesInstalledByDefault = HashMap.fromIter(x.modulesInstalledByDefault.vals(), x.modulesInstalledByDefault.size(), Text.equal, Text.hash);
         modulesToDelete = x.modulesToDelete;
         newRepo = x.newRepo;
         var remainingModules = x.remainingModules;
@@ -166,7 +166,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?inst = installedPackages.get(installationId) else {
                 Debug.trap("error getting installation");
             };
-            let ?b = inst.defaultInstalledModules.get("battery") else {
+            let ?b = inst.modulesInstalledByDefault.get("battery") else {
                 Debug.trap("error getting battery");
             };
             battery := actor(Principal.toText(b));
@@ -463,7 +463,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Iter.map<Text, (Text, Principal)>(
                     modulesToDelete0.keys(),
                     func (name: Text) {
-                        let ?m = oldPkg.defaultInstalledModules.get(name) else {
+                        let ?m = oldPkg.modulesInstalledByDefault.get(name) else {
                             Debug.trap("programming error");
                         };
                         (name, m);
@@ -474,9 +474,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             // It seems that the below can be optimized:
             let allModules = HashMap.fromIter<Text, ()>(
                 Iter.map<Text, (Text, ())>(
-                    Iter.concat(oldPkg.defaultInstalledModules.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
+                    Iter.concat(oldPkg.modulesInstalledByDefault.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
                 ),
-                oldPkg.defaultInstalledModules.size() + newPkgModules.size(),
+                oldPkg.modulesInstalledByDefault.size() + newPkgModules.size(),
                 Text.equal,
                 Text.hash,
             );
@@ -486,7 +486,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 installationId = newPkgData.installationId;
                 package = newPkg;
                 newRepo = Principal.fromActor(newPkgData.repo);
-                defaultInstalledModules = HashMap.HashMap(0, Text.equal, Text.hash);
+                modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
                 modulesToDelete;
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
             });
@@ -509,7 +509,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
             Debug.trap("no such upgrade");
         };
-        upgrade.defaultInstalledModules.put(moduleName, canister_id);
+        upgrade.modulesInstalledByDefault.put(moduleName, canister_id);
 
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
@@ -533,7 +533,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             inst.packageRepoCanister := upgrade.newRepo;
             inst.package := upgrade.package;
-            inst.defaultInstalledModules := upgrade.defaultInstalledModules;
+            inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault;
             halfUpgradedPackages.delete(upgradeId);
         };
 
@@ -545,7 +545,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("no such installed package");
         };
         label r for ((moduleName, module_) in real.modules.entries()) {
-            let ?cbPrincipal = inst.defaultInstalledModules.get(moduleName) else {
+            let ?cbPrincipal = inst.modulesInstalledByDefault.get(moduleName) else {
                 continue r; // We remove the module in other part of the code.
             };
             switch (module_.callbacks.get(#CodeUpgradedForAllCanisters)) {
@@ -726,7 +726,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
                 packageRepoCanister = Principal.fromActor(p.repo); // TODO: Make packageRepoCanister to be of actor type.
-                defaultInstalledModules = preinstalledModules;
+                modulesInstalledByDefault = preinstalledModules;
                 minInstallationId;
                 afterInstallCallback;
                 bootstrapping;
@@ -757,12 +757,12 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         // TODO: `Iter.toArray` is a (small) slowdown.
         let bi = if (pkg.bootstrapping) {
-            Iter.toArray(pkg.defaultInstalledModules.entries());
+            Iter.toArray(pkg.modulesInstalledByDefault.entries());
         } else {
             let ?pkg0 = installedPackages.get(0) else {
                 Debug.trap("package manager not installed");
             };
-            Iter.toArray(pkg0.defaultInstalledModules.entries()); // TODO: inefficient?
+            Iter.toArray(pkg0.modulesInstalledByDefault.entries()); // TODO: inefficient?
         };
         let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
         var moduleNumber = 0;
@@ -820,7 +820,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let pos = posTmp;
             posTmp += 1;
 
-            let canister_id = oldPkg.defaultInstalledModules.get(name);
+            let canister_id = oldPkg.modulesInstalledByDefault.get(name);
             let ?wasmModule = newPkgModules.get(name) else {
                 Debug.trap("programming error: no such module");
             };
@@ -872,7 +872,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         switch (moduleName) {
             case (?name) {
-                inst.defaultInstalledModules.put(name, canister);
+                inst.modulesInstalledByDefault.put(name, canister);
             };
             case null {};
         };
@@ -887,7 +887,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        let ?cbPrincipal = inst.defaultInstalledModules.get(moduleName2) else {
+                        let ?cbPrincipal = inst.modulesInstalledByDefault.get(moduleName2) else {
                             Debug.trap("programming error 3");
                         };
                         ignore getSimpleIndirect().callAll([{
@@ -931,7 +931,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             id = installationId;
             var package = ourHalfInstalled.package;
             var packageRepoCanister = ourHalfInstalled.packageRepoCanister;
-            var defaultInstalledModules = ourHalfInstalled.defaultInstalledModules; // no need for deep copy, because we delete `ourHalfInstalled` soon
+            var modulesInstalledByDefault = ourHalfInstalled.modulesInstalledByDefault; // no need for deep copy, because we delete `ourHalfInstalled` soon
             additionalModules = HashMap.HashMap(0, Text.equal, Text.hash);
             var pinned = false;
         });
@@ -1194,7 +1194,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = installedPackages.get(installationId) else {
             Debug.trap("no such installation");
         };
-        let ?m = inst.defaultInstalledModules.get(moduleName) else {
+        let ?m = inst.modulesInstalledByDefault.get(moduleName) else {
             Debug.trap("no such module");
         };
         m;
@@ -1303,7 +1303,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("no such package");
         };
         // TODO: May be a little bit slow.
-        Iter.toArray<(Text, Principal)>(res.defaultInstalledModules.entries());
+        Iter.toArray<(Text, Principal)>(res.modulesInstalledByDefault.entries());
     };
 
     // TODO: Rearrage functions, possible rename:

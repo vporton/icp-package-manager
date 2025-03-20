@@ -218,13 +218,13 @@ describe('My Test Suite', () => {
 
         const examplePkg = await packageManager.getInstalledPackage(exampleInstallationId);
         for (const moduleName of ['example1', 'example2']) {
-            const examplePrincipal = examplePkg.defaultInstalledModules.filter(([name, _principal]) => name === moduleName)[0][1];
+            const examplePrincipal = examplePkg.modulesInstalledByDefault.filter(([name, _principal]) => name === moduleName)[0][1];
             const exampleInfo = await simpleIndirect.canister_info(
                 {canister_id: examplePrincipal, num_requested_changes: []}, 1000_000_000_000n);
             expect(new Set(exampleInfo.controllers)).to.equalPrincipalSet(new Set([pmInst.get('simple_indirect')!, backendUser]));
         }
 
-        const examplePrincipal = examplePkg.defaultInstalledModules.filter(([name, _principal]) => name === 'example1')[0][1];
+        const examplePrincipal = examplePkg.modulesInstalledByDefault.filter(([name, _principal]) => name === 'example1')[0][1];
         const exampleFrontend = createExampleFrontend(examplePrincipal, {agent: backendAgent});
         console.log("Checking example frontend owners...");
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
@@ -258,7 +258,7 @@ describe('My Test Suite', () => {
         // TODO: More detailed test:
         async function myNamedModules(): Promise<Set<string>> {
             const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
-            return new Set(Array.from(upgradeablePkg.defaultInstalledModules.values()).map(([name, _principal]) => name));
+            return new Set(Array.from(upgradeablePkg.modulesInstalledByDefault.values()).map(([name, _principal]) => name));
         }
         await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
     });

@@ -290,7 +290,7 @@ module {
         id: InstallationId;
         var package: PackageInfo;
         var packageRepoCanister: Principal;
-        var defaultInstalledModules: HashMap.HashMap<Text, Principal>;
+        var modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
         additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>;
         var pinned: Bool;
     };
@@ -309,18 +309,18 @@ module {
     // Tested in `modulesIter.test.mo`.
     /// Iterate over all modules in `pkg.namedModules`.
     public func modulesIterator(pkg: InstalledPackageInfo): Iter.Iter<(Text, Principal)> {
-        Iter.concat(pkg.defaultInstalledModules.entries(), additionalModulesIter(pkg.additionalModules));
+        Iter.concat(pkg.modulesInstalledByDefault.entries(), additionalModulesIter(pkg.additionalModules));
     };
 
     public func numberOfModules(pkg: InstalledPackageInfo): Nat {
-        pkg.defaultInstalledModules.size() + Iter.size(additionalModulesIter(pkg.additionalModules));
+        pkg.modulesInstalledByDefault.size() + Iter.size(additionalModulesIter(pkg.additionalModules));
     };
 
     public type SharedInstalledPackageInfo = {
         id: InstallationId;
         package: SharedPackageInfo;
         packageRepoCanister: Principal;
-        defaultInstalledModules: [(Text, Principal)];
+        modulesInstalledByDefault: [(Text, Principal)];
         additionalModules: [(Text, [Principal])];
         pinned: Bool;
     };
@@ -329,7 +329,7 @@ module {
         id = info.id;
         package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        defaultInstalledModules = Iter.toArray(info.defaultInstalledModules.entries());
+        modulesInstalledByDefault = Iter.toArray(info.modulesInstalledByDefault.entries());
         additionalModules = Iter.toArray(
             Iter.map<(Text, Buffer.Buffer<Principal>), (Text, [Principal])>(
                 info.additionalModules.entries(),
@@ -343,9 +343,9 @@ module {
         id = info.id;
         var package = unsharePackageInfo(info.package);
         var packageRepoCanister = info.packageRepoCanister;
-        var defaultInstalledModules = HashMap.fromIter(
-            info.defaultInstalledModules.vals(),
-            info.defaultInstalledModules.size(),
+        var modulesInstalledByDefault = HashMap.fromIter(
+            info.modulesInstalledByDefault.vals(),
+            info.modulesInstalledByDefault.size(),
             Text.equal,
             Text.hash,
         );
