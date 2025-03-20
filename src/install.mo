@@ -25,7 +25,7 @@ module {
                     compute_allocation = null; // TODO
                     memory_allocation = null; // TODO (a low priority task)
                 };
-                subnet_selection = null;
+                subnet_selection = null; // TODO
             };
             from_subaccount = ?(Blob.toArray(Principal.toBlob(user)));
         });
