@@ -838,14 +838,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                     installationId;
                     userArg = to_candid({}); // TODO
                 });
-                installArg = to_candid({ // TODO: Add more arguments.
-                    installationId = p0;
-                    packageManagerOrBootstrapper = Principal.fromActor(this);
-                });
-                upgradeArg = to_candid({ // TODO: Add more arguments.
-                    installationId = p0;
-                    packageManagerOrBootstrapper = Principal.fromActor(this);
-                });
+                installArg = to_candid({}); // TODO: Add more arguments.
+                upgradeArg = to_candid({}); // TODO: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManagerOrBootstrapper = Principal.fromActor(this);

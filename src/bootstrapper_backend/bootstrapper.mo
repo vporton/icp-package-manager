@@ -132,10 +132,7 @@ actor class Bootstrapper() = this {
                 upgradeId = null;
                 canister_id;
                 wasmModule = Common.unshareModule(m);
-                installArg = to_candid({
-                    installationId = 0; // TODO
-                    mainIndirect;
-                });
+                installArg = to_candid({});
                 packageManagerOrBootstrapper = if (moduleName == "backend") {
                     packageManagerOrBootstrapper // to call `installPackageWithPreinstalledModules` below
                 } else {
