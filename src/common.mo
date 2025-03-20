@@ -448,6 +448,6 @@ module {
 
     public type CanisterFulfillment = {
         threshold: Nat;
-        installAmount: Nat;
+        installAmount: Nat; // TODO: Rename.
     };
 }
