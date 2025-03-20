@@ -152,10 +152,10 @@ actor class Bootstrapper() = this {
             });
         };
 
-        let controllers = [simpleIndirect, mainIndirect, backend, user]; // FIXME: battery?
+        let controllers = [simpleIndirect, mainIndirect, backend, user];
         await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
-        for (canister_id in installedModules.vals()) { // FIXME: update frontend?
+        for (canister_id in installedModules.vals()) { // including frontend
             // TODO: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
