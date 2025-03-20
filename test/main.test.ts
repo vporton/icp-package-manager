@@ -166,7 +166,6 @@ describe('My Test Suite', () => {
         for (const canister_id of pmInst.values()) {
             const simpleIndirectInfo = await simpleIndirect.canister_info(
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
-            // FIXME: Depend on Battery:
             // `mainIndirectPrincipal` here is only for the package manager package:
             expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
                 new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
