@@ -148,7 +148,6 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await IC.ic.clear_chunk_store(args);
     };
 
-    // FIXME: We need instead `cycles_ledger.create_canister`.
     public shared({caller}) func create_canister(args: IC.CreateCanisterArgs, amount: Nat): async IC.CreateCanisterResult {
         onlyOwner(caller, "create_canister");
 
