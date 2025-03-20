@@ -436,7 +436,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "upgradeStart");
 
         for (newPkgNum in packages.keys()) {
-            // FIXME: Review the below code.
             let newPkgData = packages[newPkgNum];
             let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO: Need to unshare the entire variable?
             let #real newPkgReal = newPkg.specific else {
@@ -450,8 +449,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             let #real oldPkgReal = oldPkg.package.specific else {
                 Debug.trap("trying to directly upgrade a virtual package");
             };
-            // let oldPkgModules = oldPkgReal.modules;
-            // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
             let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
                 Iter.filter<(Text, Common.Module)>(
@@ -474,15 +471,15 @@ shared({caller = initialCaller}) actor class PackageManager({
                 )
             );
 
+            // It seems that the below can be optimized:
             let allModules = HashMap.fromIter<Text, ()>(
-                Iter.map<Text, (Text, ())>(Iter.concat(oldPkg.defaultInstalledModules.keys(), newPkgModules.keys()), func (x: Text) = (x, ())),
+                Iter.map<Text, (Text, ())>(
+                    Iter.concat(oldPkg.defaultInstalledModules.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
+                ),
                 oldPkg.defaultInstalledModules.size() + newPkgModules.size(),
                 Text.equal,
                 Text.hash,
             );
-
-            // let package2 = Common.unsharePackageInfo(newPkgData.package); // Possibly redundant.
-            // let numModules = realPackage.modules.size();
 
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
                 upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
