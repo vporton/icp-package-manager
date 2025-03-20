@@ -2,7 +2,6 @@ import Timer "mo:base/Timer";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Int "mo:base/Int";
-import Float "mo:base/Float";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Map "mo:base/OrderedMap";
@@ -187,7 +186,7 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     private func topUpAllCanisters(): async () {
-        let newCycles = Cycles.balance() - battery.activatedCycles;
+        let newCycles = Int.abs(+Cycles.balance() - battery.activatedCycles);
         if (newCycles != 0) {
             // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
             let fee = newCycles / 20; // 5%
