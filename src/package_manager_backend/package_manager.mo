@@ -101,6 +101,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
+        newRepo: Principal;
         defaultInstalledModules: HashMap.HashMap<Text, Principal>;
         modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
@@ -109,6 +110,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
+        newRepo: Principal; // TODO: Use actor type?
         defaultInstalledModules: [(Text, Principal)]; // TODO: Rename.
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
@@ -117,6 +119,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func shareHalfUpgradedPackageInfo(x: HalfUpgradedPackageInfo): SharedHalfUpgradedPackageInfo = {
         installationId = x.installationId;
         package = Common.sharePackageInfo(x.package);
+        newRepo = x.newRepo;
         defaultInstalledModules = Iter.toArray(x.defaultInstalledModules.entries());
         modulesToDelete = x.modulesToDelete;
         remainingModules = x.remainingModules;
@@ -127,6 +130,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package = Common.unsharePackageInfo(x.package);
         defaultInstalledModules = HashMap.fromIter(x.defaultInstalledModules.vals(), x.defaultInstalledModules.size(), Text.equal, Text.hash);
         modulesToDelete = x.modulesToDelete;
+        newRepo = x.newRepo;
         var remainingModules = x.remainingModules;
     };
 
@@ -484,6 +488,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
                 installationId = newPkgData.installationId;
                 package = newPkg;
+                newRepo = Principal.fromActor(newPkgData.repo);
                 defaultInstalledModules = HashMap.HashMap(0, Text.equal, Text.hash);
                 modulesToDelete;
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
@@ -529,7 +534,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?inst = installedPackages.get(upgrade.installationId) else {
                 Debug.trap("no such installed package");
             };
-            // inst.packageRepoCanister = ; // FIXME
+            inst.packageRepoCanister := upgrade.newRepo;
             inst.package := upgrade.package;
             inst.defaultInstalledModules := upgrade.defaultInstalledModules;
             halfUpgradedPackages.delete(upgradeId);
@@ -544,8 +549,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         label r for ((moduleName, module_) in real.modules.entries()) {
             let ?cbPrincipal = inst.defaultInstalledModules.get(moduleName) else {
-                // Debug.trap("programming error 3");
-                break r; // FIXME: correct?
+                continue r; // We remove the module in other part of the code.
             };
             switch (module_.callbacks.get(#CodeUpgradedForAllCanisters)) {
                 case (?callbackName) {
