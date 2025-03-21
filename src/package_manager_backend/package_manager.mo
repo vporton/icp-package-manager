@@ -820,7 +820,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?wasmModule = newPkgModules.get(name) else {
                 Debug.trap("programming error: no such module");
             };
-            Debug.print("START UPGRADE module " # debug_show(name) # " for upgrade " # debug_show(p0) # " at position " # debug_show(pos));
             getMainIndirect().upgradeOrInstallModule({
                 upgradeId = p0;
                 installationId;
