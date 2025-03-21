@@ -411,7 +411,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "upgradePackages");
 
         let minUpgradeId = nextUpgradeId;
-        nextUpgradeId += Array.size(packages);
+        nextUpgradeId += Array.size(packages); // TODO: Check the case of `package.size() == 0`.
 
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
