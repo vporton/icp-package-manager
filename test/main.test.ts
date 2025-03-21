@@ -253,17 +253,6 @@ describe('My Test Suite', () => {
             }],
             user: backendUser,
         });
-        for (const _ of [0]) { // FIXME: Remove this loop.
-            await packageManager.upgradePackages({
-                packages: [{
-                    installationId: upgradeableInstallationId,
-                    packageName: "upgradeable",
-                    version: "0.0.2",
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-                }],
-                user: backendUser,
-            });
-        }
         console.log("Testing upgraded package `upgradeable`...");
         // We will wait till `m1` is removed, because this signifie the upgrade is done. // TODO: a better way
         // TODO: More detailed test:
