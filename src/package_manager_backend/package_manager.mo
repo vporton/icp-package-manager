@@ -213,7 +213,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("package_manager: not initialized");
             };
             // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
-            // TODO: https://github.com/dfinity/motoko/issues/4837
             let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let c = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
@@ -227,6 +226,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 let f: Asset.AssetCanister = actor(Principal.toText(frontend));
                 f.get({key = "/index.html"; accept_encodings = ["gzip"]});
             };
+            // TODO: https://github.com/dfinity/motoko/issues/4837
             // ignore {{a0 = await a; b0 = await b/*; c0 = await c; d0 = await d*/}}; // run in parallel
         }
         catch(e) {
