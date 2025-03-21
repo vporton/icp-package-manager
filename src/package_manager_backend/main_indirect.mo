@@ -427,6 +427,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         sender_canister_version = null; // TODO: set appropriate value if needed.
                         arg = to_candid({
                             packageManagerOrBootstrapper;
+                            mainIndirect;
                             simpleIndirect;
                             user;
                             installationId;
