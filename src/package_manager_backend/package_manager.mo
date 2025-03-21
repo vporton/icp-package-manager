@@ -736,6 +736,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
+            // FIXME: This also again starts installing packages already in installing process.
             // TODO: Use it to be able to finish an interrupted installation:
             for ((p0, pkg) in halfInstalledPackages.entries()) {
                 await* doInstallFinish(p0, pkg);
