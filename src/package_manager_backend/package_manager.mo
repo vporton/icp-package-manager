@@ -482,7 +482,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Text.hash,
             );
 
-            halfUpgradedPackages.put(minUpgradeId + newPkgNum, {
+            let pkg2: HalfUpgradedPackageInfo = {
                 upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
                 installationId = newPkgData.installationId;
                 package = newPkg;
@@ -490,13 +490,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
                 modulesToDelete;
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
-            });
-
-            // FIXME: This also again starts upgrading packages already in upgrading process.
-            // Finish upgrading packages.
-            for ((p1, pkg2) in halfUpgradedPackages.entries()) {
-                await* doUpgradeFinish(p1, pkg2, packages[newPkgNum].installationId, user); // TODO: Use named arguments.
             };
+            halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
+            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user); // TODO: Use named arguments.
         };
     };
 
@@ -736,11 +732,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
-            // FIXME: This also again starts installing packages already in installing process.
-            // TODO: Use it to be able to finish an interrupted installation:
-            for ((p0, pkg) in halfInstalledPackages.entries()) {
-                await* doInstallFinish(p0, pkg);
-            };
+            await* doInstallFinish(minInstallationId + p0, ourHalfInstalled);
         };
     };
 
