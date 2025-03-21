@@ -1,4 +1,5 @@
 import Principal "mo:base/Principal";
+import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
@@ -14,6 +15,8 @@ import cmc "canister:cmc";
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
     public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
+        Cycles.add<system>(cyclesAmount);
+        // FIXME: Choose subnet.
         let res = await cmc.create_canister({
             settings = ?{
                 // TODO

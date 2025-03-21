@@ -1380,7 +1380,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO: a way to set.
 
-    stable var newCanisterCycles = 400_000_000_000; // 4 times more, than creating a canister
+    stable var newCanisterCycles = 10_000_000_000_000; // FIXME
 
     public query({caller}) func getNewCanisterCycles(): async Nat {
         onlyOwner(caller, "getNewCanisterCycles");

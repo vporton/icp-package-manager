@@ -14,7 +14,7 @@ import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 
 actor class Bootstrapper() = this {
-    stable var newCanisterCycles = 600_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
+    /*stable*/ var newCanisterCycles = 50_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared func bootstrapFrontend({

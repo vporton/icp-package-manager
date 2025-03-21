@@ -4,6 +4,7 @@
 ///
 /// TODO: Extract this to a separate MOPS package
 import Cycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
 import IC "mo:ic";
 
 actor CMC {
@@ -123,7 +124,7 @@ actor CMC {
 
   public shared func create_canister(arg: CreateCanisterArg): async CreateCanisterResult {
     let amount = Cycles.available();
-    ignore Cycles.accept<system>(amount); // TODO
+    ignore Cycles.accept<system>(amount);
     let sub = arg.settings;
     Cycles.add<system>(amount);
     let { canister_id } = await IC.ic.create_canister({
