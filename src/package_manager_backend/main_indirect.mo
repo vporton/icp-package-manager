@@ -407,7 +407,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         try {
             onlyOwner(caller, "upgradeOrInstallModule");
 
-            Debug.print("upgradeOrInstallModule " # debug_show(moduleName));
+            Debug.print("upgradeOrInstallModule " # debug_show(moduleName) # " " # debug_show(upgradeId));
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
             let wasmModuleSourcePartition: Common.RepositoryRO =
