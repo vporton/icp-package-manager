@@ -279,17 +279,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
             canister: Principal; name: Text; data: Blob;
         };
     }): async* Principal {
-        Debug.print("installModuleCode " # debug_show(moduleName)); // FIXME: Remove.
         let {canister_id} = await* Install.myCreateCanister({
             mainControllers = ?[Principal.fromActor(this)];
             user;
             mainIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
         });
-        Debug.print("A1"); // FIXME: Remove.
 
         let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
-        Debug.print("A2"); // FIXME: Remove.
     
         await* Install.myInstallCode({
             installationId;
@@ -302,9 +299,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             simpleIndirect;
             user;
         });
-        Debug.print("A3"); // FIXME: Remove.
 
-        Debug.print("A4"); // FIXME: Remove.
         // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
         // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
         await IC.ic.update_settings({
@@ -320,7 +315,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 wasm_memory_limit = null;
             };
         });
-        Debug.print("A5"); // FIXME: Remove.
 
         await pm.onInstallCode({
             moduleNumber;
@@ -332,7 +326,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
             packageManagerOrBootstrapper;
             afterInstallCallback;
         });
-        Debug.print("A6"); // FIXME: Remove.
 
         canister_id;
     };
