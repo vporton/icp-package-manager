@@ -146,6 +146,7 @@ shared({caller = initialOwner}) actor class Battery({
     public type CanisterKindsMap = Map.Map<CanisterKind, Common.CanisterFulfillment>;
 
     public type Battery = {
+        canisterInitialCycles: Nat;
         defaultFulfillment: Common.CanisterFulfillment;
         canisterMap: CanisterMap;
         canisterKindsMap: CanisterKindsMap;
@@ -155,6 +156,7 @@ shared({caller = initialOwner}) actor class Battery({
 
     private func newBattery(): Battery =
         {
+            canisterInitialCycles = 1_000_000_000_000;
             defaultFulfillment = {
                 threshold = 3_000_000_000_000;
                 installAmount = 2_000_000_000_000;
@@ -163,6 +165,12 @@ shared({caller = initialOwner}) actor class Battery({
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
             var activatedCycles = 0;
         };
+
+    public query func getCanisterInitialCycles(): async Nat {
+        // onlyOwner(caller, "setDefaultFulfillment");
+
+        battery.canisterInitialCycles;
+    };
 
     // TODO:
     // public func insertCanisterKind(battery: Battery, kind: Text, info: Common.CanisterFulfillment) {

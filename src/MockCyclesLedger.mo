@@ -82,9 +82,10 @@ actor MockCyclesLedger {
 
     // TODO: `args.amount`
     public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
-        ignore Cycles.accept<system>(10_000_000_000_000);
+        let amount = Cycles.available();
+        ignore Cycles.accept<system>(amount);
         let sub = do ? { args.creation_args!.settings! };
-        Cycles.add<system>(10_000_000_000_000);
+        Cycles.add<system>(amount);
         let { canister_id } = await IC.create_canister({
             settings = sub;
             // sender_canister_version = null; // TODO
