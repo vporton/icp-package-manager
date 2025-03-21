@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+    import { readFileSync } from 'fs';
 import { exec, execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
@@ -19,6 +19,7 @@ if (process.env.DFX_NETWORK === 'local') {
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister repository");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cmc");
 }
 
 function commandOutput(command: string): Promise<string> {

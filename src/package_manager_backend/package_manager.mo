@@ -744,6 +744,8 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
+        Debug.print("doInstallFinish " # pkg.package.base.name); // FIXME: Remove.
+
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> =
             switch (p.specific) {
@@ -779,6 +781,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // The following (typically) does not overflow cycles limit, because we use an one-way function.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
+            Debug.print("CALL installModule " # name # " of " # pkg.package.base.name); // FIXME: Remove.
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;
@@ -1381,7 +1384,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO: a way to set.
 
-    stable var newCanisterCycles = 10_000_000_000_000; // FIXME
+    stable var newCanisterCycles = 2_000_000_000_000; // FIXME
 
     public query({caller}) func getNewCanisterCycles(): async Nat {
         onlyOwner(caller, "getNewCanisterCycles");

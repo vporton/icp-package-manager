@@ -15,7 +15,9 @@ import cmc "canister:cmc";
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
     public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
+        Debug.print("B0: " # debug_show(cyclesAmount)); // FIXME: Remove.
         Cycles.add<system>(cyclesAmount);
+        Debug.print("B1"); // FIXME: Remove.
         // FIXME: Choose subnet.
         let res = await cmc.create_canister({
             settings = ?{
@@ -32,6 +34,7 @@ module {
             subnet_selection = null; // TODO
             subnet_type = null; // TODO
         });
+        Debug.print("B2"); // FIXME: Remove.
         let canister_id = switch (res) {
             case (#Ok canister_id) canister_id;
             case (#Err err) {
@@ -40,6 +43,7 @@ module {
                 Debug.trap("cannot create canister: " # msg);
             };  
         };
+        Debug.print("B3"); // FIXME: Remove.
         {canister_id};
     };
 
@@ -54,6 +58,7 @@ module {
         simpleIndirect: Principal;
         user: Principal;
     }): async* () {
+        Debug.print("myInstallCode"); // FIXME: Remove.
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
         let wasmModuleSourcePartition: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
         let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);

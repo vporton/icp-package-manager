@@ -123,14 +123,18 @@ actor CMC {
   // };
 
   public shared func create_canister(arg: CreateCanisterArg): async CreateCanisterResult {
+    Debug.print("C-1"); // FIXME: Remove.
     let amount = Cycles.available();
+    Debug.print("AMOUNT: " # debug_show (amount)); // FIXME: Remove.
     ignore Cycles.accept<system>(amount);
     let sub = arg.settings;
     Cycles.add<system>(amount);
+    Debug.print("C0"); // FIXME: Remove.
     let { canister_id } = await IC.ic.create_canister({
         settings = sub;
         sender_canister_version = null; // TODO
     });
+    Debug.print("C1"); // FIXME: Remove.
     #Ok canister_id;
   };
 }
