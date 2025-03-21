@@ -769,8 +769,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?backend = coreModules.get("backend") else {
             Debug.trap("error getting backend");
         };
-        let ?indirect = coreModules.get("indirect") else {
-            Debug.trap("error getting indirect");
+        let ?main_indirect = coreModules.get("main_indirect") else {
+            Debug.trap("error getting main_indirect");
         };
         let ?simple_indirect = coreModules.get("simple_indirect") else {
             Debug.trap("error getting simple_indirect");
@@ -785,7 +785,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 installArg = to_candid({}); // TODO: Add more arguments.
                 installationId = p0;
                 packageManagerOrBootstrapper = backend;
-                mainIndirect = indirect;
+                mainIndirect = main_indirect;
                 simpleIndirect = simple_indirect;
                 preinstalledCanisterId = coreModules.get(name);
                 user; // TODO: `!`

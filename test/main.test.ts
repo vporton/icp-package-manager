@@ -168,24 +168,24 @@ describe('My Test Suite', () => {
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
             // `mainIndirectPrincipal` here is only for the package manager package:
             expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
-                new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
+                new Set([pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser])
             );
         }
         console.log("Testing owners of the PM modules...");
         // TODO: Check `batteryPrincipal` too.
         for (const [principal, create] of [
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
-            [pmInst.get('indirect')!, createIndirectActor],
+            [pmInst.get('main_indirect')!, createIndirectActor],
             [pmInst.get('backend')!, createPackageManager],
             [pmInst.get('battery')!, createBattery],
         ]) {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
-            const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser];
+            const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser];
             // Battery is self-dependent:
             if ([
-                pmInst.get('indirect')!,
+                pmInst.get('main_indirect')!,
                 pmInst.get('simple_indirect')!,
                 pmInst.get('battery')!
             ].includes(principal as Principal)) {
@@ -200,7 +200,7 @@ describe('My Test Suite', () => {
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await pmFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([pmInst.get('simple_indirect')!, pmInst.get('indirect')!, pmInst.get('backend')!, backendUser])
+                new Set([pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser])
             );
         }
 
