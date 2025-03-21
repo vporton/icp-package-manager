@@ -213,10 +213,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("package_manager: not initialized");
             };
             // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
-            let a = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-            let b = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-            let c = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-            let d = do {
+            let _ = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            let _ = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            let _ = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            let _ = do {
                 let ?pkg = installedPackages.get(installationId) else {
                     Debug.trap("package manager is not yet installed");
                 };
