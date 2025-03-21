@@ -111,10 +111,21 @@ actor CMC {
   //   notify_top_up : shared NotifyTopUpArg -> async NotifyTopUpResult;
   // }
 
-  public shared func notify_create_canister(args: NotifyCreateCanisterArg): async NotifyCreateCanisterResult {
-    ignore Cycles.accept<system>(10_000_000_000_000); // TODO
-    let sub = do ? { args.settings!/*.settings!*/ };
-    Cycles.add<system>(10_000_000_000_000);
+  // public shared func notify_create_canister(arg: NotifyCreateCanisterArg): async NotifyCreateCanisterResult {
+  //   ignore Cycles.accept<system>(10_000_000_000_000); // TODO
+  //   Cycles.add<system>(10_000_000_000_000);
+  //   let { canister_id } = await IC.ic.create_canister({
+  //       settings = arg.settings;
+  //       sender_canister_version = null; // TODO
+  //   });
+  //   #Ok canister_id;
+  // };
+
+  public shared func create_canister(arg: CreateCanisterArg): async CreateCanisterResult {
+    let amount = Cycles.available();
+    ignore Cycles.accept<system>(amount); // TODO
+    let sub = arg.settings;
+    Cycles.add<system>(amount);
     let { canister_id } = await IC.ic.create_canister({
         settings = sub;
         sender_canister_version = null; // TODO
