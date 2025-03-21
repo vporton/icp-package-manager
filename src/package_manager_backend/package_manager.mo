@@ -492,6 +492,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
             });
 
+            // FIXME: This also again starts upgrading packages already in upgrading process.
             // Finish upgrading packages.
             for ((p1, pkg2) in halfUpgradedPackages.entries()) {
                 await* doUpgradeFinish(p1, pkg2, packages[newPkgNum].installationId, user); // TODO: Use named arguments.
@@ -508,7 +509,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "onUpgradeOrInstallModule");
 
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade");
+            Debug.trap("no such upgrade: " # debug_show(upgradeId));
         };
         upgrade.modulesInstalledByDefault.put(moduleName, canister_id);
 
@@ -826,6 +827,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?wasmModule = newPkgModules.get(name) else {
                 Debug.trap("programming error: no such module");
             };
+            Debug.print("START UPGRADE module " # debug_show(name) # " for upgrade " # debug_show(p0) # " at position " # debug_show(pos));
             getMainIndirect().upgradeOrInstallModule({
                 upgradeId = p0;
                 installationId;
