@@ -1,5 +1,8 @@
 Remaining things TODO:
 
+- When running two upgrade operations of the same package in nearly the same time,
+  it tries to `stop_canister` for an already deleted canister. That may be a more serious sympthom.
+
 - Support upgrade from a different repo.
 
 - Prevent upgrading package to the same version as installed?
