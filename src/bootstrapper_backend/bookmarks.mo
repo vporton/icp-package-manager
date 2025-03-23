@@ -10,7 +10,9 @@ import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 
 // TODO: Allow only the user to see his bookmarks?
-persistent actor Bookmarks {
+persistent actor class Bookmarks({
+    bootstrapper: Principal;
+}) {
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     public type Bookmark = {

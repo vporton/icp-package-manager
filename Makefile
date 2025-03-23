@@ -3,6 +3,7 @@
 NETWORK = local
 export MOPS_ENV = $(NETWORK)
 USER = $(shell dfx identity get-principal)
+# DEPLOY_FLAGS.bookmark = --argument "rec { bootstrapper = \"$$()\""; }"
 DEPLOY_FLAGS.bootstrapper_data = --argument "principal \"$(USER)\""
 
 .PHONY: deploy
@@ -33,3 +34,8 @@ deploy-test: deploy \
   deploy@upgrade_example_backend1_v1 deploy@upgrade_example_backend2_v1 \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
+
+deploy-self@bookmark:
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
+	  --argument "record { bootstrapper = principal \"$$(dfx canister id bootstrapper)\"; }" \
+	  bookmark
