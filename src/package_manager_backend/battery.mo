@@ -159,7 +159,7 @@ shared({caller = initialOwner}) actor class Battery({
             canisterInitialCycles = 1_000_000_000_000;
             defaultFulfillment = {
                 threshold = 3_000_000_000_000;
-                installAmount = 2_000_000_000_000;
+                topupAmount = 2_000_000_000_000;
             };
             canisterMap = moduleLocationMap.empty<CanisterKind>();
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
@@ -194,7 +194,7 @@ shared({caller = initialOwner}) actor class Battery({
             case (?x) x;
             case null battery.defaultFulfillment;
         };
-        Cycles.add<system>(fulfillment.installAmount); // TODO: If this traps on a too high amount, keep filling other canisters?
+        Cycles.add<system>(fulfillment.topupAmount); // TODO: If this traps on a too high amount, keep filling other canisters?
         getMainIndirect().topUpOneCanisterFinish(canister_id, fulfillment);
     };
 

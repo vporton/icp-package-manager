@@ -506,8 +506,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
             let status = await IC.ic.canister_status({canister_id});
             let remaining = status.cycles;
             if (remaining <= fulfillment.threshold) {
-                ignore Cycles.accept<system>(fulfillment.installAmount);
-                Cycles.add<system>(fulfillment.installAmount);
+                ignore Cycles.accept<system>(fulfillment.topupAmount);
+                Cycles.add<system>(fulfillment.topupAmount);
                 await IC.ic.deposit_cycles({canister_id});
             };
         }

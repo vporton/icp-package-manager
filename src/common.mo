@@ -435,6 +435,6 @@ module {
 
     public type CanisterFulfillment = {
         threshold: Nat;
-        installAmount: Nat; // TODO: Rename.
+        topupAmount: Nat;
     };
 }
