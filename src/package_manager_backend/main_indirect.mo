@@ -410,10 +410,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
             Debug.print("upgradeOrInstallModule " # debug_show(moduleName) # " " # debug_show(upgradeId));
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-            let wasmModuleSourcePartition: Common.RepositoryRO =
+            let repository: Common.RepositoryRO =
                 actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
 
-            let wasm_module = await wasmModuleSourcePartition.getWasmModule(wasmModuleLocation.1);
+            let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
             let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
                     let mode2 = if (wasmModule.forceReinstall) {
