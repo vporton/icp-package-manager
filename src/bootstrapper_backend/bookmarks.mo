@@ -49,7 +49,7 @@ persistent actor Bookmarks {
     /// Returns whether bookmark already existed.
     ///
     /// TODO: Add note not to disclose your principal on the bootstrapper, for strangers not to add bookmarks for you.
-    /// FIXME: Fix this by using key pair for bookmarking.
+    /// FIXME: Fix this by using key pair with private key in a URL for bookmarking.
     public shared func addBookmark(b: Bookmark, user: Principal): async Bool {
         let transferred = Cycles.accept<system>(env.bookmarkCost);
         if (transferred < env.bookmarkCost) {
