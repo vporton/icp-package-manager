@@ -1,9 +1,18 @@
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import BTree "mo:stableheapbtreemap/BTree";
+import Cycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
+import Nat64 "mo:base/Nat64";
+import Int "mo:base/Int";
+import Time "mo:base/Time";
+import env "mo:env";
+import CyclesLedger "canister:cycles_ledger";
 
 // TODO: Allow only the user to see his bookmarks?
 persistent actor Bookmarks {
+    let revenueRecipient = Principal.fromText(env.revenueRecipient);
+
     public type Bookmark = {
         frontend: Principal;
         backend: Principal;
@@ -39,7 +48,11 @@ persistent actor Bookmarks {
 
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark(b: Bookmark): async Bool {
-        switch (BTree.get(bookmarks, bookmarksCompare, b)) {
+        let transferred = Cycles.accept<system>(env.bookmarkCost);
+        if (transferred < env.bookmarkCost) {
+            Debug.trap("requires payment");
+        };
+        let res = switch (BTree.get(bookmarks, bookmarksCompare, b)) {
             case (?_) true;
             case null {
                 ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
@@ -52,8 +65,16 @@ persistent actor Bookmarks {
                 false;
             };
         };
+        ignore await CyclesLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = env.bookmarkCost - 100_000_000; // minus transfer fee
+        });
+        res;
     };
 
-    // TODO: Charge the allocated by dev to limit DoS spam.
     // TODO: inspect messages for max. principal length to be 29
 }
