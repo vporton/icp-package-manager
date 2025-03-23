@@ -13,7 +13,7 @@ import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
 
 module {
-    public func IntHash(value: Int): Hash.Hash { // TODO: letter casing
+    public func intHash(value: Int): Hash.Hash {
         var v2 = Int.abs(value);
         var hash: Nat32 = 0;
         while (v2 != 0) {

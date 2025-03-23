@@ -196,7 +196,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   /// Data ///
 
   // TODO: Use hashes instead of numbers, for balanced tree and duplicate elimination.
-  let wasms = TrieMap.TrieMap<Nat, Blob>(Nat.equal, Common.IntHash);
+  let wasms = TrieMap.TrieMap<Nat, Blob>(Nat.equal, Common.intHash);
 
   public query func getWasmModule(key: Nat): async Blob { 
     let ?v = wasms.get(key) else {

@@ -259,7 +259,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
-        HashMap.HashMap(0, Nat.equal, Common.IntHash);
+        HashMap.HashMap(0, Nat.equal, Common.intHash);
 
     stable var _installedPackagesByNameSave: [(Blob, {
         all: RBTree.Tree<Common.InstallationId, ()>;
@@ -274,17 +274,17 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
     stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfUninstalledPackages: HashMap.HashMap<Common.UninstallationId, HalfUninstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
     stable var _halfUpgradedPackagesSave: [(Common.UpgradeId, SharedHalfUpgradedPackageInfo)] = [];
     // TODO: `var` or `let` here and in other places:
     var halfUpgradedPackages: HashMap.HashMap<Common.UpgradeId, HalfUpgradedPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.IntHash);
+        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
     stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
 
@@ -1102,7 +1102,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             ),
             Array.size(_installedPackagesSave),
             Nat.equal,
-            Common.IntHash,
+            Common.intHash,
         );
         _installedPackagesSave := []; // Free memory.
 
@@ -1131,7 +1131,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             ),
             _halfInstalledPackagesSave.size(),
             Nat.equal,
-            Common.IntHash,
+            Common.intHash,
         );
         _halfInstalledPackagesSave := []; // Free memory.
         halfUninstalledPackages := HashMap.fromIter<Common.UninstallationId, HalfUninstalledPackageInfo>(
@@ -1141,7 +1141,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             ),
             _halfInstalledPackagesSave.size(),
             Nat.equal,
-            Common.IntHash,
+            Common.intHash,
         );
         _halfUninstalledPackagesSave := []; // Free memory.
         halfUpgradedPackages := HashMap.fromIter<Common.UpgradeId, HalfUpgradedPackageInfo>(
@@ -1151,7 +1151,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             ),
             _halfUpgradedPackagesSave.size(),
             Nat.equal,
-            Common.IntHash,
+            Common.intHash,
         );
         _halfUpgradedPackagesSave := []; // Free memory.
     };
