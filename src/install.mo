@@ -13,10 +13,9 @@ import cycles_ledger "canister:cycles_ledger";
 import cmc "canister:cmc";
 
 module {
-    // TODO: (Here and in other places) rename `mainControllers`.
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     public func myCreateCanister({
-        mainControllers: ?[Principal];
+        controllers: ?[Principal];
         user: Principal;
         cyclesAmount: Nat;
     }): async* {canister_id: Principal} {
@@ -26,7 +25,7 @@ module {
             settings = ?{
                 // TODO
                 compute_allocation = null;
-                controllers = mainControllers;
+                controllers = controllers;
                 freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
                 log_visibility = null;
                 memory_allocation = null; // TODO (a low priority task)

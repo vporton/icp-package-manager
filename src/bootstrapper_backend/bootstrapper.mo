@@ -34,7 +34,7 @@ actor class Bootstrapper() = this {
             Debug.trap("frontend module not found");
         };
         let {canister_id} = await* Install.myCreateCanister({
-            mainControllers = ?[Principal.fromActor(this)];
+            controllers = ?[Principal.fromActor(this)];
             user;
             cyclesAmount = newCanisterCycles;
         });
@@ -108,7 +108,7 @@ actor class Bootstrapper() = this {
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
             let {canister_id} = await* Install.myCreateCanister({
-                mainControllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+                controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 user;
                 cyclesAmount = newCanisterCycles;
             });
