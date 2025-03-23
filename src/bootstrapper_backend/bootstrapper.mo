@@ -56,7 +56,8 @@ actor class Bootstrapper() = this {
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
     ///
-    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
+    /// We don't allow to substitute user-chosen modules for the package manager itself,
+    /// because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapBackend({
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
