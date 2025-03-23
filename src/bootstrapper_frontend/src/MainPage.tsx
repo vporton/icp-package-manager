@@ -45,7 +45,6 @@ export default function MainPage() {
         setBookmarks([]);
         return;
       }
-      // console.log("process.env.CANISTER_ID_BOOKMARK", process.env.CANISTER_ID_BOOKMARK);
       const bookmark = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent: props.agent});
       bookmark.getUserBookmarks().then(list => {
         setBookmarks(list);

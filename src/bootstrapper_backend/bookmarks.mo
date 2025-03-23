@@ -47,7 +47,10 @@ persistent actor Bookmarks {
     };
 
     /// Returns whether bookmark already existed.
-    public shared({caller}) func addBookmark(b: Bookmark): async Bool {
+    ///
+    /// TODO: Add note not to disclose your principal on the bootstrapper, for strangers not to add bookmarks for you.
+    /// FIXME: Fix this by using key pair for bookmarking.
+    public shared func addBookmark(b: Bookmark, user: Principal): async Bool {
         let transferred = Cycles.accept<system>(env.bookmarkCost);
         if (transferred < env.bookmarkCost) {
             Debug.trap("requires payment");
@@ -56,12 +59,12 @@ persistent actor Bookmarks {
             case (?_) true;
             case null {
                 ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
-                let a = BTree.get(userToBookmark, Principal.compare, caller);
+                let a = BTree.get(userToBookmark, Principal.compare, user);
                 let a2 = switch (a) {
                     case (?a) Array.append(a, [b]);
                     case null [b];
                 };
-                ignore BTree.insert(userToBookmark, Principal.compare, caller, a2);
+                ignore BTree.insert(userToBookmark, Principal.compare, user, a2);
                 false;
             };
         };

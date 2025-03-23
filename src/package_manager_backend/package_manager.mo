@@ -1425,6 +1425,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "addBookmark");
 
         Cycles.add<system>(env.bookmarkCost);
-        ignore Bookmarks.addBookmark(b); // `ignore` prevents non-returning function attack.
+        ignore Bookmarks.addBookmark(b, caller); // `ignore` prevents non-returning function attack.
     };
 }
