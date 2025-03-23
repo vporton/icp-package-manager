@@ -34,7 +34,7 @@ module {
                 wasm_memory_threshold = null;
             };
             subnet_selection = null; // TODO
-            subnet_type = null; // TODO
+            subnet_type = null;
         });
         let canister_id = switch (res) {
             case (#Ok canister_id) canister_id;
