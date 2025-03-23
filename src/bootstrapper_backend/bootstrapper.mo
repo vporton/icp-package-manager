@@ -190,7 +190,7 @@ actor class Bootstrapper() = this {
         ignore await backendActor.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
-          version = "0.0.1"; // TODO: should be `stable`.
+          version = "stable";
           preinstalledModules = Iter.toArray(installedModules.entries());
           repo = Repository;
           user;

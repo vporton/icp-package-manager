@@ -56,7 +56,7 @@ export default function MainPage() {
     async function bootstrap() { // TODO: Move to `useEffect`.
       try {
         setBusy(true);
-        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1"); // TODO: `"stable"`
+        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({

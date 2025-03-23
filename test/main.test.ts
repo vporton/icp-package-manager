@@ -128,7 +128,7 @@ describe('My Test Suite', () => {
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: defaultAgent});
         canisterNames.set(process.env.CANISTER_ID_REPOSITORY!, 'repoIndex');
 
-        let icPackPkg = await repoIndex.getPackage('icpack', "0.0.1");
+        let icPackPkg = await repoIndex.getPackage('icpack', "stable");
         const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
         const icPackModules = new Map(icPackPkgReal.modules);
 

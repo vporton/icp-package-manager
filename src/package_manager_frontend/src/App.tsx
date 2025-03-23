@@ -70,7 +70,7 @@ function GlobalUI() {
       try {
         setBusy(true);
         const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: defaultAgent});
-        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "0.0.1");
+        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
         const bootstrapperMainIndirect: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent});
