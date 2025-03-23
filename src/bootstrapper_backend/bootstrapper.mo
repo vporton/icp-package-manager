@@ -198,6 +198,8 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
+        // FIXME: Transfer remaining cycles to the battery.
+
         { installedModules = Iter.toArray(installedModules.entries()); }
     };
 
