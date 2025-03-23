@@ -15,9 +15,10 @@ export default function Bookmark() {
     const base = getIsLocal() ? `http://${frontend.toString()}.localhost:4943?` : `https://${frontend.toString()}.icp0.io?`;
     const url = base + `_pm_pkg0.backend=${backend.toString()}`;
     async function createBookmark() {
-        const pm = createPMActor(process.env.CANISTER_ID_BOOKMARK!, {agent});
-        await pm.addBookmark(bookmark);
-        setDone(true);
+        // TODO
+        // const pm = createPMActor(process.env.CANISTER_ID_BOOKMARK!, {agent});
+        // await pm.addBookmark(bookmark);
+        // setDone(true);
     }
     const [done, setDone] = useState(true);
     useEffect(() => {

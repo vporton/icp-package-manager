@@ -11,15 +11,12 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
-import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
 import Battery "battery";
 import CyclesLedger "canister:cycles_ledger";
-import Bookmarks "canister:bookmark";
 import Asset "mo:assets-api";
-import env "mo:env";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
@@ -1419,12 +1416,5 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("no such package");
         };
         data.default := installationId;
-    };
-
-    public shared({caller}) func addBookmark(b: Bookmarks.Bookmark): async () {
-        onlyOwner(caller, "addBookmark");
-
-        Cycles.add<system>(env.bookmarkCost);
-        ignore Bookmarks.addBookmark(b, caller); // `ignore` prevents non-returning function attack.
     };
 }

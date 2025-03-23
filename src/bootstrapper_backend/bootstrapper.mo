@@ -10,6 +10,9 @@ import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
+import Cycles "mo:base/ExperimentalCycles";
+import Bookmarks "canister:bookmark";
+import env "mo:env";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 
@@ -58,7 +61,7 @@ actor class Bootstrapper() = this {
     ///
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
-    public shared({caller = user}) func bootstrapBackend({
+    public shared({caller}) func bootstrapBackend({
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
@@ -85,7 +88,7 @@ actor class Bootstrapper() = this {
         );
         await* bootstrapBackendImpl({
             modulesToInstall;
-            user;
+            user = caller;
             packageManagerOrBootstrapper;
             frontend;
             frontendTweakPrivKey;
@@ -154,7 +157,6 @@ actor class Bootstrapper() = this {
         };
 
         let controllers = [simpleIndirect, mainIndirect, backend, user];
-        await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
         for (canister_id in installedModules.vals()) { // including frontend
             // TODO: We can provide these setting initially and thus update just one canister.
@@ -204,6 +206,9 @@ actor class Bootstrapper() = this {
 
         // FIXME: Transfer remaining cycles to the battery.
 
+        // the last stage of installation, not to add failed bookmark:
+        await* tweakFrontend(frontend, backend, frontendTweakPrivKey, controllers, user);
+
         { installedModules = Iter.toArray(installedModules.entries()); }
     };
 
@@ -211,10 +216,14 @@ actor class Bootstrapper() = this {
     public type PrivKey = Blob;
 
     /// Internal. Updates controllers and owners of the frontend.
+    ///
+    /// TODO: Rename.
     private func tweakFrontend(
         frontend: Principal,
+        backend: Principal,
         privKey: PrivKey,
         controllers: [Principal],
+        user: Principal,
     ): async* () {
         let pubKey = await Data.getFrontendTweaker(frontend);
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
@@ -234,6 +243,12 @@ actor class Bootstrapper() = this {
                 });
             };
         };
+        // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
+        //       For this, make the private key a part of the persistent link arguments?
+        //       Need to ensure that the link is paid for (prevent DoS attacks).
+        //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
+        Cycles.add<system>(env.bookmarkCost);
+        ignore await Bookmarks.addBookmark({frontend; backend}, user); // FIXME: It is added for backend principal not bootstrapper one.
         // Done above:
         // await ic.update_settings({
         //     canister_id = frontend;
