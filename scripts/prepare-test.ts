@@ -138,7 +138,7 @@ async function main() {
         modules: [
             ['backend', pmBackendModule],
             ['frontend', pmFrontendModule],
-            ['main_indirect', pmMainIndirectModule], // TODO: Rename to `main_indirect`?
+            ['main_indirect', pmMainIndirectModule],
             ['simple_indirect', pmSimpleIndirectModule],
             ['battery', pmBatteryModule],
         ],
