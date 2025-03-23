@@ -146,7 +146,6 @@ describe('My Test Suite', () => {
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
         const pmInst = new Map<string, Principal>(
             (await bootstrapper2.bootstrapBackend({
-                user: backendUser,
                 packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
                 frontendTweakPrivKey,
                 frontend: frontendPrincipal,

@@ -86,7 +86,6 @@ function GlobalUI() {
           : [];
         // TODO: Use "version" field from `additionalPackages`.
         const {installedModules} = await bootstrapperMainIndirect.bootstrapBackend({
-          user: principal!, // TODO: `!`
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           frontend: glob.frontend!,
