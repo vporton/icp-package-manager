@@ -50,9 +50,7 @@ persistent actor class Bookmarks({
 
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark(b: Bookmark, user: Principal): async Bool {
-        if (caller != bootstrapper) {
-            Debug.trap("not bootstrapper");
-        };
+        // FIXME: Replace by `icrc2_transfer_from`. Delete `user` argument.
         let transferred = Cycles.accept<system>(env.bookmarkCost);
         if (transferred < env.bookmarkCost) {
             Debug.trap("requires payment");

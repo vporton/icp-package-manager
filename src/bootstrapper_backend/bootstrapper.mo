@@ -207,7 +207,7 @@ actor class Bootstrapper() = this {
         // FIXME: Transfer remaining cycles to the battery.
 
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(frontend, backend, frontendTweakPrivKey, controllers, user);
+        await* tweakFrontend(frontend, backend, frontendTweakPrivKey, controllers);
 
         { installedModules = Iter.toArray(installedModules.entries()); }
     };
@@ -223,7 +223,6 @@ actor class Bootstrapper() = this {
         backend: Principal,
         privKey: PrivKey,
         controllers: [Principal],
-        user: Principal,
     ): async* () {
         let pubKey = await Data.getFrontendTweaker(frontend);
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
@@ -247,8 +246,9 @@ actor class Bootstrapper() = this {
         //       For this, make the private key a part of the persistent link arguments?
         //       Need to ensure that the link is paid for (prevent DoS attacks).
         //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
-        Cycles.add<system>(env.bookmarkCost);
-        ignore await Bookmarks.addBookmark({frontend; backend}, user); // FIXME: It is added for backend principal not bootstrapper one.
+        //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
+        // Cycles.add<system>(env.bookmarkCost);
+        // ignore await Bookmarks.addBookmark({frontend; backend}, bootstrapperUser);
         // Done above:
         // await ic.update_settings({
         //     canister_id = frontend;
