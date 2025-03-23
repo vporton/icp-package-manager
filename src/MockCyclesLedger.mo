@@ -3,8 +3,8 @@
 /// It's useful for testing code using `CyclesLedger.create_canister` on local net.
 ///
 /// TODO: Extract this to a separate MOPS package
-import Cycles "mo:base/ExperimentalCycles";
 import Principal "mo:base/Principal";
+// import IC "mo:ic";
 
 actor MockCyclesLedger {
     // Cycles Ledger API
@@ -63,38 +63,30 @@ actor MockCyclesLedger {
 
     // Mock implementation follows
 
-    type canister_id = Principal;
+    // type canister_id = Principal;
 
-    type CanisterCreator = actor { // TODO: Use `IC` module.
-        create_canister : shared { settings : ?canister_settings } -> async {
-            canister_id : canister_id;
-        };
-    };
+    // type canister_settings = {
+    //     freezing_threshold : ?Nat;
+    //     controllers : ?[Principal];
+    //     memory_allocation : ?Nat;
+    //     compute_allocation : ?Nat;
+    // };
 
-    let IC: CanisterCreator = actor("aaaaa-aa");
-
-    type canister_settings = {
-        freezing_threshold : ?Nat;
-        controllers : ?[Principal];
-        memory_allocation : ?Nat;
-        compute_allocation : ?Nat;
-    };
-
-    // TODO: `args.amount`
-    public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
-        let amount = Cycles.available();
-        ignore Cycles.accept<system>(amount);
-        let sub = do ? { args.creation_args!.settings! };
-        Cycles.add<system>(amount);
-        let { canister_id } = await IC.create_canister({
-            settings = sub;
-            // sender_canister_version = null; // TODO
-        });
-        #Ok {
-            block_id = 0;
-            canister_id;
-        };
-    };
+    // // TODO: `args.amount`
+    // public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
+    //     let amount = Cycles.available();
+    //     ignore Cycles.accept<system>(amount);
+    //     let sub = do ? { args.creation_args!.settings! };
+    //     Cycles.add<system>(amount);
+    //     let { canister_id } = await IC.ic.create_canister({
+    //         settings = sub;
+    //         sender_canister_version = null; // TODO
+    //     });
+    //     #Ok {
+    //         block_id = 0;
+    //         canister_id;
+    //     };
+    // };
 
     type Subaccount = Blob;
 
