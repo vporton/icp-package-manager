@@ -11,7 +11,11 @@ import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 import Cycles "mo:base/ExperimentalCycles";
+import Nat64 "mo:base/Nat64";
+import Int "mo:base/Int";
+import Time "mo:base/Time";
 import Bookmarks "canister:bookmark";
+import CyclesLedger "canister:cycles_ledger";
 import env "mo:env";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -84,7 +88,7 @@ actor class Bootstrapper() = this {
             ),
             icPackPkgReal.modules.size() - 1,
             Text.equal,
-            Text.hash
+            Text.hash,
         );
         await* bootstrapBackendImpl({
             modulesToInstall;
@@ -128,6 +132,9 @@ actor class Bootstrapper() = this {
             Debug.trap("module not deployed");
         };
         let ?simpleIndirect = installedModules.get("simple_indirect") else {
+            Debug.trap("module not deployed");
+        };
+        let ?battery = installedModules.get("battery") else {
             Debug.trap("module not deployed");
         };
         for ((moduleName, canister_id) in installedModules.entries()) {
@@ -204,7 +211,15 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
-        // FIXME: Transfer remaining cycles to the battery.
+        // TODO: `ignore` here?
+        ignore await CyclesLedger.icrc1_transfer({
+            to = {owner = battery; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = 0/*FIXME*/;
+        });
 
         // the last stage of installation, not to add failed bookmark:
         await* tweakFrontend(frontend, backend, frontendTweakPrivKey, controllers);
