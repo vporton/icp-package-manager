@@ -14,7 +14,6 @@ import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
-import Bookmarks "canister:bookmark";
 import CyclesLedger "canister:cycles_ledger";
 import env "mo:env";
 import Data "canister:bootstrapper_data";
