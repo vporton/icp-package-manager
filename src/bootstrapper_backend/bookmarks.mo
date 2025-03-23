@@ -49,26 +49,10 @@ persistent actor class Bookmarks({
     };
 
     /// Returns whether bookmark already existed.
-    public shared({caller}) func addBookmark(b: Bookmark, user: Principal): async Bool {
-        // FIXME: Replace by `icrc2_transfer_from`. Delete `user` argument.
-        let transferred = Cycles.accept<system>(env.bookmarkCost);
-        if (transferred < env.bookmarkCost) {
-            Debug.trap("requires payment");
-        };
-        let res = switch (BTree.get(bookmarks, bookmarksCompare, b)) {
-            case (?_) true;
-            case null {
-                ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
-                let a = BTree.get(userToBookmark, Principal.compare, user);
-                let a2 = switch (a) {
-                    case (?a) Array.append(a, [b]);
-                    case null [b];
-                };
-                ignore BTree.insert(userToBookmark, Principal.compare, user, a2);
-                false;
-            };
-        };
-        ignore await CyclesLedger.icrc1_transfer({
+    public shared({caller}) func addBookmark(b: Bookmark, battery: Principal): async Bool {
+        let res = await CyclesLedger.icrc2_transfer_from({
+            spender_subaccount = null;
+            from = { owner = battery; subaccount = null };
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
@@ -76,7 +60,26 @@ persistent actor class Bookmarks({
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = env.bookmarkCost - 100_000_000; // minus transfer fee
         });
-        res;
+        switch (res) {
+            case (#Err e) {
+                Debug.print("Error transferring funds: " # debug_show(e));
+                return false;
+            };
+            case (#Ok _) {};
+        };
+        switch (BTree.get(bookmarks, bookmarksCompare, b)) {
+            case (?_) true;
+            case null {
+                ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
+                let a = BTree.get(userToBookmark, Principal.compare, caller);
+                let a2 = switch (a) {
+                    case (?a) Array.append(a, [b]);
+                    case null [b];
+                };
+                ignore BTree.insert(userToBookmark, Principal.compare, caller, a2);
+                false;
+            };
+        };
     };
 
     // TODO: inspect messages for max. principal length to be 29

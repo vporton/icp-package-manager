@@ -139,10 +139,115 @@ actor MockCyclesLedger {
         #Err : TransferError;
     };
 
-
     public shared func icrc1_transfer(_args: TransferArgs): async TransferResult {
         // Do nothing.
         #Ok 1;
     };
 
+    type AllowanceArgs = {
+        account : Account;
+        spender : Account;
+    };
+
+    type Allowance = {
+        allowance : Nat;
+        expires_at : ?Nat64;
+    };
+
+	public query func icrc2_allowance(_args: AllowanceArgs): async Allowance {
+        { allowance = 10_000_000_000_000; expires_at = null };
+    };
+
+    type ApproveArgs = {
+        fee : ?Nat;
+        memo : ?Blob;
+        from_subaccount : ?Blob;
+        created_at_time : ?Nat64;
+        amount : Nat;
+        expected_allowance : ?Nat;
+        expires_at : ?Nat64;
+        spender : Account;
+    };
+
+    type ApproveResult = {
+        #Ok : Nat;
+        #Err : ApproveError;
+    };
+
+    type ApproveError = {
+        #GenericError : {
+            message : Text;
+            error_code : Nat;
+        };
+        #TemporarilyUnavailable;
+        #Duplicate : {
+            duplicate_of : Nat;
+        };
+        #BadFee : {
+            expected_fee : Nat;
+        };
+        #AllowanceChanged : {
+            current_allowance : Nat;
+        };
+        #CreatedInFuture : {
+            ledger_time : Nat64;
+        };
+        #TooOld;
+        #Expired : {
+            ledger_time : Nat64;
+        };
+        #InsufficientFunds : {
+            balance : Nat;
+        }
+    };
+
+	public shared func icrc2_approve(args: ApproveArgs): async ApproveResult {
+        #Ok(args.amount);
+    };
+
+    type TransferFromArgs = {
+        to : Account;
+        fee : ?Nat;
+        spender_subaccount : ?Blob;
+        from : Account;
+        memo : ?Blob;
+        created_at_time : ?Nat64;
+        amount : Nat;
+    };
+
+    type TransferFromResult = {
+        #Ok : Nat;
+        #Err : TransferFromError;
+    };
+
+    type TransferFromError = {
+        #GenericError : {
+            message : Text;
+            error_code : Nat;
+        };
+        #TemporarilyUnavailable;
+        #InsufficientAllowance : {
+            allowance : Nat;
+        };
+        #BadBurn : {
+            min_burn_amount : Nat;
+        };
+        #Duplicate : {
+            duplicate_of : Nat;
+        };
+        #BadFee : {
+            expected_fee : Nat;
+        };
+        #CreatedInFuture : {
+            ledger_time : Nat64;
+        };
+        #TooOld;
+        #InsufficientFunds : {
+            balance : Nat;
+        }
+    };
+
+    public shared func icrc2_transfer_from(args: TransferFromArgs): async TransferFromResult {
+        #Ok(args.amount);
+    };
 }
