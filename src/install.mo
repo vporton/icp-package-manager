@@ -15,7 +15,11 @@ import cmc "canister:cmc";
 module {
     // TODO: (Here and in other places) rename `mainControllers`.
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
-    public func myCreateCanister({mainControllers: ?[Principal]; user: Principal; cyclesAmount: Nat}): async* {canister_id: Principal} {
+    public func myCreateCanister({
+        mainControllers: ?[Principal];
+        user: Principal;
+        cyclesAmount: Nat;
+    }): async* {canister_id: Principal} {
         Cycles.add<system>(cyclesAmount);
         // FIXME: Choose subnet.
         let res = await cmc.create_canister({
