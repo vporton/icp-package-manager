@@ -14,6 +14,7 @@ import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 
 actor class Bootstrapper() = this {
+    /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
