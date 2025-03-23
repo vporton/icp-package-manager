@@ -74,11 +74,15 @@ actor class Bootstrapper() = this {
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
-        // Do a deep copy:
+        // We bootstrap backend at this stage:
         let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
-            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
+            Iter.filter<(Text, Common.SharedModule)>(
+                icPackPkgReal.modules.vals(), func (name: Text, _: Common.SharedModule) = name != "frontend"
+            ),
+            icPackPkgReal.modules.size() - 1,
+            Text.equal,
+            Text.hash
         );
-        modulesToInstall.delete("frontend"); // We bootstrap backend at this stage.
         await* bootstrapBackendImpl({
             modulesToInstall;
             user;
