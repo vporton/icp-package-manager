@@ -24,6 +24,10 @@ actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
+    /// Should be given with a reserve.
+    var totalBootstrapCost = 10_000_000_000_000; // TODO: Make it stable.
+    // FIXME: frontend? backend? both?
+
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared func bootstrapFrontend({
         installArg: Blob;
@@ -115,6 +119,7 @@ actor class Bootstrapper() = this {
     }): async* {
         installedModules: [(Text, Principal)];
     } {
+        // FIXME: If I use subaccount, the below can't be used.
         // FIXME: At the beginning test that the user paid enough cycles.
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
@@ -213,12 +218,12 @@ actor class Bootstrapper() = this {
 
         // TODO: `ignore` here?
         ignore await CyclesLedger.icrc1_transfer({
-            to = {owner = battery; subaccount = null};
+            to = {owner = battery; subaccount = null}; // FIXME: `subaccount`
             fee = null;
             memo = null;
             from_subaccount = null;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = 0/*FIXME*/;
+            amount = totalBootstrapCost;
         });
 
         // the last stage of installation, not to add failed bookmark:
