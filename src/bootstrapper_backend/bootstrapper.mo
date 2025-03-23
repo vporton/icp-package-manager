@@ -23,16 +23,29 @@ actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
-    /// Should be given with a reserve.
+    /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
     var totalBootstrapCost = 10_000_000_000_000; // TODO: Make it stable.
-    // FIXME: frontend? backend? both?
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared func bootstrapFrontend({
         installArg: Blob;
-        user: Principal;
+        user: Principal; // FIXME: It can withdraw from another user.
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
+        let amountToMove = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
+        });
+
+        // Move user's fund into current use:
+        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+            to = {owner = Principal.fromActor(this); subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Principal.toBlob(user));
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = amountToMove;
+        });
+
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -43,11 +56,14 @@ actor class Bootstrapper() = this {
         let ?wasmModule = modulesToInstall.get("frontend") else {
             Debug.trap("frontend module not found");
         };
+        Cycles.add<system>(amountToMove);
         let {canister_id} = await* Install.myCreateCanister({
             controllers = ?[Principal.fromActor(this)];
             user;
             cyclesAmount = newCanisterCycles;
         });
+
+        Cycles.add<system>(Cycles.refunded());
         await* Install.myInstallCode({
             installationId = 0;
             upgradeId = null;
@@ -60,7 +76,19 @@ actor class Bootstrapper() = this {
             simpleIndirect = Principal.fromText("aaaaa-aa");
             user;
         });
+        Cycles.add<system>(Cycles.refunded());
         await Data.putFrontendTweaker(canister_id, frontendTweakPubKey);
+
+        // Return user's fund from current use:
+        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+            to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = Cycles.refunded();
+        });
+
         {canister_id};
     };
 
@@ -80,6 +108,21 @@ actor class Bootstrapper() = this {
     }): async {
         installedModules: [(Text, Principal)];
     } {
+        let amountToMove = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(caller));
+        });
+
+        // Move user's fund into current use:
+        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+            to = {owner = Principal.fromActor(this); subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Principal.toBlob(caller));
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = amountToMove;
+        });
+
+        Cycles.add<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -122,6 +165,7 @@ actor class Bootstrapper() = this {
         // FIXME: At the beginning test that the user paid enough cycles.
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
+            Cycles.add<system>(Cycles.refunded());
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 user;
@@ -145,6 +189,7 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
+            Cycles.add<system>(Cycles.refunded());
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
@@ -171,6 +216,7 @@ actor class Bootstrapper() = this {
 
         for (canister_id in installedModules.vals()) { // including frontend
             // TODO: We can provide these setting initially and thus update just one canister.
+            Cycles.add<system>(Cycles.refunded());
             await ic.update_settings({
                 canister_id;
                 sender_canister_version = null;
@@ -204,6 +250,7 @@ actor class Bootstrapper() = this {
             }) -> async {minInstallationId: Common.InstallationId};
         };
         // TODO: Transfer user cycles before this call:
+        Cycles.add<system>(Cycles.refunded());
         ignore await backendActor.installPackageWithPreinstalledModules({
           whatToInstall = #package;
           packageName = "icpack";
@@ -243,18 +290,22 @@ actor class Bootstrapper() = this {
         privKey: PrivKey,
         controllers: [Principal],
     ): async* () {
+        Cycles.add<system>(Cycles.refunded());
         let pubKey = await Data.getFrontendTweaker(frontend);
         if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
             Debug.trap("access denied");
         };
         let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
+        Cycles.add<system>(Cycles.refunded());
         let owners = await assets.list_authorized();
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
             for (principal in controllers.vals()) {
+                Cycles.add<system>(Cycles.refunded());
                 await assets.grant_permission({to_principal = principal; permission});
             };
             for (owner in owners.vals()) {
+                Cycles.add<system>(Cycles.refunded());
                 await assets.revoke_permission({
                     of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
@@ -284,6 +335,7 @@ actor class Bootstrapper() = this {
         //         wasm_memory_limit = null;
         //     };
         // });
+        Cycles.add<system>(Cycles.refunded());
         await Data.deleteFrontendTweaker(frontend);
     };
 }
