@@ -28,7 +28,7 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
     }
 }
 
-export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) { // TODO: Move to `useEffect`.
+export async function bootstrapFrontend(props: {agent: Agent}) { // TODO: Move to `useEffect`.
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     try {// TODO: Duplicate code
         let pkg = await repoIndex.getPackage('icpack', "stable");
@@ -40,10 +40,9 @@ export async function bootstrapFrontend(props: {user: Principal, agent: Agent}) 
         const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
         const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
             installArg: new Uint8Array(IDL.encode(
-                [IDL.Record({user: IDL.Principal, installationId: IDL.Nat})],
-                [{user: props.user, installationId: 0 /* TODO */}],
+                [IDL.Record({/*user: IDL.Principal,*/ installationId: IDL.Nat})],
+                [{/*user: props.user,*/  installationId: 0 /* TODO */}],
             )),
-            user: props.user,
             frontendTweakPubKey,
         });
         return {canister_id: frontendPrincipal, frontendTweakPrivKey};

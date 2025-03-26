@@ -134,7 +134,7 @@ describe('My Test Suite', () => {
 
         console.log("Bootstrapping frontend...");
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
-            await bootstrapFrontend({user: bootstrapperUser, agent: bootstrapperAgent});
+            await bootstrapFrontend({agent: bootstrapperAgent});
         canisterNames.set(frontendPrincipal.toText(), 'frontendPrincipal');
 
         const backendAgent = newAgent();

@@ -59,7 +59,6 @@ export default function MainPage() {
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({
-          user: props.principal!,
           agent: props.agent!,
         });
         const url = getIsLocal()

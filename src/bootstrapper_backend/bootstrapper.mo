@@ -27,9 +27,8 @@ actor class Bootstrapper() = this {
     var totalBootstrapCost = 10_000_000_000_000; // TODO: Make it stable.
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
-    public shared func bootstrapFrontend({
+    public shared({caller = user}) func bootstrapFrontend({
         installArg: Blob;
-        user: Principal; // FIXME: It can withdraw from another user.
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
