@@ -15,7 +15,6 @@ import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
 import CyclesLedger "canister:cycles_ledger";
-import env "mo:env";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 
