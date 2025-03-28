@@ -146,7 +146,7 @@ actor class Bootstrapper() = this {
         );
         await* bootstrapBackendImpl({
             modulesToInstall;
-            user = caller;
+            user;
             packageManagerOrBootstrapper;
             frontend;
             frontendTweakPrivKey;
