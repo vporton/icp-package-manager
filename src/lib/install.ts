@@ -38,14 +38,10 @@ export async function bootstrapFrontend(props: {agent: Agent}) { // TODO: Move t
         const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
         const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
-        const {canister_id: frontendPrincipal} = await bootstrapper.bootstrapFrontend({
-            installArg: new Uint8Array(IDL.encode(
-                [IDL.Record({/*user: IDL.Principal,*/ installationId: IDL.Nat})],
-                [{/*user: props.user,*/  installationId: 0 /* TODO */}],
-            )),
+        const {installedModules} = await bootstrapper.bootstrapFrontend({
             frontendTweakPubKey,
         });
-        return {canister_id: frontendPrincipal, frontendTweakPrivKey};
+        return {installedModules, frontendTweakPrivKey};
     }
     catch(e) {
       console.log(e);
@@ -132,7 +128,7 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
                 return;
             }
             catch (e) {
-                // console.log("Waiting for initialization: " + (e as any).message); // TODO: shorter message
+                console.log("Waiting for initialization: " + (e as any).message); // TODO: shorter message
             }
             if (i == 30) {
                 reject("Cannot initilialize canisters");

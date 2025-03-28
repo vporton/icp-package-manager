@@ -58,12 +58,13 @@ export default function MainPage() {
         let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const {canister_id: frontendPrincipal, frontendTweakPrivKey} = await bootstrapFrontend({
+        const {installedModules, frontendTweakPrivKey} = await bootstrapFrontend({
           agent: props.agent!,
         });
+        const installedModulesMap = new Map(installedModules);
         const url = getIsLocal()
-          ? `http://${frontendPrincipal}.localhost:4943`
-          : `https://${frontendPrincipal}.icp0.io`;
+          ? `http://${installedModulesMap.get("frontend")}.localhost:4943`
+          : `https://${installedModulesMap.get("frontend")}.icp0.io`;
         // gives the right to set frontend owner and controller to backend:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
         const packages2 = additionalPackages;
@@ -71,7 +72,12 @@ export default function MainPage() {
           packages2.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
         }
         const packages3 = packages2.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
-        open(`${url}?frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&additionalPackages=${JSON.stringify(packages3)}`, '_self');
+        open(
+          `${url}?` +
+            `frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&` +
+            `additionalPackages=${JSON.stringify(packages3)}&`+
+            `modules=${JSON.stringify(installedModules)}`,
+          '_self');
       }
       catch(e) {
         console.log(e);

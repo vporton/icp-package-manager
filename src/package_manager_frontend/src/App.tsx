@@ -65,6 +65,7 @@ function GlobalUI() {
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
   const [searchParams, _] = useSearchParams();
+  const installedModules: [string, Principal][] = JSON.parse(searchParams.get('modules')!);
   if (glob.backend === undefined) {
     async function installBackend() {
       try {
@@ -85,10 +86,10 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         // TODO: Use "version" field from `additionalPackages`.
-        const {installedModules} = await bootstrapperMainIndirect.bootstrapBackend({
+        await bootstrapperMainIndirect.bootstrapBackend({
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
-          frontend: glob.frontend!,
+          installedModules,
           additionalPackages: additionalPackages,
         });
         const installedModulesMap = new Map(installedModules);

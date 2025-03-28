@@ -109,4 +109,88 @@ module {
             case _ {};
         };
     };
+
+    // TODO: severe code "disorder"
+    public type Callbacks = actor {
+        onCreateCanister: shared ({
+            installationId: Common.InstallationId;
+            moduleNumber: Nat;
+            moduleName: ?Text;
+            canister: Principal;
+            user: Principal;
+        }) -> async ();
+        onInstallCode: shared ({
+            installationId: Common.InstallationId;
+            canister: Principal;
+            moduleNumber: Nat;
+            moduleName: ?Text;
+            user: Principal;
+            module_: Common.SharedModule;
+            packageManagerOrBootstrapper: Principal;
+            afterInstallCallback: ?{
+                canister: Principal; name: Text; data: Blob;
+            };
+        }) -> async ();
+    };
+
+    // TODO: wrong code organization:
+    public func _installModuleCodeOnly({
+        moduleNumber: Nat;
+        moduleName: ?Text;
+        installationId: Common.InstallationId;
+        upgradeId: ?Common.UpgradeId;
+        wasmModule: Common.Module;
+        packageManagerOrBootstrapper: Principal;
+        mainIndirect: Principal;
+        simpleIndirect: Principal;
+        installArg: Blob;
+        user: Principal;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
+        canister_id: Principal;
+    }): async* Principal {
+        let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+    
+        await* myInstallCode({
+            installationId;
+            upgradeId;
+            canister_id;
+            wasmModule;
+            installArg;
+            packageManagerOrBootstrapper;
+            mainIndirect;
+            simpleIndirect;
+            user;
+        });
+
+        // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
+        // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+        await ic.update_settings({
+            canister_id;
+            sender_canister_version = null;
+            settings = {
+                compute_allocation = null;
+                controllers = ?[simpleIndirect, user];
+                freezing_threshold = null;
+                log_visibility = null;
+                memory_allocation = null;
+                reserved_cycles_limit = null;
+                wasm_memory_limit = null;
+            };
+        });
+
+        await pm.onInstallCode({
+            moduleNumber;
+            moduleName;
+            module_ = Common.shareModule(wasmModule);
+            canister = canister_id;
+            installationId;
+            user;
+            packageManagerOrBootstrapper;
+            afterInstallCallback;
+        });
+
+        canister_id;
+    };
 }

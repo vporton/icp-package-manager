@@ -29,9 +29,8 @@ actor class Bootstrapper() = this {
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapFrontend({
-        installArg: Blob;
         frontendTweakPubKey: PubKey;
-    }): async {canister_id: Principal} {
+    }): async {installedModules: [(Text, Principal)]} {
         // TODO: Check if the user paid enough cycles.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
@@ -59,33 +58,129 @@ actor class Bootstrapper() = this {
         let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
             icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
-        let ?wasmModule = modulesToInstall.get("frontend") else {
-            Debug.trap("frontend module not found");
-        };
-        Cycles.add<system>(amountToMove);
-        let {canister_id} = await* Install.myCreateCanister({
-            controllers = ?[Principal.fromActor(this)];
-            cyclesAmount = newCanisterCycles;
-            subnet_selection = ?(
-                #Filter({subnet_type = ?"Application"})
-            );
-        });
+        // let ?wasmModule = modulesToInstall.get("frontend") else {
+        //     Debug.trap("frontend module not found");
+        // };
+        // Cycles.add<system>(amountToMove);
+        // let {canister_id} = await* Install.myCreateCanister({
+        //     controllers = ?[Principal.fromActor(this)];
+        //     cyclesAmount = newCanisterCycles;
+        //     subnet_selection = ?(
+        //         #Filter({subnet_type = ?"Application"})
+        //     );
+        // });
 
-        Cycles.add<system>(Cycles.refunded());
-        await* Install.myInstallCode({
-            installationId = 0;
-            upgradeId = null;
-            canister_id;
-            wasmModule = Common.unshareModule(wasmModule);
-            installArg;
-            packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
-            // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
-            mainIndirect = Principal.fromText("aaaaa-aa");
-            simpleIndirect = Principal.fromText("aaaaa-aa");
+        // Cycles.add<system>(Cycles.refunded());
+        // await* Install.myInstallCode({
+        //     installationId = 0;
+        //     upgradeId = null;
+        //     canister_id;
+        //     wasmModule = Common.unshareModule(wasmModule);
+        //     installArg;
+        //     packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
+        //     // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
+        //     mainIndirect = Principal.fromText("aaaaa-aa");
+        //     simpleIndirect = Principal.fromText("aaaaa-aa");
+        //     user;
+        // });
+
+        let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
+        for (moduleName in modulesToInstall.keys()) {
+            Cycles.add<system>(Cycles.refunded());
+            let {canister_id} = await* Install.myCreateCanister({
+                controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+                cyclesAmount = newCanisterCycles;
+                subnet_selection = ?(
+                    #Filter({subnet_type = ?"Application"})
+                );
+            });
+            installedModules.put(moduleName, canister_id);
+        };
+
+        let ?frontend = installedModules.get("frontend") else {
+            Debug.trap("module not deployed");
+        };
+        let ?backend = installedModules.get("backend") else {
+            Debug.trap("module not deployed");
+        };
+        let ?mainIndirect = installedModules.get("main_indirect") else {
+            Debug.trap("module not deployed");
+        };
+        let ?simpleIndirect = installedModules.get("simple_indirect") else {
+            Debug.trap("module not deployed");
+        };
+        // let ?battery = installedModules.get("battery") else {
+        //     Debug.trap("module not deployed");
+        // };
+
+        let ?mFrontend = modulesToInstall.get("frontend") else {
+            Debug.trap("module not found");
+        };
+        let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
+        await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+            arg = to_candid({});
+            wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
+            mode = #install;
+            canister_id = frontend;
+            sender_canister_version = null; // TODO
+        });
+        await* Install.copyAssetsIfAny({
+            wasmModule = Common.unshareModule(mFrontend);
+            canister_id = frontend;
+            simpleIndirect;
             user;
         });
+        label install for ((moduleName, canister_id) in installedModules.entries()) {
+            if (moduleName == "frontend") {
+                continue install;
+            };
+            let ?m = modulesToInstall.get(moduleName) else {
+                Debug.trap("module not found");
+            };
+            Cycles.add<system>(Cycles.refunded());
+            await* Install.myInstallCode({
+                installationId = 0;
+                upgradeId = null;
+                canister_id;
+                wasmModule = Common.unshareModule(m);
+                installArg = to_candid({});
+                packageManagerOrBootstrapper = if (moduleName == "backend") {
+                    Principal.fromActor(this) // to call `installPackageWithPreinstalledModules` below
+                } else {
+                    backend
+                };
+                mainIndirect;
+                simpleIndirect;
+                user;
+                // TODO: Pass the following only to the `backend` module:
+                // frontend;
+                // frontendTweakPrivKey;
+                // repo = Repository;
+                // additionalPackages;
+            });
+        };
+
+        let controllers = [simpleIndirect, mainIndirect, backend, user]; // TODO: duplicate code
+        let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
         Cycles.add<system>(Cycles.refunded());
-        await Data.putFrontendTweaker(canister_id, frontendTweakPubKey);
+        let owners = await assets.list_authorized();
+        for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
+            // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
+            for (principal in controllers.vals()) {
+                Cycles.add<system>(Cycles.refunded());
+                await assets.grant_permission({to_principal = principal; permission});
+            };
+            for (owner in owners.vals()) {
+                Cycles.add<system>(Cycles.refunded());
+                await assets.revoke_permission({
+                    of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
+                    permission;
+                });
+            };
+        };
+
+        Cycles.add<system>(Cycles.refunded());
+        await Data.putFrontendTweaker(frontend, frontendTweakPubKey);
 
         // Return user's fund from current use:
         ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
@@ -97,7 +192,7 @@ actor class Bootstrapper() = this {
             amount = Cycles.refunded();
         });
 
-        {canister_id};
+        {installedModules = Iter.toArray(installedModules.entries())};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
@@ -106,16 +201,14 @@ actor class Bootstrapper() = this {
     /// because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapBackend({
         packageManagerOrBootstrapper: Principal;
-        frontend: Principal;
         frontendTweakPrivKey: PrivKey;
+        installedModules: [(Text, Principal)];
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-    }): async {
-        installedModules: [(Text, Principal)];
-    } {
+    }): async () {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
@@ -140,95 +233,33 @@ actor class Bootstrapper() = this {
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
-        // We bootstrap backend at this stage:
+
         let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
-            Iter.filter<(Text, Common.SharedModule)>(
-                icPackPkgReal.modules.vals(), func (name: Text, _: Common.SharedModule) = name != "frontend"
-            ),
-            icPackPkgReal.modules.size() - 1,
-            Text.equal,
-            Text.hash,
+            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
-        await* bootstrapBackendImpl({
-            modulesToInstall;
-            user;
-            packageManagerOrBootstrapper;
-            frontend;
-            frontendTweakPrivKey;
-            additionalPackages;
-        });
 
-        // We don't do transfer to the user here, because in `bootstrapBackendImpl` we already tranferred to the battery.
-    };
-
-    private func bootstrapBackendImpl({
-        modulesToInstall: HashMap.HashMap<Text, Common.SharedModule>;
-        user: Principal;
-        packageManagerOrBootstrapper: Principal;
-        frontend: Principal;
-        frontendTweakPrivKey: PrivKey;
-        additionalPackages: [{
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryRO;
-        }];
-    }): async* {
-        installedModules: [(Text, Principal)];
-    } {
-        let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
-        for (moduleName in modulesToInstall.keys()) {
-            Cycles.add<system>(Cycles.refunded());
-            let {canister_id} = await* Install.myCreateCanister({
-                controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                cyclesAmount = newCanisterCycles;
-                subnet_selection = ?(
-                    #Filter({subnet_type = ?"Application"})
-                );
-            });
-            installedModules.put(moduleName, canister_id);
-        };
-        let ?backend = installedModules.get("backend") else {
+        // We bootstrap backend at this stage:
+        let installedModules2 = HashMap.fromIter<Text, Principal>(
+            installedModules.vals(), installedModules.size(), Text.equal, Text.hash);
+        let ?frontend = installedModules2.get("frontend") else {
             Debug.trap("module not deployed");
         };
-        let ?mainIndirect = installedModules.get("main_indirect") else {
+        let ?backend = installedModules2.get("backend") else {
             Debug.trap("module not deployed");
         };
-        let ?simpleIndirect = installedModules.get("simple_indirect") else {
+        let ?mainIndirect = installedModules2.get("main_indirect") else {
             Debug.trap("module not deployed");
         };
-        let ?battery = installedModules.get("battery") else {
+        let ?simpleIndirect = installedModules2.get("simple_indirect") else {
             Debug.trap("module not deployed");
         };
-        for ((moduleName, canister_id) in installedModules.entries()) {
-            let ?m = modulesToInstall.get(moduleName) else {
-                Debug.trap("module not found");
-            };
-            Cycles.add<system>(Cycles.refunded());
-            await* Install.myInstallCode({
-                installationId = 0;
-                upgradeId = null;
-                canister_id;
-                wasmModule = Common.unshareModule(m);
-                installArg = to_candid({});
-                packageManagerOrBootstrapper = if (moduleName == "backend") {
-                    packageManagerOrBootstrapper // to call `installPackageWithPreinstalledModules` below
-                } else {
-                    backend
-                };
-                mainIndirect;
-                simpleIndirect;
-                user;
-                // TODO: Pass the following only to the `backend` module:
-                // frontend;
-                // frontendTweakPrivKey;
-                // repo = Repository;
-                // additionalPackages;
-            });
+        let ?battery = installedModules2.get("battery") else {
+            Debug.trap("module not deployed");
         };
 
-        let controllers = [simpleIndirect, mainIndirect, backend, user];
+        let controllers = [simpleIndirect, mainIndirect, backend, user]; // TODO: duplicate code
 
-        for (canister_id in installedModules.vals()) { // including frontend
+        for (canister_id in installedModules2.vals()) { // including frontend
             // TODO: We can provide these setting initially and thus update just one canister.
             Cycles.add<system>(Cycles.refunded());
             await ic.update_settings({
@@ -269,7 +300,7 @@ actor class Bootstrapper() = this {
           whatToInstall = #package;
           packageName = "icpack";
           version = "stable";
-          preinstalledModules = Iter.toArray(installedModules.entries());
+          preinstalledModules = Iter.toArray(installedModules.vals());
           repo = Repository;
           user;
           mainIndirect;
@@ -287,18 +318,33 @@ actor class Bootstrapper() = this {
         });
 
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
+        // await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
         // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
         //       For this, make the private key a part of the persistent link arguments?
         //       Need to ensure that the link is paid for (prevent DoS attacks).
         //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
+        // FIXME:
         Cycles.add<system>(env.bookmarkCost);
-        ignore await Bookmarks.addBookmark({frontend; backend}, user);
+        ignore await Bookmarks.addBookmark({frontend; backend}, user); // FIXME: added from a wrong user.
 
-        { installedModules = Iter.toArray(installedModules.entries()); }
+        // We don't do transfer to the user here, because in `bootstrapBackendImpl` we already tranferred to the battery.
     };
+
+    // private func bootstrapBackendImpl({
+    //     modulesToInstall: [(Text, Common.SharedModule)];
+    //     user: Principal;
+    //     packageManagerOrBootstrapper: Principal;
+    //     frontendTweakPrivKey: PrivKey;
+    //     installedModules: [(Text, Principal)];
+    //     additionalPackages: [{
+    //         packageName: Common.PackageName;
+    //         version: Common.Version;
+    //         repo: Common.RepositoryRO;
+    //     }];
+    // }): async* () {
+    // };
 
     public type PubKey = Blob;
     public type PrivKey = Blob;
@@ -306,50 +352,33 @@ actor class Bootstrapper() = this {
     /// Internal. Updates controllers and owners of the frontend.
     ///
     /// TODO: Rename.
-    private func tweakFrontend(
-        frontend: Principal,
-        privKey: PrivKey,
-        controllers: [Principal],
-    ): async* () {
-        Cycles.add<system>(Cycles.refunded());
-        let pubKey = await Data.getFrontendTweaker(frontend);
-        if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
-            Debug.trap("access denied");
-        };
-        let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
-        Cycles.add<system>(Cycles.refunded());
-        let owners = await assets.list_authorized();
-        for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
-            // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
-            for (principal in controllers.vals()) {
-                Cycles.add<system>(Cycles.refunded());
-                await assets.grant_permission({to_principal = principal; permission});
-            };
-            for (owner in owners.vals()) {
-                Cycles.add<system>(Cycles.refunded());
-                await assets.revoke_permission({
-                    of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
-                    permission;
-                });
-            };
-        };
-        // Done above:
-        // await ic.update_settings({
-        //     canister_id = frontend;
-        //     sender_canister_version = null;
-        //     settings = {
-        //         compute_allocation = null;
-        //         // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
-        //         // I don't add more controllers, because controlling this is potentially unsafe.
-        //         controllers = ?[backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend];
-        //         freezing_threshold = null;
-        //         log_visibility = null;
-        //         memory_allocation = null;
-        //         reserved_cycles_limit = null;
-        //         wasm_memory_limit = null;
-        //     };
-        // });
-        Cycles.add<system>(Cycles.refunded());
-        await Data.deleteFrontendTweaker(frontend);
-    };
+    // private func tweakFrontend(
+    //     frontend: Principal,
+    //     privKey: PrivKey,
+    //     controllers: [Principal],
+    // ): async* () {
+    //     Cycles.add<system>(Cycles.refunded());
+    //     let pubKey = await Data.getFrontendTweaker(frontend);
+    //     if (Sha256.fromBlob(#sha256, privKey) != pubKey) {
+    //         Debug.trap("access denied");
+    //     };
+    //     // Done above:
+    //     // await ic.update_settings({
+    //     //     canister_id = frontend;
+    //     //     sender_canister_version = null;
+    //     //     settings = {
+    //     //         compute_allocation = null;
+    //     //         // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
+    //     //         // I don't add more controllers, because controlling this is potentially unsafe.
+    //     //         controllers = ?[backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend];
+    //     //         freezing_threshold = null;
+    //     //         log_visibility = null;
+    //     //         memory_allocation = null;
+    //     //         reserved_cycles_limit = null;
+    //     //         wasm_memory_limit = null;
+    //     //     };
+    //     // });
+    //     Cycles.add<system>(Cycles.refunded());
+    //     await Data.deleteFrontendTweaker(frontend);
+    // };
 }

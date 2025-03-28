@@ -133,9 +133,10 @@ describe('My Test Suite', () => {
         const icPackModules = new Map(icPackPkgReal.modules);
 
         console.log("Bootstrapping frontend...");
-        const {canister_id: frontendPrincipal, frontendTweakPrivKey} =
+        const {installedModules, frontendTweakPrivKey} =
             await bootstrapFrontend({agent: bootstrapperAgent});
-        canisterNames.set(frontendPrincipal.toText(), 'frontendPrincipal');
+        const pmInst = new Map(installedModules);
+        canisterNames.set(pmInst.get("frontend")!.toText(), 'frontendPrincipal');
 
         const backendAgent = newAgent();
         const backendUser = await backendAgent.getPrincipal();
@@ -144,14 +145,12 @@ describe('My Test Suite', () => {
 
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
-        const pmInst = new Map<string, Principal>(
-            (await bootstrapper2.bootstrapBackend({
-                packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-                frontendTweakPrivKey,
-                frontend: frontendPrincipal,
-                additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
-            })).installedModules
-        );
+        await bootstrapper2.bootstrapBackend({
+            packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+            frontendTweakPrivKey,
+            installedModules,
+            additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
+        });
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);
         }
@@ -195,7 +194,7 @@ describe('My Test Suite', () => {
             );
         }
         console.log("Checking PM frontend owners...");
-        const pmFrontend = createPMFrontend(frontendPrincipal, {agent: backendAgent});
+        const pmFrontend = createPMFrontend(pmInst.get("frontend")!, {agent: backendAgent});
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await pmFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(
