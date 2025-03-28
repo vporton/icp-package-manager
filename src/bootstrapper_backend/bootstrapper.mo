@@ -150,9 +150,10 @@ actor class Bootstrapper() = this {
             packageManagerOrBootstrapper;
             frontend;
             frontendTweakPrivKey;
-            // repo;
             additionalPackages;
         });
+
+        // We don't do transfer to the user here, because in `bootstrapBackendImpl` we already tranferred to the battery.
     };
 
     private func bootstrapBackendImpl({
