@@ -112,7 +112,7 @@ actor class Bootstrapper() = this {
         installedModules: [(Text, Principal)];
     } {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(caller));
+            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
 
         // Move user's fund into current use:
