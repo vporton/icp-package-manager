@@ -35,14 +35,19 @@ actor class Bootstrapper() = this {
         });
 
         // Move user's fund into current use:
-        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+        switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = amountToMove;
-        });
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
@@ -94,7 +99,7 @@ actor class Bootstrapper() = this {
     ///
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
-    public shared({caller}) func bootstrapBackend({
+    public shared({caller = user}) func bootstrapBackend({
         packageManagerOrBootstrapper: Principal;
         frontend: Principal;
         frontendTweakPrivKey: PrivKey;
@@ -111,14 +116,19 @@ actor class Bootstrapper() = this {
         });
 
         // Move user's fund into current use:
-        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+        switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Principal.toBlob(caller));
+            from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = amountToMove;
-        });
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
 
         Cycles.add<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
