@@ -30,6 +30,7 @@ actor class Bootstrapper() = this {
         installArg: Blob;
         frontendTweakPubKey: PubKey;
     }): async {canister_id: Principal} {
+        // TODO: Check if the user paid enough cycles.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
@@ -170,8 +171,6 @@ actor class Bootstrapper() = this {
     }): async* {
         installedModules: [(Text, Principal)];
     } {
-        // FIXME: If I use subaccount, the below can't be used.
-        // FIXME: At the beginning test that the user paid enough cycles.
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
             Cycles.add<system>(Cycles.refunded());
