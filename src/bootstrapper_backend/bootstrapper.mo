@@ -65,7 +65,7 @@ actor class Bootstrapper() = this {
             controllers = ?[Principal.fromActor(this)];
             cyclesAmount = newCanisterCycles;
             subnet_selection = ?(
-                #Filter({subnet_type = ?"Application"});
+                #Filter({subnet_type = ?"Application"})
             );
         });
 
@@ -180,7 +180,7 @@ actor class Bootstrapper() = this {
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 cyclesAmount = newCanisterCycles;
                 subnet_selection = ?(
-                    #Filter({subnet_type = ?"Application"});
+                    #Filter({subnet_type = ?"Application"})
                 );
             });
             installedModules.put(moduleName, canister_id);
