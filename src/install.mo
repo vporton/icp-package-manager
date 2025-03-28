@@ -17,9 +17,9 @@ module {
     public func myCreateCanister({
         controllers: ?[Principal];
         cyclesAmount: Nat;
+        subnet_selection: ?cmc.SubnetSelection;
     }): async* {canister_id: Principal} {
         Cycles.add<system>(cyclesAmount);
-        // FIXME: Choose subnet.
         let res = await cmc.create_canister({
             settings = ?{
                 // TODO
@@ -32,7 +32,7 @@ module {
                 wasm_memory_limit = null;
                 wasm_memory_threshold = null;
             };
-            subnet_selection = null; // TODO
+            subnet_selection;
             subnet_type = null;
         });
         let canister_id = switch (res) {
