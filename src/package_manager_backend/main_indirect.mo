@@ -281,7 +281,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): async* Principal {
         let {canister_id} = await* Install.myCreateCanister({
             controllers = ?[Principal.fromActor(this)];
-            user;
             mainIndirect;
             cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
         });
@@ -443,8 +442,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 case null {
                     let {canister_id} = await* Install.myCreateCanister({
                         controllers = ?[Principal.fromActor(this), simpleIndirect];
-                        user;
-                        mainIndirect;
                         cyclesAmount = await ourPM.getNewCanisterCycles();
                     });
                     await* Install.myInstallCode({

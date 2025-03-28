@@ -63,7 +63,6 @@ actor class Bootstrapper() = this {
         Cycles.add<system>(amountToMove);
         let {canister_id} = await* Install.myCreateCanister({
             controllers = ?[Principal.fromActor(this)];
-            user;
             cyclesAmount = newCanisterCycles;
         });
 
@@ -176,7 +175,6 @@ actor class Bootstrapper() = this {
             Cycles.add<system>(Cycles.refunded());
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                user;
                 cyclesAmount = newCanisterCycles;
             });
             installedModules.put(moduleName, canister_id);

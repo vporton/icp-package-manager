@@ -16,7 +16,6 @@ module {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     public func myCreateCanister({
         controllers: ?[Principal];
-        user: Principal;
         cyclesAmount: Nat;
     }): async* {canister_id: Principal} {
         Cycles.add<system>(cyclesAmount);
