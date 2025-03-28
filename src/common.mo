@@ -403,16 +403,6 @@ module {
             );
         };
 
-    public type canister_settings = { // TODO: Remove.
-        freezing_threshold : ?Nat;
-        controllers : ?[Principal];
-        memory_allocation : ?Nat;
-        compute_allocation : ?Nat;
-    };
-
-    public type canister_id = Principal;
-    public type wasm_module = Blob;
-
     public func extractModuleLocation(code: ModuleCode): (Principal, Nat) =
         switch (code) {
             case (#Wasm wasmModuleLocation) {
