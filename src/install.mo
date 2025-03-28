@@ -1,15 +1,11 @@
 import Principal "mo:base/Principal";
 import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
-import Nat64 "mo:base/Nat64";
-import Int "mo:base/Int";
-import Time "mo:base/Time";
 import Blob "mo:base/Blob";
 import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";
 import Asset "mo:assets-api";
-import cycles_ledger "canister:cycles_ledger";
 import cmc "canister:cmc";
 
 module {

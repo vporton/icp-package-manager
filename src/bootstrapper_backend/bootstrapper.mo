@@ -285,7 +285,7 @@ actor class Bootstrapper() = this {
         });
 
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(frontend, backend, frontendTweakPrivKey, controllers);
+        await* tweakFrontend(frontend, frontendTweakPrivKey, controllers);
 
         { installedModules = Iter.toArray(installedModules.entries()); }
     };
@@ -298,7 +298,6 @@ actor class Bootstrapper() = this {
     /// TODO: Rename.
     private func tweakFrontend(
         frontend: Principal,
-        backend: Principal,
         privKey: PrivKey,
         controllers: [Principal],
     ): async* () {

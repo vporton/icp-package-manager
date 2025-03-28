@@ -393,7 +393,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     public shared({caller}) func upgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        moduleNumber: Nat; // TODO
+        moduleNumber = _: Nat; // TODO
         moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
