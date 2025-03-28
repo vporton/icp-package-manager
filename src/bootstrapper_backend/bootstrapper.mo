@@ -14,7 +14,6 @@ import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
-import Bookmarks "canister:bookmark";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -294,8 +293,8 @@ actor class Bootstrapper() = this {
         //       Need to ensure that the link is paid for (prevent DoS attacks).
         //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
-        Cycles.add<system>(env.bookmarkCost);
-        ignore await Bookmarks.addBookmark({frontend; backend}, user);
+        // Cycles.add<system>(env.bookmarkCost);
+        // ignore await Bookmarks.addBookmark({frontend; backend}, user);
 
         { installedModules = Iter.toArray(installedModules.entries()); }
     };
