@@ -6,7 +6,8 @@
       "dependencies": ["cycles_ledger", "cmc", "bootstrapper_data", "repository"],
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "bootstrapper_data": {
       "type": "motoko",
@@ -14,7 +15,8 @@
       "dependencies": [],
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "main_indirect": {
       "type": "motoko",
@@ -22,14 +24,16 @@
       "dependencies": ["bootstrapper", "cycles_ledger", "cmc"],
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "simple_indirect": {
       "type": "motoko",
       "main": "src/package_manager_backend/simple_indirect.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "package_manager": {
       "type": "motoko",
@@ -37,7 +41,8 @@
       "dependencies": ["bootstrapper", "cycles_ledger", "repository"],
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "bookmark": {
       "type": "motoko",
@@ -45,56 +50,64 @@
       "dependencies": [],
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "repository": {
       "type": "motoko",
       "main": "src/repository_backend/Repository.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "battery": {
       "type": "motoko",
       "main": "src/package_manager_backend/battery.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "example_backend": {
       "type": "motoko",
       "main": "src/example_backend/main.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "upgrade_example_backend1_v1": {
       "type": "motoko",
       "main": "src/upgrade_example_backend/0.0.1/main1.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "upgrade_example_backend2_v1": {
       "type": "motoko",
       "main": "src/upgrade_example_backend/0.0.1/main2.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "upgrade_example_backend2_v2": {
       "type": "motoko",
       "main": "src/upgrade_example_backend/0.0.2/main2.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "upgrade_example_backend3_v2": {
       "type": "motoko",
       "main": "src/upgrade_example_backend/0.0.2/main3.mo",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "package_manager_frontend": {
       "dependencies": [
@@ -107,7 +120,8 @@
       "workspace": "package_manager_frontend",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "bootstrapper_frontend": {
       "dependencies": [
@@ -123,7 +137,8 @@
       "workspace": "bootstrapper_frontend",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "example_frontend": {
       "dependencies": ["example_backend"],
@@ -134,7 +149,8 @@
       "workspace": "example_frontend",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "internet_identity": {
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
@@ -148,7 +164,8 @@
       "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "cycles_ledger": {
       "main": "src/MockCyclesLedger.mo",
@@ -160,7 +177,8 @@
       },
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     },
     "cmc": {
       "main": "src/MockCMC.mo",
@@ -172,12 +190,12 @@
       },
       "metadata": [{
         "name": "candid:service"
-      }]
+      }],
+      "args": "--enhanced-orthogonal-persistence"
     }
   },
   "defaults": {
     "build": {
-      "args": "--enhanced-orthogonal-persistence",
       "packtool": "mops sources"
     }
   },
