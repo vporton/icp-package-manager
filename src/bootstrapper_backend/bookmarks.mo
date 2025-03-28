@@ -1,7 +1,6 @@
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import BTree "mo:stableheapbtreemap/BTree";
-import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
@@ -11,7 +10,7 @@ import CyclesLedger "canister:cycles_ledger";
 
 // TODO: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks({
-    bootstrapper: Principal;
+    bootstrapper = _: Principal;
 }) {
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
