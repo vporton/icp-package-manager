@@ -272,7 +272,7 @@ actor class Bootstrapper() = this {
 
         // TODO: `ignore` here?
         ignore await CyclesLedger.icrc1_transfer({
-            to = {owner = battery; subaccount = null}; // FIXME: `subaccount`
+            to = {owner = battery; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = null;
