@@ -14,6 +14,7 @@ actor class BootstrapperData(initialOwner: Principal) {
     public type FrontendTweaker = {
         // controllers: [Principal]; // pass them from UI, it's safe.
         frontend: Principal;
+        // user: Principal; // bootstrap frontend user
     };
 
     /// TODO: Save/load on cansiter upgrade.

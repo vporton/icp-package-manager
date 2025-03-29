@@ -148,6 +148,7 @@ describe('My Test Suite', () => {
         await bootstrapper2.bootstrapBackend({
             frontendTweakPrivKey,
             installedModules,
+            user: backendUser,
             additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
         });
         for (const [name, m] of pmInst.entries()) {

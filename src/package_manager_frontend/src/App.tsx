@@ -92,6 +92,7 @@ function GlobalUI() {
         await bootstrapperMainIndirect.bootstrapBackend({
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           installedModules,
+          user: principal!,
           additionalPackages,
         });
         const installedModulesMap = new Map(installedModules);

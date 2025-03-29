@@ -138,6 +138,7 @@ actor class Bootstrapper() = this {
         Cycles.add<system>(Cycles.refunded());
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
+            // user;
         });
 
         // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
@@ -165,9 +166,10 @@ actor class Bootstrapper() = this {
     ///
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
-    public shared({caller = user}) func bootstrapBackend({
+    public shared({caller}) func bootstrapBackend({
         frontendTweakPrivKey: PrivKey;
         installedModules: [(Text, Principal)];
+        user: Principal; // to address security vulnerabulities, used only to add a controller.
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
@@ -256,7 +258,7 @@ actor class Bootstrapper() = this {
 
         // TODO: It may happen when the app is not installed because of an error.
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(frontendTweakPrivKey, controllers);
+        await* tweakFrontend(frontendTweakPrivKey, controllers, user);
 
         for (canister_id in installedModules2.vals()) { // including frontend
             // TODO: We can provide these setting initially and thus update just one canister.
@@ -342,6 +344,7 @@ actor class Bootstrapper() = this {
     private func tweakFrontend(
         privKey: PrivKey,
         controllers: [Principal],
+        user: Principal, // to address security vulnerabulities, used only to add a controller.
     ): async* () {
         let pubKey = Sha256.fromBlob(#sha256, privKey);
 
@@ -359,7 +362,7 @@ actor class Bootstrapper() = this {
                     permission;
                 });
             };
-            for (principal in controllers.vals()) {
+            for (principal in Iter.concat(controllers.vals(), [user].vals())) {
                 Cycles.add<system>(Cycles.refunded());
                 await assets.authorize(principal); // TODO: needed?
                 await assets.grant_permission({to_principal = principal; permission});
