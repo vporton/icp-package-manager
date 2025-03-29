@@ -128,7 +128,7 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
                 return;
             }
             catch (e) {
-                console.log("Waiting for initialization..."); // TODO: shorter message
+                console.log("Waiting for initialization...");
             }
             if (i == 30) {
                 reject("Cannot initilialize canisters");
