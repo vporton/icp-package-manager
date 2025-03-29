@@ -135,8 +135,6 @@ actor class Bootstrapper() = this {
         let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
         let owners = await assets.list_authorized();
         let ctl = (await ic.canister_info({canister_id = frontend; num_requested_changes = null})).controllers;
-        Debug.print("CTL0: " # debug_show(frontend) # ": " # debug_show(ctl));
-        Debug.print("OWNERS0: " # debug_show(frontend) # ": " # debug_show(owners));
 
         Cycles.add<system>(Cycles.refunded());
         await Data.putFrontendTweaker(frontendTweakPubKey, {
@@ -169,7 +167,6 @@ actor class Bootstrapper() = this {
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapBackend({
-        packageManagerOrBootstrapper: Principal;
         frontendTweakPrivKey: PrivKey;
         installedModules: [(Text, Principal)];
         additionalPackages: [{
@@ -355,11 +352,6 @@ actor class Bootstrapper() = this {
         let assets: Asset.AssetCanister = actor(Principal.toText(tweaker.frontend));
         Cycles.add<system>(Cycles.refunded());
         let owners = await assets.list_authorized();
-        Debug.print("OWNERS: " # debug_show(tweaker.frontend) # ": " # debug_show(owners));
-        Debug.print("OWNERS2: " # debug_show(tweaker.frontend) # ": " # debug_show(await assets.list_permitted({permission = #ManagePermissions})));
-        Debug.print("OWNERS3: " # debug_show(tweaker.frontend) # ": " # debug_show(await assets.list_authorized()));
-        let ctl = (await ic.canister_info({canister_id = tweaker.frontend; num_requested_changes = null})).controllers;
-        Debug.print("CTL1: " # debug_show(tweaker.frontend) # ": " # debug_show(ctl));
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             for (owner in owners.vals()) {
                 Cycles.add<system>(Cycles.refunded());

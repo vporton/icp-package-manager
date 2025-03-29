@@ -146,7 +146,6 @@ describe('My Test Suite', () => {
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
         await bootstrapper2.bootstrapBackend({
-            packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
             frontendTweakPrivKey,
             installedModules,
             additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
