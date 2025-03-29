@@ -90,7 +90,7 @@ function GlobalUI() {
           packageManagerOrBootstrapper: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!), // TODO: Don't forget to remove it.
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           installedModules,
-          additionalPackages: additionalPackages,
+          additionalPackages,
         });
         const installedModulesMap = new Map(installedModules);
         const backendPrincipal = installedModulesMap.get('backend')!;
