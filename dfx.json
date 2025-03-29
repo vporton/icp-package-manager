@@ -3,7 +3,7 @@
     "bootstrapper": {
       "type": "motoko",
       "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["cycles_ledger", "cmc", "bootstrapper_data", "repository"],
+      "dependencies": ["cycles_ledger", "cmc", "bootstrapper_data", "repository", "bookmark"],
       "metadata": [{
         "name": "candid:service"
       }],

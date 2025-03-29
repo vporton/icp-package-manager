@@ -75,8 +75,8 @@ export default function MainPage() {
         open(
           `${url}?` +
             `frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&` +
-            `additionalPackages=${JSON.stringify(packages3)}&`+
-            `modules=${JSON.stringify(installedModules)}`,
+            `additionalPackages=${JSON.stringify(packages3)}&` +
+            `modules=${JSON.stringify(installedModules.map(([s, p]: [string, Principal]) => [s, p.toString()]))}`,
           '_self');
       }
       catch(e) {
@@ -108,6 +108,7 @@ export default function MainPage() {
     }[] = additionalPackagesStr === null ? []
       : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
     // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
+    const modulesJSON = (searchParams as any).get('modules');
 
     const b = bookmarks[0]; // TODO
 
@@ -121,7 +122,7 @@ export default function MainPage() {
             <ul>
               {bookmarks.map(inst => {
                 const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
-                const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
+                const url = base + `_pm_pkg0.backend=${inst.backend.toString()}}`;
                 return <li key={url}><a href={url}>{url}</a></li>;
               })}
             </ul>

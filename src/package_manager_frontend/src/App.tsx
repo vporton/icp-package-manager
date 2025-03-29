@@ -65,7 +65,9 @@ function GlobalUI() {
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
   const [searchParams, _] = useSearchParams();
-  const installedModules: [string, Principal][] = JSON.parse(searchParams.get('modules')!);
+  const moduleJSON = searchParams.get('modules');
+  const installedModules: [string, Principal][] = moduleJSON !== null ?
+    JSON.parse(moduleJSON).map(([s, p]: [string, string]) => [s, Principal.fromText(p)]) : undefined;
   if (glob.backend === undefined) {
     async function installBackend() {
       try {
@@ -85,6 +87,7 @@ function GlobalUI() {
           ? JSON.parse(searchParams.get('additionalPackages')!)
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
+        const modulesJSON = searchParams.get('modules')!;
         // TODO: Use "version" field from `additionalPackages`.
         await bootstrapperMainIndirect.bootstrapBackend({
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
@@ -102,7 +105,11 @@ function GlobalUI() {
 
         const backend_str = backendPrincipal.toString();
         const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
-        open(`${base}_pm_pkg0.backend=${backend_str}`, '_self');
+        let base2 = `${base}_pm_pkg0.backend=${backend_str}`;
+        if (modulesJSON !== undefined) {
+          base2 += `&modules=${encodeURIComponent(modulesJSON)}`;
+        }
+        open(base2, '_self');
       }
       catch (e) {
         console.log(e); // TODO: Return an error.
