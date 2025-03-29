@@ -361,18 +361,17 @@ actor class Bootstrapper() = this {
         let ctl = (await ic.canister_info({canister_id = tweaker.frontend; num_requested_changes = null})).controllers;
         Debug.print("CTL1: " # debug_show(tweaker.frontend) # ": " # debug_show(ctl));
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
-            // TODO: `user` here is a bootstrapper user, not backend user. // TODO: Add backend user.
-            for (principal in controllers.vals()) {
-                Cycles.add<system>(Cycles.refunded());
-                await assets.authorize(principal); // TODO: needed?
-                await assets.grant_permission({to_principal = principal; permission});
-            };
             for (owner in owners.vals()) {
                 Cycles.add<system>(Cycles.refunded());
                 await assets.revoke_permission({
                     of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
                 });
+            };
+            for (principal in controllers.vals()) {
+                Cycles.add<system>(Cycles.refunded());
+                await assets.authorize(principal); // TODO: needed?
+                await assets.grant_permission({to_principal = principal; permission});
             };
         };
 
