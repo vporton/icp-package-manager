@@ -84,7 +84,6 @@ actor class Bootstrapper() = this {
         // });
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
-        Debug.print("modulesToInstall: " # debug_show(Iter.toArray(modulesToInstall.keys())))   ;
         for (moduleName in modulesToInstall.keys()) {
             Cycles.add<system>(Cycles.refunded());
             let {canister_id} = await* Install.myCreateCanister({
