@@ -17,6 +17,7 @@ import Time "mo:base/Time";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
+import Bookmarks "canister:bookmark";
 
 actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
@@ -141,6 +142,14 @@ actor class Bootstrapper() = this {
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
         });
+
+        // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
+        //       For this, make the private key a part of the persistent link arguments?
+        //       Need to ensure that the link is paid for (prevent DoS attacks).
+        //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
+        //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
+        Cycles.add<system>(Cycles.refunded());
+        ignore await Bookmarks.addBookmark({frontend; backend}, user);
 
         // Return user's fund from current use:
         ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
@@ -310,15 +319,6 @@ actor class Bootstrapper() = this {
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = totalBootstrapCost;
         });
-
-        // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
-        //       For this, make the private key a part of the persistent link arguments?
-        //       Need to ensure that the link is paid for (prevent DoS attacks).
-        //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
-        //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
-        // FIXME:
-        // Cycles.add<system>(env.bookmarkCost);
-        // ignore await Bookmarks.addBookmark({frontend; backend}, user); // FIXME: added from a wrong user.
 
         // We don't do transfer to the user here, because in `bootstrapBackendImpl` we already tranferred to the battery.
     };
