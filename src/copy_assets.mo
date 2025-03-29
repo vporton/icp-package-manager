@@ -4,7 +4,6 @@ import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
-import Debug "mo:base/Debug";
 import Asset "mo:assets-api";
 
 module {

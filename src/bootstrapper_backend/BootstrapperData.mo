@@ -11,11 +11,18 @@ actor class BootstrapperData(initialOwner: Principal) {
 
     stable var owner = initialOwner;
 
+    public type FrontendTweaker = {
+        // pubKey: PubKey;
+        // installationId: Common.InstallationId
+        controllers: [Principal];
+        frontend: Principal;
+    };
+
     /// TODO: Save/load on cansiter upgrade.
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
-    let frontendTweakers = HashMap.HashMap<Principal, PubKey>(1, Principal.equal, Principal.hash); // TODO: Make it stable?
+    let frontendTweakers = HashMap.HashMap<PubKey, FrontendTweaker>(1, Blob.equal, Blob.hash); // TODO: Make it stable?
     /// TODO: Save/load on cansiter upgrade.
-    let frontendTweakerTimes = RBTree.RBTree<Time.Time, Principal>(Int.compare); // TODO: Make it stable?
+    let frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare); // TODO: Make it stable?
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -29,40 +36,40 @@ actor class BootstrapperData(initialOwner: Principal) {
         owner := newOwner;
     };
 
-    public shared({caller}) func putFrontendTweaker(frontendCanister: Principal, pubKey: Blob): async () {
+    public shared({caller}) func putFrontendTweaker(pubKey: Blob, tweaker: FrontendTweaker): async () {
         onlyOwner(caller);
 
-        frontendTweakers.put(frontendCanister, pubKey);
-        frontendTweakerTimes.put(Time.now(), frontendCanister);
+        frontendTweakers.put(pubKey, tweaker);
+        frontendTweakerTimes.put(Time.now(), pubKey);
     };
 
-    public shared({caller}) func getFrontendTweaker(frontendCanister: Principal): async PubKey {
+    public shared({caller}) func getFrontendTweaker(pubKey: PubKey): async FrontendTweaker {
         onlyOwner(caller);
 
         do { // clean memory by removing old entries
             let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min // TODO: make configurable?
             var i = RBTree.iter(frontendTweakerTimes.share(), #fwd);
             label x loop {
-                let ?(time, principal) = i.next() else {
+                let ?(time, pubKey) = i.next() else {
                     break x;
                 };
                 if (time < threshold) {
                     frontendTweakerTimes.delete(time);
-                    frontendTweakers.delete(principal);
+                    frontendTweakers.delete(pubKey);
                 } else {
                     break x;
                 };
             };
         };
-        let ?pubKey = frontendTweakers.get(frontendCanister) else {
+        let ?res = frontendTweakers.get(pubKey) else {
             Debug.trap("no such frontend or key expired");
         };
-        pubKey;
+        res;
     };
 
-    public shared({caller}) func deleteFrontendTweaker(frontendCanister: Principal): async () {
+    public shared({caller}) func deleteFrontendTweaker(pubKey: PubKey): async () {
         onlyOwner(caller);
 
-        frontendTweakers.delete(frontendCanister);
+        frontendTweakers.delete(pubKey);
     };
 }
