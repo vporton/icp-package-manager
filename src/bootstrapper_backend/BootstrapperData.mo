@@ -12,9 +12,7 @@ actor class BootstrapperData(initialOwner: Principal) {
     stable var owner = initialOwner;
 
     public type FrontendTweaker = {
-        // pubKey: PubKey;
-        // installationId: Common.InstallationId
-        controllers: [Principal];
+        // controllers: [Principal]; // pass them from UI, it's safe.
         frontend: Principal;
     };
 
