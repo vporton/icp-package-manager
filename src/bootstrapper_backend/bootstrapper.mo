@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]} {
-        // TODO: Check if the user paid enough cycles.
+        // FIXME: Pay to the vendor.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
