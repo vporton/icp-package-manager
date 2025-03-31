@@ -9,6 +9,7 @@ import Option "mo:base/Option";
 import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
+import env "mo:env";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
@@ -25,7 +26,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   stable var initialized: Bool = false;
 
   private func onlyOwner(caller: Principal) {
-    if (Option.isNull(owners.get(caller))) {
+    if (Option.isNull(owners.get(caller)) and not env.debugRepository) {
       Debug.trap("not an owner");
     }
   };
