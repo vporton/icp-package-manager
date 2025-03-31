@@ -48,7 +48,7 @@ persistent actor class Bookmarks({
     };
 
     /// Returns whether bookmark already existed.
-    public shared({caller}) func addBookmark(b: Bookmark, battery: Principal): async Bool {
+    public shared({caller}) func addBookmark({b: Bookmark; battery: Principal}): async Bool {
         let res = await CyclesLedger.icrc2_transfer_from({
             spender_subaccount = null;
             from = { owner = battery; subaccount = null };
@@ -70,12 +70,12 @@ persistent actor class Bookmarks({
             case (?_) true;
             case null {
                 ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
-                let a = BTree.get(userToBookmark, Principal.compare, caller);
+                let a = BTree.get(userToBookmark, Principal.compare, user); // FIXME
                 let a2 = switch (a) {
                     case (?a) Array.append(a, [b]);
                     case null [b];
                 };
-                ignore BTree.insert(userToBookmark, Principal.compare, caller, a2);
+                ignore BTree.insert(userToBookmark, Principal.compare, user, a2);
                 false;
             };
         };

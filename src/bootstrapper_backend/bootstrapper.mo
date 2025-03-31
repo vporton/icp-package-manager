@@ -108,9 +108,9 @@ actor class Bootstrapper() = this {
         let ?simpleIndirect = installedModules.get("simple_indirect") else {
             Debug.trap("module not deployed");
         };
-        // let ?battery = installedModules.get("battery") else {
-        //     Debug.trap("module not deployed");
-        // };
+        let ?battery = installedModules.get("battery") else {
+            Debug.trap("module not deployed");
+        };
 
         let ?mFrontend = modulesToInstall.get("frontend") else {
             Debug.trap("module not found");
@@ -147,7 +147,7 @@ actor class Bootstrapper() = this {
         //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         Cycles.add<system>(Cycles.refunded());
-        ignore await Bookmarks.addBookmark({frontend; backend}, user);
+        ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery});
 
         // Return user's fund from current use:
         ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
