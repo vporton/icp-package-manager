@@ -1,7 +1,9 @@
 Remaining things TODO:
 
+- Use choosen "Default version" on the mainpage.
+
 - When running two upgrade operations of the same package in nearly the same time,
-  it tries to `stop_canister` for an already deleted canister. That may be a more serious sympthom.
+  it tries to `stop_canister` for an already deleted canister. That may be a more serious symptom.
 
 - Support upgrade from a different repo.
 
