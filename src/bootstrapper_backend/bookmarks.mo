@@ -10,7 +10,7 @@ import CyclesLedger "canister:cycles_ledger";
 
 // TODO: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks({
-    bootstrapper = _: Principal;
+    bootstrapper: Principal;
 }) {
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
@@ -48,7 +48,11 @@ persistent actor class Bookmarks({
     };
 
     /// Returns whether bookmark already existed.
-    public shared({caller}) func addBookmark({b: Bookmark; battery: Principal}): async Bool {
+    public shared({caller}) func addBookmark({b: Bookmark; battery: Principal; user: Principal}): async Bool {
+        if (caller != bootstrapper) {
+            Debug.trap("bookmarks: not the owner");
+        };
+
         let res = await CyclesLedger.icrc2_transfer_from({
             spender_subaccount = null;
             from = { owner = battery; subaccount = null };
