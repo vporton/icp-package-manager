@@ -147,11 +147,6 @@ actor class Bootstrapper() = this {
             user;
         });
 
-        // FIXME: Remove.
-        let assets: Asset.AssetCanister = actor(Principal.toText(frontend));
-        let owners = await assets.list_authorized();
-        let ctl = (await ic.canister_info({canister_id = frontend; num_requested_changes = null})).controllers;
-
         Cycles.add<system>(Cycles.refunded());
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
