@@ -110,7 +110,7 @@ export default function MainPage() {
     // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
     const modulesJSON = (searchParams as any).get('modules');
 
-    const b = bookmarks[0]; // TODO
+    const b = bookmarks[0]; // TODO: Allow to install not for the first package manager.
 
     // TODO: Give user freedom to change whether bootstrap or install.
     return (
