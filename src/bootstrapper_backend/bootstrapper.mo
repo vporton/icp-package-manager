@@ -14,6 +14,8 @@ import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
+import Float "mo:base/Float";
+import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -23,6 +25,8 @@ actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
 
+    let revenueRecipient = Principal.fromText(env.revenueRecipient);
+
     /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
     var totalBootstrapCost = 10_000_000_000_000; // TODO: Make it stable.
 
@@ -30,7 +34,6 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]} {
-        // FIXME: Pay to the vendor.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
@@ -42,7 +45,21 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = amountToMove;
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+        // Pay to the vendor (TODO: Ensure no double fee later.)
+        switch(await CyclesLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Principal.toBlob(user));
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare));
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
