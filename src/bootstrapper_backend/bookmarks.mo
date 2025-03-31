@@ -74,7 +74,7 @@ persistent actor class Bookmarks({
             case (?_) true;
             case null {
                 ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
-                let a = BTree.get(userToBookmark, Principal.compare, user); // FIXME
+                let a = BTree.get(userToBookmark, Principal.compare, user);
                 let a2 = switch (a) {
                     case (?a) Array.append(a, [b]);
                     case null [b];
