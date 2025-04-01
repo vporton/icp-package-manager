@@ -162,14 +162,19 @@ actor class Bootstrapper() = this {
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
 
         // Return user's fund from current use:
-        ignore await CyclesLedger.icrc1_transfer({ // TODO: Not `ignore`.
+        switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
             fee = null;
             memo = null;
             from_subaccount = null;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Cycles.refunded();
-        });
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };
