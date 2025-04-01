@@ -119,9 +119,9 @@ actor class Bootstrapper() = this {
         let ?backend = installedModules.get("backend") else {
             Debug.trap("module not deployed");
         };
-        let ?mainIndirect = installedModules.get("main_indirect") else {
-            Debug.trap("module not deployed");
-        };
+        // let ?mainIndirect = installedModules.get("main_indirect") else {
+        //     Debug.trap("module not deployed");
+        // };
         let ?simpleIndirect = installedModules.get("simple_indirect") else {
             Debug.trap("module not deployed");
         };
