@@ -46,7 +46,7 @@ actor class BootstrapperData(initialOwner: Principal) {
         onlyOwner(caller);
 
         do { // clean memory by removing old entries
-            let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min // TODO: make configurable?
+            let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min
             var i = RBTree.iter(frontendTweakerTimes.share(), #fwd);
             label x loop {
                 let ?(time, pubKey) = i.next() else {
