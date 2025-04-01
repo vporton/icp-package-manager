@@ -386,22 +386,6 @@ actor class Bootstrapper() = this {
             };
         };
 
-        // Done above:
-        // await ic.update_settings({
-        //     canister_id = frontend;
-        //     sender_canister_version = null;
-        //     settings = {
-        //         compute_allocation = null;
-        //         // We don't include `indirect_canister_id` because it can't control without risk of ite beiing replaced.
-        //         // I don't add more controllers, because controlling this is potentially unsafe.
-        //         controllers = ?[backend_canister_id, indirect_canister_id, simple_indirect_canister_id, frontend];
-        //         freezing_threshold = null;
-        //         log_visibility = null;
-        //         memory_allocation = null;
-        //         reserved_cycles_limit = null;
-        //         wasm_memory_limit = null;
-        //     };
-        // });
         Cycles.add<system>(Cycles.refunded());
         await Data.deleteFrontendTweaker(pubKey);
     };
