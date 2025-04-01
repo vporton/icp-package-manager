@@ -4,7 +4,7 @@ import { AuthButton }  from './AuthButton';
 import { AuthProvider, getIsLocal } from './auth/use-auth-client';
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Bookmark from './Bookmark';
+// import Bookmark from './Bookmark';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 
