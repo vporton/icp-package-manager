@@ -50,7 +50,7 @@ function App2() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainPage/>}/>
-            <Route path="/bookmark" element={<Bookmark/>}/>
+            {/* <Route path="/bookmark" element={<Bookmark/>}/> */}
           </Routes>
         </BrowserRouter>        
       </Container>
