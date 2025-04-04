@@ -17,7 +17,6 @@ import SimpleIndirect "simple_indirect";
 import Battery "battery";
 import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
-import env "mo:env";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManagerOrBootstrapper: Principal;
@@ -1378,7 +1377,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO: a way to set.
 
     /// The total cycles amount, including canister creation fee.
-    stable var newCanisterCycles = 2_000_000_000_000 * env.subnetSize / 13; // TODO
+    stable var newCanisterCycles = 2_000_000_000_000; // TODO
 
     /// The total cycles amount, including canister creation fee.
     public query({caller}) func getNewCanisterCycles(): async Nat {
