@@ -77,7 +77,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
   }
 
   const defaultAgent = useMemo<HttpAgent>(() => {
-    const agent = new HttpAgent(); // TODO: options
+    const agent = new HttpAgent({});
     if (getIsLocal()) {
       agent.fetchRootKey();
     }
