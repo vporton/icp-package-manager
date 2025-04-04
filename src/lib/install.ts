@@ -5,7 +5,6 @@ import { createActor as createFrontendActor } from '../declarations/example_fron
 import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../declarations/repository";
-import { IDL } from "@dfinity/candid";
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
     const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
