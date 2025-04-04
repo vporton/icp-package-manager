@@ -26,7 +26,7 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
     }
 }
 
-export async function bootstrapFrontend(props: {agent: Agent}) { // TODO: Move to `useEffect`.
+export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
     try {// TODO: Duplicate code
         let pkg = await repoIndex.getPackage('icpack', "stable");
