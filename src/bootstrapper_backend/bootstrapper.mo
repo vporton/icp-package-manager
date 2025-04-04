@@ -183,7 +183,7 @@ actor class Bootstrapper() = this {
     ///
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
-    public shared({caller}) func bootstrapBackend({
+    public shared func bootstrapBackend({
         frontendTweakPrivKey: PrivKey;
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
@@ -225,9 +225,6 @@ actor class Bootstrapper() = this {
         // We bootstrap backend at this stage:
         let installedModules2 = HashMap.fromIter<Text, Principal>(
             installedModules.vals(), installedModules.size(), Text.equal, Text.hash);
-        let ?frontend = installedModules2.get("frontend") else {
-            Debug.trap("module not deployed");
-        };
         let ?backend = installedModules2.get("backend") else {
             Debug.trap("module not deployed");
         };

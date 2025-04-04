@@ -1,7 +1,5 @@
 import Blob "mo:base/Blob";
 import Principal "mo:base/Principal";
-import HashMap "mo:base/HashMap";
-import RBTree "mo:base/RBTree";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Debug "mo:base/Debug";
