@@ -134,7 +134,44 @@ module {
         }) -> async ();
     };
 
-    // TODO: wrong code organization:
+    public func _installModuleCode({
+        moduleNumber: Nat;
+        moduleName: ?Text;
+        installationId: Common.InstallationId;
+        upgradeId: ?Common.UpgradeId;
+        wasmModule: Common.Module;
+        packageManagerOrBootstrapper: Principal;
+        mainIndirect: Principal;
+        simpleIndirect: Principal;
+        installArg: Blob;
+        user: Principal;
+        controllers: ?[Principal];
+        cyclesAmount: Nat;
+        afterInstallCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
+    }): async* Principal {
+        let {canister_id} = await* myCreateCanister({
+            controllers;
+            cyclesAmount;
+            subnet_selection = null;
+        });
+        await* _installModuleCodeOnly({
+            moduleNumber;
+            moduleName;
+            installationId;
+            upgradeId;
+            wasmModule;
+            packageManagerOrBootstrapper;
+            mainIndirect;
+            simpleIndirect;
+            installArg;
+            user;
+            afterInstallCallback;
+            canister_id: Principal;
+        });
+    };
+
     public func _installModuleCodeOnly({
         moduleNumber: Nat;
         moduleName: ?Text;

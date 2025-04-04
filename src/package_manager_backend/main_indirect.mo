@@ -221,7 +221,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                 };
                 case null {
-                    ignore await* _installModuleCode({
+                    ignore await* Install._installModuleCode({
                         installationId;
                         upgradeId = null;
                         moduleNumber;
@@ -232,6 +232,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         mainIndirect;
                         simpleIndirect;
                         user;
+                        controllers = ?[Principal.fromActor(this)];
+                        cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
                         afterInstallCallback;
                     });
                 };
@@ -242,42 +244,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
             Debug.print(msg);
             Debug.trap(msg);
         };
-    };
-
-    private func _installModuleCode({
-        moduleNumber: Nat;
-        moduleName: ?Text;
-        installationId: Common.InstallationId;
-        upgradeId: ?Common.UpgradeId;
-        wasmModule: Common.Module;
-        packageManagerOrBootstrapper: Principal;
-        mainIndirect: Principal;
-        simpleIndirect: Principal;
-        installArg: Blob;
-        user: Principal;
-        afterInstallCallback: ?{
-            canister: Principal; name: Text; data: Blob;
-        };
-    }): async* Principal {
-        let {canister_id} = await* Install.myCreateCanister({
-            controllers = ?[Principal.fromActor(this)];
-            cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
-            subnet_selection = null;
-        });
-        await* Install._installModuleCodeOnly({
-            moduleNumber;
-            moduleName;
-            installationId;
-            upgradeId;
-            wasmModule;
-            packageManagerOrBootstrapper;
-            mainIndirect;
-            simpleIndirect;
-            installArg;
-            user;
-            afterInstallCallback;
-            canister_id: Principal;
-        });
     };
 
     public shared({caller}) func upgradePackageWrapper({
