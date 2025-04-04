@@ -1,7 +1,8 @@
 import { Container, Nav, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
-import { AuthProvider, getIsLocal } from './auth/use-auth-client';
+import { AuthProvider } from './auth/use-auth-client';
+import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 // import Bookmark from './Bookmark';

@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { AuthContext, getIsLocal } from "./auth/use-auth-client";
+import { AuthContext } from "./auth/use-auth-client";
+import { getIsLocal } from "../../lib/state";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createBootstrapperIndirectActor } from "../../declarations/bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";

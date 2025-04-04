@@ -2,14 +2,9 @@ import { Agent, HttpAgent, Identity } from "@dfinity/agent";
 import { AuthClient, AuthClientCreateOptions, AuthClientLoginOptions } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-// import { getIsLocal } from "../../util/client";
+import { getIsLocal } from "../../../lib/state";
 // import sha256 from 'crypto-js/sha256';
 // import * as base64 from 'base64-js';
-
-// TODO: Move this function to GlobalState
-export function getIsLocal() {
-  return useMemo(() => /localhost/.test(document.location.hostname), []);
-}
 
 export const AuthContext = createContext<{
   isAuthenticated: boolean,

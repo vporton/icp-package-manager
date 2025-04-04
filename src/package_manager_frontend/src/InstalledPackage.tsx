@@ -1,5 +1,6 @@
 import { useParams, useSearchParams } from "react-router-dom";
-import { getIsLocal, useAuth } from "./auth/use-auth-client";
+import { useAuth } from "./auth/use-auth-client";
+import { getIsLocal } from "../../lib/state";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
