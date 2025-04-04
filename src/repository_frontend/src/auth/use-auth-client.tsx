@@ -85,7 +85,8 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
 
   useEffect(() => {
     // Initialize AuthClient
-    const baseOptions = props.options.createOptions ?? defaultOptions.createOptions;
+    const baseOptions = props.options !== undefined && props.options.createOptions !== undefined
+      ? props.options.createOptions : defaultOptions.createOptions;
     AuthClient.create({...baseOptions, idleOptions: {
         // Prevent page reload on timeout, not to lose form data:
         disableIdle: false,
