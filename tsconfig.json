@@ -10,6 +10,7 @@
         "outDir": "HACK_BECAUSE_OF_ALLOW_JS",
         "allowSyntheticDefaultImports": true,
         "jsx": "react",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "types": ["node"]
     }
 }
