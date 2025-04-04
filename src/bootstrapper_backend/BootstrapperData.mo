@@ -5,8 +5,10 @@ import RBTree "mo:base/RBTree";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Debug "mo:base/Debug";
+import Trie "mo:base/Trie";
+import Nat32 "mo:base/Nat32";
 
-actor class BootstrapperData(initialOwner: Principal) {
+persistent actor class BootstrapperData(initialOwner: Principal) {
     public type PubKey = Blob;
 
     stable var owner = initialOwner;
@@ -17,11 +19,9 @@ actor class BootstrapperData(initialOwner: Principal) {
         // user: Principal; // bootstrap frontend user
     };
 
-    /// TODO: Save/load on cansiter upgrade.
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
-    let frontendTweakers = HashMap.HashMap<PubKey, FrontendTweaker>(1, Blob.equal, Blob.hash); // TODO: Make it stable?
-    /// TODO: Save/load on cansiter upgrade.
-    let frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare); // TODO: Make it stable?
+    stable var frontendTweakers = Trie.empty<PubKey, FrontendTweaker>(); // TODO: Can be unbalanced by a hacker.
+    stable var frontendTweakerTimes = Trie.empty<Time.Time, PubKey>(); // TODO: inefficient
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -38,8 +38,12 @@ actor class BootstrapperData(initialOwner: Principal) {
     public shared({caller}) func putFrontendTweaker(pubKey: Blob, tweaker: FrontendTweaker): async () {
         onlyOwner(caller);
 
-        frontendTweakers.put(pubKey, tweaker);
-        frontendTweakerTimes.put(Time.now(), pubKey);
+        frontendTweakers := Trie.put(
+            frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal, tweaker
+        ).0;
+        frontendTweakerTimes := Trie.put(
+            frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(Time.now()) % (2**32)); key = Time.now()}, Int.equal, pubKey
+        ).0;
     };
 
     public shared({caller}) func getFrontendTweaker(pubKey: PubKey): async FrontendTweaker {
@@ -47,28 +51,31 @@ actor class BootstrapperData(initialOwner: Principal) {
 
         do { // clean memory by removing old entries
             let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min
-            var i = RBTree.iter(frontendTweakerTimes.share(), #fwd);
+            var i = Trie.iter(frontendTweakerTimes);
             label x loop {
                 let ?(time, pubKey) = i.next() else {
                     break x;
                 };
                 if (time < threshold) {
-                    frontendTweakerTimes.delete(time);
-                    frontendTweakers.delete(pubKey);
+                    frontendTweakerTimes := Trie.remove(
+                        frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(time)); key = time}, Int.equal
+                    ).0;
+                    frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
                 } else {
                     break x;
                 };
             };
         };
-        let ?res = frontendTweakers.get(pubKey) else {
+        let ?res = Trie.get(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal) else {
             Debug.trap("no such frontend or key expired");
         };
         res;
     };
 
+    // TODO: Also remove `frontendTweakerTimes` entry.
     public shared({caller}) func deleteFrontendTweaker(pubKey: PubKey): async () {
         onlyOwner(caller);
 
-        frontendTweakers.delete(pubKey);
+        frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
     };
 }
