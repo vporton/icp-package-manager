@@ -85,7 +85,7 @@ export class InitializedChecker {
             const canister = pkg.modulesInstalledByDefault.filter(([name, _m]) => name === cb.moduleName)[0][1];
 
             const methodName: string | undefined = (cb.how as any).methodName;
-                if (methodName !== undefined) {
+            if (methodName !== undefined) {
                     const idlFactory = ({ IDL }: { IDL: any }) => {
                     return IDL.Service({
                         [methodName]: IDL.Func([], [], ['query']),
