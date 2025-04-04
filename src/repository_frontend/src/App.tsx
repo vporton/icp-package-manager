@@ -12,7 +12,7 @@ const packagesToRepair = [ // TODO
 ]
 
 function App() {
-  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.ic0.app`;
+  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BrowserRouter>
       <AuthProvider options={{loginOptions: {

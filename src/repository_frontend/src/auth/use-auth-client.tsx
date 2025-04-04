@@ -39,7 +39,7 @@ const defaultOptions: UseAuthClientOptions = {
     identityProvider:
     getIsLocal()
         ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
-        : `https://identity.ic0.app`,
+        : `https://identity.internetcomputer.org`,
   },
 };
 
