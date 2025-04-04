@@ -73,7 +73,7 @@ export class InitializedChecker {
     /// Throws exception, if not yet installed.
     async check() {
         try {
-            // TODO: very inefficient
+            // TODO: bring object creations outside this method, because it is typically called in a loop.
             const pkgMan: PackageManager = createPackageManager(this.package_manager, {agent: this.agent});
             const pkg = await pkgMan.getInstalledPackage(this.installationId);
             const real = (pkg.package.specific as any).real as SharedRealPackageInfo;
