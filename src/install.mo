@@ -111,7 +111,6 @@ module {
         };
     };
 
-    // TODO: severe code "disorder"
     public type Callbacks = actor {
         onCreateCanister: shared ({
             installationId: Common.InstallationId;
