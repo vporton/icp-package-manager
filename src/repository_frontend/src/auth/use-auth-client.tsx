@@ -63,7 +63,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
     await updateClient(auth.authClient);
   }
 
-  async function updateClient(client) {
+  async function updateClient(client: AuthClient) {
     const isAuthenticated = await client.isAuthenticated();
     const identity = client.getIdentity();
     const principal = identity.getPrincipal();
