@@ -186,7 +186,7 @@ actor class Bootstrapper() = this {
     public shared({caller}) func bootstrapBackend({
         frontendTweakPrivKey: PrivKey;
         installedModules: [(Text, Principal)];
-        user: Principal; // to address security vulnerabulities, used only to add a controller.
+        user: Principal; // to address security vulnerabulities, used only to add as a controller.
         additionalPackages: [{
             packageName: Common.PackageName;
             version: Common.Version;
