@@ -86,7 +86,7 @@ export class InitializedChecker {
 
             const methodName: string | undefined = (cb.how as any).methodName;
             if (methodName !== undefined) {
-                    const idlFactory = ({ IDL }: { IDL: any }) => {
+                const idlFactory = ({ IDL }: { IDL: any }) => {
                     return IDL.Service({
                         [methodName]: IDL.Func([], [], ['query']),
                     });
