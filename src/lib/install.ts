@@ -1,4 +1,3 @@
-// TODO: Rename this file.
 import { Principal } from '@dfinity/principal';
 import { InstallationId, PackageManager, SharedRealPackageInfo, SharedModule } from '../declarations/package_manager/package_manager.did';
 import { createActor as createPackageManager } from '../declarations/package_manager';
