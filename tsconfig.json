@@ -11,6 +11,12 @@
         "allowSyntheticDefaultImports": true,
         "jsx": "react",
         "resolveJsonModule": true,
-        "types": ["node"]
-    }
+        "types": ["node"],
+    },
+    "include": [
+        "src/**/*.tsx",
+        "src/**/*.ts",
+        "scripts/**/*.ts",
+        "test/**/*.ts"
+    ],
 }
