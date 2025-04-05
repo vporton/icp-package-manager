@@ -71,7 +71,7 @@ module {
             wasm_module;
             mode = #install;
             canister_id;
-            sender_canister_version = null; // TODO
+            sender_canister_version = wasmModule.canisterVersion; // TODO
         });
 
         await* copyAssetsIfAny({

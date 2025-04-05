@@ -162,6 +162,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
       callbacks = module_.callbacks;
       installByDefault = module_.installByDefault;
       forceReinstall = module_.forceReinstall;
+      canisterVersion = module_.canisterVersion;
       code = switch (module_.code) {
         case (#Wasm blob) {
             let {id} = await* _uploadWasm(blob);

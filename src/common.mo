@@ -80,6 +80,7 @@ module {
         code: ModuleCode;
         installByDefault: Bool;
         forceReinstall: Bool;
+        canisterVersion: ?Nat64; // sender_canister_version
         callbacks: [(ModuleEvent, MethodName)];
     };
 
@@ -87,6 +88,7 @@ module {
         code: ModuleCode;
         installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `MainIndirect`.
+        canisterVersion: ?Nat64; // sender_canister_version
         callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
     };
 
@@ -95,6 +97,7 @@ module {
             code = m.code;
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
+            canisterVersion = m.canisterVersion;
             callbacks = Iter.toArray(m.callbacks.entries());
         };
 
@@ -103,6 +106,7 @@ module {
             code = m.code;
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
+            canisterVersion = m.canisterVersion;
             callbacks = HashMap.fromIter(
                 m.callbacks.vals(),
                 m.callbacks.size(),
@@ -123,6 +127,7 @@ module {
         code: ModuleUploadCode;
         installByDefault: Bool;
         forceReinstall: Bool;
+        canisterVersion: ?Nat64; // sender_canister_version
         callbacks: [(ModuleEvent, MethodName)];
     };
 
