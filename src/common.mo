@@ -274,15 +274,8 @@ module {
         /// Returns releases with optional other release name
         /// (like `("stable", ?"morpheus")`).
         getReleases: query () -> async [(Text, ?Text)];
-        // TODO: Uncomment below.
-        /// Returns versions with optional other version name
-        /// (like `("stable", ?"2.0.4")`).
-        ///
-        /// TODO: Should it contain aliases from `RepositoryRO.getReleases`? Maybe, not.
-        // getPackageVersions: query (name: Text) -> async [(Version, ?Version)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
         getWasmModule: query (sk: Nat) -> async Blob;
-        // packagesByFunction: query (function: Text) -> async [(PackageName, Version)];
     };
 
     public type InstalledPackageInfo = {
