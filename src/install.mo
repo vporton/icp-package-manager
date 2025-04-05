@@ -54,7 +54,7 @@ module {
         user: Principal;
     }): async* () {
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
-        let repository: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename.
+        let repository: Common.RepositoryRO = actor(Principal.toText(wasmModuleLocation.0));
         let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
