@@ -21,9 +21,9 @@ module {
                 // TODO
                 compute_allocation = null;
                 controllers = controllers;
-                freezing_threshold = null; // TODO: 30 days may be not enough, make configurable.
+                freezing_threshold = null; // 30 days may be not enough, make configurable.
                 log_visibility = null;
-                memory_allocation = null; // TODO (a low priority task)
+                memory_allocation = null; // a low priority task
                 reserved_cycles_limit = null;
                 wasm_memory_limit = null;
                 wasm_memory_threshold = null;
