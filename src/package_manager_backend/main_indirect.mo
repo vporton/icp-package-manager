@@ -256,7 +256,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         }];
         // pmPrincipal: Principal; // TODO
         user: Principal;
-        arg: Blob;
+        arg = _: Blob; // TODo
     }): () {
         try {
             onlyOwner(caller, "upgradePackageWrapper");
@@ -299,7 +299,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         };
                     },
                 ));
-                arg;
             });
         }
         catch (e) {

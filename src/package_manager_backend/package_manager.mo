@@ -417,7 +417,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
             packages;
-            pmPrincipal = Principal.fromActor(this); // TODO
             user;
             arg = to_candid({}); // TODO
         });
@@ -484,7 +483,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             );
 
             let pkg2: HalfUpgradedPackageInfo = {
-                upgradeId = minUpgradeId + newPkgNum; // TODO: superfluous
                 installationId = newPkgData.installationId;
                 package = newPkg;
                 newRepo = Principal.fromActor(newPkgData.repo);
@@ -827,20 +825,20 @@ shared({caller = initialCaller}) actor class PackageManager({
                 canister_id;
                 user;
                 wasmModule = Common.shareModule(wasmModule);
-                arg = to_candid({
-                    packageManagerOrBootstrapper;
-                    mainIndirect;
-                    simpleIndirect;
-                    user;
-                    installationId;
-                    userArg = to_candid({}); // TODO
-                });
+                // arg = to_candid({
+                //     packageManagerOrBootstrapper;
+                //     mainIndirect;
+                //     simpleIndirect;
+                //     user;
+                //     installationId;
+                //     userArg = to_candid({}); // TODO
+                // });
                 installArg = to_candid({}); // TODO: Add more arguments.
                 upgradeArg = to_candid({}); // TODO: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
-                mainIndirect;
+                // mainIndirect;
                 simpleIndirect;
             });
         };

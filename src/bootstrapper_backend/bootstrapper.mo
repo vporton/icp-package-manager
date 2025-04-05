@@ -312,7 +312,6 @@ actor class Bootstrapper() = this {
         // TODO: Transfer user cycles before this call:
         Cycles.add<system>(Cycles.refunded());
         ignore await backendActor.installPackageWithPreinstalledModules({
-          whatToInstall = #package;
           packageName = "icpack";
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals());

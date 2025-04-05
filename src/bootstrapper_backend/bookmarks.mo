@@ -59,7 +59,6 @@ persistent actor class Bookmarks({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = null;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = env.bookmarkCost - 100_000_000; // minus transfer fee
         });
