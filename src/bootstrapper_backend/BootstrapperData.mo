@@ -57,7 +57,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
                 };
                 if (time < threshold) {
                     frontendTweakerTimes := Trie.remove(
-                        // FIXME: hash should be a hash.
+                        // FIXME: hash should be a hash. Also Time.now() is probably a bad value. See also the comment above.
                         frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(time)); key = time}, Int.equal
                     ).0;
                     frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
