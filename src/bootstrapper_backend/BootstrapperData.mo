@@ -40,7 +40,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
             frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal, tweaker
         ).0;
         frontendTweakerTimes := Trie.put(
-            // FIXME: hash should be a hash.
+            // FIXME: hash should be a hash. Also Time.now() is probably a bad value. See also the comment below.
             frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(Time.now()) % (2**32)); key = Time.now()}, Int.equal, pubKey
         ).0;
     };
