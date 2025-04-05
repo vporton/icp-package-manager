@@ -70,41 +70,49 @@ async function main() {
         installByDefault: true,
         forceReinstall: false,
         callbacks: [],
+        canisterVersion: [],
     });
+
     const pmBackendModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBackendBlob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmMainIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmMainIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
+        canisterVersion: [],
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmSimpleIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmSimpleIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
+        canisterVersion: [],
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const pmBatteryModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBatteryBlob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
     });
     const exampleFrontend = await repositoryIndex.uploadModule({
         code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
     const exampleBackend = await repositoryIndex.uploadModule({
         code: {Wasm: pmExampleBackendBlob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
 
@@ -112,24 +120,28 @@ async function main() {
         code: {Wasm: pmUpgradeable1V1Blob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
     const pmUpgradeable2V1 = await repositoryIndex.uploadModule({
         code: {Wasm: pmUpgradeable2V1Blob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
     const pmUpgradeable2V2 = await repositoryIndex.uploadModule({
         code: {Wasm: pmUpgradeable2V2Blob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
     const pmUpgradeable3V2 = await repositoryIndex.uploadModule({
         code: {Wasm: pmUpgradeable3V2Blob},
         installByDefault: true,
         forceReinstall: false,
+        canisterVersion: [],
         callbacks: [],
     });
 
