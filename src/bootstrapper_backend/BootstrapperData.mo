@@ -19,6 +19,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     };
 
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
+    ///
+    /// FIXME: See "LIMITATIONS" in https://internetcomputer.org/docs/motoko/main/base/Trie
     stable var frontendTweakers = Trie.empty<PubKey, FrontendTweaker>(); // TODO: Can be unbalanced by a hacker.
     stable var frontendTweakerTimes = Trie.empty<Time.Time, PubKey>(); // TODO: inefficient
 
