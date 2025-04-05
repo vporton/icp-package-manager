@@ -40,6 +40,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
             frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal, tweaker
         ).0;
         frontendTweakerTimes := Trie.put(
+            // FIXME: hash should be a hash.
             frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(Time.now()) % (2**32)); key = Time.now()}, Int.equal, pubKey
         ).0;
     };
@@ -56,6 +57,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
                 };
                 if (time < threshold) {
                     frontendTweakerTimes := Trie.remove(
+                        // FIXME: hash should be a hash.
                         frontendTweakerTimes, {hash = Nat32.fromNat(Int.abs(time)); key = time}, Int.equal
                     ).0;
                     frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
@@ -75,5 +77,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         onlyOwner(caller);
 
         frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
+        // TODO: Remove also from `frontendTweakerTimes`.
     };
 }
