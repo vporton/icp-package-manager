@@ -91,17 +91,16 @@ module {
         switch (wasmModule.code) {
             case (#Assets {assets}) {
                 Debug.print("Copy assets " # debug_show(assets) # " -> " # debug_show(canister_id));
-                await* CopyAssets.copyAll({
-                    from = actor(Principal.toText(assets)): Asset.AssetCanister; to = actor(Principal.toText(canister_id)): Asset.AssetCanister;
-                });
+                let from: Asset.AssetCanister = actor(Principal.toText(assets));
+                let to: Asset.AssetCanister = actor(Principal.toText(canister_id));
+                await* CopyAssets.copyAll({from; to});
                 // TODO: duplicate work with bootstrapper
-                let assets2: Asset.AssetCanister = actor(Principal.toText(canister_id)); // TODO: Rename.
-                let oldController = (await assets2.list_authorized())[0];
+                let oldController = (await to.list_authorized())[0];
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
                     for (principal in [simpleIndirect, user].vals()) {
-                        await assets2.grant_permission({to_principal = principal; permission});
+                        await to.grant_permission({to_principal = principal; permission});
                     };
-                    await assets2.revoke_permission({
+                    await to.revoke_permission({
                         of_principal = oldController;
                         permission;
                     });
