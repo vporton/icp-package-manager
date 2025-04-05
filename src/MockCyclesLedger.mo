@@ -1,8 +1,6 @@
 /// Mock `CyclesLedger.create_canister` implementation using `IC.create_canister` (for testing).
 /// IT DOES NOT CONFORM TO THE SPECS!
 /// It's useful for testing code using `CyclesLedger.create_canister` on local net.
-///
-/// TODO: Extract this to a separate MOPS package
 import Principal "mo:base/Principal";
 // import IC "mo:ic";
 
