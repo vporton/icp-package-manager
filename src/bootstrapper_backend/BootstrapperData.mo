@@ -3,9 +3,7 @@ import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Debug "mo:base/Debug";
-import Trie "mo:base/Trie";
-import Nat32 "mo:base/Nat32";
-import Common "../common";
+import RBTree "mo:base/RBTree";
 
 persistent actor class BootstrapperData(initialOwner: Principal) {
     public type PubKey = Blob;
@@ -21,8 +19,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
     ///
     /// FIXME: See "LIMITATIONS" in https://internetcomputer.org/docs/motoko/main/base/Trie
-    stable var frontendTweakers = Trie.empty<PubKey, FrontendTweaker>(); // TODO: Can be unbalanced by a hacker.
-    stable var frontendTweakerTimes = Trie.empty<Time.Time, PubKey>(); // TODO: inefficient
+    transient var frontendTweakers = RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
+    stable var _frontendTweakersSave = frontendTweakers.share();
+    transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
+    stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -39,13 +39,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     public shared({caller}) func putFrontendTweaker(pubKey: Blob, tweaker: FrontendTweaker): async () {
         onlyOwner(caller);
 
-        frontendTweakers := Trie.put(
-            frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal, tweaker
-        ).0;
-        frontendTweakerTimes := Trie.put(
-            // FIXME: Time.now() is probably a bad value.
-            frontendTweakerTimes, {hash = Common.intHash(Time.now()); key = Time.now()}, Int.equal, pubKey
-        ).0;
+        frontendTweakers.put(pubKey, tweaker);
+        frontendTweakerTimes.put(Time.now(), pubKey);
     };
 
     public shared({caller}) func getFrontendTweaker(pubKey: PubKey): async FrontendTweaker {
@@ -53,23 +48,20 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
         do { // clean memory by removing old entries
             let threshold = Time.now() - 2700 * 1_000_000_000; // 45 min
-            var i = Trie.iter(frontendTweakerTimes);
+            var i = frontendTweakerTimes.entries();
             label x loop {
                 let ?(time, pubKey) = i.next() else {
                     break x;
                 };
                 if (time < threshold) {
-                    frontendTweakerTimes := Trie.remove(
-                        // FIXME: Time.now() is probably a bad value.
-                        frontendTweakerTimes, {hash = Common.intHash(Int.abs(time)); key = time}, Int.equal
-                    ).0;
-                    frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
+                    frontendTweakerTimes.delete(time);
+                    frontendTweakers.delete(pubKey);
                 } else {
                     break x;
                 };
             };
         };
-        let ?res = Trie.get(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal) else {
+        let ?res = frontendTweakers.get(pubKey) else {
             Debug.trap("no such frontend or key expired");
         };
         res;
@@ -79,7 +71,21 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     public shared({caller}) func deleteFrontendTweaker(pubKey: PubKey): async () {
         onlyOwner(caller);
 
-        frontendTweakers := Trie.remove(frontendTweakers, {hash = Blob.hash(pubKey); key = pubKey}, Blob.equal).0;
+        frontendTweakers.delete(pubKey);
         // TODO: Remove also from `frontendTweakerTimes`.
+    };
+
+    system func preupgrade() {
+        _frontendTweakersSave := frontendTweakers.share();
+        _frontendTweakerTimesSave := frontendTweakerTimes.share();
+    };
+
+    system func postupgrade() {
+        frontendTweakers.unshare(_frontendTweakersSave);
+        frontendTweakerTimes.unshare(_frontendTweakerTimesSave);
+        
+        // Free memory:
+        frontendTweakers := RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
+        frontendTweakerTimes := RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     };
 }
