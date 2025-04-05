@@ -17,8 +17,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     };
 
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
-    ///
-    /// FIXME: See "LIMITATIONS" in https://internetcomputer.org/docs/motoko/main/base/Trie
     transient var frontendTweakers = RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
     stable var _frontendTweakersSave = frontendTweakers.share();
     transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
