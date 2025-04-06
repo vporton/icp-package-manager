@@ -737,7 +737,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
-
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> =
             switch (p.specific) {
