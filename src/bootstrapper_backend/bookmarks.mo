@@ -9,14 +9,27 @@ import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 
 // TODO: Allow only the user to see his bookmarks?
-persistent actor class Bookmarks({
-    bootstrapper: Principal;
-}) {
+persistent actor class Bookmarks(initialOwner: Principal) {
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     public type Bookmark = {
         frontend: Principal;
         backend: Principal;
+    };
+
+    var bootstrapper_: Principal = Principal.fromText("aaaaa-aa"); // TODO: Rewrite DFX and make it class argument instead.
+
+    var initialized: Bool = false;
+
+    public shared({caller}) func init({bootstrapper: Principal}): async () {
+        if (caller != initialOwner) {
+            Debug.trap("bookmarks: not the initiaizer");
+        };
+        if (initialized) {
+            Debug.trap("bookmarks: already initialized");
+        };
+        bootstrapper_ := bootstrapper;
+        initialized := true;
     };
 
     private func bookmarksCompare(a: Bookmark, b: Bookmark): {#less; #equal; #greater} {
@@ -49,7 +62,7 @@ persistent actor class Bookmarks({
 
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark({b: Bookmark; battery: Principal; user: Principal}): async Bool {
-        if (caller != bootstrapper) {
+        if (caller != bootstrapper_) {
             Debug.trap("bookmarks: not the owner");
         };
 

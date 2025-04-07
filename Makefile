@@ -35,7 +35,8 @@ deploy-test: deploy \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
 
-deploy-self@bookmark:
+deploy-self@bookmark: deploy@bootstrapper
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
-	  --argument "record { bootstrapper = principal \"$$(dfx canister id bootstrapper)\"; }" \
+	  --argument "principal \"$(USER)\"" \
 	  bookmark
+	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
