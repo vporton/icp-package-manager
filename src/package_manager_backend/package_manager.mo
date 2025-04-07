@@ -254,7 +254,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         main_indirect_ := main_indirect_v;
     };
 
-    stable var nextInstallationId: Common.InstallationId = 0;
+    stable var nextInstallationId: Common.InstallationId = 0; // 0 is package manager.
     stable var nextUninstallationId: Common.UninstallationId = 0;
     stable var nextUpgradeId: Common.UpgradeId = 0;
 
@@ -645,7 +645,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         let minInstallationId = nextInstallationId;
-        nextInstallationId += additionalPackages.size();
+        nextInstallationId += additionalPackages.size() + 1; // + 1 package manager
 
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
