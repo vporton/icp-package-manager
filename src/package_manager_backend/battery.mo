@@ -30,10 +30,10 @@ shared({caller = initialOwner}) actor class Battery({
             [
                 (packageManagerOrBootstrapper, ()),
                 (mainIndirect, ()), // temporary
-                (simpleIndirect, ()), // TODO: superfluous?
+                (simpleIndirect, ()),
                 (Principal.fromActor(this), ()), // to execute the timer
                 (user, ()),
-            ].vals(), // TODO: Are all required?
+            ].vals(), // TODO@P2: Are all required?
             5,
             Principal.equal,
             Principal.hash);
@@ -172,13 +172,13 @@ shared({caller = initialOwner}) actor class Battery({
         battery.canisterInitialCycles;
     };
 
-    // TODO:
+    // TODO@P3:
     // public func insertCanisterKind(battery: Battery, kind: Text, info: Common.CanisterFulfillment) {
     //     OrderedMap.put(battery.canisterKindsMap, canisterKindEqual, canisterKindHash, kind, info);
     // };
 
     func initTimer<system>() {
-        timer := ?(Timer.recurringTimer<system>(#seconds 3600, topUpAllCanisters)); // TODO: editable period
+        timer := ?(Timer.recurringTimer<system>(#seconds 3600, topUpAllCanisters)); // TODO@P3: editable period
     };
 
     stable let battery = newBattery();
@@ -194,7 +194,7 @@ shared({caller = initialOwner}) actor class Battery({
             case (?x) x;
             case null battery.defaultFulfillment;
         };
-        Cycles.add<system>(fulfillment.topupAmount); // TODO: If this traps on a too high amount, keep filling other canisters?
+        Cycles.add<system>(fulfillment.topupAmount); // TODO@P3: If this traps on a too high amount, keep filling other canisters?
         getMainIndirect().topUpOneCanisterFinish(canister_id, fulfillment);
     };
 
@@ -246,7 +246,7 @@ shared({caller = initialOwner}) actor class Battery({
     system func inspect({
         caller : Principal;
     }): Bool {
-        onlyOwner(caller, "inspect"/*TODO*/);
+        onlyOwner(caller, "inspect"/*TODO@P3*/);
         true;
     };
 

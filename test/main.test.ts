@@ -154,7 +154,7 @@ describe('My Test Suite', () => {
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);
         }
-        const pmInstallationId = 0n; // TODO
+        const pmInstallationId = 0n; // TODO@P3
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, pmInst.get('backend')!, pmInstallationId);
         const packageManager: PackageManager = createPackageManager(pmInst.get('backend')!, {agent: backendAgent});
@@ -170,7 +170,7 @@ describe('My Test Suite', () => {
             );
         }
         console.log("Testing owners of the PM modules...");
-        // TODO: Check `batteryPrincipal` too.
+        // TODO@P2: Check `batteryPrincipal` too.
         for (const [principal, create] of [
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
             [pmInst.get('main_indirect')!, createIndirectActor],
@@ -252,13 +252,13 @@ describe('My Test Suite', () => {
             user: backendUser,
         });
         console.log("Testing upgraded package `upgradeable`...");
-        // We will wait till `m1` is removed, because this signifie the upgrade is done. // TODO: a better way
-        // TODO: More detailed test:
+        // We will wait till `m1` is removed, because this signifie the upgrade is done. // TODO@P3: a better way
+        // TODO@P3: More detailed test:
         async function myNamedModules(): Promise<Set<string>> {
             const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
             return new Set(Array.from(upgradeablePkg.modulesInstalledByDefault.values()).map(([name, _principal]) => name));
         }
         await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
     });
-    // TODO: Test `removeStalled()`.
+    // TODO@P3: Test `removeStalled()`.
 });

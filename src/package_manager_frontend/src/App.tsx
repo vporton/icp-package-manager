@@ -89,7 +89,6 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         const modulesJSON = searchParams.get('modules')!;
-        // TODO: Use "version" field from `additionalPackages`.
         await bootstrapperMainIndirect.bootstrapBackend({
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           installedModules,
@@ -98,7 +97,7 @@ function GlobalUI() {
         });
         const installedModulesMap = new Map(installedModules);
         const backendPrincipal = installedModulesMap.get('backend')!;
-        const installationId = 0n; // TODO
+        const installationId = 0n; // TODO@P3
         const waitResult = await waitTillInitialized(agent!, backendPrincipal, installationId);
         if (waitResult !== undefined) {
           alert(waitResult);
@@ -114,13 +113,13 @@ function GlobalUI() {
         open(base2, '_self');
       }
       catch (e) {
-        console.log(e); // TODO: Return an error.
+        console.log(e); // TODO@P3: Return an error.
       }
       finally {
         setBusy(false);
       }
     }
-    // TODO: Start installation automatically, without clicking a button?
+    // TODO@P3: Start installation automatically, without clicking a button?
     return (
       <Container>
         <p>You first need to install the missing components (so called <q>backend</q>) for this software.
@@ -177,7 +176,7 @@ function App2() {
     );
     return cyclesPaymentAddress !== undefined
       ? (
-        // TODO: `stopPropagation` doesn't work in some reason.
+        // TODO@P3: `stopPropagation` doesn't work in some reason.
         <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
           <p><strong>Warning: 5% fee applied.</strong></p>
           <p>
@@ -186,7 +185,7 @@ function App2() {
               <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
             </OverlayTrigger>
           </p>
-          <p>TODO: QR-code</p>
+          <p>TODO@P3: QR-code</p>
         </div>
       )
       : undefined;
@@ -224,7 +223,7 @@ function App2() {
           <Routes>
             <Route path="/" element={<MainPage/>}/>
             <Route path="/choose-version/:repo/:packageName" element={<ChooseVersion/>}/>
-            <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO: repo and packageName can be deduces from installationId */}
+            <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO@P3: repo and packageName can be deduces from installationId */}
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>

@@ -51,9 +51,9 @@ export default function MainPage() {
         setBookmarks(list);
       });
     }, [props.isAuthenticated, props.principal]);
-    // TODO: Allow to change the bootstrap repo:
-    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
-    async function bootstrap() { // TODO: Move to `useEffect`.
+    // TODO@P3: Allow to change the bootstrap repo:
+    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
+    async function bootstrap() {
       try {
         setBusy(true);
         let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
@@ -82,7 +82,7 @@ export default function MainPage() {
       }
       catch(e) {
         console.log(e);
-        throw e; // TODO
+        throw e; // TODO@P3
       }
       finally {
         setBusy(false);
@@ -98,7 +98,7 @@ export default function MainPage() {
       }
     }
 
-    // TODO: Move below variables to the top.
+    // TODO@P3: Move below variables to the top.
     const [searchParams, _] = useSearchParams();
     const [addExample, setAddExample] = useState(false);
     const additionalPackagesStr = (searchParams as any).get('additionalPackages');
@@ -111,9 +111,9 @@ export default function MainPage() {
     // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
     const modulesJSON = (searchParams as any).get('modules');
 
-    const b = bookmarks[0]; // TODO: Allow to install not for the first package manager.
+    const b = bookmarks[0]; // TODO@P3: Allow to install not for the first package manager.
 
-    // TODO: Give user freedom to change whether bootstrap or install.
+    // TODO@P3: Give user freedom to change whether bootstrap or install.
     return (
       <>
         {bookmarks.length !== 0 ?

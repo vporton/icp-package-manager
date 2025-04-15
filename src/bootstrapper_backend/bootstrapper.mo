@@ -23,12 +23,12 @@ import Bookmarks "canister:bookmark";
 
 actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
-    /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO: Edit it. (Move to `bootstrapper_data`?)
+    /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
-    var totalBootstrapCost = 10_000_000_000_000; // TODO: Make it stable.
+    var totalBootstrapCost = 10_000_000_000_000; // TODO@P2: Make it stable.
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapFrontend({
@@ -52,7 +52,7 @@ actor class Bootstrapper() = this {
             };
             case (#Ok _) {};
         };
-        // Pay to the vendor (TODO: Ensure no double fee later.)
+        // Pay to the vendor (TODO@P2: Ensure no double fee later.)
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
@@ -138,7 +138,7 @@ actor class Bootstrapper() = this {
             wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
             mode = #install;
             canister_id = frontend;
-            sender_canister_version = null; // TODO
+            sender_canister_version = null; // TODO@P3
         });
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(mFrontend);
@@ -153,11 +153,11 @@ actor class Bootstrapper() = this {
             // user;
         });
 
-        // TODO: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
-        //       For this, make the private key a part of the persistent link arguments?
-        //       Need to ensure that the link is paid for (prevent DoS attacks).
-        //       Another (easy) way is to add "Bookmark" checkbox to bootstrap.
-        //       It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
+        // TODO@P3: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
+        //          For this, make the private key a part of the persistent link arguments?
+        //          Need to ensure that the link is paid for (prevent DoS attacks).
+        //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
+        //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         Cycles.add<system>(Cycles.refunded());
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
 
@@ -260,7 +260,7 @@ actor class Bootstrapper() = this {
                 mainIndirect;
                 simpleIndirect;
                 user;
-                // TODO: Pass the following only to the `backend` module:
+                // TODO@P3: Pass the following only to the `backend` module:
                 // frontend;
                 // frontendTweakPrivKey;
                 // repo = Repository;
@@ -268,19 +268,19 @@ actor class Bootstrapper() = this {
             });
         };
 
-        let controllers = [simpleIndirect, mainIndirect, backend, user]; // TODO: duplicate code
+        let controllers = [simpleIndirect, mainIndirect, backend, user]; // TODO@P3: duplicate code
 
-        // TODO: It may happen when the app is not installed because of an error.
+        // TODO@P3: It may happen when the app is not installed because of an error.
         // the last stage of installation, not to add failed bookmark:
         await* tweakFrontend(frontendTweakPrivKey, controllers, user);
 
         for (canister_id in installedModules2.vals()) { // including frontend
-            // TODO: We can provide these setting initially and thus update just one canister.
+            // TODO@P3: We can provide these setting initially and thus update just one canister.
             Cycles.add<system>(Cycles.refunded());
             await ic.update_settings({
                 canister_id;
                 sender_canister_version = null;
-                settings = { // TODO
+                settings = { // TODO@P3
                     compute_allocation = null;
                     // `indirect_canister_id` here is only for the package manager package:
                     controllers = ?controllers;
@@ -309,7 +309,6 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        // TODO: Transfer user cycles before this call:
         Cycles.add<system>(Cycles.refunded());
         ignore await backendActor.installPackageWithPreinstalledModules({
           packageName = "icpack";
@@ -321,7 +320,7 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
-        // TODO: `ignore` here?
+        // TODO@P3: `ignore` here?
         ignore await CyclesLedger.icrc1_transfer({
             to = {owner = battery; subaccount = null};
             fee = null;
@@ -353,7 +352,7 @@ actor class Bootstrapper() = this {
 
     /// Internal. Updates controllers and owners of the frontend.
     ///
-    /// TODO: Rename.
+    /// TODO@P3: Rename.
     private func tweakFrontend(
         privKey: PrivKey,
         controllers: [Principal],
@@ -371,13 +370,13 @@ actor class Bootstrapper() = this {
             for (owner in owners.vals()) {
                 Cycles.add<system>(Cycles.refunded());
                 await assets.revoke_permission({
-                    of_principal = owner; // TODO: Why isn't it enough to remove `Principal.fromActor(this)`?
+                    of_principal = owner; // TODO@P3: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
                 });
             };
             for (principal in Iter.concat(controllers.vals(), [user].vals())) {
                 Cycles.add<system>(Cycles.refunded());
-                await assets.authorize(principal); // TODO: needed?
+                await assets.authorize(principal); // TODO@P3: needed?
                 await assets.grant_permission({to_principal = principal; permission});
             };
         };

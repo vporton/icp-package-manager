@@ -1,161 +1,121 @@
 Remaining things TODO:
 
-- Use choosen "Default version" on the mainpage.
+- TODO@P2: `example` is installed by the bootstrapper under ID 2 instead of 1.
 
-- When running two upgrade operations of the same package in nearly the same time,
+- TODO@P3 Use choosen "Default version" on the mainpage.
+
+- TODO@P3 When running two upgrade operations of the same package in nearly the same time,
   it tries to `stop_canister` for an already deleted canister. That may be a more serious symptom.
 
-- Support upgrade from a different repo.
+- TODO@P3 Support upgrade from a different repo.
 
-- Prevent upgrading package to the same version as installed?
+- TODO@P3 Prevent upgrading package to the same version as installed?
 
-- Battery canister should not supply cycles to itself.
+- TODO@P3 Battery canister should not supply cycles to itself.
 
-- The payment popup may not fit browser window. The menu is broken on mobile.
+- TODO@P2 The payment popup may not fit browser window. The menu is broken on mobile.
 
-- Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
+- TODO@P3 Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
-- Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
+- TODO@P2 Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
 
-- Replace unstable HashMap (and Trie?) by stable OrderedMap.
+- TODO@P2 Replace unstable HashMap (and Trie?) by stable OrderedMap.
 
-- Apparently, I will use `simple_indirect` to delete a canister.
+- TODO@P3 Apparently, I will use `simple_indirect` to delete a canister.
   Then `simple_indirect` receives its cycles and cycles need to be transferred to `battery`.
 
-- When deleting a module, withdraw its cycles.
+- TODO@P3 Add/delete a package one-by-one in addition to `setFullPackageInfo`.
 
-- Add/delete a package one-by-one in addition to `setFullPackageInfo`.
+- TODO@P3 On clicking Upgrade button, ask the user whether really wants to upgrade.
 
-- Meta descriptions for packages.
-
-- On clicking Upgrade button, ask the user whether really wants to upgrade.
-
-- Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
+- TODO@P2 Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
   Use SHA-256 to identify blobs.  
 
-- Update some packages automatically (every day).
+- TODO@P3 Update some packages automatically (every day).
 
-- casing of identifiers: https://forum.dfinity.org/t/what-is-the-advised-naming-scheme-for-canisters/41023/2
+- TODO@P3 Can we install additional packages not waiting till full bootstrapping of the PM?
 
-- Can we install additional packages not waiting till full bootstrapping of the PM?
+- TODO@P3 It should say "Install additonal copy" of the package when installing an already installed package.
 
-- It should say "Install additonal copy" of the package when installing an already installed package.
+- TODO@P2 `HashMap<..., ()>` -> `Set<...>`.
 
-- `HashMap<..., ()>` -> `Set<...>`.
+- TODO@P2 Test real module with zero modules.
 
-- Test real module with zero modules.
+- TODO@P3 Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
 
-- If the user has several PMs installed, order their order.
+- TODO@P2 future compaitibility in package format.
 
-- https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
+- TODO@P3 Ability to bootstrap backend without frontend (for AI agents and other API users).
 
-- Use remaining dev's cycles to store URLs of PMs.
+- TODO@P3 Prevent using Tab key to circumvent “busy” overlay.
 
-- rejecting (i.e. throw) does 'not' rollback state changes done before, while trapping (e.g. Debug.trap, assert…, out of cycle conditions) does.
+- TODO@P3 A button to copy repository's principal.
 
-- Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
+- TODO@P2 Remove `indirectCaller` (remain only `simpleIndirect`) as controller.
 
-- future compaitibility in package format.
+- TODO@P2 Should we use 32-bytes hash as the ID of WASM value instead of number?
 
-- Ability to bootstrap backend without frontend (for AI agents and other API users).
+- TODO@P3 `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
-- Prevent using Tab key to circumvent “busy” overlay.
+- TODO@P3 Resist to drain cycles attack.
 
-- A button to copy repository's principal.
+- TODO@P2 Disallow packages of zero modules.
 
-- Remove `indirectCaller` (remain only `simpleIndirect`) as controller.
+- TODO@P3 Backing/restoring state of packages.
 
-- Should we use 32-bytes hash as the ID of WASM value instead of number?
+- TODO@P3 Paid soft.
 
-- `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
+- TODO@P2 Reconcile different naming schemes: `main_indirect` but `Repository`.
 
-- Resist to drain cycles attack.
+- TODO@P3 When user adds a new repository canister, check that it is an index canister.
 
-- Should user be a controller?
+- TODO@P3 Prevent browser window to close during bootstrap.
 
-- Disallow packages of zero modules.
+- TODO@P2 `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
 
-- Backing/restoring state of packages.
+- TODO@P2 Show the hash of installed package and refuse installation/upgrade, when doesn't match.
 
-- Paid soft.
+- TODO@P3 Keep a log of **finished** operations. Especially useful to check whether upgrade completed.
 
-- Reconcile different naming schemes: `main_indirect` but `Repository`.
-
-- Bootstrappers of packages (devs) could forbid more than one bootstrap to limit their gas loss and store principals.
-
-- Wait curtains.
-
-- For initializing a package, add `packageInit` function (not sure in backend or main_indirect).
-  that could be used to init dependencies from dependent packages (because they may be not yet initialized).
-
-- When user adds a new repository canister, check that it is an index canister.
-
-- Prevent browser window to close during bootstrap.
-
-- `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
-
-- Show the hash of installed package and refuse installation/upgrade, when doesn't match.
-
-- Keep a log of **finished** operations. Especially useful to check whether upgrade completed.
-
-- use the CMC’s `notify_create_canister`.
-
-- When logged out while showing installing packages, should message that cannot show.
+- TODO@P3 When logged out while showing installing packages, should message that cannot show.
   Likewise for mainpage,
 
-- Error handling in frontend.
+- TODO@P3 Error handling in frontend.
 
-- Optionally, create user's repository and copy there installed packages.
+- TODO@P3 Optionally, create user's repository and copy there installed packages.
 
-- Use https://github.com/dfinity/cycles-ledger (or directly CMC?) instead of `IC.create_canister`.
+- TODO@P3 Managing package repositories.
 
-- Managing package repositories.
+- TODO@P3 "no such frontend or key expired" - show this message to the user.
 
-- "no such frontend or key expired" - show this message to the user.
+- TODO@P3 A special DAO.
 
-- Upgrading.
+  - TODO@P2 Every package should have owner(s) to specify who is able to change it.
 
-- UI:
-    - Scanning package dependencies in the UI.
+- TODO@P3 Package's and/or user's option to stop all canisters of a package before upgrading.
 
-- A special DAO.
+- TODO@P3 "Add distro" at distro's site.
 
-  - Every package should have owner(s) to specify who is able to change it.
+- TODO@P3 Autocomplete package name for installation.
 
-- https://dashboard.internetcomputer.org/sns/l7ra6-uqaaa-aaaaq-aadea-cai
+- TODO@P3 Events (similar to permissions?)
 
-- Package's and/or user's option to stop all canisters of a package before upgrading.
+- TODO@P2 Store in installed package info also its `Repository`?
 
-- "Add distro" at distro's site.
+- TODO@P2 Package manager (and probably some other packages) should be non-removable.
 
-- Autocomplete package name for installation.
+- TODO@P3 `!` in TypeScript.
 
-- Events (similar to permissions?)
-
-- Should we automatically uninstall "orphaned" packages (installed only to support another package)?
-
-- Store in installed package info also its `Repository`?
-
-- Package manager (and probably some other packages) should be non-removable.
-
-- `!` in TypeScript.
-
-- Option to re-use a canister for another package (should require non-safe confirmation from both
+- TODO@P2 Option to re-use a canister for another package (should require non-safe confirmation from both
   user and package).
 
-- Statistics of use.
+- TODO@P3 Statistics of use.
 
-- `FIXME`/`TODO` in the sources.
+- TODO@P3 Security policy
 
-- Security policy
+- TODO@P3 Should `getOwners` method be available only to owners?
 
-- Should `getOwners` method be available only to owners?
+- TODO@P3 Partner with https://launchdarkly.com (app feature management platform).
 
-- Enhanced orthogonal persistence.
-
-- With new 64-bit memory model no need for CanDB.
-
-- Partner with https://launchdarkly.com (app feature management platform).
-
-- https://thoropass.com/guide/compliance-guide-soc-2-for-your-startup/
+- TODO@P3 https://thoropass.com/guide/compliance-guide-soc-2-for-your-startup/
   SOC 2 defines criteria for managing customer data based on five “trust service principles”—security, availability, processing integrity, confidentiality and privacy.

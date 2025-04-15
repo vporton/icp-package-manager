@@ -7,7 +7,7 @@ import { createActor as createBootstrapperIndirectActor } from "../declarations/
 import { createActor as createRepositoryIndexActor } from "../declarations/repository";
 
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
-    const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
+    const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
     if (typeof window !== 'undefined') {
         return crypto.getRandomValues(v);
     } else {
@@ -16,7 +16,7 @@ async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
 }
 
 async function sha256(v: Uint8Array): Promise<Uint8Array> {
-    const mycrypto = await import("crypto"); // TODO: This forces to use `"module": "ES2020"`.
+    const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
     if (typeof window !== 'undefined') {
         return new Uint8Array(await crypto.subtle.digest('SHA-256', v));
     } else {
@@ -27,8 +27,8 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
 }
 
 export async function bootstrapFrontend(props: {agent: Agent}) {
-    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO: `defaultAgent` here and in other places.
-    try {// TODO: Duplicate code
+    const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
+    try { // TODO@P3: Duplicate code
         let pkg = await repoIndex.getPackage('icpack', "stable");
         const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
 
@@ -43,7 +43,7 @@ export async function bootstrapFrontend(props: {agent: Agent}) {
     }
     catch(e) {
       console.log(e);
-      throw e; // TODO
+      throw e; // TODO@P3
     }
 }
 
@@ -73,12 +73,12 @@ export class InitializedChecker {
     /// Throws exception, if not yet installed.
     async check() {
         try {
-            // TODO: bring object creations outside this method, because it is typically called in a loop.
+            // TODO@P3: bring object creations outside this method, because it is typically called in a loop.
             const pkgMan: PackageManager = createPackageManager(this.package_manager, {agent: this.agent});
             const pkg = await pkgMan.getInstalledPackage(this.installationId);
             const real = (pkg.package.specific as any).real as SharedRealPackageInfo;
             if (real.checkInitializedCallback.length === 0) {
-                return; // TODO: Also check that all modules were installed.
+                return; // TODO@P3: Also check that all modules were installed.
                         // Note that it is easier to do here, in frontend.
             }
             const cb = real.checkInitializedCallback[0];

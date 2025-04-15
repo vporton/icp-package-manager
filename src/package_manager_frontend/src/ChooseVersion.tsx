@@ -24,7 +24,7 @@ export default function ChooseVersion(props: {}) {
     const [packageName2, setPackageName2] = useState<string | undefined>(packageName);
     const [repo2, setRepo2] = useState<Principal | undefined>(repo === undefined ? undefined : Principal.fromText(repo));
     const [version2, setVersion2] = useState<string | undefined>();
-    const [guid0, setGuid0] = useState<any | undefined>(); // TODO: inconsistent
+    const [guid0, setGuid0] = useState<any | undefined>(); // TODO@P3: inconsistent
     useEffect(() => {
         if (oldInstallation !== undefined && glob.packageManager !== undefined) {
             glob.packageManager.getInstalledPackage(BigInt(oldInstallation)).then(installation => {
@@ -59,7 +59,7 @@ function ChooseVersion2(props: {
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
-    // TODO: I doubt consistency, and performance in the case if there is no such package.
+    // TODO@P3: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         if (glob.packageManager !== undefined && props.packageName !== undefined) {
             const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: props.repo!, agent: defaultAgent});
@@ -87,7 +87,7 @@ function ChooseVersion2(props: {
             setBusy(true);
             setInstalling(true);
 
-            // TODO: hack
+            // TODO@P3: hack
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
             const {minInstallationId: id} = await package_manager.installPackages({
                 packages: [{
@@ -103,7 +103,7 @@ function ChooseVersion2(props: {
         }
         catch(e) {
             console.log(e);
-            throw e; // TODO
+            throw e; // TODO@P3
         }
         finally {
             setBusy(false);
@@ -114,7 +114,7 @@ function ChooseVersion2(props: {
             setBusy(true);
             setInstalling(true);
 
-            // TODO: hack
+            // TODO@P3: hack
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
             const {minUpgradeId: id} = await package_manager.upgradePackages({
                 packages: [{
@@ -137,7 +137,7 @@ function ChooseVersion2(props: {
         }
         catch(e) {
             console.log(e);
-            throw e; // TODO
+            throw e; // TODO@P3
         }
         finally {
             setBusy(false);
@@ -155,7 +155,7 @@ function ChooseVersion2(props: {
                     <p>You are strongly recommended to upgrade only to higher versions.</p>
                 </Alert>
             }
-            <p>Package: {props.packageName}</p> {/* TODO: no "No such package." message, while the package loads */}
+            <p>Package: {props.packageName}</p> {/* TODO@P3: no "No such package." message, while the package loads */}
             {versions === undefined ? <p>No such package.</p> : <>
                 <p>
                     {props.oldInstallation !== undefined && <>Current version: {props.currentVersion}{" "}</>}
@@ -166,7 +166,7 @@ function ChooseVersion2(props: {
                     </select>
                 </p>
                 <p>
-                    {/* TODO: Disable the button when executing it. */}
+                    {/* TODO@P2: Disable the button when executing it. */}
                     {props.oldInstallation !== undefined ?
                         <Button onClick={upgrade} disabled={installing || chosenVersion === undefined}>Upgrade package</Button>
                         : installedVersions.size == 0

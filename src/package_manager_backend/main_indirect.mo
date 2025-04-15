@@ -14,7 +14,7 @@ import IC "mo:ic";
 import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class MainIndirect({
-    packageManagerOrBootstrapper: Principal; // TODO: Rename to just `packageManager`?.
+    packageManagerOrBootstrapper: Principal; // TODO@P2: Rename to just `packageManager`?.
     mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
@@ -49,7 +49,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): async () {
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed?
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P2: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
         let battery = await pm.getModulePrincipal(installationId, "battery");
@@ -98,7 +98,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     };
 
     type OurPMType = actor {
-        getNewCanisterCycles: () -> async Nat; // TODO: seems unneeded
+        getNewCanisterCycles: () -> async Nat; // TODO@P3: seems unneeded
         getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
     };
 
@@ -111,7 +111,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
         ourPM := actor(Principal.toText(pm));
     };
 
-    public shared({caller}) func installPackagesWrapper({ // TODO: Rename.
+    /// Internal.
+    public shared({caller}) func installPackagesWrapper({ // TODO@P3: Rename.
         pmPrincipal: Principal;
         packages: [{
             repo: Common.RepositoryRO;
@@ -152,7 +153,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 }) -> async ();
             };
 
-            // TODO: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
+            // TODO@P2: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
                 minInstallationId;
                 afterInstallCallback;
@@ -179,7 +180,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         }
         catch (e) {
             Debug.print("installPackagesWrapper: " # Error.message(e));
-            throw e;
+            Debug.trap(Error.message(e));
         };
     };
 
@@ -203,7 +204,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
 
-            // TODO: bad code
+            // TODO@P3: bad code
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
                     let pm: Install.Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
@@ -233,7 +234,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         simpleIndirect;
                         user;
                         controllers = ?[Principal.fromActor(this)];
-                        cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO: Don't call it several times.
+                        cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
                         afterInstallCallback;
                     });
                 };
@@ -254,9 +255,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-        // pmPrincipal: Principal; // TODO
+        // pmPrincipal: Principal; // TODO@P2
         user: Principal;
-        arg = _: Blob; // TODo
+        arg = _: Blob; // TODO@P2
     }): () {
         try {
             onlyOwner(caller, "upgradePackageWrapper");
@@ -309,7 +310,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     public shared({caller}) func upgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        moduleNumber = _: Nat; // TODO
+        moduleNumber = _: Nat; // TODO@P2
         moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
@@ -326,7 +327,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
             let repository: Common.RepositoryRO =
-                actor(Principal.toText(wasmModuleLocation.0)); // TODO: Rename if needed
+                actor(Principal.toText(wasmModuleLocation.0));
 
             let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
             let newCanisterId = switch (canister_id) {
@@ -334,12 +335,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
                     } else {
-                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO: Check modes carefully.
+                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO@P2: Check modes carefully.
                     };
-                    // TODO: consider invoking user's callback if needed.
+                    // TODO@P2: consider invoking user's callback if needed.
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     await simple.install_code({
-                        sender_canister_version = null; // TODO: set appropriate value if needed.
+                        sender_canister_version = null; // TODO@P3: set appropriate value if needed.
                         arg = to_candid({
                             packageManagerOrBootstrapper;
                             mainIndirect;
@@ -352,7 +353,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         wasm_module;
                         mode = mode2;
                         canister_id;
-                    }, 1000_000_000_000); // TODO
+                    }, 1000_000_000_000); // TODO@P2
                     canister_id;
                 };
                 case null {
@@ -366,7 +367,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         upgradeId = null;
                         canister_id;
                         wasmModule = Common.unshareModule(wasmModule);
-                        installArg = to_candid(installArg); // TODO: per-module args (here and in other places)
+                        installArg = to_candid(installArg); // TODO@P2: per-module args (here and in other places)
                         packageManagerOrBootstrapper;
                         mainIndirect;
                         simpleIndirect;
@@ -388,7 +389,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             reserved_cycles_limit = null;
                             wasm_memory_limit = null;
                         };
-                    }, 1000_000_000_000); // TODO
+                    }, 1000_000_000_000); // TODO@P2
                     canister_id;
                 };
             };
@@ -401,7 +402,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             };
             await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId});
             await* Install.copyAssetsIfAny({
-                wasmModule = Common.unshareModule(wasmModule); // TODO: duplicate call above
+                wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
                 canister_id = newCanisterId;
                 simpleIndirect;
                 user;

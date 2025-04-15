@@ -1,4 +1,3 @@
-/// TODO: Rename this file.
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
@@ -19,9 +18,6 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
 
   var nextWasmId = 0;
-  // var nextPackageId = 0; // TODO: unused
-
-  // CanDB index methods //
 
   stable var initialized: Bool = false;
 
@@ -93,7 +89,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     packageCreators.delete(oldPackageCreator);
   };
 
-  // TODO: not needed
+  // TODO@P3: not needed
   public shared({caller}) func init(): async () {
     onlyOwner(caller);
     
@@ -197,7 +193,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   /// Data ///
 
-  // TODO: Use hashes instead of numbers, for balanced tree and duplicate elimination.
+  // TODO@P2: Use hashes instead of numbers, for balanced tree and duplicate elimination.
   let wasms = TrieMap.TrieMap<Nat, Blob>(Nat.equal, Common.intHash);
 
   public query func getWasmModule(key: Nat): async Blob { 
@@ -207,7 +203,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     v;
   };
 
-  // TODO: `removeWasmModule`
+  // TODO@P3: `removeWasmModule`
 
   let packages = TrieMap.TrieMap<Text, {
     pkg: Common.FullPackageInfo;
@@ -225,21 +221,21 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     _getFullPackageInfo(name);
   };
 
-  /// TODO: Put a barrier to make the update atomic.
-  /// TODO: Don't call it directly.
+  /// TODO@P3: Put a barrier to make the update atomic.
+  /// TODO@P3: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
     let p = packages.get(name);
     switch (p) {
       case (?p) {
-        onlyPackageOwner(caller, name); // TODO: queries by name second time.
+        onlyPackageOwner(caller, name); // TODO@P3: queries by name second time.
       };
       case null {
         onlyPackageCreator(caller);
       };
     };
-    onlyOwner(caller); // TODO: Who has the right to create a package?
+    onlyOwner(caller); // TODO@P2: Who has the right to create a package?
 
-    // TODO: Check that package exists?
+    // TODO@P3: Check that package exists?
     let owners = switch (p) {
       case (?{pkg = _; owners}) {
         owners;
@@ -267,27 +263,6 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     Debug.trap("no such package version");
   };
 
-  // public shared({caller}) func uploadModules(modules: [(Text, Common.ModuleUpload)]): async [(Text, Common.Module)] {
-  //   onlyOwner(caller);
-  //   let buf = Buffer.Buffer<(Text, Common.Module)>(Array.size(modules));
-  //   for (m in modules.vals()) {
-  //     buf.add(m.0, await* uploadModule(m.1));
-  //   };
-  //   Buffer.toArray(buf);
-  // };
-
-  // TODO: Remove?
-  // TODO: two shared calls here
-  // public shared({caller}) func uploadRealPackageInfo(info: Common.RealPackageInfoUpload): async Common.RealPackageInfo {
-  //   onlyOwner(caller);
-  //   {
-  //     modules = await uploadModules(info.modules);
-  //     extraModules = await uploadModules(info.extraModules);
-  //     dependencies = info.dependencies;
-  //     functions = info.functions;
-  //     permissions = info.permissions;
-  //   };
-  // };
     system func preupgrade() {
         _ownersSave := Iter.toArray(owners.entries());
         _packageCreatorsSave := Iter.toArray(packageCreators.entries());

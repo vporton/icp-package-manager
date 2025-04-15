@@ -61,31 +61,6 @@ actor MockCyclesLedger {
 
     // Mock implementation follows
 
-    // type canister_id = Principal;
-
-    // type canister_settings = {
-    //     freezing_threshold : ?Nat;
-    //     controllers : ?[Principal];
-    //     memory_allocation : ?Nat;
-    //     compute_allocation : ?Nat;
-    // };
-
-    // // TODO: `args.amount`
-    // public shared func create_canister(args: CreateCanisterArgs): async ({ #Ok : CreateCanisterSuccess; #Err : CreateCanisterError }) {
-    //     let amount = Cycles.available();
-    //     ignore Cycles.accept<system>(amount);
-    //     let sub = do ? { args.creation_args!.settings! };
-    //     Cycles.add<system>(amount);
-    //     let { canister_id } = await IC.ic.create_canister({
-    //         settings = sub;
-    //         sender_canister_version = null; // TODO
-    //     });
-    //     #Ok {
-    //         block_id = 0;
-    //         canister_id;
-    //     };
-    // };
-
     type Subaccount = Blob;
 
     type Account = {

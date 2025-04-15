@@ -86,7 +86,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
         // Prevent page reload on timeout, not to lose form data:
         disableIdle: false,
         disableDefaultIdleCallback: true,
-        // onIdle: () => logout(), // TODO: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
+        // onIdle: () => logout(), // TODO@P3: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
         // idleTimeout: 1000, // 1 sec
       }}).then(async (client) => {
       updateClient(client);

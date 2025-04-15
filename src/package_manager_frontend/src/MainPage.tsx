@@ -14,11 +14,11 @@ import { myUseNavigate } from "./MyNavigate";
 import { Repository } from "../../declarations/repository/repository.did";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
-    const [name, setName] = useState("(Unnamed)"); // TODO: button to rename it
-    const [principal, setPrincipal] = useState(""); // TODO: validate
+    const [name, setName] = useState("(Unnamed)"); // TODO@P3: button to rename it
+    const [principal, setPrincipal] = useState(""); // TODO@P3: validate
     const glob = useContext(GlobalContext);
     const handleSave = async () => {
-        // TODO: Don't allow to add the same repo twice.
+        // TODO@P3: Don't allow to add the same repo twice.
         props.handleClose();
         await glob.packageManager!.addRepository(Principal.fromText(principal), name);
         props.handleReload();
@@ -97,7 +97,7 @@ export default function MainPage() {
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        if (glob.packageManager === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isAuthenticated) { // TODO@P3: It seems to work but is a hack
             setDistros(undefined);
             return;
         }

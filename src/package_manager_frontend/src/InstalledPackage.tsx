@@ -22,9 +22,9 @@ export default function InstalledPackage(props: {}) {
     const [showUninstallConfirmation, setShowUninstallConfirmation] = useState(false);
     const [uninstallConfirmationMessage, setUninstallConfirmationMessage] = useState("");
     const glob = useContext(GlobalContext);
-    // TODO: When logged out, show instead that logged out.
+    // TODO@P3: When logged out, show instead that logged out.
     useEffect(() => {
-        if (glob.packageManager === undefined) { // TODO: `agent` is unused.
+        if (glob.packageManager === undefined) {
             return;
         }
         glob.packageManager.getInstalledPackage(BigInt(installationId!)).then(pkg => {
@@ -33,7 +33,7 @@ export default function InstalledPackage(props: {}) {
         });
     }, [glob.packageManager]);
     useEffect(() => {
-        // TODO: It seems to work but is a hack:
+        // TODO@P3: It seems to work but is a hack:
         if (glob.packageManager === undefined || !isAuthenticated || pkg === undefined) {
             return;
         }
@@ -60,7 +60,7 @@ export default function InstalledPackage(props: {}) {
         }
     }, [glob.packageManager, glob.backend, pkg]);
 
-    // TODO: Ask for confirmation.
+    // TODO@P2: Ask for confirmation.
     function uninstall() {
         setUninstallConfirmationMessage("");
         setShowUninstallConfirmation(true);
@@ -103,7 +103,7 @@ export default function InstalledPackage(props: {}) {
                 <p><strong>Package version:</strong> {pkg.package.base.version}</p>
                 <p><strong>Short description:</strong> {pkg.package.base.shortDescription}</p>
                 <p><strong>Long description:</strong> {pkg.package.base.longDescription}</p>
-                <Accordion defaultActiveKey={undefined}> {/* TODO: https://stackoverflow.com/q/79367323/856090 */}
+                <Accordion defaultActiveKey={undefined}> {/* TODO@P3: https://stackoverflow.com/q/79367323/856090 */}
                     <Accordion.Item eventKey="dangerZone" className="danger ">
                         <Accordion.Header
                             onClick={() => setShowDanger(!showDanger)}                           

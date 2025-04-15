@@ -27,12 +27,12 @@ function InstalledPackageLine(props: {
     guid: Uint8Array,
     allInstalled: Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[], default: bigint}
 >}) {
-    const packages0 = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString())!; // TODO: Instead, make it an argument in `props`.
-    if (packages0 === undefined) { // TODO: needed?
+    const packages0 = props.allInstalled.get(myAmendedGUID(props.guid, props.packageName).toString())!; // TODO@P3: Instead, make it an argument in `props`.
+    if (packages0 === undefined) { // TODO@P3: needed?
         return ""; // hack
     }
     const versionsSet = new Set(packages0.all.map(p => p.package.base.version));
-    const versions = Array.from(versionsSet); // TODO: Sort appropriately.
+    const versions = Array.from(versionsSet); // TODO@P3: Sort appropriately.
     const byVersion = new Map<string, SharedInstalledPackageInfo[]>();
     for (const v of versions) {
         byVersion.set(v, packages0.all.filter(p => p.package.base.version === v));
@@ -44,7 +44,7 @@ function InstalledPackageLine(props: {
     return (
         <li>
             <span title={Guid.parse(props.guid).toString()}><code>{props.packageName}</code></span>{" "}
-            {/* TODO: Sort. */}
+            {/* TODO@P3: Sort. */}
             {Array.from(byVersion.entries()).map(([version, packages]) =>
                 <span key={version}>
                     {packages.length === 1 ?
@@ -76,19 +76,19 @@ export default function InstalledPackages(props: {}) {
     const glob = useContext(GlobalContext);
     const { isAuthenticated } = useAuth();
     useEffect(() => {
-        if (glob.packageManager === undefined || !isAuthenticated) { // TODO: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isAuthenticated) { // TODO@P3: It seems to work but is a hack
             setInstalledVersions(undefined);
             return;
         }
         glob.packageManager.getAllInstalledPackages().then(async allPackages => {
             const guids2Set = await Promise.all(new Set(allPackages.map(p => { return {guid: p[1].package.base.guid, name: p[1].package.base.name} }) as Array<{guid: Uint8Array, name: string}>));
             const guids2 = Array.from(guids2Set);
-            // guids2.sort(); // TODO: wrong order
+            // guids2.sort(); // TODO@P3: wrong order
             Promise.all(guids2.map(async guid2 => {
-                const pibn = await glob.packageManager!.getInstalledPackagesInfoByName(guid2.name, guid2.guid); // TODO: inefficient
+                const pibn = await glob.packageManager!.getInstalledPackagesInfoByName(guid2.name, guid2.guid); // TODO@P3: inefficient
                 const p: [string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}] =
                     [
-                        myAmendedGUID(guid2.guid, guid2.name).toString(), // TODO: `.toString` here is a crude hack.
+                        myAmendedGUID(guid2.guid, guid2.name).toString(), // TODO@P3: `.toString` here is a crude hack.
                         pibn,
                     ];
                 return p;

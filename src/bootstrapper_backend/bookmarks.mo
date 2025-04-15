@@ -8,7 +8,7 @@ import Time "mo:base/Time";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 
-// TODO: Allow only the user to see his bookmarks?
+// TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {
     let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
@@ -17,7 +17,8 @@ persistent actor class Bookmarks(initialOwner: Principal) {
         backend: Principal;
     };
 
-    var bootstrapper_: Principal = Principal.fromText("aaaaa-aa"); // TODO: Rewrite DFX and make it class argument instead.
+    // TODO@P2: Rename.
+    var bootstrapper_: Principal = Principal.fromText("aaaaa-aa"); // TODO@P3: Rewrite DFX and make it class argument instead.
 
     var initialized: Bool = false;
 
@@ -96,6 +97,4 @@ persistent actor class Bookmarks(initialOwner: Principal) {
             };
         };
     };
-
-    // TODO: inspect messages for max. principal length to be 29
 }

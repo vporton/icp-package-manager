@@ -1,4 +1,4 @@
-/// TODO: Methods to query for all installed packages.
+/// TODO@P3: Methods to query for all installed packages.
 import Option "mo:base/Option";
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
@@ -112,8 +112,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
-        newRepo: Principal; // TODO: Use actor type?
-        modulesInstalledByDefault: [(Text, Principal)]; // TODO: Rename.
+        newRepo: Principal; // TODO@P2: Use actor type?
+        modulesInstalledByDefault: [(Text, Principal)];
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
     };
@@ -144,9 +144,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             [
                 (packageManagerOrBootstrapper, ()),
                 (mainIndirect, ()), // temporary
-                (simpleIndirect, ()), // TODO: superfluous?
+                (simpleIndirect, ()),
                 (user, ()),
-            ].vals(), // TODO: Are all required?
+            ].vals(), // TODO@P2: Are all required?
             4,
             Principal.equal,
             Principal.hash);
@@ -162,7 +162,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         try {
             onlyOwner(caller, "init");
 
-            owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO: needed?
+            owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
             owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
 
             let ?inst = installedPackages.get(installationId) else {
@@ -177,7 +177,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         }
         catch(e) {
             Debug.print("PM init: " # Error.message(e));
-            throw e;
+            Debug.trap(Error.message(e));
         };
     };
 
@@ -213,7 +213,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             if (not initialized) {
                 Debug.trap("package_manager: not initialized");
             };
-            // TODO: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
+            // TODO@P3: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
             let _ = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
@@ -227,12 +227,12 @@ shared({caller = initialCaller}) actor class PackageManager({
                 let f: Asset.AssetCanister = actor(Principal.toText(frontend));
                 f.get({key = "/index.html"; accept_encodings = ["gzip"]});
             };
-            // TODO: https://github.com/dfinity/motoko/issues/4837
+            // TODO@P3: https://github.com/dfinity/motoko/issues/4837
             // ignore {{a0 = await a; b0 = await b/*; c0 = await c; d0 = await d*/}}; // run in parallel
         }
         catch(e) {
             Debug.print("PM isAllInitialized: " # Error.message(e));
-            throw e;
+            Debug.trap(Error.message(e));
         };
     };
 
@@ -247,7 +247,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         simple_indirect_;
     };
 
-    // TODO: too low-level?
+    // TODO@P3: too low-level?
     public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
         onlyOwner(caller, "setMainIndirect");
 
@@ -273,23 +273,23 @@ shared({caller = initialCaller}) actor class PackageManager({
         HashMap.HashMap(0, Blob.equal, Blob.hash);
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
-    // TODO: `var` or `let` here and in other places:
+    // TODO@P3: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
     stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
-    // TODO: `var` or `let` here and in other places:
+    // TODO@P3: `var` or `let` here and in other places:
     var halfUninstalledPackages: HashMap.HashMap<Common.UninstallationId, HalfUninstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
     stable var _halfUpgradedPackagesSave: [(Common.UpgradeId, SharedHalfUpgradedPackageInfo)] = [];
-    // TODO: `var` or `let` here and in other places:
+    // TODO@P3: `var` or `let` here and in other places:
     var halfUpgradedPackages: HashMap.HashMap<Common.UpgradeId, HalfUpgradedPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
-    stable var repositories: [{canister: Principal; name: Text}] = []; // TODO: a more suitable type like `HashMap` or at least `Buffer`?
+    stable var repositories: [{canister: Principal; name: Text}] = []; // TODO@P2: a more suitable type like `HashMap` or at least `Buffer`?
 
-    // TODO: Copy this code to other modules:
+    // TODO@P3: Copy this code to other modules:
     func onlyOwner(caller: Principal, msg: Text) {
         if (Option.isNull(owners.get(caller))) {
             Debug.trap(debug_show(caller) # " is not the owner: " # msg);
@@ -303,7 +303,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryRO;
         }];
         user: Principal;
-        afterInstallCallback: ?{ // TODO: Remove it from this function?
+        afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
     })
@@ -314,7 +314,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
-        await* _installModulesGroup({ // TODO: Rename this function.
+        await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
             minInstallationId;
             packages = Iter.toArray(Iter.map<
@@ -347,7 +347,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared({caller}) func uninstallPackages({
-        packages: [Common.InstallationId]; // TODO: Use `packageIds` argument name here and in other functions.
+        packages: [Common.InstallationId]; // TODO@P2: Use `packageIds` argument name here and in other functions.
         user: Principal;
     })
         : async {minUninstallationId: Common.UninstallationId}
@@ -412,13 +412,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "upgradePackages");
 
         let minUpgradeId = nextUpgradeId;
-        nextUpgradeId += Array.size(packages); // TODO: Check the case of `package.size() == 0`.
+        nextUpgradeId += Array.size(packages);
 
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
             packages;
             user;
-            arg = to_candid({}); // TODO
+            arg = to_candid({}); // TODO@P2
         });
 
         {minUpgradeId};
@@ -438,11 +438,11 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         for (newPkgNum in packages.keys()) {
             let newPkgData = packages[newPkgNum];
-            let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO: Need to unshare the entire variable?
+            let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO@P3: Need to unshare the entire variable?
             let #real newPkgReal = newPkg.specific else {
                 Debug.trap("trying to directly install a virtual package");
             };
-            // TODO: virtual packages; upgrading a real package into virtual or vice versa
+            // TODO@P3: virtual packages; upgrading a real package into virtual or vice versa
             let newPkgModules = newPkgReal.modules;
             let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
                 Debug.trap("no such package installation");
@@ -456,7 +456,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     oldPkgReal.modules.entries(),
                     func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
                 ),
-                oldPkgReal.modules.size(), // TODO: It can be smaller.
+                oldPkgReal.modules.size(), // TODO@P3: It can be smaller.
                 Text.equal,
                 Text.hash,
             );
@@ -491,7 +491,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
             };
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
-            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user); // TODO: Use named arguments.
+            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user); // TODO@P3: Use named arguments.
         };
     };
 
@@ -550,7 +550,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     ignore getSimpleIndirect().callAll([{
                         canister = cbPrincipal;
                         name = callbackName.method;
-                        data = to_candid({ // TODO
+                        data = to_candid({ // TODO@P2
                             upgradeId;
                             installationId = upgrade.installationId;
                             packageManagerOrBootstrapper = Principal.fromActor(this);
@@ -614,7 +614,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         try {
             onlyOwner(caller, "bootstrapAdditionalPackages");
 
-            ignore await this.installPackages({ // TODO: no need for shared call
+            ignore await this.installPackages({ // TODO@P3: no need for shared call
                 packages;
                 user;
                 afterInstallCallback = null;
@@ -653,7 +653,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             minInstallationId;
             packages = [{packageName; version; repo; preinstalledModules}]; // HACK
             pmPrincipal = Principal.fromActor(this);
-            // objectToInstall = #package {packageName; version}; // TODO
             user;
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
@@ -664,21 +663,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
     };
 
-    /// It can be used directly from frontend.
-    ///
-    /// `avoidRepeated` forbids to install them same named modules more than once.
-    ///
-    // public shared({caller}) func installNamedModules({
-    //     repo: Common.RepositoryRO; // TODO: Install from multiple repos.
-    //     modules: [(Text, Common.SharedModule)]; //  installArg, initArg
-    //     avoidRepeated: Bool;
-    //     user: Principal;
-    //     preinstalledModules: [(Text, Principal)];
-    // }): async {installationId: Common.InstallationId} {
-    //     onlyOwner(caller, "installNamedModule");
-    // };
-
-    // TODO
+    // TODO@P3: Remove?
     type ObjectToInstall = {
         #package : {
             packageName: Common.PackageName;
@@ -714,7 +699,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 Debug.trap("trying to directly install a virtual package");
             };
 
-            let package2 = Common.unsharePackageInfo(p.package); // TODO: why used twice below? seems to be a mis-programming.
+            let package2 = Common.unsharePackageInfo(p.package); // TODO@P3: why used twice below? seems to be a mis-programming.
             let numModules = realPackage.modules.size();
 
             let preinstalledModules = HashMap.fromIter<Text, Principal>(
@@ -722,7 +707,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
-                packageRepoCanister = Principal.fromActor(p.repo); // TODO: Make packageRepoCanister to be of actor type.
+                packageRepoCanister = Principal.fromActor(p.repo); // TODO@P2: Make packageRepoCanister to be of actor type.
                 modulesInstalledByDefault = preinstalledModules;
                 minInstallationId;
                 afterInstallCallback;
@@ -735,7 +720,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: Check that all useful code has been moved from here and delete this function.
+    // TODO@P3: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> =
@@ -749,14 +734,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                 case (#virtual _) [].vals();
             };
 
-        // TODO: `Iter.toArray` is a (small) slowdown.
+        // TODO@P3: `Iter.toArray` is a (small) slowdown.
         let bi = if (pkg.bootstrapping) {
             Iter.toArray(pkg.modulesInstalledByDefault.entries());
         } else {
             let ?pkg0 = installedPackages.get(0) else {
                 Debug.trap("package manager not installed");
             };
-            Iter.toArray(pkg0.modulesInstalledByDefault.entries()); // TODO: inefficient?
+            Iter.toArray(pkg0.modulesInstalledByDefault.entries());
         };
         let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
         var moduleNumber = 0;
@@ -776,17 +761,17 @@ shared({caller = initialCaller}) actor class PackageManager({
             getMainIndirect().installModule({
                 moduleNumber;
                 moduleName = ?name;
-                installArg = to_candid({}); // TODO: Add more arguments.
+                installArg = to_candid({}); // TODO@P2: Add more arguments.
                 installationId = p0;
                 packageManagerOrBootstrapper = backend;
                 mainIndirect = main_indirect;
                 simpleIndirect = simple_indirect;
                 preinstalledCanisterId = coreModules.get(name);
-                user; // TODO: `!`
-                wasmModule = Common.shareModule(m); // TODO: We unshared, then shared it, huh?
+                user;
+                wasmModule = Common.shareModule(m); // TODO@P3: We unshared, then shared it, huh?
                 afterInstallCallback = pkg.afterInstallCallback;
             });
-            // TODO: Do two following variables duplicate each other?
+            // TODO@P3: Do two following variables duplicate each other?
             moduleNumber += 1;
             i += 1;
         };
@@ -797,10 +782,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #real newPkgReal = pkg.package.specific else {
             Debug.trap("trying to directly install a virtual package");
         };
-        // TODO: upgrading a real package into virtual or vice versa
+        // TODO@P3: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgReal.modules;
 
-        // TODO: repeated calculation
+        // TODO@P3: repeated calculation
         let ?oldPkg = installedPackages.get(pkg.installationId) else {
             Debug.trap("no such package installation");
         };
@@ -830,10 +815,10 @@ shared({caller = initialCaller}) actor class PackageManager({
                 //     simpleIndirect;
                 //     user;
                 //     installationId;
-                //     userArg = to_candid({}); // TODO
+                //     userArg = to_candid({});
                 // });
-                installArg = to_candid({}); // TODO: Add more arguments.
-                upgradeArg = to_candid({}); // TODO: Add more arguments.
+                installArg = to_candid({}); // TODO@P2: Add more arguments.
+                upgradeArg = to_candid({}); // TODO@P2: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManagerOrBootstrapper = Principal.fromActor(this);
@@ -847,7 +832,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;
         canister: Principal;
-        moduleNumber: Nat; // TODO: Use it.
+        moduleNumber: Nat; // TODO@P2: Use it.
         moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
@@ -856,7 +841,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        // TODO: Move after `onlyOwner` call:
+        // TODO@P3: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
 
         onlyOwner(caller, "onInstallCode");
@@ -870,13 +855,13 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             case null {};
         };
-        let #real realPackage = inst.package.specific else { // TODO: fails with virtual packages
+        let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
-        // Note that we have different algorithms for zero and non-zero number of callbacks (TODO: check).
+        // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P2: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
-            // TODO: order of this code
+            // TODO@P2: order of this code
             _updateAfterInstall({installationId});
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
@@ -887,11 +872,11 @@ shared({caller = initialCaller}) actor class PackageManager({
                         ignore getSimpleIndirect().callAll([{
                             canister = cbPrincipal;
                             name = callbackName.method;
-                            data = to_candid({ // TODO
+                            data = to_candid({ // TODO@P2
                                 installationId;
                                 canister;
                                 user;
-                                packageManagerOrBootstrapper; // TODO: Remove?
+                                packageManagerOrBootstrapper; // TODO@P2: Remove?
                                 module_;
                                 moduleNumber;
                             });
@@ -907,7 +892,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         canister = afterInstallCallback.canister;
                         name = afterInstallCallback.name;
                         data = afterInstallCallback.data;
-                        error = #abort; // TODO: Here it's superfluous.
+                        error = #abort; // TODO@P3: Here it's superfluous.
                     }]);
                 };
                 case null {};
@@ -916,7 +901,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: Keep registry of ALL installed modules.
     private func _updateAfterInstall({installationId: Common.InstallationId}) {
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
@@ -953,10 +937,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     let packageInfo = await part.getPackage(installation.name, installation.version);
 
     //     let ourHalfInstalled: HalfInstalledPackageInfo = {
-    //         numberOfModulesToInstall = installation.modules.size(); // TODO: Is it a nonsense?
+    //         numberOfModulesToInstall = installation.modules.size();
     //         name = installation.name;
     //         version = installation.version;
-    //         modules = HashMap.fromIter<Text, (Principal, {#empty; #installed})>( // TODO: can be made simpler?
+    //         modules = HashMap.fromIter<Text, (Principal, {#empty; #installed})>(
     //             Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
     //                 installation.modules.entries(),
     //                 func ((x, y): (Text, Principal)): (Text, (Principal, {#empty; #installed})) = (x, (y, #installed)),
@@ -967,11 +951,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     //         );
     //         package = packageInfo;
     //         packageRepoCanister = installation.packageRepoCanister;
-    //         preinstalledModules = null; // TODO: Seems right, but check again.
+    //         preinstalledModules = null;
     //     };
     //     halfInstalledPackages.put(installationId, ourHalfInstalled);
 
-    //     // TODO:
     //     // let part: Common.RepositoryRO = actor (Principal.toText(canister));
     //     // let installation = await part.getPackage(packageName, version);
     //     let #real realPackage = packageInfo.specific else {
@@ -985,7 +968,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     });
     // };
 
-    // TODO: Uncomment.
     // private func _finishUninstallPackage({
     //     installationId: Nat;
     //     ourHalfInstalled: HalfInstalledPackageInfo;
@@ -1013,7 +995,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
     //         Debug.trap("programming error: can't get package by name");
     //     };
-    //     // TODO: The below is inefficient and silly, need to change data structure?
     //     if (Array.size(byName) == 1) {
     //         installedPackagesByName.delete(ourHalfInstalled.name);
     //     } else {
@@ -1156,7 +1137,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // Accessor method //
 
-    // TODO: needed?
+    // TODO@P3: needed?
     /// Returns all (default installed and additional) modules canisters.
     /// Internal.
     public query({caller}) func getAllCanisters(): async [({packageName: Text; guid: Blob}, [(Text, Principal)])] {
@@ -1289,18 +1270,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         ));
     };
 
-    /// TODO: very unstable API.
+    /// TODO@P3: very unstable API.
     public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
         onlyOwner(caller, "getHalfInstalledPackageModulesById");
 
         let ?res = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package");
         };
-        // TODO: May be a little bit slow.
+        // TODO@P3: May be a little bit slow.
         Iter.toArray<(Text, Principal)>(res.modulesInstalledByDefault.entries());
     };
 
-    // TODO: Rearrage functions, possible rename:
+    // TODO@P3: Rearrage functions, possible rename:
     private func _installModulesGroup({
         mainIndirect: MainIndirect.MainIndirect;
         minInstallationId: Common.InstallationId;
@@ -1356,7 +1337,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
+    // TODO@P2: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
     public composite query({caller}) func userAccountBlob(): async Blob {
         Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(caller)));
@@ -1372,10 +1353,10 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // Adjustable values //
 
-    // TODO: a way to set.
+    // TODO@P3: a way to set.
 
     /// The total cycles amount, including canister creation fee.
-    stable var newCanisterCycles = 2_000_000_000_000 * env.subnetSize / 13; // TODO
+    stable var newCanisterCycles = 2_000_000_000_000 * env.subnetSize / 13; // TODO@P2
 
     /// The total cycles amount, including canister creation fee.
     public query({caller}) func getNewCanisterCycles(): async Nat {
@@ -1389,7 +1370,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
         onlyOwner(caller, "addRepository");
 
-        repositories := Array.append(repositories, [{canister; name}]); // TODO: Use `Buffer` instead.
+        repositories := Array.append(repositories, [{canister; name}]);
     };
 
     public shared({caller}) func removeRepository(canister: Principal): async () {

@@ -7,10 +7,6 @@ import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-au
 import { AuthProvider } from './auth/use-auth-client';
 import { myUseNavigate } from "./MyNavigate";
 
-const packagesToRepair = [ // TODO
-  {installationId: 3, name: "fineedit", version: "2.3.5"}
-]
-
 function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
@@ -45,7 +41,7 @@ function App2() {
       <div>
         <Container>
           <p><AuthButton/></p>
-          <Routes> {/* TODO: Refactor into sub-components. */}
+          <Routes> {/* TODO@P3: Refactor into sub-components. */}
             <Route path="/" element={
               <>
                 <h2>Install</h2>

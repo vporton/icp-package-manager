@@ -5,9 +5,9 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 // import sha256 from 'crypto-js/sha256';
 // import * as base64 from 'base64-js';
 
-// TODO: Move this function to GlobalState
+// TODO@P3: Move this function to GlobalState
 export function getIsLocal(): boolean {
-  return /localhost/.test(document.location.hostname); // TODO: Cache the result.
+  return /localhost/.test(document.location.hostname); // TODO@P3: Cache the result.
 }
 
 export const AuthContext = createContext<{
@@ -76,7 +76,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
   }
 
   const defaultAgent = useMemo<HttpAgent>(() => {
-    const agent = new HttpAgent(); // TODO: options
+    const agent = new HttpAgent();
     if (getIsLocal()) {
       agent.fetchRootKey();
     }
@@ -91,7 +91,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
         // Prevent page reload on timeout, not to lose form data:
         disableIdle: false,
         disableDefaultIdleCallback: true,
-        // onIdle: () => logout(), // TODO: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
+        // onIdle: () => logout(), // TODO@P3: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
         // idleTimeout: 1000, // 1 sec
       }}).then(async (client) => {
       updateClient(client);

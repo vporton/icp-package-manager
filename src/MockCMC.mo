@@ -97,27 +97,6 @@ actor CMC {
   };
   public type SubnetTypesToSubnetsResponse = { data : [(Text, [Principal])] };
   public type log_visibility = { #controllers; #public_ };
-  // public type Self = ?CyclesCanisterInitPayload -> async actor {
-  //   create_canister : shared CreateCanisterArg -> async CreateCanisterResult;
-  //   get_build_metadata : shared query () -> async Text;
-  //   get_default_subnets : shared query () -> async [Principal];
-  //   get_icp_xdr_conversion_rate : shared query () -> async IcpXdrConversionRateResponse;
-  //   get_principals_authorized_to_create_canisters_to_subnets : shared query () -> async PrincipalsAuthorizedToCreateCanistersToSubnetsResponse;
-  //   get_subnet_types_to_subnets : shared query () -> async SubnetTypesToSubnetsResponse;
-  //   notify_create_canister : shared NotifyCreateCanisterArg -> async NotifyCreateCanisterResult;
-  //   notify_mint_cycles : shared NotifyMintCyclesArg -> async NotifyMintCyclesResult;
-  //   notify_top_up : shared NotifyTopUpArg -> async NotifyTopUpResult;
-  // }
-
-  // public shared func notify_create_canister(arg: NotifyCreateCanisterArg): async NotifyCreateCanisterResult {
-  //   ignore Cycles.accept<system>(10_000_000_000_000); // TODO
-  //   Cycles.add<system>(10_000_000_000_000);
-  //   let { canister_id } = await IC.ic.create_canister({
-  //       settings = arg.settings;
-  //       sender_canister_version = null; // TODO
-  //   });
-  //   #Ok canister_id;
-  // };
 
   public shared func create_canister(arg: CreateCanisterArg): async CreateCanisterResult {
     let amount = Cycles.available();
@@ -126,7 +105,7 @@ actor CMC {
     Cycles.add<system>(amount);
     let { canister_id } = await IC.ic.create_canister({
         settings = sub;
-        sender_canister_version = null; // TODO
+        sender_canister_version = null; // TODO@P3
     });
     #Ok canister_id;
   };

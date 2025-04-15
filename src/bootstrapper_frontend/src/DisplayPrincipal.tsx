@@ -10,5 +10,5 @@ export default function DisplayPrincipal(props: {value: Principal | undefined}) 
     return (
         <code>{start}&hellip;{end}</code>
     );
-    // TODO: copy to clipboard button
+    // TODO@P3: copy to clipboard button
 }

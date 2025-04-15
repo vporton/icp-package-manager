@@ -65,12 +65,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         res;
     };
 
-    // TODO: Also remove `frontendTweakerTimes` entry.
     public shared({caller}) func deleteFrontendTweaker(pubKey: PubKey): async () {
         onlyOwner(caller);
 
         frontendTweakers.delete(pubKey);
-        // TODO: Remove also from `frontendTweakerTimes`.
+        // TODO@P3: Remove also from `frontendTweakerTimes`.
     };
 
     system func preupgrade() {

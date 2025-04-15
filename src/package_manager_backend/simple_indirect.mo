@@ -12,7 +12,7 @@ import Common "../common";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManagerOrBootstrapper: Principal;
-    mainIndirect: Principal; // TODO: Rename.
+    mainIndirect: Principal; // TODO@P2: Rename.
     simpleIndirect: Principal;
     user: Principal;
     installationId: Common.InstallationId;
@@ -38,7 +38,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
             Principal.equal,
             Principal.hash);
 
-    public shared({caller}) func init({ // TODO
+    public shared({caller}) func init({ // TODO@P3
         // installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;
@@ -46,7 +46,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     }): async () {
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO: needed here?
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed here?
 
         type OurPMType = actor {
             getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
@@ -103,7 +103,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     ///
     /// If a method is missing, stop.
     ///
-    /// TODO: It would be more efficient and elegant to pass a shared method.
+    /// TODO@P2: It would be more efficient and elegant to pass a shared method.
     private func callAllImpl(methods: [{canister: Principal; name: Text; data: Blob; error: OnError}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
@@ -125,7 +125,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await* callAllImpl(methods);
     };
 
-    // TODO: Are the following methods necessary? Can't we use `callAll` with management canister?
+    // TODO@P2: Are the following methods necessary? Can't we use `callAll` with management canister?
 
     public shared({caller}) func canister_info(args: IC.CanisterInfoArgs, amount: Nat): async IC.CanisterInfoResult {
         onlyOwner(caller, "canister_info");
@@ -169,7 +169,6 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         await IC.ic.delete_canister_snapshot(args);
     };
 
-    // TODO: Is `amount` needed here?
 	public shared({caller}) func deposit_cycles(args: IC.DepositCyclesArgs, amount: Nat): async () {
         onlyOwner(caller, "deposit_cycles");
 

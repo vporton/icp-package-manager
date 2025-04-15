@@ -134,7 +134,7 @@ module {
     public type CheckInitializedCallback = {
         moduleName: Text;
         how: {
-            /// Considered initialized, when doesn't throw.
+            /// Considered initialized, when doesn't trap.
             #methodName : Text;
             /// Considered initialized, when the URL path (starting with /) exists.
             #urlPath : Text;
