@@ -105,8 +105,7 @@ function GlobalUI() {
         }
 
         const backend_str = backendPrincipal.toString();
-        const base = getIsLocal() ? `http://${glob.frontend}.localhost:4943?` : `https://${glob.frontend}.icp0.io?`;
-        let base2 = `${base}_pm_pkg0.backend=${backend_str}`;
+        let base2 = `?_pm_pkg0.backend=${backend_str}`;
         if (modulesJSON !== undefined) {
           base2 += `&modules=${encodeURIComponent(modulesJSON)}`;
         }
