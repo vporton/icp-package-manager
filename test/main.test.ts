@@ -154,6 +154,7 @@ describe('My Test Suite', () => {
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);
         }
+        // TODO@P2: Check installation IDs of bootstrapper and of regularly installed `example` package.
         const pmInstallationId = 0n; // TODO@P3
         console.log("Wait till installed PM initializes...");
         await waitTillInitialized(backendAgent, pmInst.get('backend')!, pmInstallationId);
