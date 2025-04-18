@@ -15,8 +15,6 @@ Remaining things TODO:
 
 - TODO@P3 Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
-- TODO@P2 Replace unstable HashMap (and Trie?) by stable OrderedMap.
-
 - TODO@P3 Apparently, I will use `simple_indirect` to delete a canister.
   Then `simple_indirect` receives its cycles and cycles need to be transferred to `battery`.
 
