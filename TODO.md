@@ -15,8 +15,6 @@ Remaining things TODO:
 
 - TODO@P3 Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
-- TODO@P2 Replace `stableheapbtreemap` by OrderedMap or OrderedSet from `base` library.
-
 - TODO@P2 Replace unstable HashMap (and Trie?) by stable OrderedMap.
 
 - TODO@P3 Apparently, I will use `simple_indirect` to delete a canister.
