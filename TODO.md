@@ -28,7 +28,7 @@ Remaining things TODO:
 
 - TODO@P3 It should say "Install additonal copy" of the package when installing an already installed package.
 
-- TODO@P2 Test real module with zero modules.
+- TODO@P3 Test real package with zero modules.
 
 - TODO@P3 Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
 
