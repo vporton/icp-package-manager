@@ -34,6 +34,8 @@ Remaining things TODO:
 
 - TODO@P2 future compatibility in package format.
 
+- TODO@P3 Show dependencies/suggests/recommends in app store.
+
 - TODO@P3 Ability to bootstrap backend without frontend (for AI agents and other API users).
 
 - TODO@P3 Prevent using Tab key to circumvent “busy” overlay.
