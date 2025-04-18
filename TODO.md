@@ -23,7 +23,7 @@ Remaining things TODO:
 - TODO@P3 On clicking Upgrade button, ask the user whether really wants to upgrade.
 
 - TODO@P2 Store WASM blobs together with packages, for them to be effectively deleted, when a package version is deleted.
-  Use SHA-256 to identify blobs.  
+  Use SHA-256 to identify blobs. It cannot be done, because several WASMs overflow message size.
 
 - TODO@P3 Update some packages automatically (every day).
 
