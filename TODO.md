@@ -40,8 +40,6 @@ Remaining things TODO:
 
 - TODO@P3 A button to copy repository's principal.
 
-- TODO@P2 Remove `indirectCaller` (remain only `simpleIndirect`) as controller.
-
 - TODO@P3 `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
 - TODO@P3 Resist to drain cycles attack.
