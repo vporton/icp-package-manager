@@ -52,7 +52,7 @@ module {
         Blob.fromArray(Array.subArray(Blob.toArray(h256), 0, 16)); // 128-bit hash
     };
 
-    public type Location = (canister: Principal, id: Nat);
+    public type Location = (canister: Principal, id: Blob); // `id` is a 128-bit hash of the module code.
 
     public type ModuleEvent = {
         #CodeInstalledForAllCanisters;
@@ -280,7 +280,7 @@ module {
         /// (like `("stable", ?"morpheus")`).
         getReleases: query () -> async [(Text, ?Text)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
-        getWasmModule: query (sk: Nat) -> async Blob;
+        getWasmModule: query (sk: Blob) -> async Blob;
     };
 
     public type InstalledPackageInfo = {
@@ -400,7 +400,7 @@ module {
             );
         };
 
-    public func extractModuleLocation(code: ModuleCode): (Principal, Nat) =
+    public func extractModuleLocation(code: ModuleCode): (Principal, Blob) =
         switch (code) {
             case (#Wasm wasmModuleLocation) {
                 wasmModuleLocation;

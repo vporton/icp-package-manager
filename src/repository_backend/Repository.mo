@@ -8,6 +8,7 @@ import Option "mo:base/Option";
 import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
+import Sha256 "mo:sha2/Sha256";
 import env "mo:env";
 import Common "../common";
 
@@ -16,8 +17,6 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
   stable var _packageCreatorsSave: [(Principal, ())] = [];
   var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
-
-  var nextWasmId = 0;
 
   stable var initialized: Bool = false;
 
@@ -136,16 +135,16 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     releases := value;
   };
 
-  private func _uploadWasm(wasm: Blob): async* {id: Nat} {
-    let id = nextWasmId;
-    nextWasmId += 1;
+  private func _uploadWasm(wasm: Blob): async* {id: Blob} {
+    let id0 = Sha256.fromBlob(#sha256, wasm);
+    let id = Blob.fromArray(Array.subArray(Blob.toArray(id0), 0, 16));
 
     wasms.put(id, wasm);
 
     {id};
   };
 
-  public shared({caller}) func uploadWasm(wasm: Blob): async {id: Nat} {
+  public shared({caller}) func uploadWasm(wasm: Blob): async {id: Blob} {
     onlyOwner(caller);
   
     await* _uploadWasm(wasm);
@@ -193,10 +192,9 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   /// Data ///
 
-  // TODO@P2: Use hashes instead of numbers, for balanced tree and duplicate elimination.
-  let wasms = TrieMap.TrieMap<Nat, Blob>(Nat.equal, Common.intHash);
+  let wasms = TrieMap.TrieMap<Blob, Blob>(Blob.equal, Blob.hash);
 
-  public query func getWasmModule(key: Nat): async Blob { 
+  public query func getWasmModule(key: Blob): async Blob { 
     let ?v = wasms.get(key) else {
       Debug.trap("no such module");
     };

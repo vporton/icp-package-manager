@@ -22,8 +22,6 @@ Remaining things TODO:
 
 - TODO@P3 On clicking Upgrade button, ask the user whether really wants to upgrade.
 
-- TODO@P2 Use SHA-256 to identify blobs?
-
 - TODO@P3 Update some packages automatically (every day).
 
 - TODO@P3 Can we install additional packages not waiting till full bootstrapping of the PM?
