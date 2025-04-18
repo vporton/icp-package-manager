@@ -42,7 +42,7 @@ Remaining things TODO:
 
 - TODO@P2 Remove `indirectCaller` (remain only `simpleIndirect`) as controller.
 
-- TODO@P2 Should we use 32-bytes hash as the ID of WASM value instead of number?
+- TODO@P2 Should we use 16-bytes hash as the ID of WASM value instead of number?
 
 - TODO@P3 `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
