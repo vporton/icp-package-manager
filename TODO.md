@@ -81,7 +81,7 @@ Remaining things TODO:
 
 - TODO@P2 Store in installed package info also its `Repository`?
 
-- TODO@P2 Package manager (and probably some other packages) should be non-removable.
+- TODO@P3 Package manager (and probably some other packages) should be non-removable.
 
 - TODO@P3 `!` in TypeScript.
 
