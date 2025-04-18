@@ -11,7 +11,7 @@ import CyclesLedger "canister:cycles_ledger";
 
 // TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {
-    let revenueRecipient = Principal.fromText(env.revenueRecipient);
+    transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     public type Bookmark = {
         frontend: Principal;
