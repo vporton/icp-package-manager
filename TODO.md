@@ -44,7 +44,7 @@ Remaining things TODO:
 
 - TODO@P3 Resist to drain cycles attack.
 
-- TODO@P2 Disallow packages of zero modules.
+- TODO@P3 Disallow packages of zero modules.
 
 - TODO@P3 Backing/restoring state of packages.
 
