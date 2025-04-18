@@ -11,7 +11,7 @@ Remaining things TODO:
 
 - TODO@P3 Battery canister should not supply cycles to itself.
 
-- TODO@P2 The payment popup may not fit browser window. The menu is broken on mobile.
+- TODO@P3 The payment popup may not fit browser window. The menu is broken on mobile.
 
 - TODO@P3 Withdraw cycles. When withdrawing cycles, update `battery.activatedCycles`.
 
