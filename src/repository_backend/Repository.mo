@@ -9,7 +9,6 @@ import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
 import Sha256 "mo:sha2/Sha256";
-import env "mo:env";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
@@ -21,7 +20,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   stable var initialized: Bool = false;
 
   private func onlyOwner(caller: Principal) {
-    if (Option.isNull(owners.get(caller)) and not env.debugRepository) {
+    if (Option.isNull(owners.get(caller))) {
       Debug.trap("not an owner");
     }
   };
@@ -145,13 +144,13 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   };
 
   public shared({caller}) func uploadWasm(wasm: Blob): async {id: Blob} {
-    onlyOwner(caller);
+    onlyPackageCreator(caller);
   
     await* _uploadWasm(wasm);
   };
 
   public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.SharedModule {
-    onlyOwner(caller);
+    onlyPackageCreator(caller);
 
     {
       callbacks = module_.callbacks;
