@@ -27,10 +27,11 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 	generate@example_frontend generate@package_manager_frontend deploy-backend
 
 .PHONY: deploy-backend
-deploy-backend: deploy@repository generate@battery \
+deploy-backend: deploy@repository deploy@bookmark generate@battery \
   deploy@internet_identity init
 
 .PHONY: init
+init:
 	-dfx ledger fabricate-cycles --t 2000000 --canister repository
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
@@ -41,7 +42,7 @@ deploy-test: deploy \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
 
-deploy-self@bookmark: deploy@bootstrapper
+deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
 	  --argument "principal \"$(USER)\"" \
 	  bookmark

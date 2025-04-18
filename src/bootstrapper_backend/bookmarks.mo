@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
-import BTree "mo:stableheapbtreemap/BTree";
+import Map "mo:base/OrderedMap";
+import Set "mo:base/OrderedSet";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
@@ -45,20 +46,23 @@ persistent actor class Bookmarks(initialOwner: Principal) {
     //     Principal.hash(a.frontend) ^ Principal.hash(a.backend);
     // };
 
-    /// user -> [Bookmark]
-    stable let userToBookmark = BTree.init<Principal, [Bookmark]>(null);
+    transient let principalMap = Map.Make<Principal>(Principal.compare);
+    transient let bookmarkSet = Set.Make<Bookmark>(bookmarksCompare);
 
-    stable let bookmarks = BTree.init<Bookmark, ()>(null);
+    /// user -> [Bookmark]
+    stable var userToBookmark = principalMap.empty<[Bookmark]>();
+
+    stable var bookmarks = bookmarkSet.empty();
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
-        switch (BTree.get(userToBookmark, Principal.compare, caller)) {
+        switch (principalMap.get(userToBookmark, caller)) {
             case (?a) a;
             case null [];
         };
     };
 
     public query func hasBookmark(b: Bookmark): async Bool {
-        BTree.has(bookmarks, bookmarksCompare, b);
+        bookmarkSet.contains(bookmarks, b);
     };
 
     /// Returns whether bookmark already existed.
@@ -83,18 +87,17 @@ persistent actor class Bookmarks(initialOwner: Principal) {
             };
             case (#Ok _) {};
         };
-        switch (BTree.get(bookmarks, bookmarksCompare, b)) {
-            case (?_) true;
-            case null {
-                ignore BTree.insert(bookmarks, bookmarksCompare, b, ());
-                let a = BTree.get(userToBookmark, Principal.compare, user);
-                let a2 = switch (a) {
-                    case (?a) Array.append(a, [b]);
-                    case null [b];
-                };
-                ignore BTree.insert(userToBookmark, Principal.compare, user, a2);
-                false;
+        if (bookmarkSet.contains(bookmarks, b)) {
+            true;
+        } else {
+            bookmarks := bookmarkSet.put(bookmarks, b);
+            let a = principalMap.get(userToBookmark, user);
+            let a2 = switch (a) {
+                case (?a) Array.append(a, [b]);
+                case null [b];
             };
+            userToBookmark := principalMap.put(userToBookmark, user, a2);
+            false;
         };
     };
 }
