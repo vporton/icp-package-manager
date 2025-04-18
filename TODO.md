@@ -56,8 +56,6 @@ Remaining things TODO:
 
 - TODO@P2 `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
 
-- TODO@P2 Show the hash of installed package and refuse installation/upgrade, when doesn't match.
-
 - TODO@P3 Keep a log of **finished** operations. Especially useful to check whether upgrade completed.
 
 - TODO@P3 When logged out while showing installing packages, should message that cannot show.
