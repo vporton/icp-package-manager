@@ -1,7 +1,5 @@
 Remaining things TODO:
 
-- TODO@P2: `example` is installed by the bootstrapper under ID 2 instead of 1.
-
 - TODO@P3 Use choosen "Default version" on the mainpage.
 
 - TODO@P3 When running two upgrade operations of the same package in nearly the same time,

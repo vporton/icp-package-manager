@@ -312,7 +312,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "installPackages");
 
         let minInstallationId = nextInstallationId;
+        Debug.print("installPackages: " # debug_show(minInstallationId));
         nextInstallationId += packages.size();
+        Debug.print("installPackages2: " # debug_show(nextInstallationId));
 
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
@@ -645,7 +647,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "installPackageWithPreinstalledModules");
 
         let minInstallationId = nextInstallationId;
-        nextInstallationId += additionalPackages.size() + 1; // + 1 package manager
+        Debug.print("installPackageWithPreinstalledModules: " # debug_show(minInstallationId));
+        nextInstallationId += /*additionalPackages.size() +*/ 1; // TODO@P3: Account additionalPackages.size() here?
+        Debug.print("installPackageWithPreinstalledModules2: " # debug_show(nextInstallationId));
 
         // We first fully install the package manager, and only then other packages.
         await* _installModulesGroup({
