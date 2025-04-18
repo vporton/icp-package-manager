@@ -18,19 +18,18 @@ persistent actor class Bookmarks(initialOwner: Principal) {
         backend: Principal;
     };
 
-    // TODO@P2: Rename.
-    var bootstrapper_: Principal = Principal.fromText("aaaaa-aa"); // TODO@P3: Rewrite DFX and make it class argument instead.
+    var bootstrapper: Principal = Principal.fromText("aaaaa-aa"); // TODO@P3: Rewrite DFX and make it class argument instead.
 
     var initialized: Bool = false;
 
-    public shared({caller}) func init({bootstrapper: Principal}): async () {
+    public shared({caller}) func init(args: {bootstrapper: Principal}): async () {
         if (caller != initialOwner) {
             Debug.trap("bookmarks: not the initiaizer");
         };
         if (initialized) {
             Debug.trap("bookmarks: already initialized");
         };
-        bootstrapper_ := bootstrapper;
+        bootstrapper := args.bootstrapper;
         initialized := true;
     };
 
@@ -67,7 +66,7 @@ persistent actor class Bookmarks(initialOwner: Principal) {
 
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark({b: Bookmark; battery: Principal; user: Principal}): async Bool {
-        if (caller != bootstrapper_) {
+        if (caller != bootstrapper) {
             Debug.trap("bookmarks: not the owner");
         };
 
