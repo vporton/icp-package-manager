@@ -79,8 +79,6 @@ Remaining things TODO:
 
 - TODO@P3 Events (similar to permissions?)
 
-- TODO@P2 Store in installed package info also its `Repository`?
-
 - TODO@P3 Package manager (and probably some other packages) should be non-removable.
 
 - TODO@P3 `!` in TypeScript.
