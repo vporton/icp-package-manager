@@ -32,8 +32,6 @@ Remaining things TODO:
 
 - TODO@P3 Events WG: https://forum.dfinity.org/t/technical-working-group-inter-canister-event-utility-working-group/29048/41
 
-- TODO@P2 future compatibility in package format.
-
 - TODO@P3 Show dependencies/suggests/recommends in app store.
 
 - TODO@P3 Ability to bootstrap backend without frontend (for AI agents and other API users).
