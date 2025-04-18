@@ -71,8 +71,6 @@ Remaining things TODO:
 
 - TODO@P3 A special DAO.
 
-- TODO@P2 Every package should have owner(s) to specify who is able to change it.
-
 - TODO@P3 Package's and/or user's option to stop all canisters of a package before upgrading.
 
 - TODO@P3 "Add distro" at distro's site.
