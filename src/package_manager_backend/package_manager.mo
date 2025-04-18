@@ -259,11 +259,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var nextUpgradeId: Common.UpgradeId = 0;
 
     stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
-    /// TODO@P2: Use `OrderedMap` instead.
     var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
         HashMap.HashMap(0, Nat.equal, Common.intHash);
 
-    /// TODO@P2: Use `OrderedMap` instead.
     stable var _installedPackagesByNameSave: [(Blob, {
         all: RBTree.Tree<Common.InstallationId, ()>;
         default: Common.InstallationId;
@@ -276,7 +274,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
     // TODO@P3: `var` or `let` here and in other places:
-    /// TODO@P2: Use `OrderedMap` instead.
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
