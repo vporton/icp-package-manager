@@ -93,7 +93,7 @@ Remaining things TODO:
 
 - TODO@P3 `!` in TypeScript.
 
-- TODO@P2 Option to re-use a canister for another package (should require non-safe confirmation from both
+- TODO@P3 Option to re-use a canister for another package (should require non-safe confirmation from both
   user and package).
 
 - TODO@P3 Statistics of use.
