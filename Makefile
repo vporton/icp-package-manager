@@ -23,8 +23,14 @@ deps:
 INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"
 
 .PHONY: deploy
-deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy@example_frontend deploy@repository generate@battery \
-  deploy@internet_identity generate@example_frontend generate@package_manager_frontend
+deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy@example_frontend \
+	generate@example_frontend generate@package_manager_frontend deploy-backend
+
+.PHONY: deploy-backend
+deploy-backend: deploy@repository generate@battery \
+  deploy@internet_identity init
+
+.PHONY: init
 	-dfx ledger fabricate-cycles --t 2000000 --canister repository
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
