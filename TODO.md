@@ -50,8 +50,6 @@ Remaining things TODO:
 
 - TODO@P3 Paid soft.
 
-- TODO@P2 Reconcile different naming schemes: `main_indirect` but `Repository`.
-
 - TODO@P3 When user adds a new repository canister, check that it is an index canister.
 
 - TODO@P3 Prevent browser window to close during bootstrap.
