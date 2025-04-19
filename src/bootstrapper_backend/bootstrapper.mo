@@ -30,43 +30,9 @@ actor class Bootstrapper() = this {
     /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
     var totalBootstrapCost = 10_000_000_000_000; // TODO@P2: Make it stable.
 
-    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
-    public shared({caller = user}) func bootstrapFrontend({
-        frontendTweakPubKey: PubKey;
-    }): async {installedModules: [(Text, Principal)]} {
-        let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
-        });
-
-        // Move user's fund into current use:
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(this); subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(Principal.toBlob(user));
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
-        // Pay to the vendor (TODO@P2: Ensure no double fee later.)
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(Principal.toBlob(user));
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare));
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
-
+    private func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal)
+        : async* {installedModules: [(Text, Principal)]}
+    {
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -161,6 +127,48 @@ actor class Bootstrapper() = this {
         Cycles.add<system>(Cycles.refunded());
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
 
+        {installedModules = Iter.toArray(installedModules.entries())};
+    };
+
+    /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
+    public shared({caller = user}) func bootstrapFrontend({
+        frontendTweakPubKey: PubKey;
+    }): async {installedModules: [(Text, Principal)]} {
+        let amountToMove = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
+        });
+
+        // Move user's fund into current use:
+        switch(await CyclesLedger.icrc1_transfer({
+            to = {owner = Principal.fromActor(this); subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Principal.toBlob(user));
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+        // Pay to the vendor (TODO@P2: Ensure no double fee later.)
+        switch(await CyclesLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Principal.toBlob(user));
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare));
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+
+        let installedModules = await* doBootstrapFrontend(frontendTweakPubKey, user);
+    
         // Return user's fund from current use:
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
@@ -176,7 +184,7 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        {installedModules = Iter.toArray(installedModules.entries())};
+        installedModules;
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
