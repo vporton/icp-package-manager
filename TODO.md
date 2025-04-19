@@ -54,7 +54,7 @@ Remaining things TODO:
 
 - TODO@P3 Prevent browser window to close during bootstrap.
 
-- TODO@P2 `Cycles.add<system>(...)` & `ignore Cycles.accept<system>(...)` - consider each case individually. Also spread cycles.
+- TODO@P2 `Cycles.add<system>(...)` - consider each case individually. Also spread cycles.
 
 - TODO@P3 Keep a log of **finished** operations. Especially useful to check whether upgrade completed.
 
