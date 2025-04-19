@@ -23,6 +23,8 @@ import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
 
 actor class Bootstrapper() = this {
+    transient let icp_transfer_fee = 10_000;
+
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
@@ -146,21 +148,20 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*icp_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
             };
             case (#Ok _) {};
         };
-        // Pay to the vendor (TODO@P2: Ensure no double fee later.)
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare));
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*icp_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -176,7 +177,7 @@ actor class Bootstrapper() = this {
                 memo = null;
                 from_subaccount = null;
                 created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Cycles.refunded();
+                amount = Cycles.refunded() - 3*icp_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -222,7 +223,7 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(Principal.toBlob(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = amountToMove;
+            amount = amountToMove - 2*icp_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -245,7 +246,7 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = null;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = totalBootstrapCost;
+            amount = totalBootstrapCost - icp_transfer_fee;
         });
     };
 
