@@ -192,7 +192,7 @@ actor class Bootstrapper() = this {
             await* finish();
             Debug.trap(Error.message(e));
         };
-        await* finish();
+        await* finish(); // TODO@P2: Instead, place funds on the user's battery.
 
         {installedModules};
     };
