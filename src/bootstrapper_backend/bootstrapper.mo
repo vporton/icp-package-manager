@@ -15,6 +15,7 @@ import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
 import Float "mo:base/Float";
+import Error "mo:base/Error";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -167,24 +168,33 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        let installedModules = await* doBootstrapFrontend(frontendTweakPubKey, user);
-    
-        // Return user's fund from current use:
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Cycles.refunded();
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
+        func finish(): async* () {
+            // Return user's fund from current use:
+            switch(await CyclesLedger.icrc1_transfer({
+                to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
+                fee = null;
+                memo = null;
+                from_subaccount = null;
+                created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+                amount = Cycles.refunded();
+            })) {
+                case (#Err e) {
+                    Debug.trap("transfer failed: " # debug_show(e));
+                };
+                case (#Ok _) {};
             };
-            case (#Ok _) {};
         };
 
-        installedModules;
+        let {installedModules} = try {
+            await* doBootstrapFrontend(frontendTweakPubKey, user);
+        }
+        catch (e) {
+            await* finish();
+            Debug.trap(Error.message(e));
+        };
+        await* finish();
+
+        {installedModules};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
