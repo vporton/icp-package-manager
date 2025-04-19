@@ -55,7 +55,7 @@ actor class Bootstrapper() = this {
         //     );
         // });
 
-        // Cycles.add<system>(Cycles.refunded());
+        // Cycles.add<system>(Cycles.balance());
         // await* Install.myInstallCode({
         //     installationId = 0;
         //     upgradeId = null;
@@ -71,7 +71,7 @@ actor class Bootstrapper() = this {
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
-            Cycles.add<system>(Cycles.refunded());
+            // Cycles.add<system>(Cycles.balance() - 500_000_000_000);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 cyclesAmount = newCanisterCycles;
@@ -116,7 +116,7 @@ actor class Bootstrapper() = this {
             user;
         });
 
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
             // user;
@@ -127,7 +127,7 @@ actor class Bootstrapper() = this {
         //          Need to ensure that the link is paid for (prevent DoS attacks).
         //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
 
         {installedModules = Iter.toArray(installedModules.entries())};
@@ -294,7 +294,7 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
-            Cycles.add<system>(Cycles.refunded());
+            Cycles.add<system>(Cycles.balance() - 500_000_000_000);
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
@@ -325,7 +325,7 @@ actor class Bootstrapper() = this {
 
         for (canister_id in installedModules2.vals()) { // including frontend
             // TODO@P3: We can provide these setting initially and thus update just one canister.
-            Cycles.add<system>(Cycles.refunded());
+            Cycles.add<system>(Cycles.balance() - 500_000_000_000);
             await ic.update_settings({
                 canister_id;
                 sender_canister_version = null;
@@ -358,7 +358,7 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         ignore await backendActor.installPackageWithPreinstalledModules({
           packageName = "icpack";
           version = "stable";
@@ -385,28 +385,28 @@ actor class Bootstrapper() = this {
     ): async* () {
         let pubKey = Sha256.fromBlob(#sha256, privKey);
 
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
         let assets: Asset.AssetCanister = actor(Principal.toText(tweaker.frontend));
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         let owners = await assets.list_authorized();
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             for (owner in owners.vals()) {
-                Cycles.add<system>(Cycles.refunded());
+                Cycles.add<system>(Cycles.balance() - 500_000_000_000);
                 await assets.revoke_permission({
                     of_principal = owner; // TODO@P3: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
                 });
             };
             for (principal in Iter.concat(controllers.vals(), [user].vals())) {
-                Cycles.add<system>(Cycles.refunded());
+                Cycles.add<system>(Cycles.balance() - 500_000_000_000);
                 await assets.authorize(principal); // TODO@P3: needed?
                 await assets.grant_permission({to_principal = principal; permission});
             };
         };
 
-        Cycles.add<system>(Cycles.refunded());
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.deleteFrontendTweaker(pubKey);
     };
 }
