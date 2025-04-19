@@ -189,10 +189,10 @@ actor class Bootstrapper() = this {
             await* doBootstrapFrontend(frontendTweakPubKey, user);
         }
         catch (e) {
-            await* finish();
+            await* finish(); // After frontend install, we return the money, to continue with backend install.
             Debug.trap(Error.message(e));
         };
-        await* finish(); // TODO@P2: Instead, place funds on the user's battery.
+        await* finish();
 
         {installedModules};
     };
@@ -230,6 +230,36 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
+        // We can't `try` on this, because if it fails, we don't know the battery:
+        let {battery} = await* doBootstrapBackend({
+            frontendTweakPrivKey;
+            installedModules;
+            user;
+            additionalPackages;
+            amountToMove;
+        });
+
+        ignore await CyclesLedger.icrc1_transfer({
+            to = {owner = battery; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = totalBootstrapCost;
+        });
+    };
+
+    private func doBootstrapBackend({
+        frontendTweakPrivKey: PrivKey;
+        installedModules: [(Text, Principal)];
+        user: Principal; // to address security vulnerabulities, used only to add as a controller.
+        additionalPackages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+        }];
+        amountToMove: Nat;
+    }): async* {battery: Principal} {
         Cycles.add<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
@@ -338,32 +368,8 @@ actor class Bootstrapper() = this {
           additionalPackages;
         });
 
-        // TODO@P3: `ignore` here?
-        ignore await CyclesLedger.icrc1_transfer({
-            to = {owner = battery; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = totalBootstrapCost;
-        });
-
-        // We don't do transfer to the user here, because in `bootstrapBackendImpl` we already tranferred to the battery.
+        {battery};
     };
-
-    // private func bootstrapBackendImpl({
-    //     modulesToInstall: [(Text, Common.SharedModule)];
-    //     user: Principal;
-    //     packageManagerOrBootstrapper: Principal;
-    //     frontendTweakPrivKey: PrivKey;
-    //     installedModules: [(Text, Principal)];
-    //     additionalPackages: [{
-    //         packageName: Common.PackageName;
-    //         version: Common.Version;
-    //         repo: Common.RepositoryRO;
-    //     }];
-    // }): async* () {
-    // };
 
     public type PubKey = Blob;
     public type PrivKey = Blob;
