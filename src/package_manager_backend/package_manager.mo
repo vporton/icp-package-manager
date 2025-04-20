@@ -328,7 +328,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     packageName: Common.PackageName;
                     version: Common.Version;
                     preinstalledModules: [(Text, Principal)];
-                }
+                },
             >(packages.vals(), func (p: {
                 repo: Common.RepositoryRO;
                 packageName: Common.PackageName;
