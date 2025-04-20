@@ -49,18 +49,18 @@ deploy-self@cycles_ledger:
 		symbol = \"ICP\"; \
 		decimals = 6; \
 		fee = 10_000; \
-		max_supply = 1_000_000_000_000_000; \
+		max_supply = 1_000_000_000_000_000_000; \
 		initial_balances = vec { \
 			record { \
 				record { \
 					owner = principal \"$(USER)\"; \
 					subaccount = null; \
 				}; \
-				100_000_000_000_000 \
+				1_000_000_000_000_000_000 \
 			} \
 		}; \
 		min_burn_amount = 10_000; \
-		minting_account = null; \
+		minting_account = opt record { owner = principal \"$(USER)\"; subaccount = null }; \
 		advanced_settings = null; \
 	  })" \
 	  cycles_ledger

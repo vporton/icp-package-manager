@@ -1,4 +1,4 @@
-import { Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
 import { AuthProvider, useAuth } from './auth/use-auth-client';
@@ -72,6 +72,18 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
     : undefined;
 }
 
+function principalToSubAccount(principal: Principal): Uint8Array {
+  const bytes = new Uint8Array(32).fill(0);
+  const principalBytes = principal.toUint8Array();
+  bytes[0] = principalBytes.length;
+  
+  for (let i = 0; i < principalBytes.length; i++) {
+    bytes[1 + i] = principalBytes[i];
+  }
+  
+  return bytes;
+}
+
 function App2() {
   const {isAuthenticated, principal} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
@@ -84,7 +96,7 @@ function App2() {
     }
     cycles_ledger.icrc1_balance_of({
       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-      subaccount: [principal.toUint8Array()],
+      subaccount: [principalToSubAccount(principal!)],
     }).then((amount: bigint) => {
       setCyclesAmount(parseInt(amount.toString()))
     });
@@ -95,6 +107,24 @@ function App2() {
       setCyclesPaymentAddress(b as Uint8Array);
     });
   }, [principal]);
+  function mint() {
+    cycles_ledger.mint({
+      to: {
+        owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+        subaccount: [principalToSubAccount(principal!)],  
+      },
+      amount: BigInt(100*10**12),
+      memo: [],
+      created_at_time: [],
+    }).then(res => {
+      console.log("Minted: ", res);
+      if ((res as any).Err) {
+        alert("Minting error!"); // TODO@P3
+      } else {
+        updateCyclesAmount();
+      }
+    });
+  }
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
@@ -109,18 +139,21 @@ function App2() {
               <AuthButton/>
             </Nav>
             <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
-                <Dropdown>
-                  <Dropdown.Toggle>
-                    Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item as="div">
-                      <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-                <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
-              </Nav>
+              <Dropdown>
+                <Dropdown.Toggle>
+                  Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item as="div">
+                    <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+              <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
+            </Nav>
+            <Nav style={{display: isAuthenticated && getIsLocal() ? undefined : 'none'}}>
+              <Button onClick={mint}>Mint</Button>
+            </Nav>
           </Navbar>
         </nav>
         <BrowserRouter>

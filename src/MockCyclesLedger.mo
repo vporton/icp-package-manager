@@ -4,6 +4,7 @@
 import Principal "mo:base/Principal";
 // import IC "mo:ic";
 import ICRC1 "mo:icrc1/ICRC1";
+import T "mo:icrc1/ICRC1/Types";
 import Option "mo:base/Option";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 import Array "mo:base/Array";
@@ -118,8 +119,15 @@ shared({ caller = _owner }) actor class MockCyclesLedger(
         await* ICRC1.transfer(token, args, caller);
     };
 
-    public shared ({ caller }) func mint(args : ICRC1.Mint) : async ICRC1.TransferResult {
-        await* ICRC1.mint(token, args, caller);
+    /// In our mock object, anyone can mint.
+    public shared func mint(args : ICRC1.Mint) : async ICRC1.TransferResult {
+        // await* ICRC1.mint(token, args, caller);
+        let transfer_args : T.TransferArgs = {
+            args with from_subaccount = token.minting_account.subaccount;
+            fee = null;
+        };
+
+        await* ICRC1.transfer(token, transfer_args, token.minting_account.owner);
     };
 
     public shared ({ caller }) func burn(args : ICRC1.BurnArgs) : async ICRC1.TransferResult {

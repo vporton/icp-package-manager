@@ -17,6 +17,9 @@ import Time "mo:base/Time";
 import Float "mo:base/Float";
 import Error "mo:base/Error";
 import Nat "mo:base/Nat";
+import Buffer "mo:base/Buffer";
+import Blob "mo:base/Blob";
+import Nat8 "mo:base/Nat8";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -30,6 +33,19 @@ actor class Bootstrapper() = this {
     /*stable*/ var newCanisterCycles = 20_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
+
+    private func principalToSubaccount(principal : Principal) : Blob {
+        var sub = Buffer.Buffer<Nat8>(32);
+        let subaccount_blob = Principal.toBlob(principal);
+
+        sub.add(Nat8.fromNat(subaccount_blob.size()));
+        sub.append(Buffer.fromArray<Nat8>(Blob.toArray(subaccount_blob)));
+        while (sub.size() < 32) {
+            sub.add(0);
+        };
+
+        Blob.fromArray(Buffer.toArray(sub));
+    };
 
     // TODO@P2: Should `do*` functions be protected against unauthorized calling?
 
@@ -118,7 +134,7 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
+            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
 
         // Move user's fund into current use:
@@ -126,7 +142,7 @@ actor class Bootstrapper() = this {
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Principal.toBlob(user));
+            from_subaccount = ?(principalToSubaccount(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*icp_transfer_fee;
         })) {
@@ -139,7 +155,7 @@ actor class Bootstrapper() = this {
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Principal.toBlob(user));
+            from_subaccount = ?(principalToSubaccount(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*icp_transfer_fee;
         })) {
@@ -153,7 +169,7 @@ actor class Bootstrapper() = this {
             let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
+                to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};
                 fee = null;
                 memo = null;
                 from_subaccount = null;
@@ -196,7 +212,7 @@ actor class Bootstrapper() = this {
         }];
     }): async {spentCycles: Nat} {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
+            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
 
         // Move user's fund into current use:
@@ -204,7 +220,7 @@ actor class Bootstrapper() = this {
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Principal.toBlob(user));
+            from_subaccount = ?(principalToSubaccount(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = amountToMove - 2*icp_transfer_fee;
         })) {
