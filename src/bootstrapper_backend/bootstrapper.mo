@@ -72,7 +72,7 @@ actor class Bootstrapper() = this {
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
-            // Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+            // Cycles.add<system>(newCanisterCycles);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 cyclesAmount = newCanisterCycles;

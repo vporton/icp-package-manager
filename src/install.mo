@@ -15,7 +15,6 @@ module {
         cyclesAmount: Nat;
         subnet_selection: ?cmc.SubnetSelection;
     }): async* {canister_id: Principal} {
-        Debug.print("cyclesAmount: " # debug_show(cyclesAmount)); // FIXME: Remove.
         Cycles.add<system>(cyclesAmount);
         let res = await cmc.create_canister({
             settings = ?{
