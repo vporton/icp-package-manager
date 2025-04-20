@@ -44,31 +44,6 @@ actor class Bootstrapper() = this {
         let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
             icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
-        // let ?wasmModule = modulesToInstall.get("frontend") else {
-        //     Debug.trap("frontend module not found");
-        // };
-        // Cycles.add<system>(amountToMove);
-        // let {canister_id} = await* Install.myCreateCanister({
-        //     controllers = ?[Principal.fromActor(this)];
-        //     cyclesAmount = newCanisterCycles;
-        //     subnet_selection = ?(
-        //         #Filter({subnet_type = ?"Application"})
-        //     );
-        // });
-
-        // Cycles.add<system>(Cycles.balance());
-        // await* Install.myInstallCode({
-        //     installationId = 0;
-        //     upgradeId = null;
-        //     canister_id;
-        //     wasmModule = Common.unshareModule(wasmModule);
-        //     installArg;
-        //     packageManagerOrBootstrapper = Principal.fromActor(this); // modified by frontend tweak below.
-        //     // Automated tests esnure that these `aaaaa-aa` don't appear at a later installation stage:
-        //     mainIndirect = Principal.fromText("aaaaa-aa");
-        //     simpleIndirect = Principal.fromText("aaaaa-aa");
-        //     user;
-        // });
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
