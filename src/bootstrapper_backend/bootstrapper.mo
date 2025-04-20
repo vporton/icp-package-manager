@@ -52,7 +52,7 @@ actor class Bootstrapper() = this {
     public shared func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
-        ignore Cycles.accept<system>(amountToMove);
+        // ignore Cycles.accept<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -166,7 +166,9 @@ actor class Bootstrapper() = this {
         };
 
         func finish(): async* {returnAmount: Nat} {
+            Debug.print("Refunding user " # debug_show(Cycles.refunded())); // FIXME: Remove.
             let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
+            Debug.print("Transfer back: " # debug_show(returnAmount)); // FIXME: Remove.
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};
@@ -214,6 +216,7 @@ actor class Bootstrapper() = this {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
+        Debug.print("bootstrapBackend amountToMove: " # debug_show(amountToMove)); // FIXME: Remove.
 
         // Move user's fund into current use:
         switch(await CyclesLedger.icrc1_transfer({
@@ -267,6 +270,12 @@ actor class Bootstrapper() = this {
         amountToMove: Nat;
     }): async {battery: Principal} {
         Cycles.add<system>(amountToMove);
+
+        let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
+
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+        let tweaker = await Data.getFrontendTweaker(pubKey);
+
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -326,7 +335,10 @@ actor class Bootstrapper() = this {
 
         // TODO@P3: It may happen when the app is not installed because of an error.
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(frontendTweakPrivKey, controllers, user);
+        await* tweakFrontend(tweaker, controllers, user);
+
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+        await Data.deleteFrontendTweaker(pubKey);
 
         for (canister_id in installedModules2.vals()) { // including frontend
             // TODO@P3: We can provide these setting initially and thus update just one canister.
@@ -384,15 +396,10 @@ actor class Bootstrapper() = this {
     ///
     /// TODO@P3: Rename.
     private func tweakFrontend(
-        privKey: PrivKey,
+        tweaker: Data.FrontendTweaker,
         controllers: [Principal],
         user: Principal, // to address security vulnerabulities, used only to add a controller.
     ): async* () {
-        let pubKey = Sha256.fromBlob(#sha256, privKey);
-
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
-        let tweaker = await Data.getFrontendTweaker(pubKey);
-
         let assets: Asset.AssetCanister = actor(Principal.toText(tweaker.frontend));
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         let owners = await assets.list_authorized();
@@ -410,9 +417,6 @@ actor class Bootstrapper() = this {
                 await assets.grant_permission({to_principal = principal; permission});
             };
         };
-
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
-        await Data.deleteFrontendTweaker(pubKey);
     };
 
     // TODO@P3: Should be in th frontend.
