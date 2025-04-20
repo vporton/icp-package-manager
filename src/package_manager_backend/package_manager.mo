@@ -1346,12 +1346,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(caller)));
     };
 
-    private func userAccount(user: Principal): CyclesLedger.Account {
-        {owner = Principal.fromActor(battery); subaccount = ?(Principal.toBlob(user))};
+    private func userAccount(/*user: Principal*/): CyclesLedger.Account {
+        {owner = Principal.fromActor(battery); subaccount = null/*?(Principal.toBlob(user))*/};
     };
 
     public composite query({caller}) func userBalance(): async Nat {
-        await CyclesLedger.icrc1_balance_of(userAccount(caller));
+        await CyclesLedger.icrc1_balance_of(userAccount(/*caller*/));
     };
 
     // Adjustable values //
