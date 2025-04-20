@@ -115,7 +115,7 @@ actor class Bootstrapper() = this {
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
-            // user;
+            user;
         });
 
         // TODO@P3: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
@@ -136,6 +136,8 @@ actor class Bootstrapper() = this {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
+
+        // TODO@P3: `- 5*icp_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
         switch(await CyclesLedger.icrc1_transfer({
@@ -204,7 +206,7 @@ actor class Bootstrapper() = this {
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
     public shared func bootstrapBackend({
-        frontendTweakPrivKey: PrivKey;
+        frontendTweakPrivKey: PrivKey; // TODO@P3: Rename.
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
         additionalPackages: [{
@@ -213,17 +215,22 @@ actor class Bootstrapper() = this {
             repo: Common.RepositoryRO;
         }];
     }): async {spentCycles: Nat} {
+        let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
+
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+        let tweaker = await Data.getFrontendTweaker(pubKey);
+
         let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(tweaker.user));
         });
-        Debug.print("bootstrapBackend amountToMove: " # debug_show(amountToMove)); // FIXME: Remove.
+        Debug.print("BACKEND amountToMove: " # debug_show(amountToMove)); // FIXME: Remove.
 
         // Move user's fund into current use:
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(principalToSubaccount(user));
+            from_subaccount = ?(principalToSubaccount(tweaker.user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = amountToMove - 2*icp_transfer_fee;
         })) {
@@ -237,11 +244,12 @@ actor class Bootstrapper() = this {
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
         let {battery} = await doBootstrapBackend({
-            frontendTweakPrivKey;
+            pubKey;
             installedModules;
             user;
             additionalPackages;
             amountToMove;
+            tweaker
         });
 
         let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
@@ -255,11 +263,12 @@ actor class Bootstrapper() = this {
             amount = returnAmount;
         });
 
+        Debug.print("amountToMove - returnAmount = " # debug_show(amountToMove) # " - " # debug_show(returnAmount)); // FIXME: Remove.
         {spentCycles = amountToMove - returnAmount};
     };
 
     public shared func doBootstrapBackend({
-        frontendTweakPrivKey: PrivKey;
+        pubKey: PubKey;
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
         additionalPackages: [{
@@ -268,13 +277,9 @@ actor class Bootstrapper() = this {
             repo: Common.RepositoryRO;
         }];
         amountToMove: Nat;
+        tweaker: Data.FrontendTweaker;
     }): async {battery: Principal} {
         Cycles.add<system>(amountToMove);
-
-        let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
-
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
-        let tweaker = await Data.getFrontendTweaker(pubKey);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {

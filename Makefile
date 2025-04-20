@@ -56,7 +56,7 @@ deploy-self@cycles_ledger:
 					owner = principal \"$(USER)\"; \
 					subaccount = null; \
 				}; \
-				1_000_000_000_000_000_000 \
+				1_000_000_000 \
 			} \
 		}; \
 		min_burn_amount = 10_000; \

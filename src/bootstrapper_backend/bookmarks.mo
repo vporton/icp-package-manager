@@ -3,16 +3,9 @@ import Array "mo:base/Array";
 import Map "mo:base/OrderedMap";
 import Set "mo:base/OrderedSet";
 import Debug "mo:base/Debug";
-import Nat64 "mo:base/Nat64";
-import Int "mo:base/Int";
-import Time "mo:base/Time";
-import env "mo:env";
-import CyclesLedger "canister:cycles_ledger";
 
 // TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {
-    transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
-
     public type Bookmark = {
         frontend: Principal;
         backend: Principal;

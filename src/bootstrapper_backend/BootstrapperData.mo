@@ -13,7 +13,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     public type FrontendTweaker = {
         // controllers: [Principal]; // pass them from UI, it's safe.
         frontend: Principal;
-        // user: Principal; // bootstrap frontend user
+        user: Principal; // bootstrap frontend user
     };
 
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
