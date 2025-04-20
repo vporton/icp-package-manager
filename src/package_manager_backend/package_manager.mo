@@ -312,9 +312,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         onlyOwner(caller, "installPackages");
 
         let minInstallationId = nextInstallationId;
-        Debug.print("installPackages: " # debug_show(minInstallationId));
         nextInstallationId += packages.size();
-        Debug.print("installPackages2: " # debug_show(nextInstallationId));
 
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
