@@ -1,13 +1,18 @@
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import { Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
-import { AuthProvider } from './auth/use-auth-client';
+import { AuthProvider, useAuth } from './auth/use-auth-client';
 import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 // import Bookmark from './Bookmark';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
+import { useContext, useEffect, useState } from 'react';
+import { bootstrapper } from '../../declarations/bootstrapper';
+import { cycles_ledger } from '../../declarations/cycles_ledger';
+import { Actor } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
@@ -32,7 +37,64 @@ function App() {
   );
 }
 
+function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAddress: Uint8Array | undefined}) { // TODO@P3: duplicate code
+  const address = Buffer.from(props.cyclesPaymentAddress!).toString('hex');
+  const [copied, setCopied] = useState(false);
+  const copyToClipboard = async () => {
+    navigator.clipboard.writeText(address).then(() => {
+      try {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+    });
+  }
+  const renderTooltip = (props: any) => (
+    <Tooltip {...props}>
+      {copied ? 'Copied!' : 'Copy to clipboard'}
+    </Tooltip>
+  );
+  return props.cyclesPaymentAddress !== undefined
+    ? (
+      // TODO@P3: `stopPropagation` doesn't work in some reason.
+      <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+        <p><strong>Warning: 5% fee applied.</strong></p>
+        <p>
+          Send cycles to{" "}
+          <OverlayTrigger placement="right" overlay={renderTooltip}>
+            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
+          </OverlayTrigger>
+        </p>
+        <p>TODO@P3: QR-code</p>
+      </div>
+    )
+    : undefined;
+}
+
 function App2() {
+  const {isAuthenticated, principal} = useAuth();
+  const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
+  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
+  // TODO@P3: below correct `!` usage?
+  function updateCyclesAmount() {
+    setCyclesAmount(undefined);
+    if (principal === undefined) {
+      return;
+    }
+    cycles_ledger.icrc1_balance_of({
+      owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+      subaccount: [principal.toUint8Array()],
+    }).then((amount: bigint) => {
+      setCyclesAmount(parseInt(amount.toString()))
+    });
+  }
+  useEffect(updateCyclesAmount, [principal]);
+  useEffect(() => {
+    bootstrapper.userAccountBlob().then((b) => {
+      setCyclesPaymentAddress(b as Uint8Array);
+    });
+  }, [principal]);
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
@@ -46,6 +108,19 @@ function App2() {
             <Nav>
               <AuthButton/>
             </Nav>
+            <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
+                <Dropdown>
+                  <Dropdown.Toggle>
+                    Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item as="div">
+                      <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+                <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
+              </Nav>
           </Navbar>
         </nav>
         <BrowserRouter>

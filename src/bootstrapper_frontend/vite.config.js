@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import environment from 'vite-plugin-environment';
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '../../.env' });
@@ -27,6 +28,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    nodePolyfills(),
     environment("all", { prefix: "CANISTER_", defineOn: 'process.env' }),
     environment("all", { prefix: "DFX_", defineOn: 'process.env' }),
   ],

@@ -398,4 +398,10 @@ actor class Bootstrapper() = this {
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.deleteFrontendTweaker(pubKey);
     };
+
+    // TODO@P3: Should be in th frontend.
+    public composite query({caller}) func userAccountBlob(): async Blob {
+        Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
+    };
+
 }

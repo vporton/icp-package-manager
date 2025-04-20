@@ -42,6 +42,29 @@ deploy-test: deploy \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
 
+deploy-self@cycles_ledger:
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.cycles_ledger) \
+	  --argument "( record { \
+		name = \"Internet Computer\"; \
+		symbol = \"ICP\"; \
+		decimals = 6; \
+		fee = 10_000; \
+		max_supply = 1_000_000_000_000_000; \
+		initial_balances = vec { \
+			record { \
+				record { \
+					owner = principal \"$(USER)\"; \
+					subaccount = null; \
+				}; \
+				100_000_000_000_000 \
+			} \
+		}; \
+		min_burn_amount = 10_000; \
+		minting_account = null; \
+		advanced_settings = null; \
+	  })" \
+	  cycles_ledger
+
 deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
 	  --argument "principal \"$(USER)\"" \

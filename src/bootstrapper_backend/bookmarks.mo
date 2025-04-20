@@ -70,22 +70,22 @@ persistent actor class Bookmarks(initialOwner: Principal) {
             Debug.trap("bookmarks: not the owner");
         };
 
-        let res = await CyclesLedger.icrc2_transfer_from({
-            spender_subaccount = null;
-            from = { owner = battery; subaccount = null };
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = env.bookmarkCost - 100_000_000; // minus transfer fee
-        });
-        switch (res) {
-            case (#Err e) {
-                Debug.print("Error transferring funds: " # debug_show(e));
-                return false;
-            };
-            case (#Ok _) {};
-        };
+        // let res = await CyclesLedger.icrc2_transfer_from({
+        //     spender_subaccount = null;
+        //     from = { owner = battery; subaccount = null };
+        //     to = {owner = revenueRecipient; subaccount = null};
+        //     fee = null;
+        //     memo = null;
+        //     created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+        //     amount = env.bookmarkCost - 100_000_000; // minus transfer fee
+        // });
+        // switch (res) {
+        //     case (#Err e) {
+        //         Debug.print("Error transferring funds: " # debug_show(e));
+        //         return false;
+        //     };
+        //     case (#Ok _) {};
+        // };
         if (bookmarkSet.contains(bookmarks, b)) {
             true;
         } else {

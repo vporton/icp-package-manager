@@ -3,8 +3,14 @@
 /// It's useful for testing code using `CyclesLedger.create_canister` on local net.
 import Principal "mo:base/Principal";
 // import IC "mo:ic";
+import ICRC1 "mo:icrc1/ICRC1";
+import Option "mo:base/Option";
+import ExperimentalCycles "mo:base/ExperimentalCycles";
+import Array "mo:base/Array";
 
-actor MockCyclesLedger {
+shared({ caller = _owner }) actor class MockCyclesLedger(
+    token_args : ICRC1.TokenInitArgs,
+) : async ICRC1.FullInterface {
     // Cycles Ledger API
 
     type BlockIndex = Nat;
@@ -61,166 +67,79 @@ actor MockCyclesLedger {
 
     // Mock implementation follows
 
-    type Subaccount = Blob;
+    stable let token = ICRC1.init({
+        token_args with minting_account = Option.get(
+            token_args.minting_account,
+            {
+                owner = _owner;
+                subaccount = null;
+            },
+        );
+    });
 
-    type Account = {
-        owner : Principal;
-        subaccount : ?Subaccount;
+    /// Functions for the ICRC1 token standard
+    public shared query func icrc1_name() : async Text {
+        ICRC1.name(token);
     };
 
-	public query func icrc1_balance_of(_account: Account): async Nat {
-        10_000_000_000_000;
+    public shared query func icrc1_symbol() : async Text {
+        ICRC1.symbol(token);
     };
 
-    type Timestamp = Nat64;
-
-    type TransferArgs = {
-        to : Account;
-        fee : ?Nat;
-        memo : ?Blob;
-        from_subaccount : ?Subaccount;
-        created_at_time : ?Timestamp;
-        amount : Nat;
+    public shared query func icrc1_decimals() : async Nat8 {
+        ICRC1.decimals(token);
     };
 
-    type TransferError = {
-        #GenericError : {
-            message : Text;
-            error_code : Nat;
-        };
-        #TemporarilyUnavailable;
-        #BadBurn : {
-            min_burn_amount : Nat;
-        };
-        #Duplicate : {
-            duplicate_of : Nat;
-        };
-        #BadFee : {
-            expected_fee : Nat;
-        };
-        #CreatedInFuture : {
-            ledger_time : Timestamp;
-        };
-        #TooOld;
-        #InsufficientFunds : {
-            balance : Nat;
-        }
+    public shared query func icrc1_fee() : async ICRC1.Balance {
+        ICRC1.fee(token);
     };
 
-    type TransferResult = {
-        #Ok : Nat;
-        #Err : TransferError;
+    public shared query func icrc1_metadata() : async [ICRC1.MetaDatum] {
+        ICRC1.metadata(token);
     };
 
-    public shared func icrc1_transfer(_args: TransferArgs): async TransferResult {
-        // Do nothing.
-        #Ok 1;
+    public shared query func icrc1_total_supply() : async ICRC1.Balance {
+        ICRC1.total_supply(token);
     };
 
-    type AllowanceArgs = {
-        account : Account;
-        spender : Account;
+    public shared query func icrc1_minting_account() : async ?ICRC1.Account {
+        ?ICRC1.minting_account(token);
     };
 
-    type Allowance = {
-        allowance : Nat;
-        expires_at : ?Nat64;
+    public shared query func icrc1_balance_of(args : ICRC1.Account) : async ICRC1.Balance {
+        ICRC1.balance_of(token, args);
     };
 
-	public query func icrc2_allowance(_args: AllowanceArgs): async Allowance {
-        { allowance = 10_000_000_000_000; expires_at = null };
+    public shared query func icrc1_supported_standards() : async [ICRC1.SupportedStandard] {
+        ICRC1.supported_standards(token);
     };
 
-    type ApproveArgs = {
-        fee : ?Nat;
-        memo : ?Blob;
-        from_subaccount : ?Blob;
-        created_at_time : ?Nat64;
-        amount : Nat;
-        expected_allowance : ?Nat;
-        expires_at : ?Nat64;
-        spender : Account;
+    public shared ({ caller }) func icrc1_transfer(args : ICRC1.TransferArgs) : async ICRC1.TransferResult {
+        await* ICRC1.transfer(token, args, caller);
     };
 
-    type ApproveResult = {
-        #Ok : Nat;
-        #Err : ApproveError;
+    public shared ({ caller }) func mint(args : ICRC1.Mint) : async ICRC1.TransferResult {
+        await* ICRC1.mint(token, args, caller);
     };
 
-    type ApproveError = {
-        #GenericError : {
-            message : Text;
-            error_code : Nat;
-        };
-        #TemporarilyUnavailable;
-        #Duplicate : {
-            duplicate_of : Nat;
-        };
-        #BadFee : {
-            expected_fee : Nat;
-        };
-        #AllowanceChanged : {
-            current_allowance : Nat;
-        };
-        #CreatedInFuture : {
-            ledger_time : Nat64;
-        };
-        #TooOld;
-        #Expired : {
-            ledger_time : Nat64;
-        };
-        #InsufficientFunds : {
-            balance : Nat;
-        }
+    public shared ({ caller }) func burn(args : ICRC1.BurnArgs) : async ICRC1.TransferResult {
+        await* ICRC1.burn(token, args, caller);
     };
 
-	public shared func icrc2_approve(args: ApproveArgs): async ApproveResult {
-        #Ok(args.amount);
+    // Functions from the rosetta icrc1 ledger
+    public shared query func get_transactions(req : ICRC1.GetTransactionsRequest) : async ICRC1.GetTransactionsResponse {
+        ICRC1.get_transactions(token, req);
     };
 
-    type TransferFromArgs = {
-        to : Account;
-        fee : ?Nat;
-        spender_subaccount : ?Blob;
-        from : Account;
-        memo : ?Blob;
-        created_at_time : ?Nat64;
-        amount : Nat;
+    // Additional functions not included in the ICRC1 standard
+    public shared func get_transaction(i : ICRC1.TxIndex) : async ?ICRC1.Transaction {
+        await* ICRC1.get_transaction(token, i);
     };
 
-    type TransferFromResult = {
-        #Ok : Nat;
-        #Err : TransferFromError;
-    };
-
-    type TransferFromError = {
-        #GenericError : {
-            message : Text;
-            error_code : Nat;
-        };
-        #TemporarilyUnavailable;
-        #InsufficientAllowance : {
-            allowance : Nat;
-        };
-        #BadBurn : {
-            min_burn_amount : Nat;
-        };
-        #Duplicate : {
-            duplicate_of : Nat;
-        };
-        #BadFee : {
-            expected_fee : Nat;
-        };
-        #CreatedInFuture : {
-            ledger_time : Nat64;
-        };
-        #TooOld;
-        #InsufficientFunds : {
-            balance : Nat;
-        }
-    };
-
-    public shared func icrc2_transfer_from(args: TransferFromArgs): async TransferFromResult {
-        #Ok(args.amount);
+    // Deposit cycles into this archive canister.
+    public shared func deposit_cycles() : async () { // TODO@P3: needed?
+        let amount = ExperimentalCycles.available();
+        let accepted = ExperimentalCycles.accept<system>(amount);
+        assert (accepted == amount);
     };
 }
