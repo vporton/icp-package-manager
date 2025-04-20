@@ -111,7 +111,7 @@
     },
     "package_manager_frontend": {
       "dependencies": [
-        "package_manager", "internet_identity"
+        "package_manager", "internet_identity", "bootstrapper"
       ],
       "source": [
         "src/package_manager_frontend/dist"

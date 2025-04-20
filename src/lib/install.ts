@@ -36,10 +36,10 @@ export async function bootstrapFrontend(props: {agent: Agent}) {
         const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
         const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
-        const {installedModules} = await bootstrapper.bootstrapFrontend({
+        const {installedModules, spentCycles} = await bootstrapper.bootstrapFrontend({
             frontendTweakPubKey,
         });
-        return {installedModules, frontendTweakPrivKey};
+        return {installedModules, frontendTweakPrivKey, spentCycles};
     }
     catch(e) {
       console.log(e);

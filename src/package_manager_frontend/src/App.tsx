@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
-import { Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Alert, Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Link, Route, Routes, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Link, Route, Routes, useParams, useSearchParams } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { AuthProvider, useAuth } from './auth/use-auth-client';
@@ -63,6 +63,9 @@ function App() {
 
 function GlobalUI() {
   const glob = useContext(GlobalContext);
+  const spentStr: string | null = (new URLSearchParams(location.href)).get('spent');
+  const spent = spentStr === null ? undefined : BigInt(spentStr);
+
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
   const [searchParams, _] = useSearchParams();
@@ -89,7 +92,7 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         const modulesJSON = searchParams.get('modules')!;
-        await bootstrapperMainIndirect.bootstrapBackend({
+        const {spentCycles: spentBackendStr} = await bootstrapperMainIndirect.bootstrapBackend({
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           installedModules,
           user: principal!,
@@ -109,6 +112,14 @@ function GlobalUI() {
         if (modulesJSON !== undefined) {
           base2 += `&modules=${encodeURIComponent(modulesJSON)}`;
         }
+        if (spentStr !== null) {
+          base2 += `&spentFrontend=${spentStr}`;
+        }
+        const spentBackend = spentBackendStr === null ? undefined : BigInt(spentBackendStr);
+        if (spentBackend !== undefined) {
+          base2 += `&spentBackend=${spentBackend}`;
+        }
+
         open(base2, '_self');
       }
       catch (e) {
@@ -118,11 +129,15 @@ function GlobalUI() {
         setBusy(false);
       }
     }
+
     // TODO@P3: Start installation automatically, without clicking a button?
     return (
       <Container>
         <p>You first need to install the missing components (so called <q>backend</q>) for this software.
           This is just two buttons easy. You have around 45min to do this.</p>
+        {spent !== undefined &&
+              <Alert variant="info">You spent {Number(spent.toString()) / 10**12}T cycles for bootstrapping frontend.</Alert>
+        }
         <ol>
           <li><AuthButton/></li>
           <li><Button disabled={!isAuthenticated} onClick={installBackend}>Install</Button></li>

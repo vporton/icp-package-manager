@@ -59,7 +59,7 @@ export default function MainPage() {
         let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const {installedModules, frontendTweakPrivKey} = await bootstrapFrontend({
+        const {installedModules, frontendTweakPrivKey, spentCycles} = await bootstrapFrontend({
           agent: props.agent!,
         });
         const installedModulesMap = new Map(installedModules);
@@ -77,7 +77,8 @@ export default function MainPage() {
           `${url}?` +
             `frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&` +
             `additionalPackages=${JSON.stringify(packages3)}&` +
-            `modules=${JSON.stringify(installedModules.map(([s, p]: [string, Principal]) => [s, p.toString()]))}`,
+            `modules=${JSON.stringify(installedModules.map(([s, p]: [string, Principal]) => [s, p.toString()]))}&` +
+            `spent=${spentCycles}`,
           '_self');
       }
       catch(e) {

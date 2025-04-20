@@ -16,6 +16,7 @@ import Int "mo:base/Int";
 import Time "mo:base/Time";
 import Float "mo:base/Float";
 import Error "mo:base/Error";
+import Nat "mo:base/Nat";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -28,7 +29,7 @@ actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
-    let revenueRecipient = Principal.fromText(env.revenueRecipient);
+    transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
     var totalBootstrapCost = 10_000_000_000_000; // TODO@P2: Make it stable.
@@ -136,7 +137,7 @@ actor class Bootstrapper() = this {
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
-    }): async {installedModules: [(Text, Principal)]} {
+    }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
@@ -169,6 +170,8 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
+        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee); // FIXME@P2: `Cycles.refunded` here is something wrong.
+
         func finish(): async* () {
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
@@ -177,7 +180,7 @@ actor class Bootstrapper() = this {
                 memo = null;
                 from_subaccount = null;
                 created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Cycles.refunded() - 3*icp_transfer_fee;
+                amount = returnAmount;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -195,7 +198,7 @@ actor class Bootstrapper() = this {
         };
         await* finish();
 
-        {installedModules};
+        {installedModules; spentCycles = amountToMove - returnAmount};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
@@ -211,7 +214,7 @@ actor class Bootstrapper() = this {
             version: Common.Version;
             repo: Common.RepositoryRO;
         }];
-    }): async () {
+    }): async {spentCycles: Nat} {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user));
         });
@@ -231,6 +234,8 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
+        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee); // FIXME@P2: `Cycles.refunded` here is something wrong.
+
         // We can't `try` on this, because if it fails, we don't know the battery:
         let {battery} = await* doBootstrapBackend({
             frontendTweakPrivKey;
@@ -240,14 +245,18 @@ actor class Bootstrapper() = this {
             amountToMove;
         });
 
+        Debug.print("REMAINS2: " # debug_show(amountToMove) # " - " # debug_show(returnAmount)); // FIXME: Remove.
+
         ignore await CyclesLedger.icrc1_transfer({
             to = {owner = battery; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = null;
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = totalBootstrapCost - icp_transfer_fee;
+            amount = returnAmount;
         });
+
+        {spentCycles = amountToMove - returnAmount};
     };
 
     private func doBootstrapBackend({

@@ -12,6 +12,7 @@ import { createActor as repoPartitionCreateActor } from '../../declarations/repo
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { myUseNavigate } from "./MyNavigate";
 import { Repository } from "../../declarations/repository/repository.did";
+import { useParams } from "react-router-dom";
 
 function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload: () => void}) {
     const [name, setName] = useState("(Unnamed)"); // TODO@P3: button to rename it
@@ -45,6 +46,12 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 export default function MainPage() {
     const { agent, defaultAgent, principal, isAuthenticated } = useAuth();
     const glob = useContext(GlobalContext);
+
+    const spentFrontendStr = (new URLSearchParams(window.location.search)).get("spentFrontend");
+    const spentBackendStr = (new URLSearchParams(window.location.search)).get("spentBackend");
+    const spentFrontend = spentFrontendStr === null ? undefined : BigInt(spentFrontendStr);
+    const spentBackend = spentBackendStr === null ? undefined : BigInt(spentBackendStr);
+    const spentTotal = spentFrontend !== undefined && spentBackend !== undefined ? spentFrontend + spentBackend : undefined;
 
     const navigate = myUseNavigate();
     const [distroAddShow, setDistroAddShow] = useState(false);
@@ -141,6 +148,11 @@ export default function MainPage() {
                     <Alert variant="info">If you lose the URL, you can find it at the bootstrapper site{" "}
                         (provided that you've bookmarked this page).</Alert>
                 </>
+            }
+            {spentTotal !== undefined &&
+                <Alert variant="info">
+                    You spent total {Number(spentTotal.toString()) / 10**12}T cycles for bootstrapping.
+                </Alert>
             }
             <h2>Distribution</h2>
             <DistroAdd show={distroAddShow} handleClose={handleClose} handleReload={reloadDistros}/>
