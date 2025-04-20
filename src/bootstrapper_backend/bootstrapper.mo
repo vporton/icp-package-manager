@@ -34,8 +34,8 @@ actor class Bootstrapper() = this {
     /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
     var totalBootstrapCost = 10_000_000_000_000; // TODO@P2: Make it stable.
 
-    private func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal)
-        : async* {installedModules: [(Text, Principal)]}
+    public shared func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal)
+        : async {installedModules: [(Text, Principal)]}
     {
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
@@ -170,9 +170,8 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee); // FIXME@P2: `Cycles.refunded` here is something wrong.
-
-        func finish(): async* () {
+        func finish(): async* {returnAmount: Nat} {
+            let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = Principal.fromActor(this); subaccount = ?(Principal.toBlob(user))};
@@ -187,16 +186,18 @@ actor class Bootstrapper() = this {
                 };
                 case (#Ok _) {};
             };
+            {returnAmount};
         };
 
         let {installedModules} = try {
-            await* doBootstrapFrontend(frontendTweakPubKey, user);
+            Cycles.add<system>(amountToMove);
+            await doBootstrapFrontend(frontendTweakPubKey, user);
         }
         catch (e) {
-            await* finish(); // After frontend install, we return the money, to continue with backend install.
+            ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
             Debug.trap(Error.message(e));
         };
-        await* finish();
+        let {returnAmount: Nat} = await* finish();
 
         {installedModules; spentCycles = amountToMove - returnAmount};
     };
@@ -234,10 +235,10 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee); // FIXME@P2: `Cycles.refunded` here is something wrong.
-
-        // We can't `try` on this, because if it fails, we don't know the battery:
-        let {battery} = await* doBootstrapBackend({
+        Cycles.add<system>(amountToMove);
+        // We can't `try` on this, because if it fails, we don't know the battery.
+        // TODO@P3: `try` to return money back to user account.
+        let {battery} = await doBootstrapBackend({
             frontendTweakPrivKey;
             installedModules;
             user;
@@ -245,7 +246,7 @@ actor class Bootstrapper() = this {
             amountToMove;
         });
 
-        Debug.print("REMAINS2: " # debug_show(amountToMove) # " - " # debug_show(returnAmount)); // FIXME: Remove.
+        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
 
         ignore await CyclesLedger.icrc1_transfer({
             to = {owner = battery; subaccount = null};
@@ -259,7 +260,7 @@ actor class Bootstrapper() = this {
         {spentCycles = amountToMove - returnAmount};
     };
 
-    private func doBootstrapBackend({
+    public shared func doBootstrapBackend({
         frontendTweakPrivKey: PrivKey;
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
@@ -269,7 +270,7 @@ actor class Bootstrapper() = this {
             repo: Common.RepositoryRO;
         }];
         amountToMove: Nat;
-    }): async* {battery: Principal} {
+    }): async {battery: Principal} {
         Cycles.add<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
