@@ -27,16 +27,16 @@ actor class Bootstrapper() = this {
     transient let icp_transfer_fee = 10_000;
 
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
-    /*stable*/ var newCanisterCycles = 1000_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
+    /*stable*/ var newCanisterCycles = 20_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
-    /// Both frontend and backend boootstrapping should fit this. Should be given with a reserve.
-    var totalBootstrapCost = 10_000_000_000_000; // TODO@P2: Make it stable.
+    // TODO@P2: Should `do*` functions be protected against unauthorized calling?
 
-    public shared func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal)
+    public shared func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
+        ignore Cycles.accept<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -50,7 +50,11 @@ actor class Bootstrapper() = this {
             // Cycles.add<system>(newCanisterCycles);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                cyclesAmount = newCanisterCycles;
+                cyclesAmount = if (moduleName == "backend") {
+                    20_000_000_000_000 // TODO@P3
+                } else {
+                    newCanisterCycles;
+                };
                 subnet_selection = ?(
                     #Filter({subnet_type = ?"Application"})
                 );
@@ -166,7 +170,7 @@ actor class Bootstrapper() = this {
 
         let {installedModules} = try {
             Cycles.add<system>(amountToMove);
-            await doBootstrapFrontend(frontendTweakPubKey, user);
+            await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         }
         catch (e) {
             ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
