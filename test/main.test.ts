@@ -5,7 +5,7 @@ import { Principal } from "@dfinity/principal";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { bootstrapFrontend, waitTillInitialized } from "../src/lib/install";
 import { createActor as createBootstrapperActor } from '../src/declarations/bootstrapper';
-import { createActor as createRepositoryIndexActor } from "../src/declarations/repository";
+import { createActor as createCyclesLedger } from "../src/declarations/cycles_ledger";
 import { createActor as createIndirectActor } from '../src/declarations/main_indirect';
 import { createActor as createSimpleIndirectActor } from '../src/declarations/simple_indirect';
 import { createActor as createBattery } from '../src/declarations/battery';
@@ -21,6 +21,10 @@ import { PackageManager } from "../src/declarations/package_manager/package_mana
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 import dfxConfig from "../dfx.json";
 import canisterId from "../.dfx/local/canister_ids.json";
+import { cycles_ledger } from "../src/declarations/cycles_ledger";
+import { principalToSubAccount } from "../src/lib/misc";
+import { commandOutput } from "../src/lib/scripts";
+import { decodeFile } from "../scripts/lib/key";
 
 global.fetch = node_fetch as any;
 
@@ -126,6 +130,29 @@ describe('My Test Suite', () => {
         canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
 
         canisterNames.set(process.env.CANISTER_ID_REPOSITORY!, 'repoIndex');
+
+        const key = await commandOutput("dfx identity export Zon"); // secret key
+        const identity = decodeFile(key);
+        const mainUserAgent = new HttpAgent({host: "http://localhost:4943", identity})
+        if (process.env.DFX_NETWORK === 'local') {
+            mainUserAgent.fetchRootKey();
+        }    
+        const CyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent: mainUserAgent});
+        const initialTransferResult = await CyclesLedger.icrc1_transfer({
+            to: {
+                owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+                subaccount: [principalToSubAccount(bootstrapperUser)],
+            },
+            fee: [],
+            memo: [],
+            from_subaccount: [],
+            created_at_time: [],
+            amount: BigInt(100 * 10**12),
+        });
+        if ((initialTransferResult as any).Err !== undefined) {
+            console.log((initialTransferResult as any).Err);
+            throw "transfer failed: " + (initialTransferResult as any).Err.toString();
+        }
 
         console.log("Bootstrapping frontend...");
         const {installedModules, frontendTweakPrivKey} =

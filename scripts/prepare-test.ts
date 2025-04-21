@@ -1,8 +1,9 @@
-    import { readFileSync } from 'fs';
-import { exec, execSync } from "child_process";
+import { readFileSync } from 'fs';
+import { execSync } from "child_process";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
+import { commandOutput } from "../src/lib/scripts";
 import { Repository, SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
 import { _SERVICE as repository } from '../src/declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/repository';
@@ -20,10 +21,6 @@ if (process.env.DFX_NETWORK === 'local') {
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cmc");
-}
-
-function commandOutput(command: string): Promise<string> {
-    return new Promise((resolve) => exec(command, function(error, stdout, stderr){ resolve(stdout); }));
 }
 
 async function main() {
