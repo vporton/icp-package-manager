@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P2 Should we hold cycles on package manager or indirect caller itself instead of the battery, in order to have them ready to use?
+
 - TODO@P3 Use choosen "Default version" on the mainpage.
 
 - TODO@P3 When running two upgrade operations of the same package in nearly the same time,
