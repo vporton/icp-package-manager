@@ -20,7 +20,7 @@ import Asset "mo:assets-api";
 import env "mo:env";
 
 shared({caller = initialCaller}) actor class PackageManager({
-    packageManagerOrBootstrapper: Principal;
+    packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
@@ -142,7 +142,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             [
-                (packageManagerOrBootstrapper, ()),
+                (packageManager, ()),
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()),
                 (user, ()),
@@ -157,13 +157,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         // installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;
-        // packageManagerOrBootstrapper: Principal;
+        // packageManager: Principal;
     }): async () {
         try {
             onlyOwner(caller, "init");
 
             owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
-            owners.delete(packageManagerOrBootstrapper); // delete bootstrapper
+            owners.delete(packageManager); // delete bootstrapper
 
             let ?inst = installedPackages.get(installationId) else {
                 Debug.trap("error getting installation");
@@ -553,7 +553,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                         data = to_candid({ // TODO@P2
                             upgradeId;
                             installationId = upgrade.installationId;
-                            packageManagerOrBootstrapper = Principal.fromActor(this);
+                            packageManager = Principal.fromActor(this);
                         });
                         error = #abort;
                     }]);
@@ -765,7 +765,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 moduleName = ?name;
                 installArg = to_candid({}); // TODO@P2: Add more arguments.
                 installationId = p0;
-                packageManagerOrBootstrapper = backend;
+                packageManager = backend;
                 mainIndirect = main_indirect;
                 simpleIndirect = simple_indirect;
                 preinstalledCanisterId = coreModules.get(name);
@@ -812,7 +812,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 user;
                 wasmModule = Common.shareModule(wasmModule);
                 // arg = to_candid({
-                //     packageManagerOrBootstrapper;
+                //     packageManager;
                 //     mainIndirect;
                 //     simpleIndirect;
                 //     user;
@@ -823,7 +823,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 upgradeArg = to_candid({}); // TODO@P2: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
-                packageManagerOrBootstrapper = Principal.fromActor(this);
+                packageManager = Principal.fromActor(this);
                 // mainIndirect;
                 simpleIndirect;
             });
@@ -838,7 +838,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
@@ -878,7 +878,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 installationId;
                                 canister;
                                 user;
-                                packageManagerOrBootstrapper; // TODO@P2: Remove?
+                                packageManager; // TODO@P2: Remove?
                                 module_;
                                 moduleNumber;
                             });

@@ -17,7 +17,7 @@ import CyclesLedger "canister:cycles_ledger";
 import env "mo:env";
 
 shared({caller = initialOwner}) actor class Battery({
-    packageManagerOrBootstrapper: Principal;
+    packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
@@ -28,7 +28,7 @@ shared({caller = initialOwner}) actor class Battery({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             [
-                (packageManagerOrBootstrapper, ()),
+                (packageManager, ()),
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()),
                 (Principal.fromActor(this), ()), // to execute the timer
@@ -98,7 +98,7 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     private func getPM(): OurPMType {
-        actor(Principal.toText(packageManagerOrBootstrapper));
+        actor(Principal.toText(packageManager));
     };
 
     private func getMainIndirect(): MainIndirect.MainIndirect {

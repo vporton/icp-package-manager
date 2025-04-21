@@ -14,7 +14,7 @@ import IC "mo:ic";
 import SimpleIndirect "simple_indirect";
 
 shared({caller = initialCaller}) actor class MainIndirect({
-    packageManagerOrBootstrapper: Principal; // TODO@P2: Rename to just `packageManager`?.
+    packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
@@ -32,7 +32,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             [
-                (packageManagerOrBootstrapper, ()),
+                (packageManager, ()),
                 (mainIndirect, ()),
                 (simpleIndirect, ()),
                 (user, ()),
@@ -45,13 +45,13 @@ shared({caller = initialCaller}) actor class MainIndirect({
         installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;
-        // packageManagerOrBootstrapper: Principal;
+        // packageManager: Principal;
     }): async () {
         onlyOwner(caller, "init");
 
         owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P2: needed?
 
-        let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
+        let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
         owners.put(battery, ());
 
@@ -102,7 +102,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
     };
 
-    /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper)); // actor("aaaaa-aa");
+    /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManager)); // actor("aaaaa-aa");
     // /*stable*/ var ourSimpleIndirect = simpleIndirect;
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
@@ -190,7 +190,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         moduleName: ?Text;
         wasmModule: Common.SharedModule;
         user: Principal;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
         preinstalledCanisterId: ?Principal;
@@ -207,7 +207,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             // TODO@P3: bad code
             switch (preinstalledCanisterId) {
                 case (?preinstalledCanisterId) {
-                    let pm: Install.Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+                    let pm: Install.Callbacks = actor(Principal.toText(packageManager));
 
                     await pm.onInstallCode({
                         moduleNumber;
@@ -216,7 +216,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         canister = preinstalledCanisterId;
                         installationId;
                         user;
-                        packageManagerOrBootstrapper;
+                        packageManager;
                         afterInstallCallback;
                     });
 
@@ -229,7 +229,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
                         installArg;
-                        packageManagerOrBootstrapper;
+                        packageManager;
                         mainIndirect;
                         simpleIndirect;
                         user;
@@ -269,7 +269,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 newPackages[i] := ?(Common.unsharePackageInfo(pkg));
             };
 
-            let backendObj = actor(Principal.toText(packageManagerOrBootstrapper)): actor {
+            let backendObj = actor(Principal.toText(packageManager)): actor {
                 upgradeStart: shared ({
                     minUpgradeId: Common.UpgradeId;
                     user: Principal;
@@ -314,7 +314,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         simpleIndirect: Principal;
         installArg: Blob;
         upgradeArg: Blob;
@@ -342,7 +342,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     await simple.install_code({
                         sender_canister_version = null; // TODO@P3: set appropriate value if needed.
                         arg = to_candid({
-                            packageManagerOrBootstrapper;
+                            packageManager;
                             mainIndirect;
                             simpleIndirect;
                             user;
@@ -368,14 +368,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         canister_id;
                         wasmModule = Common.unshareModule(wasmModule);
                         installArg = to_candid(installArg); // TODO@P2: per-module args (here and in other places)
-                        packageManagerOrBootstrapper;
+                        packageManager;
                         mainIndirect;
                         simpleIndirect;
                         user;
                     });
 
                     // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-                    // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+                    // Note that packageManager calls it on getMainIndirect(), not by itself, so doesn't freeze.
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     await simple.update_settings({ // the actor that is a controller
                         canister_id;
@@ -393,7 +393,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     canister_id;
                 };
             };
-            let backendObj = actor (Principal.toText(packageManagerOrBootstrapper)) : actor {
+            let backendObj = actor (Principal.toText(packageManager)) : actor {
                 onUpgradeOrInstallModule: shared ({
                     upgradeId: Common.UpgradeId;
                     moduleName: Text;

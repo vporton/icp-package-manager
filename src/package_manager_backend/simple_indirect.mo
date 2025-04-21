@@ -11,7 +11,7 @@ import IC "mo:ic";
 import Common "../common";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
-    packageManagerOrBootstrapper: Principal;
+    packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal; // TODO@P2: Rename.
     simpleIndirect: Principal;
     user: Principal;
@@ -29,7 +29,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     var owners: HashMap.HashMap<Principal, ()> =
         HashMap.fromIter(
             [
-                (packageManagerOrBootstrapper, ()),
+                (packageManager, ()),
                 (mainIndirect, ()),
                 (user, ()),
                 (simpleIndirect, ()),
@@ -42,7 +42,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         // installationId: Common.InstallationId;
         // canister: Principal;
         // user: Principal;
-        // packageManagerOrBootstrapper: Principal;
+        // packageManager: Principal;
     }): async () {
         onlyOwner(caller, "init");
 
@@ -51,7 +51,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
         type OurPMType = actor {
             getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
         };
-        let pm: OurPMType = actor (Principal.toText(packageManagerOrBootstrapper));
+        let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
         owners.put(battery, ());
 

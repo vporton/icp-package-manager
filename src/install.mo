@@ -48,7 +48,7 @@ module {
         canister_id: Principal;
         wasmModule: Common.Module;
         installArg: Blob;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
         user: Principal;
@@ -60,7 +60,7 @@ module {
         Debug.print("Installing code for canister " # debug_show(canister_id));
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
-                packageManagerOrBootstrapper;
+                packageManager;
                 mainIndirect;
                 simpleIndirect;
                 user;
@@ -125,7 +125,7 @@ module {
             moduleName: ?Text;
             user: Principal;
             module_: Common.SharedModule;
-            packageManagerOrBootstrapper: Principal;
+            packageManager: Principal;
             afterInstallCallback: ?{
                 canister: Principal; name: Text; data: Blob;
             };
@@ -138,7 +138,7 @@ module {
         installationId: Common.InstallationId;
         upgradeId: ?Common.UpgradeId;
         wasmModule: Common.Module;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
         installArg: Blob;
@@ -160,7 +160,7 @@ module {
             installationId;
             upgradeId;
             wasmModule;
-            packageManagerOrBootstrapper;
+            packageManager;
             mainIndirect;
             simpleIndirect;
             installArg;
@@ -176,7 +176,7 @@ module {
         installationId: Common.InstallationId;
         upgradeId: ?Common.UpgradeId;
         wasmModule: Common.Module;
-        packageManagerOrBootstrapper: Principal;
+        packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
         installArg: Blob;
@@ -186,7 +186,7 @@ module {
         };
         canister_id: Principal;
     }): async* Principal {
-        let pm: Callbacks = actor(Principal.toText(packageManagerOrBootstrapper));
+        let pm: Callbacks = actor(Principal.toText(packageManager));
     
         await* myInstallCode({
             installationId;
@@ -194,14 +194,14 @@ module {
             canister_id;
             wasmModule;
             installArg;
-            packageManagerOrBootstrapper;
+            packageManager;
             mainIndirect;
             simpleIndirect;
             user;
         });
 
         // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-        // Note that packageManagerOrBootstrapper calls it on getMainIndirect(), not by itself, so doesn't freeze.
+        // Note that packageManager calls it on getMainIndirect(), not by itself, so doesn't freeze.
         await ic.update_settings({
             canister_id;
             sender_canister_version = null;
@@ -223,7 +223,7 @@ module {
             canister = canister_id;
             installationId;
             user;
-            packageManagerOrBootstrapper;
+            packageManager;
             afterInstallCallback;
         });
 
