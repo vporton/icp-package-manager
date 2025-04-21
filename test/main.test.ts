@@ -125,12 +125,7 @@ describe('My Test Suite', () => {
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
         canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
 
-        const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: defaultAgent});
         canisterNames.set(process.env.CANISTER_ID_REPOSITORY!, 'repoIndex');
-
-        let icPackPkg = await repoIndex.getPackage('icpack', "stable");
-        const icPackPkgReal = (icPackPkg!.specific as any).real as SharedRealPackageInfo;
-        const icPackModules = new Map(icPackPkgReal.modules);
 
         console.log("Bootstrapping frontend...");
         const {installedModules, frontendTweakPrivKey} =

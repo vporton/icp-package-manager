@@ -1350,7 +1350,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         {owner = Principal.fromActor(battery); subaccount = null/*?(Principal.toBlob(user))*/};
     };
 
-    public composite query({caller}) func userBalance(): async Nat {
+    public composite query/*({caller})*/ func userBalance(): async Nat {
         await CyclesLedger.icrc1_balance_of(userAccount(/*caller*/));
     };
 
