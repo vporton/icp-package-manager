@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
     transient let icp_transfer_fee = 10_000;
 
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
-    /*stable*/ var newCanisterCycles = 20_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
+    /*stable*/ var newCanisterCycles = 2_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
@@ -66,7 +66,7 @@ actor class Bootstrapper() = this {
             // Cycles.add<system>(newCanisterCycles);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                cyclesAmount = if (moduleName == "backend") {
+                cyclesAmount = if (moduleName == "main_indirect") {
                     20_000_000_000_000 // TODO@P3
                 } else {
                     newCanisterCycles;
