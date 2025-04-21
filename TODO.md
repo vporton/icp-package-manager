@@ -1,6 +1,6 @@
 Remaining things TODO:
 
-- TODO@P2 Should we hold cycles on package manager or indirect caller itself instead of the battery, in order to have them ready to use?
+- TODO@P3 Interface for asking the battery for more cycles (if the user accepts). Use for example, for `icpack`.
 
 - TODO@P3 Use choosen "Default version" on the mainpage.
 
