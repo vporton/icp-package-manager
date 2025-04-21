@@ -8,6 +8,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 // import Bookmark from './Bookmark';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
+import { principalToSubAccount } "../../lib/misc";
 import { useContext, useEffect, useState } from 'react';
 import { bootstrapper } from '../../declarations/bootstrapper';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
@@ -70,18 +71,6 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
       </div>
     )
     : undefined;
-}
-
-function principalToSubAccount(principal: Principal): Uint8Array {
-  const bytes = new Uint8Array(32).fill(0);
-  const principalBytes = principal.toUint8Array();
-  bytes[0] = principalBytes.length;
-  
-  for (let i = 0; i < principalBytes.length; i++) {
-    bytes[1 + i] = principalBytes[i];
-  }
-  
-  return bytes;
 }
 
 function App2() {
