@@ -11,4 +11,3 @@ export function principalToSubAccount(principal: Principal): Uint8Array {
     
     return bytes;
 }
-  
