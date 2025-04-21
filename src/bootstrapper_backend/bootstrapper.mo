@@ -27,7 +27,7 @@ import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
 
 actor class Bootstrapper() = this {
-    transient let icp_transfer_fee = 10_000;
+    transient let cycles_transfer_fee = 100_000_000_000;
 
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).
@@ -137,7 +137,7 @@ actor class Bootstrapper() = this {
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
 
-        // TODO@P3: `- 5*icp_transfer_fee` and likewise seems to have superfluous multipliers.
+        // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
         switch(await CyclesLedger.icrc1_transfer({
@@ -146,7 +146,7 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(principalToSubaccount(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*icp_transfer_fee;
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -159,7 +159,7 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(principalToSubaccount(user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*icp_transfer_fee;
+            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*cycles_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -169,7 +169,7 @@ actor class Bootstrapper() = this {
 
         func finish(): async* {returnAmount: Nat} {
             Debug.print("Refunding user " # debug_show(Cycles.refunded())); // FIXME: Remove.
-            let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
+            let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
             Debug.print("Transfer back: " # debug_show(returnAmount)); // FIXME: Remove.
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
@@ -232,7 +232,7 @@ actor class Bootstrapper() = this {
             memo = null;
             from_subaccount = ?(principalToSubaccount(tweaker.user));
             created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = amountToMove - 2*icp_transfer_fee;
+            amount = amountToMove - 2*cycles_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -252,7 +252,7 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-        let returnAmount = Int.abs(Cycles.refunded() - 3*icp_transfer_fee);
+        let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
 
         ignore await CyclesLedger.icrc1_transfer({
             to = {owner = battery; subaccount = null};
