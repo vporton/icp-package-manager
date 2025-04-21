@@ -30,7 +30,7 @@ actor class Bootstrapper() = this {
     transient let icp_transfer_fee = 10_000;
 
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
-    /*stable*/ var newCanisterCycles = 2_000_000_000_000; // TODO@P2: Edit it. (Move to `bootstrapper_data`?)
+    transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
