@@ -60,7 +60,6 @@ export default function InstalledPackage(props: {}) {
         }
     }, [glob.packageManager, glob.backend, pkg]);
 
-    // TODO@P2: Ask for confirmation.
     function uninstall() {
         setUninstallConfirmationMessage("");
         setShowUninstallConfirmation(true);
