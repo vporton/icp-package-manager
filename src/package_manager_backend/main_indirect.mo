@@ -49,7 +49,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     }): async () {
         onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P2: needed?
+        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
