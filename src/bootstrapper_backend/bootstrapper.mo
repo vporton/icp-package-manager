@@ -47,11 +47,18 @@ actor class Bootstrapper() = this {
         Blob.fromArray(Buffer.toArray(sub));
     };
 
-    // TODO@P2: Should `do*` functions be protected against unauthorized calling?
+    /// TODO@P3: Do we need this check?
+    private func checkItself(caller: Principal) {
+        if (caller != Principal.fromActor(this)) {
+            Debug.trap("can be called only by itself");
+        };
+    };
 
-    public shared func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
+    public shared({caller}) func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
+        checkItself(caller);
+
         // ignore Cycles.accept<system>(amountToMove);
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
@@ -267,7 +274,7 @@ actor class Bootstrapper() = this {
         {spentCycles = amountToMove - returnAmount};
     };
 
-    public shared func doBootstrapBackend({
+    public shared({caller}) func doBootstrapBackend({
         pubKey: PubKey;
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
@@ -279,6 +286,8 @@ actor class Bootstrapper() = this {
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
     }): async {battery: Principal} {
+        checkItself(caller);
+
         Cycles.add<system>(amountToMove);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
