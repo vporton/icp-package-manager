@@ -17,7 +17,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     };
 
     /// Frontend canisters belong to bootstrapper canister. We move them to new owners.
-    transient var frontendTweakers = RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare); // TODO@P2: Use RBTree or OrderedTree consistently.
+    transient var frontendTweakers = RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
     stable var _frontendTweakersSave = frontendTweakers.share();
     transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();

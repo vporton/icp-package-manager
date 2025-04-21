@@ -33,7 +33,7 @@ shared({caller = initialOwner}) actor class Battery({
                 (simpleIndirect, ()),
                 (Principal.fromActor(this), ()), // to execute the timer
                 (user, ()),
-            ].vals(), // TODO@P2: Are all required?
+            ].vals(),
             5,
             Principal.equal,
             Principal.hash);
