@@ -42,8 +42,6 @@ Remaining things TODO:
 
 - TODO@P3 `inspect` incoming calls. To avoid DoS attacks, limit max package description to 30KB.
 
-- TODO@P2 It seems to spend all available cycles on bootstrapping frontend.
-
 - TODO@P3 Resist to drain cycles attack.
 
 - TODO@P3 Disallow packages of zero modules.
