@@ -166,7 +166,6 @@ function ChooseVersion2(props: {
                     </select>
                 </p>
                 <p>
-                    {/* TODO@P2: Disable the button when executing it. */}
                     {props.oldInstallation !== undefined ?
                         <Button onClick={upgrade} disabled={installing || chosenVersion === undefined}>Upgrade package</Button>
                         : installedVersions.size == 0
