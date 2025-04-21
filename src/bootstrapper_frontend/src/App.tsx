@@ -8,7 +8,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 // import Bookmark from './Bookmark';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
-import { principalToSubAccount } "../../lib/misc";
+import { principalToSubAccount } from "../../lib/misc";
 import { useContext, useEffect, useState } from 'react';
 import { bootstrapper } from '../../declarations/bootstrapper';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
