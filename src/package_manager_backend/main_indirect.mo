@@ -153,7 +153,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 }) -> async ();
             };
 
-            // TODO@P2: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
+            // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
                 minInstallationId;
                 afterInstallCallback;
