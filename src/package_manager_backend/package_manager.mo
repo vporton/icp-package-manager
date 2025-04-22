@@ -1383,7 +1383,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO@P2: Copy package specs to "userspace", in order to have `extraModules` fixed for further use.
 
-    // TODO@P3: Should be in th frontend.
+    // TODO@P3: Should be in the frontend.
     public composite query({caller}) func userAccountBlob(): async Blob {
         Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(caller)));
     };
