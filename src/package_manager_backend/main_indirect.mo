@@ -324,7 +324,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     public shared({caller}) func upgradeOrInstallModule({
         upgradeId: Common.UpgradeId;
         installationId: Common.InstallationId;
-        moduleNumber = _: Nat; // TODO@P2
+        moduleNumber: Nat;
         moduleName: Text;
         wasmModule: Common.SharedModule;
         user: Principal;
@@ -381,6 +381,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         canister_id;
                         wasmModule = Common.unshareModule(wasmModule);
                         arg = to_candid({
+                            moduleNumber;
                             // TODO@P2
                             userArg = arg;
                         }); // TODO@P2: per-module args (here and in other places)
