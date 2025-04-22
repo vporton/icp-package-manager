@@ -303,7 +303,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     var halfUpgradedPackages: HashMap.HashMap<Common.UpgradeId, HalfUpgradedPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
 
-    stable var repositories: [{canister: Principal; name: Text}] = []; // TODO@P2: a more suitable type like `HashMap` or at least `Buffer`?
+    stable var repositories: [{canister: Principal; name: Text}] = [];
 
     // TODO@P3: Copy this code to other modules:
     func onlyOwner(caller: Principal, msg: Text) {
