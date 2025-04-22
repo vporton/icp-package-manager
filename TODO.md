@@ -96,5 +96,3 @@ Remaining things TODO:
 
 - TODO@P3 https://thoropass.com/guide/compliance-guide-soc-2-for-your-startup/
   SOC 2 defines criteria for managing customer data based on five “trust service principles”—security, availability, processing integrity, confidentiality and privacy.
-
-- TODO@P2 Store hash, with which arguments was the package initialized.
