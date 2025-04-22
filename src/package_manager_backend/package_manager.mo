@@ -162,7 +162,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()),
                 (user, ()),
-            ].vals(), // TODO@P2: Are all required?
+            ].vals(),
             4,
             Principal.equal,
             Principal.hash);
