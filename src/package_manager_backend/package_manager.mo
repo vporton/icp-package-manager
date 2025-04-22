@@ -904,7 +904,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
-            // TODO@P2: order of this code
             _updateAfterInstall({installationId});
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
