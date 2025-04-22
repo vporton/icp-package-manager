@@ -112,7 +112,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
         arg: Blob;
-        initArg: Blob;
+        initArg: ?Blob;
     };
 
     public type SharedHalfUpgradedPackageInfo = {
@@ -123,7 +123,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
         arg: Blob;
-        initArg: Blob;
+        initArg: ?Blob;
     };
 
     private func shareHalfUpgradedPackageInfo(x: HalfUpgradedPackageInfo): SharedHalfUpgradedPackageInfo = {
@@ -420,6 +420,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
         user: Principal;
     })
@@ -846,7 +847,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     installationId;
                     userArg = pkg.arg;
                 });
-                initArg = to_candid({}); // TODO@P2: Add more arguments.
+                initArg = null; // TODO@P2: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManager = Principal.fromActor(this);
