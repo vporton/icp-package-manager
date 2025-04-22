@@ -350,10 +350,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     } else {
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
-                    // TODO@P2: consider invoking user's callback if needed.
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     await simple.install_code({
-                        sender_canister_version = null; // TODO@P3: set appropriate value if needed.
+                        sender_canister_version = null; // TODO@P3: Set appropriate value.
                         arg = to_candid({
                             packageManager;
                             mainIndirect;
@@ -396,7 +395,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     await simple.update_settings({ // the actor that is a controller
                         canister_id;
-                        sender_canister_version = null;
+                        sender_canister_version = null; // TODO@P3: Set appropriate value.
                         settings = {
                             compute_allocation = null;
                             controllers = ?[simpleIndirect, user];
