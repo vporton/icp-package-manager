@@ -98,3 +98,5 @@ Remaining things TODO:
   SOC 2 defines criteria for managing customer data based on five “trust service principles”—security, availability, processing integrity, confidentiality and privacy.
 
 - TODO@P2 Replace some `Principal`s by actor types?
+
+- TODO@P3 Handing names of user's repositories.
