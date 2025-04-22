@@ -365,7 +365,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         wasm_module;
                         mode = mode2;
                         canister_id;
-                    }, 1000_000_000_000); // TODO@P2
+                    }, 1000_000_000_000); // TODO@P3
                     canister_id;
                 };
                 case null {
