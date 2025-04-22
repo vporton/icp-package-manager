@@ -43,6 +43,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping: Bool;
         var remainingModules: Nat;
         arg: Blob;
+        initArg: ?Blob;
     };
 
     public type SharedHalfInstalledPackageInfo = {
@@ -56,6 +57,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping: Bool;
         remainingModules: Nat;
         arg: Blob;
+        initArg: ?Blob;
     };
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
@@ -67,6 +69,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping = x.bootstrapping;
         remainingModules = x.remainingModules;
         arg = x.arg;
+        initArg = x.initArg;
     };
 
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
@@ -78,6 +81,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         bootstrapping = x.bootstrapping;
         var remainingModules = x.remainingModules;
         arg = x.arg;
+        initArg = x.initArg;
     };
 
     public type HalfUninstalledPackageInfo = {
@@ -314,6 +318,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
         user: Principal;
         afterInstallCallback: ?{
@@ -336,6 +341,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     version: Common.Version;
                     repo: Common.RepositoryRO;
                     arg: Blob;
+                    initArg: ?Blob;
                 },
                 {
                     repo: Common.RepositoryRO;
@@ -343,17 +349,20 @@ shared({caller = initialCaller}) actor class PackageManager({
                     version: Common.Version;
                     arg: Blob;
                     preinstalledModules: [(Text, Principal)];
+                    initArg: ?Blob;
                 },
             >(packages.vals(), func (p: {
                 repo: Common.RepositoryRO;
                 packageName: Common.PackageName;
                 version: Common.Version;
                 arg: Blob;
+                initArg: ?Blob;
             }) = {
                 repo = p.repo;
                 packageName = p.packageName;
                 version = p.version;
                 arg = p.arg;
+                initArg = p.initArg;
                 preinstalledModules = [];
             }));
             pmPrincipal = Principal.fromActor(this);
@@ -629,6 +638,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }],
         user: Principal,
     ) {
@@ -652,6 +662,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         version: Common.Version;
         repo: Common.RepositoryRO;
         arg: Blob;
+        initArg: ?Blob;
         user: Principal;
         mainIndirect: Principal;
         /// Additional packages to install after bootstrapping.
@@ -660,6 +671,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
         preinstalledModules: [(Text, Principal)];
     })
@@ -676,7 +688,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         await* _installModulesGroup({
             mainIndirect = actor(Principal.toText(mainIndirect));
             minInstallationId;
-            packages = [{packageName; version; repo; preinstalledModules; arg}]; // HACK
+            packages = [{packageName; version; repo; preinstalledModules; arg; initArg}]; // HACK
             pmPrincipal = Principal.fromActor(this);
             user;
             afterInstallCallback = ?{
@@ -714,6 +726,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             repo: Common.RepositoryRO;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
+            initArg: ?Blob;
         }];
         bootstrapping: Bool;
     }) {
@@ -740,6 +753,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 bootstrapping;
                 var remainingModules = numModules;
                 arg = p.arg;
+                initArg = p.initArg;
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
@@ -1320,6 +1334,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
+            initArg: ?Blob;
         }];
         pmPrincipal: Principal;
         user: Principal;

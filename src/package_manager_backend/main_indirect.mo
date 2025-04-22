@@ -120,6 +120,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
+            initArg: ?Blob;
         }];
         minInstallationId: Common.InstallationId;
         user: Principal;
@@ -131,7 +132,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         try {
             onlyOwner(caller, "installPackagesWrapper");
 
-            Debug.print("Z0"); // FIXME: Remove.
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
                 // unsafe operation, run in main_indirect:
@@ -151,12 +151,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         repo: Common.RepositoryRO;
                         preinstalledModules: [(Text, Principal)];
                         arg: Blob;
+                        initArg: ?Blob;
                     }];
                     bootstrapping: Bool;
                 }) -> async ();
             };
 
-            Debug.print("Z1");
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
                 minInstallationId;
@@ -167,6 +167,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     repo: Common.RepositoryRO;
                     preinstalledModules: [(Text, Principal)];
                     arg: Blob;
+                    initArg: ?Blob;
                 }>(
                     packages.keys(),
                     func (i: Nat) = do {
@@ -178,12 +179,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             repo = packages[i].repo;
                             preinstalledModules = packages[i].preinstalledModules;
                             arg = packages[i].arg;
+                            initArg = packages[i].initArg;
                         };
                     },
                 ));
                 bootstrapping;
             });
-            Debug.print("Z2"); // FIXME: Remove.
         }
         catch (e) {
             Debug.print("installPackagesWrapper: " # Error.message(e));

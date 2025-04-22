@@ -16,6 +16,7 @@ import { ErrorContext } from "./ErrorContext.js";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import { Alert } from "react-bootstrap";
+import { init } from "@dfinity/agent/lib/cjs/canisters/management_service.js";
 
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
 export default function ChooseVersion(props: {}) {
@@ -95,6 +96,7 @@ function ChooseVersion2(props: {
                     version: chosenVersion!,
                     repo: props.repo!,
                     arg: new Uint8Array(),
+                    initArg: [],
                 }],
                 user: principal!,
                 afterInstallCallback: [],
@@ -124,6 +126,7 @@ function ChooseVersion2(props: {
                     version: chosenVersion!,
                     repo: props.repo!,
                     arg: new Uint8Array(),
+                    initArg: [],
                 }],
                 user: principal!,
             });

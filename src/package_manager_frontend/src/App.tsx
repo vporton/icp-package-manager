@@ -96,7 +96,7 @@ function GlobalUI() {
           frontendTweakPrivKey: glob.frontendTweakPrivKey!,
           installedModules,
           user: principal!,
-          additionalPackages: additionalPackages.map(v => {return {...v, arg: new Uint8Array()}}), // TODO@P3: Support `arg`.
+          additionalPackages: additionalPackages.map(v => {return {...v, arg: new Uint8Array(), initArg: []}}), // TODO@P3: Support `arg`.
         });
         const installedModulesMap = new Map(installedModules);
         const backendPrincipal = installedModulesMap.get('backend')!;
