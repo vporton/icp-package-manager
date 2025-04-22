@@ -271,7 +271,6 @@ actor class Bootstrapper() = this {
             amount = returnAmount;
         });
 
-        Debug.print("amountToMove - returnAmount = " # debug_show(amountToMove) # " - " # debug_show(returnAmount)); // FIXME: Remove.
         {spentCycles = amountToMove - returnAmount};
     };
 
