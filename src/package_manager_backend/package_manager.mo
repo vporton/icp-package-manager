@@ -916,7 +916,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                         ignore getSimpleIndirect().callAll([{
                             canister = cbPrincipal;
                             name = callbackName.method;
-                            data = to_candid({ // TODO@P2
+                            data = to_candid({
+                                // TODO@P3
                                 installationId;
                                 canister;
                                 user;
