@@ -807,7 +807,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO@P3: Add more arguments.
                     userArg = pkg.arg;
                 });
-                initArg = pkg.initArg;
                 installationId = p0;
                 packageManager = backend;
                 mainIndirect = main_indirect;
