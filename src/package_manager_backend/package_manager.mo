@@ -876,7 +876,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func onInstallCode({
         installationId: Common.InstallationId;
         canister: Principal;
-        moduleNumber: Nat; // TODO@P2: Use it.
+        moduleNumber: Nat;
         moduleName: ?Text;
         user: Principal;
         module_: Common.SharedModule;
