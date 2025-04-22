@@ -381,7 +381,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         wasmModule = Common.unshareModule(wasmModule);
                         arg = to_candid({
                             moduleNumber;
-                            // TODO@P2
+                            // TODO@P3
                             userArg = arg;
                         });
                         packageManager;
@@ -405,7 +405,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             reserved_cycles_limit = null;
                             wasm_memory_limit = null;
                         };
-                    }, 1000_000_000_000); // TODO@P2
+                    }, 1000_000_000_000); // TODO@P3
                     canister_id;
                 };
             };
