@@ -384,7 +384,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             moduleNumber;
                             // TODO@P2
                             userArg = arg;
-                        }); // TODO@P2: per-module args (here and in other places)
+                        });
                         packageManager;
                         mainIndirect;
                         simpleIndirect;
