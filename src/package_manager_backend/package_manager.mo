@@ -901,7 +901,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
-        // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P2: check).
+        // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
             // TODO@P2: order of this code
