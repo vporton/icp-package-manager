@@ -862,7 +862,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     installationId;
                     userArg = pkg.arg;
                 });
-                initArg = null; // TODO@P2: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManager = Principal.fromActor(this);
