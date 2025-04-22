@@ -283,6 +283,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         installationId: Common.InstallationId;
                         package: Common.SharedPackageInfo;
                         repo: Common.RepositoryRO;
+                        arg: Blob;
                     }];
                 }) -> async ();
             };
