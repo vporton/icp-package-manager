@@ -1401,8 +1401,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO@P3: a way to set.
 
     /// The total cycles amount, including canister creation fee.
-    stable var newCanisterCycles = 2_000_000_000_000 * env.subnetSize / 13; // TODO@P2
-
+    let newCanisterCycles = 2_000_000_000_000 * env.subnetSize / 13; // TODO@P3
     /// The total cycles amount, including canister creation fee.
     public query({caller}) func getNewCanisterCycles(): async Nat {
         onlyOwner(caller, "getNewCanisterCycles");
