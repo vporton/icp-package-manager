@@ -919,7 +919,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                                 installationId;
                                 canister;
                                 user;
-                                packageManager; // TODO@P2: Remove?
                                 module_;
                                 moduleNumber;
                             });
