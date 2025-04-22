@@ -221,6 +221,7 @@ actor class Bootstrapper() = this {
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
     }): async {spentCycles: Nat} {
         let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
@@ -282,6 +283,7 @@ actor class Bootstrapper() = this {
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
@@ -379,6 +381,7 @@ actor class Bootstrapper() = this {
                 version: Common.Version;
                 repo: Common.RepositoryRO; 
                 arg: Blob;
+                initArg: ?Blob;
                 user: Principal;
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
@@ -387,6 +390,7 @@ actor class Bootstrapper() = this {
                     version: Common.Version;
                     repo: Common.RepositoryRO;
                     arg: Blob;
+                    initArg: ?Blob;
                 }];
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
@@ -398,6 +402,7 @@ actor class Bootstrapper() = this {
           preinstalledModules = Iter.toArray(installedModules.vals());
           repo = Repository;
           arg = "";
+          initArg = null;
           user;
           mainIndirect;
           additionalPackages;

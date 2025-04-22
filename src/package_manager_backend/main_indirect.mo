@@ -331,7 +331,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         packageManager: Principal;
         simpleIndirect: Principal;
         arg: Blob;
-        initArg: ?Blob;
         canister_id: ?Principal;
     }): () {
         try {

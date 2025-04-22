@@ -348,8 +348,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                     packageName: Common.PackageName;
                     version: Common.Version;
                     arg: Blob;
-                    preinstalledModules: [(Text, Principal)];
                     initArg: ?Blob;
+                    preinstalledModules: [(Text, Principal)];
                 },
             >(packages.vals(), func (p: {
                 repo: Common.RepositoryRO;
@@ -806,6 +806,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     // TODO@P2: Add more arguments.
                     userArg = pkg.arg;
                 });
+                initArg = pkg.initArg;
                 installationId = p0;
                 packageManager = backend;
                 mainIndirect = main_indirect;
