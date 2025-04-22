@@ -220,6 +220,7 @@ actor class Bootstrapper() = this {
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
     }): async {spentCycles: Nat} {
         let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
@@ -282,6 +283,7 @@ actor class Bootstrapper() = this {
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
@@ -328,7 +330,7 @@ actor class Bootstrapper() = this {
                 upgradeId = null;
                 canister_id;
                 wasmModule = Common.unshareModule(m);
-                installArg = to_candid({});
+                arg = to_candid({});
                 packageManager = if (moduleName == "backend") {
                     Principal.fromActor(this) // to call `installPackageWithPreinstalledModules` below
                 } else {
@@ -378,6 +380,7 @@ actor class Bootstrapper() = this {
                 packageName: Common.PackageName;
                 version: Common.Version;
                 repo: Common.RepositoryRO; 
+                arg: Blob;
                 user: Principal;
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
@@ -385,6 +388,7 @@ actor class Bootstrapper() = this {
                     packageName: Common.PackageName;
                     version: Common.Version;
                     repo: Common.RepositoryRO;
+                    arg: Blob;
                 }];
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
@@ -395,6 +399,7 @@ actor class Bootstrapper() = this {
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals());
           repo = Repository;
+          arg = "";
           user;
           mainIndirect;
           additionalPackages;

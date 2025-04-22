@@ -119,6 +119,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
+            arg: Blob;
         }];
         minInstallationId: Common.InstallationId;
         user: Principal;
@@ -130,6 +131,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         try {
             onlyOwner(caller, "installPackagesWrapper");
 
+            Debug.print("Z0"); // FIXME: Remove.
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
                 // unsafe operation, run in main_indirect:
@@ -148,11 +150,13 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         package: Common.SharedPackageInfo;
                         repo: Common.RepositoryRO;
                         preinstalledModules: [(Text, Principal)];
+                        arg: Blob;
                     }];
                     bootstrapping: Bool;
                 }) -> async ();
             };
 
+            Debug.print("Z1");
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             await pm.installStart({
                 minInstallationId;
@@ -162,6 +166,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
                     preinstalledModules: [(Text, Principal)];
+                    arg: Blob;
                 }>(
                     packages.keys(),
                     func (i: Nat) = do {
@@ -172,11 +177,13 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             package = Common.sharePackageInfo(pkg);
                             repo = packages[i].repo;
                             preinstalledModules = packages[i].preinstalledModules;
+                            arg = packages[i].arg;
                         };
                     },
                 ));
                 bootstrapping;
             });
+            Debug.print("Z2"); // FIXME: Remove.
         }
         catch (e) {
             Debug.print("installPackagesWrapper: " # Error.message(e));
@@ -194,7 +201,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         mainIndirect: Principal;
         simpleIndirect: Principal;
         preinstalledCanisterId: ?Principal;
-        installArg: Blob;
+        arg: Blob;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
@@ -228,7 +235,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         moduleNumber;
                         moduleName;
                         wasmModule = Common.unshareModule(wasmModule);
-                        installArg;
+                        arg;
                         packageManager;
                         mainIndirect;
                         simpleIndirect;
@@ -254,10 +261,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
-        // pmPrincipal: Principal; // TODO@P2
         user: Principal;
-        arg = _: Blob; // TODO@P2
     }): () {
         try {
             onlyOwner(caller, "upgradePackageWrapper");
@@ -287,6 +293,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     installationId: Common.InstallationId;
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
+                    arg: Blob;
                 }>(
                     packages.keys(),
                     func (i: Nat) = do {
@@ -297,6 +304,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             installationId = packages[i].installationId;
                             package = Common.sharePackageInfo(pkg);
                             repo = packages[i].repo;
+                            arg = packages[i].arg;
                         };
                     },
                 ));
@@ -316,8 +324,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
         user: Principal;
         packageManager: Principal;
         simpleIndirect: Principal;
-        installArg: Blob;
-        upgradeArg: Blob;
+        arg: Blob;
+        initArg: Blob;
         canister_id: ?Principal;
     }): () {
         try {
@@ -348,7 +356,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             user;
                             installationId;
                             upgradeId;
-                            userArg = ?upgradeArg;
+                            userArg = arg;
                         });
                         wasm_module;
                         mode = mode2;
@@ -367,7 +375,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         upgradeId = null;
                         canister_id;
                         wasmModule = Common.unshareModule(wasmModule);
-                        installArg = to_candid(installArg); // TODO@P2: per-module args (here and in other places)
+                        arg = to_candid({
+                            // TODO@P2
+                            userArg = arg;
+                        }); // TODO@P2: per-module args (here and in other places)
                         packageManager;
                         mainIndirect;
                         simpleIndirect;

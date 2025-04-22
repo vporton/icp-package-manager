@@ -171,7 +171,7 @@ describe('My Test Suite', () => {
             frontendTweakPrivKey,
             installedModules,
             user: backendUser,
-            additionalPackages: [{packageName: "example", version: "0.0.1", repo}],
+            additionalPackages: [{packageName: "example", version: "0.0.1", repo, arg: new Uint8Array()}],
         });
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);
@@ -231,6 +231,7 @@ describe('My Test Suite', () => {
                 packageName: "example",
                 version: "0.0.1",
                 repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+                arg: new Uint8Array(),
             }],
             user: backendUser,
             afterInstallCallback: [],
@@ -259,6 +260,7 @@ describe('My Test Suite', () => {
                 packageName: "upgradeable",
                 version: "0.0.1",
                 repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+                arg: new Uint8Array(),
             }],
             user: backendUser,
             afterInstallCallback: [],
@@ -271,6 +273,7 @@ describe('My Test Suite', () => {
                 packageName: "upgradeable",
                 version: "0.0.2",
                 repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+                arg: new Uint8Array(),
             }],
             user: backendUser,
         });

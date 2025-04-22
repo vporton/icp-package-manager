@@ -42,6 +42,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };    
         bootstrapping: Bool;
         var remainingModules: Nat;
+        arg: Blob;
     };
 
     public type SharedHalfInstalledPackageInfo = {
@@ -54,6 +55,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         bootstrapping: Bool;
         remainingModules: Nat;
+        arg: Blob;
     };
 
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
@@ -64,6 +66,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
         remainingModules = x.remainingModules;
+        arg = x.arg;
     };
 
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
@@ -74,6 +77,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
         var remainingModules = x.remainingModules;
+        arg = x.arg;
     };
 
     public type HalfUninstalledPackageInfo = {
@@ -107,6 +111,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
         modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
+        arg: Blob;
+        initArg: Blob;
     };
 
     public type SharedHalfUpgradedPackageInfo = {
@@ -116,6 +122,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesInstalledByDefault: [(Text, Principal)];
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
+        arg: Blob;
+        initArg: Blob;
     };
 
     private func shareHalfUpgradedPackageInfo(x: HalfUpgradedPackageInfo): SharedHalfUpgradedPackageInfo = {
@@ -125,6 +133,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesInstalledByDefault = Iter.toArray(x.modulesInstalledByDefault.entries());
         modulesToDelete = x.modulesToDelete;
         remainingModules = x.remainingModules;
+        arg = x.arg;
+        initArg = x.initArg;
     };
 
     private func unshareHalfUpgradedPackageInfo(x: SharedHalfUpgradedPackageInfo): HalfUpgradedPackageInfo = {
@@ -134,6 +144,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         modulesToDelete = x.modulesToDelete;
         newRepo = x.newRepo;
         var remainingModules = x.remainingModules;
+        arg = x.arg;
+        initArg = x.initArg;
     };
 
     stable var initialized = false;
@@ -301,6 +313,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
         user: Principal;
         afterInstallCallback: ?{
@@ -322,21 +335,25 @@ shared({caller = initialCaller}) actor class PackageManager({
                     packageName: Common.PackageName;
                     version: Common.Version;
                     repo: Common.RepositoryRO;
+                    arg: Blob;
                 },
                 {
                     repo: Common.RepositoryRO;
                     packageName: Common.PackageName;
                     version: Common.Version;
+                    arg: Blob;
                     preinstalledModules: [(Text, Principal)];
                 },
             >(packages.vals(), func (p: {
                 repo: Common.RepositoryRO;
                 packageName: Common.PackageName;
                 version: Common.Version;
+                arg: Blob;
             }) = {
                 repo = p.repo;
                 packageName = p.packageName;
                 version = p.version;
+                arg = p.arg;
                 preinstalledModules = [];
             }));
             pmPrincipal = Principal.fromActor(this);
@@ -402,10 +419,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
-        // pmPrincipal: Principal;
         user: Principal;
-        // arg: Blob;
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
@@ -418,7 +434,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             minUpgradeId;
             packages;
             user;
-            arg = to_candid({}); // TODO@P2
         });
 
         {minUpgradeId};
@@ -432,6 +447,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             installationId: Common.InstallationId;
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
+            arg: Blob;
+            initArg: Blob;
         }];
     }): async () {
         onlyOwner(caller, "upgradeStart");
@@ -489,6 +506,8 @@ shared({caller = initialCaller}) actor class PackageManager({
                 modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
                 modulesToDelete;
                 var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
+                arg = newPkgData.arg;
+                initArg = newPkgData.initArg;
             };
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
             await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user); // TODO@P3: Use named arguments.
@@ -608,6 +627,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }],
         user: Principal,
     ) {
@@ -629,7 +649,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func installPackageWithPreinstalledModules({
         packageName: Common.PackageName;
         version: Common.Version;
-        repo: Common.RepositoryRO; 
+        repo: Common.RepositoryRO;
+        arg: Blob;
         user: Principal;
         mainIndirect: Principal;
         /// Additional packages to install after bootstrapping.
@@ -637,6 +658,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
+            arg: Blob;
         }];
         preinstalledModules: [(Text, Principal)];
     })
@@ -653,7 +675,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         await* _installModulesGroup({
             mainIndirect = actor(Principal.toText(mainIndirect));
             minInstallationId;
-            packages = [{packageName; version; repo; preinstalledModules}]; // HACK
+            packages = [{packageName; version; repo; preinstalledModules; arg}]; // HACK
             pmPrincipal = Principal.fromActor(this);
             user;
             afterInstallCallback = ?{
@@ -690,6 +712,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
             preinstalledModules: [(Text, Principal)];
+            arg: Blob;
         }];
         bootstrapping: Bool;
     }) {
@@ -715,6 +738,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 afterInstallCallback;
                 bootstrapping;
                 var remainingModules = numModules;
+                arg = p.arg;
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
@@ -763,7 +787,10 @@ shared({caller = initialCaller}) actor class PackageManager({
             getMainIndirect().installModule({
                 moduleNumber;
                 moduleName = ?name;
-                installArg = to_candid({}); // TODO@P2: Add more arguments.
+                arg = to_candid({
+                    // TODO@P2: Add more arguments.
+                    userArg = pkg.arg;
+                });
                 installationId = p0;
                 packageManager = backend;
                 mainIndirect = main_indirect;
@@ -811,16 +838,15 @@ shared({caller = initialCaller}) actor class PackageManager({
                 canister_id;
                 user;
                 wasmModule = Common.shareModule(wasmModule);
-                // arg = to_candid({
-                //     packageManager;
-                //     mainIndirect;
-                //     simpleIndirect;
-                //     user;
-                //     installationId;
-                //     userArg = to_candid({});
-                // });
-                installArg = to_candid({}); // TODO@P2: Add more arguments.
-                upgradeArg = to_candid({}); // TODO@P2: Add more arguments.
+                arg = to_candid({
+                    packageManager;
+                    mainIndirect;
+                    simpleIndirect;
+                    user;
+                    installationId;
+                    userArg = pkg.arg;
+                });
+                initArg = to_candid({}); // TODO@P2: Add more arguments.
                 moduleName = name;
                 moduleNumber = pos;
                 packageManager = Principal.fromActor(this);
@@ -1292,6 +1318,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
+            arg: Blob;
         }];
         pmPrincipal: Principal;
         user: Principal;

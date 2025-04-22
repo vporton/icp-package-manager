@@ -47,7 +47,7 @@ module {
         upgradeId: ?Common.UpgradeId;
         canister_id: Principal;
         wasmModule: Common.Module;
-        installArg: Blob;
+        arg: Blob;
         packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
@@ -66,7 +66,7 @@ module {
                 user;
                 installationId;
                 upgradeId;
-                userArg = installArg;
+                userArg = arg;
             });
             wasm_module;
             mode = #install;
@@ -141,7 +141,7 @@ module {
         packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
-        installArg: Blob;
+        arg: Blob;
         user: Principal;
         controllers: ?[Principal];
         cyclesAmount: Nat;
@@ -163,7 +163,7 @@ module {
             packageManager;
             mainIndirect;
             simpleIndirect;
-            installArg;
+            arg;
             user;
             afterInstallCallback;
             canister_id: Principal;
@@ -179,7 +179,7 @@ module {
         packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
-        installArg: Blob;
+        arg: Blob;
         user: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -193,7 +193,7 @@ module {
             upgradeId;
             canister_id;
             wasmModule;
-            installArg;
+            arg;
             packageManager;
             mainIndirect;
             simpleIndirect;

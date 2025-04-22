@@ -94,6 +94,7 @@ function ChooseVersion2(props: {
                     packageName: props.packageName!,
                     version: chosenVersion!,
                     repo: props.repo!,
+                    arg: new Uint8Array(),
                 }],
                 user: principal!,
                 afterInstallCallback: [],
@@ -122,6 +123,7 @@ function ChooseVersion2(props: {
                     packageName: props.packageName!,
                     version: chosenVersion!,
                     repo: props.repo!,
+                    arg: new Uint8Array(),
                 }],
                 user: principal!,
             });
