@@ -231,7 +231,6 @@ actor class Bootstrapper() = this {
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(tweaker.user));
         });
-        Debug.print("BACKEND amountToMove: " # debug_show(amountToMove)); // FIXME: Remove.
 
         // Move user's fund into current use:
         switch(await CyclesLedger.icrc1_transfer({
