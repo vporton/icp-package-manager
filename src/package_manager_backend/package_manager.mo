@@ -448,7 +448,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
             arg: Blob;
-            initArg: Blob;
+            initArg: ?Blob; // TODO@P2 Also for install.
         }];
     }): async () {
         onlyOwner(caller, "upgradeStart");

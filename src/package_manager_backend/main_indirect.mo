@@ -262,6 +262,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
+            initArg: ?Blob;
         }];
         user: Principal;
     }): () {
@@ -284,6 +285,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         package: Common.SharedPackageInfo;
                         repo: Common.RepositoryRO;
                         arg: Blob;
+                        initArg: ?Blob;
                     }];
                 }) -> async ();
             };
@@ -295,6 +297,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
                     arg: Blob;
+                    initArg: ?Blob;
                 }>(
                     packages.keys(),
                     func (i: Nat) = do {
@@ -306,6 +309,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             package = Common.sharePackageInfo(pkg);
                             repo = packages[i].repo;
                             arg = packages[i].arg;
+                            initArg = packages[i].initArg;
                         };
                     },
                 ));
