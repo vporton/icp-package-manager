@@ -373,7 +373,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared({caller}) func uninstallPackages({
-        packages: [Common.InstallationId]; // TODO@P2: Use `packageIds` argument name here and in other functions.
+        packages: [Common.InstallationId];
         user: Principal;
     })
         : async {minUninstallationId: Common.UninstallationId}
