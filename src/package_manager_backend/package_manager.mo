@@ -122,7 +122,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type SharedHalfUpgradedPackageInfo = {
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
-        newRepo: Principal; // TODO@P2: Use actor type?
+        newRepo: Principal;
         modulesInstalledByDefault: [(Text, Principal)];
         modulesToDelete: [(Text, Principal)];
         remainingModules: Nat;
