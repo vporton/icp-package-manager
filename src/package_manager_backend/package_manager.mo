@@ -804,7 +804,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 moduleNumber;
                 moduleName = ?name;
                 arg = to_candid({
-                    // TODO@P2: Add more arguments.
+                    // TODO@P3: Add more arguments.
                     userArg = pkg.arg;
                 });
                 initArg = pkg.initArg;
