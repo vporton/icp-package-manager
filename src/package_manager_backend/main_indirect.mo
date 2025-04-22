@@ -348,7 +348,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
                     } else {
-                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false }); // TODO@P2: Check modes carefully.
+                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
                     // TODO@P2: consider invoking user's callback if needed.
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
