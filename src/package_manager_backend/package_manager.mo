@@ -747,7 +747,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
-                packageRepoCanister = Principal.fromActor(p.repo); // TODO@P2: Make packageRepoCanister to be of actor type.
+                packageRepoCanister = Principal.fromActor(p.repo);
                 modulesInstalledByDefault = preinstalledModules;
                 minInstallationId;
                 afterInstallCallback;
