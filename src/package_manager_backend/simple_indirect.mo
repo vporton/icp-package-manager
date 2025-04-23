@@ -12,7 +12,7 @@ import Common "../common";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
-    mainIndirect: Principal; // TODO@P2: Rename.
+    mainIndirect: Principal;
     simpleIndirect: Principal;
     user: Principal;
     installationId: Common.InstallationId;
