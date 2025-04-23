@@ -21,23 +21,23 @@ function App() {
   return (
     <BusyProvider>
       <BusyWidget>
-        <ErrorProvider>
-          <ErrorBoundary>
-            <AuthProvider options={{loginOptions: {
-                identityProvider,
-                maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-                windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-                onSuccess: () => {
-                    console.log('Login Successful!');
-                },
-                onError: (error) => {
-                    console.error('Login Failed: ', error);
-                },
-            }}}>
+        <AuthProvider options={{loginOptions: {
+            identityProvider,
+            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+            onSuccess: () => {
+                console.log('Login Successful!');
+            },
+            onError: (error) => {
+                console.error('Login Failed: ', error);
+            },
+        }}}>
+          <ErrorProvider>
+            <ErrorBoundary>
               <App2/>
-            </AuthProvider>
-          </ErrorBoundary>
-        </ErrorProvider>
+            </ErrorBoundary>
+          </ErrorProvider>
+        </AuthProvider>
       </BusyWidget>
     </BusyProvider>
   );
@@ -150,7 +150,6 @@ function App2() {
             </Nav>
           </Navbar>
         </nav>
-        <Button onClick={() => {throw "my error"}}>Error</Button>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainPage/>}/>

@@ -17,6 +17,7 @@ import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
 import { Link, useSearchParams } from "react-router-dom";
 import { get } from "http";
+import { ErrorContext } from "../../lib/ErrorContext";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -39,6 +40,7 @@ export default function MainPage() {
   
   function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const { setBusy } = useContext(BusyContext)!;
+    const { setError } = useContext(ErrorContext)!;
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
@@ -82,7 +84,11 @@ export default function MainPage() {
       }
       catch(e) {
         console.log(e);
-        throw e; // TODO@P3
+        if (/Natural subtraction underflow/.test((e as object).toString())) {
+          setError("Not enough cycles on the account. Please, add some cycles to your account and try again.");
+        } else {
+          setError((e as object).toString());
+        }
       }
       finally {
         setBusy(false);
