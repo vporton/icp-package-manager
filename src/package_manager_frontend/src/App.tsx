@@ -16,7 +16,7 @@ import { createActor as createRepositoryIndexActor } from "../../declarations/re
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did';
 import { Bootstrapper } from '../../declarations/bootstrapper/bootstrapper.did';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
-import { ErrorProvider } from '../../lib/ErrorContext';
+import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { waitTillInitialized } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
@@ -65,6 +65,7 @@ function GlobalUI() {
 
   const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
+  const { setError } = useContext(ErrorContext)!;
   const [searchParams, _] = useSearchParams();
   const moduleJSON = searchParams.get('modules');
   const installedModules: [string, Principal][] = moduleJSON !== null ?
@@ -120,7 +121,12 @@ function GlobalUI() {
         open(base2, '_self');
       }
       catch (e) {
-        console.log(e); // TODO@P3: Return an error.
+        console.log(e);
+        if (/Natural subtraction underflow/.test((e as object).toString())) {
+          setError("Not enough cycles on the account. Please, add some cycles to your account and try again.");
+        } else {
+          setError((e as object).toString());
+        }
       }
       finally {
         setBusy(false);
