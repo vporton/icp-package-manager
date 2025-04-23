@@ -48,7 +48,7 @@ deploy-self@cycles_ledger:
 		name = \"Internet Computer\"; \
 		symbol = \"ICP\"; \
 		decimals = 6; \
-		fee = 10_000; \
+		fee = 100_000_000; \
 		max_supply = 1_000_000_000_000_000_000; \
 		initial_balances = vec { \
 			record { \

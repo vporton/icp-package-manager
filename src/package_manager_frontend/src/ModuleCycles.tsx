@@ -1,5 +1,5 @@
 import { Principal } from "@dfinity/principal";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { createActor as createCyclesLedger } from '../../declarations/cycles_ledger';
@@ -7,18 +7,23 @@ import { PackageManager } from "../../declarations/package_manager/package_manag
 import { useAuth } from "./auth/use-auth-client";
 import { URLSearchParams } from "url";
 import { setServers } from "dns";
+import { Button } from "react-bootstrap";
+import { Actor } from "@dfinity/agent";
+import { ErrorContext } from "../../lib/ErrorContext";
 
 export default function ModuleCycles() {
     const params = new URLSearchParams(window.location.search);
     const pmPrincipal = Principal.fromText(params.get('_pm_pkg0.backend')!);
-    const { agent, isAuthenticated } = useAuth();
+    const { agent, isAuthenticated, principal } = useAuth();
+    const { setError } = useContext(ErrorContext)!;
     type Module = {
         moduleName: string;
+        principal: Principal;
         cycles: bigint | undefined;
     };
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
-    useEffect(() => {
+    const reloadPackages = () => {
         if (isAuthenticated) {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
             const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
@@ -57,7 +62,36 @@ export default function ModuleCycles() {
         } else {
             setPkgs([]);
         }
-    }, [agent, isAuthenticated]);
+    };
+    useEffect(reloadPackages, [agent, isAuthenticated]);
+    async function sendTo(module: {
+        moduleName: string,
+        principal: Principal,
+        cycles: bigint | undefined;
+    }, to: Principal) {
+        try {
+            const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
+            const balance = await cyclesLedger.icrc1_balance_of({owner: module.principal, subaccount: []});
+
+            const methodName = "withdrawCycles"; // FIXME@P3: Use the correct method name from package specs.
+            const interfaceFactory = ({ IDL }: { IDL: any }) => { // TODO@P3: `any`
+                return IDL.Service({
+                    [methodName]: IDL.Func([IDL.Nat, IDL.Principal], [], ["update"])
+                });
+            };
+            const withdrawer = Actor.createActor(interfaceFactory, {
+                agent,
+                canisterId: module.principal,
+            });
+            await withdrawer[methodName](balance - 100_000_000n, to); // minus the fee
+
+            reloadPackages();
+        }
+        catch (e) {
+            console.error(e);
+            setError((e as object).toString());
+        }
+    }
     return (
         <>
             <h2>Modules Cycles</h2>
@@ -71,6 +105,21 @@ export default function ModuleCycles() {
                                 {module.cycles !== undefined ?
                                     " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
+                                {isAuthenticated && <>
+                                    {" "}
+                                    <Button onClick={() => sendTo(module, principal!)}>
+                                        to user
+                                    </Button>
+                                    {" "}
+                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_BATTERY!))}>
+                                        to battery
+                                    </Button>
+                                    {/* Cannot transfer to package manager backend module, because it is not a controller. */}
+                                    {/* {" "}
+                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER!))}>
+                                        to backend
+                                    </Button> */}
+                                </>}
                             </li>
                         ))}
                     </ul>

@@ -1,5 +1,9 @@
 Remaining things TODO:
 
+- TODO@P2 Should battery be controller of all, for cycles withdrawal?
+
+- FIXME@P3 After clicking a withdraw button, it has permanent "Loading..." around.
+
 - TODO@P3 Interface for asking the battery for more cycles (if the user accepts). Use for example, for `icpack`.
 
 - TODO@P3 Use choosen "Default version" on the mainpage.
