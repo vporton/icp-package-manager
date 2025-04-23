@@ -230,7 +230,6 @@ shared ({caller = initialOwner}) actor class Repository() = this {
         onlyPackageCreator(caller);
       };
     };
-    onlyOwner(caller); // TODO@P2: Who has the right to create a package?
 
     // TODO@P3: Check that package exists?
     let owners = switch (p) {
