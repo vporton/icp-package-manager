@@ -57,8 +57,6 @@ export default function ModuleCycles() {
         } else {
             setPkgs([]);
         }
-
-        // Get ICRC1 cycles for each module:
     }, [agent, isAuthenticated]);
     return (
         <>
