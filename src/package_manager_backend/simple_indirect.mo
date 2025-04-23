@@ -103,7 +103,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     ///
     /// If a method is missing, stop.
     ///
-    /// TODO@P2: It would be more efficient and elegant to pass a shared method.
+    /// TODO@P3: It would be more efficient and elegant to pass a shared method.
     private func callAllImpl(methods: [{canister: Principal; name: Text; data: Blob; error: OnError}]): async* () {
         label cycle for (method in methods.vals()) {
             try {
