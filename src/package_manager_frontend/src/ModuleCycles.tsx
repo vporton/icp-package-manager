@@ -65,7 +65,7 @@ export default function ModuleCycles() {
             <h2>Modules Cycles</h2>
             {pkgs.map((pkg) => (
                 <div key={pkg.packageName}>
-                    <h2>{pkg.packageName}</h2>
+                    <h3>{pkg.packageName}</h3>
                     <ul>
                         {pkg.modules.map((module) => (
                             <li key={module.moduleName}>
