@@ -21,6 +21,7 @@ import { waitTillInitialized } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
+import ModuleCycles from './ModuleCycles';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
@@ -220,6 +221,9 @@ function App2() {
                 <MyLink className="nav-link" to="/installed">Installed packages</MyLink>
               </Nav>
               <Nav>
+                <MyLink className="nav-link" to="/cycles/modules">Cycles</MyLink>
+              </Nav>
+              <Nav>
                 <AuthButton/>
               </Nav>
               <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
@@ -243,6 +247,7 @@ function App2() {
             <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO@P3: repo and packageName can be deduces from installationId */}
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
+            <Route path="/cycles/modules" element={<ModuleCycles/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>
