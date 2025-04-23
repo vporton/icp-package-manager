@@ -56,7 +56,6 @@ export default function MainPage() {
     async function bootstrap() {
       try {
         setBusy(true);
-        let pkg: SharedPackageInfo = await repoIndex.getPackage('icpack', "stable");
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {installedModules, frontendTweakPrivKey, spentCycles} = await bootstrapFrontend({

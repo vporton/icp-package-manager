@@ -13,25 +13,31 @@ import {  useEffect, useState } from 'react';
 import { bootstrapper } from '../../declarations/bootstrapper';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
+import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
+import { ErrorProvider } from '../../lib/ErrorContext';
 
 function App() {
   const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BusyProvider>
       <BusyWidget>
-        <AuthProvider options={{loginOptions: {
-            identityProvider,
-            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-            onSuccess: () => {
-                console.log('Login Successful!');
-            },
-            onError: (error) => {
-                console.error('Login Failed: ', error);
-            },
-        }}}>
-          <App2/>
-        </AuthProvider>
+        <ErrorProvider>
+          <ErrorBoundary>
+            <AuthProvider options={{loginOptions: {
+                identityProvider,
+                maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
+                windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
+                onSuccess: () => {
+                    console.log('Login Successful!');
+                },
+                onError: (error) => {
+                    console.error('Login Failed: ', error);
+                },
+            }}}>
+              <App2/>
+            </AuthProvider>
+          </ErrorBoundary>
+        </ErrorProvider>
       </BusyWidget>
     </BusyProvider>
   );
@@ -144,10 +150,12 @@ function App2() {
             </Nav>
           </Navbar>
         </nav>
+        <Button onClick={() => {throw "my error"}}>Error</Button>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainPage/>}/>
             {/* <Route path="/bookmark" element={<Bookmark/>}/> */}
+            <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </BrowserRouter>        
       </Container>

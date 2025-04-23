@@ -16,6 +16,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.log("PPP"); // FIXME: Remove.
     console.error("Uncaught error:", error, errorInfo);
     if (this.context) {
       this.context.setError(error.message);
