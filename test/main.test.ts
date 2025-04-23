@@ -193,7 +193,6 @@ describe('My Test Suite', () => {
             );
         }
         console.log("Testing owners of the PM modules...");
-        // TODO@P2: Check `batteryPrincipal` too.
         for (const [principal, create] of [
             [pmInst.get('simple_indirect')!, createSimpleIndirectActor],
             [pmInst.get('main_indirect')!, createIndirectActor],
