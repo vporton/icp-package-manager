@@ -11,6 +11,7 @@ import Blob "mo:base/Blob";
 import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Cycles "mo:base/ExperimentalCycles";
+import LIB "mo:icpack-lib";
 import Common "../common";
 import MainIndirect "main_indirect";
 import CyclesLedger "canister:cycles_ledger";
@@ -264,5 +265,9 @@ shared({caller = initialOwner}) actor class Battery({
             Principal.hash,
         );
         _ownersSave := []; // Free memory.
+    };
+
+    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
     };
 }

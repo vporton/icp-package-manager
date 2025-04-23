@@ -9,6 +9,8 @@ import Debug "mo:base/Debug";
 import Blob "mo:base/Blob";
 import IC "mo:ic";
 import Common "../common";
+import LIB "mo:icpack-lib";
+import CyclesLedger "canister:cycles_ledger";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -319,5 +321,9 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 
         Cycles.add<system>(amount);
         await IC.ic.upload_chunk(args);
+    };
+
+    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
     };
 };

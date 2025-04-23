@@ -12,6 +12,8 @@ import Common "../common";
 import Install "../install";
 import IC "mo:ic";
 import SimpleIndirect "simple_indirect";
+import LIB "mo:icpack-lib";
+import CyclesLedger "canister:cycles_ledger";
 
 shared({caller = initialCaller}) actor class MainIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -492,4 +494,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
 //             Debug.trap(msg);
 //         };
 //    };
+
+    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
+    };
 }

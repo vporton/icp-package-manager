@@ -57,12 +57,14 @@ module {
     public type ModuleEvent = {
         #CodeInstalledForAllCanisters;
         #CodeUpgradedForAllCanisters;
+        #WithdrawCycles;
     };
 
     private func moduleEventHash(e: ModuleEvent): Hash.Hash =
         switch (e) {
             case (#CodeInstalledForAllCanisters) 0;
             case (#CodeUpgradedForAllCanisters) 1;
+            case (#WithdrawCycles) 2;
         };
 
     /// Shared/query method name.

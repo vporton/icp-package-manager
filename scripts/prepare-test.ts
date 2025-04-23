@@ -75,28 +75,40 @@ async function main() {
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+        callbacks: [
+            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
     });
     const pmMainIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmMainIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
         canisterVersion: [],
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+        callbacks: [
+            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
     });
     const pmSimpleIndirectModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmSimpleIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
         canisterVersion: [],
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+        callbacks: [
+            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
     });
     const pmBatteryModule = await repositoryIndex.uploadModule({
         code: {Wasm: pmBatteryBlob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
-        callbacks: [[{CodeInstalledForAllCanisters: null}, {method: "init"}]],
+        callbacks: [
+            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
     });
     const exampleFrontend = await repositoryIndex.uploadModule({
         code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
@@ -110,7 +122,9 @@ async function main() {
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
-        callbacks: [],
+        callbacks: [
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
     });
 
     const pmUpgradeable1V1 = await repositoryIndex.uploadModule({

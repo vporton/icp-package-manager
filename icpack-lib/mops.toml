@@ -1,0 +1,10 @@
+[package]
+name = "icpack-lib"
+version = "1.0.0"
+description = "Utilities for IC Pack packages"
+repository = "https://github.com/vporton/icp-package-manager"
+keywords = [ "package", "manager", "managing", "cycles" ]
+license = "MIT"
+
+[dependencies]
+icrc1-types = "1.0.0"
