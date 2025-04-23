@@ -92,7 +92,7 @@ function App2() {
       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
       subaccount: [principalToSubAccount(principal!)],
     }).then((amount: bigint) => {
-      setCyclesAmount(parseInt(amount.toString()))
+      setCyclesAmount(parseInt(amount.toString()));
     });
   }
   useEffect(updateCyclesAmount, [principal]);
