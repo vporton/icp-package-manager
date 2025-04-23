@@ -12,7 +12,7 @@ import { createActor as createPackageManager } from '../../declarations/package_
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { InitializedChecker, waitTillInitialized } from "../../lib/install";
-import { ErrorContext } from "./ErrorContext.js";
+import { ErrorContext } from "../../lib/ErrorContext";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import { Alert } from "react-bootstrap";
@@ -129,6 +129,7 @@ function ChooseVersion2(props: {
                     initArg: [],
                 }],
                 user: principal!,
+                afterUpgradeCallback: [],
             });
             for (;;) {
                 const cur = await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0);

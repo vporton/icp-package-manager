@@ -432,6 +432,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             initArg: ?Blob;
         }];
         user: Principal;
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
@@ -444,6 +447,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             minUpgradeId;
             packages;
             user;
+            afterUpgradeCallback;
         });
 
         {minUpgradeId};
@@ -460,6 +464,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             arg: Blob;
             initArg: ?Blob;
         }];
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): async () {
         onlyOwner(caller, "upgradeStart");
 
@@ -520,7 +527,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 initArg = newPkgData.initArg;
             };
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
-            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user); // TODO@P3: Use named arguments.
+            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
         };
     };
 
@@ -529,6 +536,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         upgradeId: Common.UpgradeId;
         moduleName: Text;
         canister_id: Principal;
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): async () {
         onlyOwner(caller, "onUpgradeOrInstallModule");
 
@@ -590,6 +600,20 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
+        };
+        if (upgrade.remainingModules == 0) {
+            switch (afterUpgradeCallback) {
+                case (?afterUpgradeCallback) {
+                    ignore getSimpleIndirect().callAll([{
+                        canister = afterUpgradeCallback.canister;
+                        name = afterUpgradeCallback.name;
+                        data = afterUpgradeCallback.data;
+                        error = #abort; // TODO@P3: Here it's superfluous.
+                    }]);
+                };
+                case null {};
+            };
+            halfInstalledPackages.delete(installationId);
         };
     };
 
@@ -822,7 +846,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    private func doUpgradeFinish(p0: Common.UpgradeId, pkg: HalfUpgradedPackageInfo, installationId: Common.InstallationId, user: Principal): async* () {
+    private func doUpgradeFinish(
+        p0: Common.UpgradeId,
+        pkg: HalfUpgradedPackageInfo,
+        installationId: Common.InstallationId,
+        user: Principal,
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        },
+    ): async* () {
         var posTmp = 0;
         let #real newPkgReal = pkg.package.specific else {
             Debug.trap("trying to directly install a virtual package");
@@ -867,6 +899,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 packageManager = Principal.fromActor(this);
                 // mainIndirect;
                 simpleIndirect;
+                afterUpgradeCallback;
             });
         };
     };

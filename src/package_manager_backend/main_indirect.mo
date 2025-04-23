@@ -266,6 +266,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
             initArg: ?Blob;
         }];
         user: Principal;
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): () {
         try {
             onlyOwner(caller, "upgradePackageWrapper");
@@ -288,6 +291,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         arg: Blob;
                         initArg: ?Blob;
                     }];
+                    afterUpgradeCallback: ?{
+                        canister: Principal; name: Text; data: Blob;
+                    };
                 }) -> async ();
             };
             await backendObj.upgradeStart({
@@ -314,6 +320,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         };
                     },
                 ));
+                afterUpgradeCallback;
             });
         }
         catch (e) {
@@ -332,6 +339,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
         simpleIndirect: Principal;
         arg: Blob;
         canister_id: ?Principal;
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
     }): () {
         try {
             onlyOwner(caller, "upgradeOrInstallModule");
@@ -414,9 +424,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     upgradeId: Common.UpgradeId;
                     moduleName: Text;
                     canister_id: Principal;
+                    afterUpgradeCallback: ?{
+                        canister: Principal; name: Text; data: Blob;
+                    };
                 }) -> async ();
             };
-            await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId});
+            await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId; afterUpgradeCallback});
             await* Install.copyAssetsIfAny({
                 wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
                 canister_id = newCanisterId;

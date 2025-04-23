@@ -18,8 +18,8 @@ import { createActor as createIndirectActor } from "../../declarations/main_indi
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did';
 import { Bootstrapper } from '../../declarations/bootstrapper/bootstrapper.did';
 import { MainIndirect, PackageManager } from '../../declarations/package_manager/package_manager.did';
-import { ErrorBoundary, ErrorHandler } from "./ErrorBoundary";
-import { ErrorProvider } from './ErrorContext';
+import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
+import { ErrorProvider } from '../../lib/ErrorContext';
 import { waitTillInitialized } from '../../lib/install';
 import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';

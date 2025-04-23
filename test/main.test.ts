@@ -277,6 +277,7 @@ describe('My Test Suite', () => {
                 arg: new Uint8Array(),
                 initArg: [],
             }],
+            afterUpgradeCallback: [],
             user: backendUser,
         });
         console.log("Testing upgraded package `upgradeable`...");

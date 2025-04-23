@@ -100,3 +100,5 @@ Remaining things TODO:
 - TODO@P2 Replace some `Principal`s by actor types?
 
 - TODO@P3 Handing names of user's repositories.
+
+- TODO@P2 Report errors such as out-of-cycles.
