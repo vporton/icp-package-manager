@@ -70,14 +70,15 @@ actor class Bootstrapper() = this {
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
-            // Cycles.add<system>(newCanisterCycles);
-            let {canister_id} = await* Install.myCreateCanister({
-                controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                cyclesAmount = if (moduleName == "main_indirect") {
+            let cyclesAmount = if (moduleName == "main_indirect") {
                     20_000_000_000_000 // TODO@P3
                 } else {
                     newCanisterCycles;
                 };
+            ignore Cycles.accept<system>(cyclesAmount);
+            let {canister_id} = await* Install.myCreateCanister({
+                controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
+                cyclesAmount;
                 subnet_selection = ?(
                     #Filter({subnet_type = ?"Application"})
                 );
