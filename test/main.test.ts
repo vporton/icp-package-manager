@@ -185,6 +185,7 @@ describe('My Test Suite', () => {
         console.log("Testing controllers of the PM modules...");
         const simpleIndirect: SimpleIndirect = createSimpleIndirectActor(pmInst.get('simple_indirect')!, {agent: backendAgent});
         for (const canister_id of pmInst.values()) {
+            console.log(`Checking controllers of ${getCanisterNameFromPrincipal(canister_id)}...`);
             const simpleIndirectInfo = await simpleIndirect.canister_info(
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
             // `mainIndirectPrincipal` here is only for the package manager package:

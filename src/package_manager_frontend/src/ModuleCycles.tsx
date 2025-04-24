@@ -83,6 +83,7 @@ export default function ModuleCycles() {
                 agent,
                 canisterId: module.principal,
             });
+            console.log(`Trying to send ${balance} cycles from ${module.principal} to ${to}`);
             await withdrawer[methodName](balance - 100_000_000n, to); // minus the fee
 
             reloadPackages();
@@ -106,6 +107,7 @@ export default function ModuleCycles() {
                                     " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
                                 {isAuthenticated && <>
+                                    {/* FIXME: Canister IDs from `.env` are wrong. */}
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
                                         to user
@@ -119,6 +121,10 @@ export default function ModuleCycles() {
                                     <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER!))}>
                                         to backend
                                     </Button> */}
+                                    {" "}
+                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_SIMPLE_INDIRECT!))}>
+                                        to simple indirect
+                                    </Button>
                                 </>}
                             </li>
                         ))}
