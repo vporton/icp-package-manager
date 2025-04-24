@@ -96,6 +96,7 @@ export default function ModuleCycles() {
     return (
         <>
             <h2>Modules Cycles</h2>
+            <p>TODO@P3: This page is a mess now. Transfers can be performed through several canisters.</p>
             {pkgs.map((pkg) => (
                 <div key={pkg.packageName}>
                     <h3>{pkg.packageName}</h3>
@@ -113,16 +114,16 @@ export default function ModuleCycles() {
                                         to user
                                     </Button>
                                     {" "}
-                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_BATTERY!))}>
+                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "battery")[0].principal)}>
                                         to battery
                                     </Button>
                                     {/* Cannot transfer to package manager backend module, because it is not a controller. */}
-                                    {/* {" "}
-                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER!))}>
-                                        to backend
-                                    </Button> */}
                                     {" "}
-                                    <Button onClick={() => sendTo(module, Principal.fromText(process.env.CANISTER_ID_SIMPLE_INDIRECT!))}>
+                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "backend")[0].principal)}>
+                                        to backend
+                                    </Button>
+                                    {" "}
+                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "simple_indirect")[0].principal)}>
                                         to simple indirect
                                     </Button>
                                 </>}
