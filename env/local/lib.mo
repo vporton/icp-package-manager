@@ -5,5 +5,5 @@ module {
 
     public let subnetSize = 13; // 1 for localhost replica, 13 for most subnets, 13 for localhost PocketIC
 
-    public let bookmarkCost = 10_000_000_000; // charge to limit DoS spam.
+    public let bookmarkCost = 10_000_000_000; // charge to limit DoS spam. // TODO@P3: Remove this.
 }
