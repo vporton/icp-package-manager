@@ -107,7 +107,7 @@ export default function ModuleCycles() {
                                     " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
                                 {isAuthenticated && <>
-                                    {/* FIXME: Canister IDs from `.env` are wrong. */}
+                                    {/* FIXME@P1: Canister IDs from `.env` are wrong. */}
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
                                         to user
