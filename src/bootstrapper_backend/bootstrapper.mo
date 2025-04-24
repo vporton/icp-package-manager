@@ -338,6 +338,7 @@ actor class Bootstrapper() = this {
                 };
                 mainIndirect;
                 simpleIndirect;
+                battery;
                 user;
                 // TODO@P3: Pass the following only to the `backend` module:
                 // frontend;
@@ -347,7 +348,7 @@ actor class Bootstrapper() = this {
             });
         };
 
-        let controllers = [simpleIndirect, mainIndirect, backend, user]; // TODO@P3: duplicate code
+        let controllers = [simpleIndirect, mainIndirect, backend, battery, user]; // TODO@P3: duplicate code
 
         // TODO@P3: It may happen when the app is not installed because of an error.
         // the last stage of installation, not to add failed bookmark:

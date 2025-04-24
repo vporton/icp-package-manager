@@ -7,7 +7,6 @@ import ICRC1 "mo:icrc1/ICRC1";
 import T "mo:icrc1/ICRC1/Types";
 import Option "mo:base/Option";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
-import Array "mo:base/Array";
 
 shared({ caller = _owner }) actor class MockCyclesLedger(
     token_args : ICRC1.TokenInitArgs,

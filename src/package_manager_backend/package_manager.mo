@@ -17,16 +17,17 @@ import Time "mo:base/Time";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
-import Battery "battery";
 import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
 import LIB "mo:icpack-lib";
 import env "mo:env";
+import Battery "battery";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
+    battery: Principal;
     user: Principal;
     installationId: Common.InstallationId;
     userArg = _: Blob;
@@ -165,13 +166,14 @@ shared({caller = initialCaller}) actor class PackageManager({
                 (packageManager, ()),
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()),
+                (battery, ()),
                 (user, ()),
             ].vals(),
             4,
             Principal.equal,
             Principal.hash);
 
-    var battery: Battery.Battery = actor("aaaaa-aa");
+    var batteryActor: Battery.Battery = actor("aaaaa-aa");
 
     public shared({caller}) func init({
         // installationId: Common.InstallationId;
@@ -191,7 +193,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             let ?b = inst.modulesInstalledByDefault.get("battery") else {
                 Debug.trap("error getting battery");
             };
-            battery := actor(Principal.toText(b));
+            batteryActor := actor(Principal.toText(b)); // TODO@P3: Initialize without `init()`.
 
             initialized := true;
         }
@@ -236,7 +238,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             // TODO@P3: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
             let _ = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
-            let _ = battery.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
+            let _ = batteryActor.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = do {
                 let ?pkg = installedPackages.get(installationId) else {
                     Debug.trap("package manager is not yet installed");
@@ -1420,11 +1422,11 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO@P3: Should be in the frontend.
     public composite query({caller}) func userAccountBlob(): async Blob {
-        Principal.toLedgerAccount(Principal.fromActor(battery), ?(Principal.toBlob(caller)));
+        Principal.toLedgerAccount(battery, ?(Principal.toBlob(caller)));
     };
 
     private func userAccount(/*user: Principal*/): CyclesLedger.Account {
-        {owner = Principal.fromActor(battery); subaccount = null/*?(Principal.toBlob(user))*/};
+        {owner = battery; subaccount = null/*?(Principal.toBlob(user))*/};
     };
 
     public composite query/*({caller})*/ func userBalance(): async Nat {

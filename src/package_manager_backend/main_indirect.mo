@@ -19,6 +19,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
+    battery: Principal;
     user: Principal;
     installationId = _: Common.InstallationId;
     userArg = _: Blob;
@@ -37,6 +38,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 (packageManager, ()),
                 (mainIndirect, ()),
                 (simpleIndirect, ()),
+                (battery, ()),
                 (user, ()),
             ].vals(),
             4,
@@ -242,6 +244,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         packageManager;
                         mainIndirect;
                         simpleIndirect;
+                        battery;
                         user;
                         controllers = ?[Principal.fromActor(this)];
                         cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
@@ -399,6 +402,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         packageManager;
                         mainIndirect;
                         simpleIndirect;
+                        battery;
                         user;
                     });
 

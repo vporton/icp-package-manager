@@ -190,7 +190,13 @@ describe('My Test Suite', () => {
                 {canister_id, num_requested_changes: []}, 1000_000_000_000n);
             // `mainIndirectPrincipal` here is only for the package manager package:
             expect(new Set(simpleIndirectInfo.controllers)).to.equalPrincipalSet(
-                new Set([pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser])
+                new Set([
+                    pmInst.get('simple_indirect')!,
+                    pmInst.get('main_indirect')!,
+                    pmInst.get('backend')!,
+                    pmInst.get('battery')!,
+                    backendUser,
+                ])
             );
         }
         console.log("Testing owners of the PM modules...");
@@ -203,15 +209,13 @@ describe('My Test Suite', () => {
             const canister = (create as any)(principal, {agent: backendAgent});
             const owners = await canister.getOwners();
             console.log(`Checking ${getCanisterNameFromPrincipal(principal as Principal)}...`);
-            const expectedOwners = [pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser];
-            // Battery is self-dependent:
-            if ([
-                pmInst.get('main_indirect')!,
+            const expectedOwners = [
                 pmInst.get('simple_indirect')!,
-                pmInst.get('battery')!
-            ].includes(principal as Principal)) {
-                expectedOwners.push(pmInst.get('battery')!);
-            }
+                pmInst.get('main_indirect')!,
+                pmInst.get('backend')!,
+                pmInst.get('battery')!, // Battery is self-dependent:
+                backendUser,
+            ];
             expect(new Set(owners)).to.equalPrincipalSet(
                 new Set(expectedOwners)
             );
@@ -221,7 +225,13 @@ describe('My Test Suite', () => {
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await pmFrontend.list_permitted({permission});
             expect(new Set(owners)).to.equalPrincipalSet(
-                new Set([pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, pmInst.get('backend')!, backendUser])
+                new Set([
+                    pmInst.get('simple_indirect')!,
+                    pmInst.get('main_indirect')!,
+                    pmInst.get('backend')!,
+                    pmInst.get('battery')!, // Battery is self-dependent:
+                    backendUser,
+                ])
             );
         }
 

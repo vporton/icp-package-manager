@@ -51,6 +51,7 @@ module {
         packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
+        battery: Principal;
         user: Principal;
     }): async* () {
         let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
@@ -63,6 +64,7 @@ module {
                 packageManager;
                 mainIndirect;
                 simpleIndirect;
+                battery;
                 user;
                 installationId;
                 upgradeId;
@@ -141,6 +143,7 @@ module {
         packageManager: Principal;
         mainIndirect: Principal;
         simpleIndirect: Principal;
+        battery: Principal;
         arg: Blob;
         user: Principal;
         controllers: ?[Principal];
@@ -163,6 +166,7 @@ module {
             packageManager;
             mainIndirect;
             simpleIndirect;
+            battery;
             arg;
             user;
             afterInstallCallback;
@@ -178,6 +182,7 @@ module {
         wasmModule: Common.Module;
         packageManager: Principal;
         mainIndirect: Principal;
+        battery: Principal;
         simpleIndirect: Principal;
         arg: Blob;
         user: Principal;
@@ -197,6 +202,7 @@ module {
             packageManager;
             mainIndirect;
             simpleIndirect;
+            battery;
             user;
         });
 

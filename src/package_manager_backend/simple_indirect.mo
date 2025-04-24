@@ -16,6 +16,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
+    battery: Principal;
     user: Principal;
     installationId: Common.InstallationId;
     userArg = _: Blob;
@@ -35,6 +36,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
                 (mainIndirect, ()),
                 (user, ()),
                 (simpleIndirect, ()),
+                (battery, ()),
             ].vals(),
             4,
             Principal.equal,
