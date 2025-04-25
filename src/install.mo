@@ -15,8 +15,7 @@ module {
         cyclesAmount: Nat;
         subnet_selection: ?cmc.SubnetSelection;
     }): async* {canister_id: Principal} {
-        Cycles.add<system>(cyclesAmount);
-        let res = await cmc.create_canister({
+        let res = await (with cycles = cyclesAmount) cmc.create_canister({
             settings = ?{
                 // TODO@P3:
                 compute_allocation = null;
@@ -59,7 +58,7 @@ module {
         let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
-        await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        await (with cycles = 1_000_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
                 mainIndirect;

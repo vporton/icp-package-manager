@@ -325,7 +325,7 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
-            Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+            Cycles.add<system>(1_000_000_000_000);
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
