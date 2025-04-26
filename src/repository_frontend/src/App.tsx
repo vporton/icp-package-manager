@@ -3,7 +3,7 @@ import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
-import { InternetIdentityProvider } from '@internet-identity-labs/react-ic-ii-auth';
+import { InternetIdentityProvider } from 'ic-use-internet-identity';
 import { AuthProvider } from './auth/use-auth-client';
 import { myUseNavigate } from "./MyNavigate";
 
@@ -11,19 +11,9 @@ function App() {
   const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BrowserRouter>
-      <AuthProvider options={{loginOptions: {
-          identityProvider,
-          maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-          windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-          onSuccess: () => {
-              console.log('Login Successful!');
-          },
-          onError: (error) => {
-              console.error('Login Failed: ', error);
-          },
-      }}}>
+      <InternetIdentityProvider>
         <App2/>
-      </AuthProvider>
+      </InternetIdentityProvider>
     </BrowserRouter>
   );
 }

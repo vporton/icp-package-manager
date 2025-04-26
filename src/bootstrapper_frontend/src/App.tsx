@@ -1,7 +1,7 @@
 import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from './AuthButton';
-import { AuthProvider, useAuth } from './auth/use-auth-client';
+import { InternetIdentityProvider, useInternetIdentity } from "ic-use-internet-identity";
 import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -21,23 +21,13 @@ function App() {
   return (
     <BusyProvider>
       <BusyWidget>
-        <AuthProvider options={{loginOptions: {
-            identityProvider,
-            maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-            windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-            onSuccess: () => {
-                console.log('Login Successful!');
-            },
-            onError: (error) => {
-                console.error('Login Failed: ', error);
-            },
-        }}}>
+        <InternetIdentityProvider>
           <ErrorProvider>
             <ErrorBoundary>
               <App2/>
             </ErrorBoundary>
           </ErrorProvider>
-        </AuthProvider>
+        </InternetIdentityProvider>
       </BusyWidget>
     </BusyProvider>
   );
@@ -79,33 +69,33 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 }
 
 function App2() {
-  const {isAuthenticated, principal} = useAuth();
+  const {identity, isLoginSuccess} = useInternetIdentity();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
-    if (principal === undefined) {
+    if (identity?.getPrincipal() === undefined) {
       return;
     }
     cycles_ledger.icrc1_balance_of({
       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-      subaccount: [principalToSubAccount(principal!)],
+      subaccount: [principalToSubAccount(identity.getPrincipal()!)],
     }).then((amount: bigint) => {
       setCyclesAmount(parseInt(amount.toString()));
     });
   }
-  useEffect(updateCyclesAmount, [principal]);
+  useEffect(updateCyclesAmount, [identity]);
   useEffect(() => {
     bootstrapper.userAccountBlob().then((b) => {
       setCyclesPaymentAddress(b as Uint8Array);
     });
-  }, [principal]);
+  }, [identity]);
   function mint() {
     cycles_ledger.mint({
       to: {
         owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        subaccount: [principalToSubAccount(principal!)],  
+        subaccount: [principalToSubAccount(identity?.getPrincipal()!)],  
       },
       amount: BigInt(100*10**12),
       memo: [],
@@ -132,7 +122,7 @@ function App2() {
             <Nav>
               <AuthButton/>
             </Nav>
-            <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
+            <Nav style={{display: isLoginSuccess ? undefined : 'none'}}>
               <Dropdown>
                 <Dropdown.Toggle>
                   Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
@@ -145,7 +135,7 @@ function App2() {
               </Dropdown>
               <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
             </Nav>
-            <Nav style={{display: isAuthenticated && getIsLocal() ? undefined : 'none'}}>
+            <Nav style={{display: isLoginSuccess && getIsLocal() ? undefined : 'none'}}>
               <Button onClick={mint}>Mint</Button>
             </Nav>
           </Navbar>

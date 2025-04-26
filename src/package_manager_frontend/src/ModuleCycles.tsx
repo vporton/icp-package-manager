@@ -14,7 +14,7 @@ import { ErrorContext } from "../../lib/ErrorContext";
 export default function ModuleCycles() {
     const params = new URLSearchParams(window.location.search);
     const pmPrincipal = Principal.fromText(params.get('_pm_pkg0.backend')!);
-    const { agent, isAuthenticated, principal } = useAuth();
+    const { agent, isLoginSuccess, principal } = useInternetIdentity();
     const { setError } = useContext(ErrorContext)!;
     type Module = {
         moduleName: string;
@@ -24,7 +24,7 @@ export default function ModuleCycles() {
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
     const reloadPackages = () => {
-        if (isAuthenticated) {
+        if (isLoginSuccess) {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
             const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
             const packageManager: PackageManager = createPackageManager(pmPrincipal, {agent});
@@ -63,7 +63,7 @@ export default function ModuleCycles() {
             setPkgs([]);
         }
     };
-    useEffect(reloadPackages, [agent, isAuthenticated]);
+    useEffect(reloadPackages, [agent, isLoginSuccess]);
     async function sendTo(module: {
         moduleName: string,
         principal: Principal,
@@ -107,7 +107,7 @@ export default function ModuleCycles() {
                                 {module.cycles !== undefined ?
                                     " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
-                                {isAuthenticated && <>
+                                {isLoginSuccess && <>
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
                                         to user

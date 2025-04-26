@@ -44,7 +44,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { agent, defaultAgent, principal, isAuthenticated } = useAuth();
+    const { agent, defaultAgent, principal, isLoginSuccess } = useInternetIdentity();
     const glob = useContext(GlobalContext);
 
     const spentFrontendStr = (new URLSearchParams(window.location.search)).get("spentFrontend");
@@ -104,7 +104,7 @@ export default function MainPage() {
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        if (glob.packageManager === undefined || !isAuthenticated) { // TODO@P3: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isLoginSuccess) { // TODO@P3: It seems to work but is a hack
             setDistros(undefined);
             return;
         }
@@ -115,7 +115,7 @@ export default function MainPage() {
             }
         });
     };
-    useEffect(reloadDistros, [glob.packageManager, isAuthenticated]);
+    useEffect(reloadDistros, [glob.packageManager, isLoginSuccess]);
 
     async function deleteChecked() {
         await glob.packageManager!.removeStalled(repairedPackages);

@@ -11,7 +11,7 @@ export function getIsLocal(): boolean {
 }
 
 export const AuthContext = createContext<{
-  isAuthenticated: boolean,
+  isLoginSuccess: boolean,
   authClient?: AuthClient,
   agent?: Agent,
   defaultAgent?: Agent,
@@ -20,7 +20,7 @@ export const AuthContext = createContext<{
   options?: UseAuthClientOptions,
   login?: (callback?: () => Promise<void>) => void,
   logout?: () => Promise<void>,
-}>({isAuthenticated: false});
+}>({isLoginSuccess: false});
 
 type UseAuthClientOptions = {
   createOptions?: AuthClientCreateOptions;
@@ -64,7 +64,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
   }
 
   async function updateClient(client: AuthClient) {
-    const isAuthenticated = await client.isAuthenticated();
+    const isLoginSuccess = await client.isLoginSuccess();
     const identity = client.getIdentity();
     const principal = identity.getPrincipal();
     const agent = new HttpAgent({identity});
@@ -72,7 +72,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
       agent.fetchRootKey();
     }
 
-    setAuth({authClient: client, agent, isAuthenticated, identity, principal, options: props.options});
+    setAuth({authClient: client, agent, isLoginSuccess, identity, principal, options: props.options});
   }
 
   const defaultAgent = useMemo<HttpAgent>(() => {
@@ -91,7 +91,7 @@ export function AuthProvider(props: { children: any, options?: UseAuthClientOpti
         // Prevent page reload on timeout, not to lose form data:
         disableIdle: false,
         disableDefaultIdleCallback: true,
-        // onIdle: () => logout(), // TODO@P3: It crashes: "Cannot read properties of undefined (reading 'isAuthenticated')"
+        // onIdle: () => logout(), // TODO@P3: It crashes: "Cannot read properties of undefined (reading 'isLoginSuccess')"
         // idleTimeout: 1000, // 1 sec
       }}).then(async (client) => {
       updateClient(client);

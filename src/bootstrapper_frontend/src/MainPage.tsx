@@ -31,20 +31,20 @@ function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
 export default function MainPage() {
     return (
       <AuthContext.Consumer>{
-        ({isAuthenticated, principal, agent, defaultAgent}) =>
-          <MainPage2 isAuthenticated={isAuthenticated} principal={principal} agent={agent} defaultAgent={defaultAgent}/>
+        ({isLoginSuccess, principal, agent, defaultAgent}) =>
+          <MainPage2 isLoginSuccess={isLoginSuccess} principal={principal} agent={agent} defaultAgent={defaultAgent}/>
         }
       </AuthContext.Consumer>
     );
   }
   
-  function MainPage2(props: {isAuthenticated: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
+  function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const { setBusy } = useContext(BusyContext)!;
     const { setError } = useContext(ErrorContext)!;
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
-      if (!props.isAuthenticated || props.agent === undefined) {
+      if (!props.isLoginSuccess || props.agent === undefined) {
         setBookmarks([]);
         return;
       }
@@ -52,7 +52,7 @@ export default function MainPage() {
       bookmark.getUserBookmarks().then(list => {
         setBookmarks(list);
       });
-    }, [props.isAuthenticated, props.principal]);
+    }, [props.isLoginSuccess, props.principal]);
     // TODO@P3: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     async function bootstrap() {
@@ -125,7 +125,7 @@ export default function MainPage() {
         {bookmarks.length !== 0 ?
         <>
           <h2>Installed Package Manager</h2>
-          {!props.isAuthenticated ? <i>Not logged in</i> :
+          {!props.isLoginSuccess ? <i>Not logged in</i> :
             <ul>
               {bookmarks.map(inst => {
                 const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
@@ -155,7 +155,7 @@ export default function MainPage() {
                   <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several bookmarks of the package manager.
                   Also note that multiple package managers will be totally separate, each having its own set of installed packages.
                 </Alert>
-                <p><Button disabled={!props.isAuthenticated} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
+                <p><Button disabled={!props.isLoginSuccess} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>
@@ -171,7 +171,7 @@ export default function MainPage() {
             </label>{" "}
             <small>(for testing)</small>
           </p>
-          <p><Button disabled={!props.isAuthenticated} onClick={bootstrap}>Install package manager IC Pack</Button></p>
+          <p><Button disabled={!props.isLoginSuccess} onClick={bootstrap}>Install package manager IC Pack</Button></p>
         </>}
       </>
     );

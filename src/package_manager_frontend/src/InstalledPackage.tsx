@@ -14,7 +14,7 @@ import { myUseNavigate } from "./MyNavigate";
 export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
-    const {agent, isAuthenticated, principal} = useAuth();
+    const {agent, isLoginSuccess, principal} = useInternetIdentity();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
     const [pinned, setPinned] = useState(false);
@@ -34,7 +34,7 @@ export default function InstalledPackage(props: {}) {
     }, [glob.packageManager]);
     useEffect(() => {
         // TODO@P3: It seems to work but is a hack:
-        if (glob.packageManager === undefined || !isAuthenticated || pkg === undefined) {
+        if (glob.packageManager === undefined || !isLoginSuccess || pkg === undefined) {
             return;
         }
 
@@ -109,7 +109,7 @@ export default function InstalledPackage(props: {}) {
                         >{showDanger ? "Hide danger zone" : "Show danger zone"}
                         </Accordion.Header>
                         <Accordion.Body style={{background: 'red'}}>
-                            <p><Button disabled={!isAuthenticated} onClick={uninstall}>REMOVE THE PACKAGE AND ALL ITS DATA</Button></p>
+                            <p><Button disabled={!isLoginSuccess} onClick={uninstall}>REMOVE THE PACKAGE AND ALL ITS DATA</Button></p>
                         </Accordion.Body>
                     </Accordion.Item>
                 </Accordion>

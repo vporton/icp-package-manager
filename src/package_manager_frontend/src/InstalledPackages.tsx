@@ -74,9 +74,9 @@ export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] =
         useState<Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}> | undefined>();
     const glob = useContext(GlobalContext);
-    const { isAuthenticated } = useAuth();
+    const { isLoginSuccess } = useInternetIdentity();
     useEffect(() => {
-        if (glob.packageManager === undefined || !isAuthenticated) { // TODO@P3: It seems to work but is a hack
+        if (glob.packageManager === undefined || !isLoginSuccess) { // TODO@P3: It seems to work but is a hack
             setInstalledVersions(undefined);
             return;
         }
@@ -104,7 +104,7 @@ export default function InstalledPackages(props: {}) {
                     setInstalledVersions(byName!);
                 });
         });
-    }, [glob.packageManager, isAuthenticated]);
+    }, [glob.packageManager, isLoginSuccess]);
 
     return (
         <>

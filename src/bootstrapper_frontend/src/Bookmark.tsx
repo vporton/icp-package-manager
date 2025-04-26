@@ -6,7 +6,7 @@
 // import { createActor as createPMActor } from "../../declarations/package_manager";
 
 // export default function Bookmark() {
-//     const {isAuthenticated, principal, agent, defaultAgent} = useContext(AuthContext);
+//     const {isLoginSuccess, principal, agent, defaultAgent} = useContext(AuthContext);
 //     const params = new URLSearchParams(window.location.search) as any;
 //     const paramValues = {frontend: params.get('_pm_pkg0.frontend'), backend: params.get('_pm_pkg0.backend')};
 //     const frontend = Principal.fromText(paramValues.frontend);
@@ -28,7 +28,7 @@
 //         <>
 //             <p>Bookmark your package manager location:<br/><a href={url}>{url}</a></p>
 //             {done ? <p><em>Bookmark already created</em></p> :
-//                 <p><Button onClick={createBookmark} disabled={!isAuthenticated}>Bookmark it</Button>
+//                 <p><Button onClick={createBookmark} disabled={!isLoginSuccess}>Bookmark it</Button>
 //                     {" "}Bookmarking is a paid service amounting to 10bn cycles (at the time of writing, 1.34 cents).
 //                 </p>}
 //         </>

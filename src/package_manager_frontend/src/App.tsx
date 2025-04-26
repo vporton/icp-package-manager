@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Link, Route, Routes, useParams, useSearchParams } from 'react-router-dom';
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
-import { AuthProvider, useAuth } from './auth/use-auth-client';
+import { useInternetIdentity } from "ic-use-internet-identity";
 import { getIsLocal } from "../../lib/state";
 import InstalledPackages from './InstalledPackages';
 import { GlobalContext, GlobalContextProvider } from './state';
@@ -22,24 +22,14 @@ import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
+import { InternetIdentityProvider } from "ic-use-internet-identity";
 
 function App() {
-  const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BusyProvider>
       <BusyWidget>
         <BrowserRouter>
-          <AuthProvider options={{loginOptions: {
-              identityProvider,
-              maxTimeToLive: BigInt(3600) * BigInt(1_000_000_000),
-              windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-              onSuccess: () => {
-                  console.log('Login Successful!');
-              },
-              onError: (error) => {
-                  console.error('Login Failed: ', error);
-              },
-          }}}>
+        <InternetIdentityProvider>
             <GlobalContextProvider>
               <h1 style={{textAlign: 'center'}}>
                 <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
@@ -52,7 +42,7 @@ function App() {
                 </ErrorBoundary>
               </ErrorProvider>
             </GlobalContextProvider>
-          </AuthProvider>
+          </InternetIdentityProvider>
         </BrowserRouter>
       </BusyWidget>
     </BusyProvider>
@@ -64,7 +54,7 @@ function GlobalUI() {
   const spentStr: string | null = (new URLSearchParams(location.href)).get('spent');
   const spent = spentStr === null ? undefined : BigInt(spentStr);
 
-  const {isAuthenticated, agent, defaultAgent, principal} = useAuth();
+  const {isLoginSuccess, agent, defaultAgent, principal} = useInternetIdentity();
   const { setBusy } = useContext(BusyContext);
   const { setError } = useContext(ErrorContext)!;
   const [searchParams, _] = useSearchParams();
@@ -144,7 +134,7 @@ function GlobalUI() {
         }
         <ol>
           <li><AuthButton/></li>
-          <li><Button disabled={!isAuthenticated} onClick={installBackend}>Install</Button></li>
+          <li><Button disabled={!isLoginSuccess} onClick={installBackend}>Install</Button></li>
         </ol>
       </Container>
     );
@@ -153,7 +143,7 @@ function GlobalUI() {
 }
 
 function App2() {
-  const {isAuthenticated} = useAuth();
+  const {isLoginSuccess} = useInternetIdentity();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
@@ -226,7 +216,7 @@ function App2() {
               <Nav>
                 <AuthButton/>
               </Nav>
-              <Nav style={{display: isAuthenticated ? undefined : 'none'}}>
+              <Nav style={{display: isLoginSuccess ? undefined : 'none'}}>
                 <Dropdown>
                   <Dropdown.Toggle>
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
