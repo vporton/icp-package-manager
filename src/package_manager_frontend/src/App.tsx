@@ -6,7 +6,6 @@ import { BrowserRouter, Link, Route, Routes, useParams, useSearchParams } from '
 import MainPage from './MainPage';
 import ChooseVersion from './ChooseVersion';
 import { useInternetIdentity } from "ic-use-internet-identity";
-import { getIsLocal } from "../../lib/state";
 import InstalledPackages from './InstalledPackages';
 import { GlobalContext, GlobalContextProvider } from './state';
 import { AuthButton } from './AuthButton';
@@ -23,6 +22,7 @@ import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
 import { InternetIdentityProvider } from "ic-use-internet-identity";
+import { useAuth } from './auth/use-auth-client';
 
 function App() {
   return (
@@ -54,7 +54,7 @@ function GlobalUI() {
   const spentStr: string | null = (new URLSearchParams(location.href)).get('spent');
   const spent = spentStr === null ? undefined : BigInt(spentStr);
 
-  const {isLoginSuccess, agent, defaultAgent, principal} = useInternetIdentity();
+  const {isLoginSuccess, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
   const { setError } = useContext(ErrorContext)!;
   const [searchParams, _] = useSearchParams();
@@ -143,7 +143,7 @@ function GlobalUI() {
 }
 
 function App2() {
-  const {isLoginSuccess} = useInternetIdentity();
+  const {isLoginSuccess} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);

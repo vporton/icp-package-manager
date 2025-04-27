@@ -44,7 +44,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { agent, defaultAgent, principal, isLoginSuccess } = useInternetIdentity();
+    const { agent, defaultAgent, principal, isLoginSuccess } = useAuth();
     const glob = useContext(GlobalContext);
 
     const spentFrontendStr = (new URLSearchParams(window.location.search)).get("spentFrontend");

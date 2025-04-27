@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "./auth/use-auth-client";
+import { useAuth } from "./auth/use-auth-client";
 import { getIsLocal } from "../../lib/state";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createBootstrapperIndirectActor } from "../../declarations/bootstrapper";
@@ -29,16 +29,11 @@ function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
 }
 
 export default function MainPage() {
-    return (
-      <AuthContext.Consumer>{
-        ({isLoginSuccess, principal, agent, defaultAgent}) =>
-          <MainPage2 isLoginSuccess={isLoginSuccess} principal={principal} agent={agent} defaultAgent={defaultAgent}/>
-        }
-      </AuthContext.Consumer>
-    );
-  }
-  
-  function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
+  const {isLoginSuccess, principal, agent, defaultAgent} = useAuth();  
+  return <MainPage2 isLoginSuccess={isLoginSuccess} principal={principal} agent={agent} defaultAgent={defaultAgent}/>;
+}
+
+function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const { setBusy } = useContext(BusyContext)!;
     const { setError } = useContext(ErrorContext)!;
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);

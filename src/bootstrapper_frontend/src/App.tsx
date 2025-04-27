@@ -15,9 +15,9 @@ import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorProvider } from '../../lib/ErrorContext';
+import { useAuth } from './auth/use-auth-client';
 
 function App() {
-  const identityProvider = getIsLocal() ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BusyProvider>
       <BusyWidget>
@@ -69,33 +69,33 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 }
 
 function App2() {
-  const {identity, isLoginSuccess} = useInternetIdentity();
+  const {principal, isLoginSuccess} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
-    if (identity?.getPrincipal() === undefined) {
+    if (principal === undefined) {
       return;
     }
     cycles_ledger.icrc1_balance_of({
       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-      subaccount: [principalToSubAccount(identity.getPrincipal()!)],
+      subaccount: [principalToSubAccount(principal!)],
     }).then((amount: bigint) => {
       setCyclesAmount(parseInt(amount.toString()));
     });
   }
-  useEffect(updateCyclesAmount, [identity]);
+  useEffect(updateCyclesAmount, [principal]);
   useEffect(() => {
     bootstrapper.userAccountBlob().then((b) => {
       setCyclesPaymentAddress(b as Uint8Array);
     });
-  }, [identity]);
+  }, [principal]);
   function mint() {
     cycles_ledger.mint({
       to: {
         owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        subaccount: [principalToSubAccount(identity?.getPrincipal()!)],  
+        subaccount: [principalToSubAccount(principal!)],  
       },
       amount: BigInt(100*10**12),
       memo: [],

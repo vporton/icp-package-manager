@@ -8,7 +8,6 @@ import { AuthProvider } from './auth/use-auth-client';
 import { myUseNavigate } from "./MyNavigate";
 
 function App() {
-  const identityProvider = true ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` : `https://identity.internetcomputer.org`;
   return (
     <BrowserRouter>
       <InternetIdentityProvider>

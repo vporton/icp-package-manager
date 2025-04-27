@@ -5,7 +5,7 @@ import DisplayPrincipal from './DisplayPrincipal';
 import { AuthContext } from './auth/use-auth-client';
 
 export const AuthButton = () => {
-  // const { authenticate,  signout, isLoginSuccess, identity } = useInternetIdentity()
+  // const { authenticate,  signout, isLoginSuccess, identity } = useAuth()
   // console.log('>> authenticate', { signin })
   // console.log('>> initialize your actors with', { identity })
   return (

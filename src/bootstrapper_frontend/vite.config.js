@@ -9,7 +9,7 @@ dotenv.config({ path: '../../.env' });
 
 process.env.II_URL =
   process.env.DFX_NETWORK === "local"
-    ? `http://${process.env.CANISTER_ID_INTERNET_IDENTIY}.localhost:4943`
+    ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
     : `https://identity.ic0.app`;
 
 export default defineConfig({
@@ -36,6 +36,7 @@ export default defineConfig({
     nodePolyfills(),
     environment("all", { prefix: "CANISTER_", defineOn: 'process.env' }),
     environment("all", { prefix: "DFX_", defineOn: 'process.env' }),
+    environment(["II_URL"]),
   ],
   resolve: {
     alias: [

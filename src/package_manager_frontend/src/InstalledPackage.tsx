@@ -14,7 +14,7 @@ import { myUseNavigate } from "./MyNavigate";
 export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
-    const {agent, isLoginSuccess, principal} = useInternetIdentity();
+    const {agent, isLoginSuccess, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
     const [pinned, setPinned] = useState(false);

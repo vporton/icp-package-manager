@@ -55,8 +55,8 @@ function ChooseVersion2(props: {
 }) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
-    const {isLoginSuccess} = useInternetIdentity();
-    const {principal, agent, defaultAgent} = useInternetIdentity();
+    const {isLoginSuccess} = useAuth();
+    const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();

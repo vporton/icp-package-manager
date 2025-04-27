@@ -14,7 +14,7 @@ import { ErrorContext } from "../../lib/ErrorContext";
 export default function ModuleCycles() {
     const params = new URLSearchParams(window.location.search);
     const pmPrincipal = Principal.fromText(params.get('_pm_pkg0.backend')!);
-    const { agent, isLoginSuccess, principal } = useInternetIdentity();
+    const { agent, isLoginSuccess, principal } = useAuth();
     const { setError } = useContext(ErrorContext)!;
     type Module = {
         moduleName: string;

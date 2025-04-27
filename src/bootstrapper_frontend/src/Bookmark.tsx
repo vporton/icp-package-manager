@@ -1,5 +1,5 @@
 // import { Principal } from "@dfinity/principal";
-// import { AuthContext, getIsLocal } from "./auth/use-auth-client";
+// import { getIsLocal } from "./auth/use-auth-client";
 // import Button from "react-bootstrap/Button";
 // import { useContext, useEffect, useState } from "react";
 // import { createActor as createBookmarkActor } from "../../declarations/bookmark";
