@@ -1,6 +1,6 @@
 import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { AuthButton }  from './AuthButton';
+import { AuthButton }  from '../../lib/AuthButton';
 import { InternetIdentityProvider, useInternetIdentity } from "ic-use-internet-identity";
 import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';

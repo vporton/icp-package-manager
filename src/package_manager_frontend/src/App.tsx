@@ -8,7 +8,7 @@ import ChooseVersion from './ChooseVersion';
 import { useInternetIdentity } from "ic-use-internet-identity";
 import InstalledPackages from './InstalledPackages';
 import { GlobalContext, GlobalContextProvider } from './state';
-import { AuthButton } from './AuthButton';
+import { AuthButton } from '../../lib/AuthButton';
 import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";

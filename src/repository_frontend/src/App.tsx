@@ -4,8 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
 import { InternetIdentityProvider } from 'ic-use-internet-identity';
-import { AuthProvider } from './auth/use-auth-client';
-import { myUseNavigate } from "./MyNavigate";
 
 function App() {
   return (
@@ -18,8 +16,6 @@ function App() {
 }
 
 function App2() {
-  const navigate = myUseNavigate();
-
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
