@@ -141,6 +141,7 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
+        Debug.print("Z0: " # debug_show(user)); // FIXME: Remove.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
@@ -148,6 +149,7 @@ actor class Bootstrapper() = this {
         // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
+        Debug.print("Z1: " # debug_show(amountToMove)); // FIXME: Remove.
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
@@ -161,6 +163,7 @@ actor class Bootstrapper() = this {
             };
             case (#Ok _) {};
         };
+        Debug.print("Z2"); // FIXME: Remove.
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
@@ -174,6 +177,7 @@ actor class Bootstrapper() = this {
             };
             case (#Ok _) {};
         };
+        Debug.print("Z3"); // FIXME: Remove.
 
         func finish(): async* {returnAmount: Nat} {
             Debug.print("Refunding user " # debug_show(Cycles.refunded())); // FIXME: Remove.

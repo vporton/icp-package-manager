@@ -18,13 +18,10 @@ export function useAuth() {
   const [agentFetchedKey, setAgentFetchedKey] = useState(!getIsLocal());
   const [defaultAgentFetchedKey, setDefaultAgentFetchedKey] = useState(!getIsLocal());
   const agent = useMemo(
-    () => v.identity && agentFetchedKey ? new HttpAgent({ host, identity: v.identity }) : undefined,
-    [v.identity, agentFetchedKey]
+    () => v.identity ? new HttpAgent({ host, identity: v.identity }) : undefined,
+    [v.identity]
   );
-  const defaultAgent = useMemo(
-    () => defaultAgentFetchedKey ? new HttpAgent({ host }) : undefined,
-    [defaultAgentFetchedKey]
-  );
+  const defaultAgent = useMemo(() => new HttpAgent({ host }), []);
   useEffect(() => {
     if (getIsLocal() && agent !== undefined && !agentFetchedKey) {
       agent.fetchRootKey().then(() => setAgentFetchedKey(true));
@@ -34,13 +31,17 @@ export function useAuth() {
     if (getIsLocal() && defaultAgent !== undefined && !defaultAgentFetchedKey) {
       defaultAgent.fetchRootKey().then(() => setDefaultAgentFetchedKey(true));
     }
-  }, [agent]);
+  }, [defaultAgent]);
   return {
     identity: v.identity,
     ok: v.identity !== undefined,
-    principal: useMemo(() => v.identity?.getPrincipal(), [v.identity]),
-    agent,
-    defaultAgent,
+    principal: useMemo(() => {
+      const p = v.identity?.getPrincipal();
+      console.log("useAuth principal", p?.toString()); // FIXME: Remove
+      return p;
+    }, [v.identity]),
+    agent: agentFetchedKey ? agent : undefined,
+    defaultAgent: defaultAgentFetchedKey ? defaultAgent : undefined,
     login: v.login,
     clear: v.clear,
   };

@@ -29,7 +29,10 @@ function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
 }
 
 export default function MainPage() {
-  const {ok, principal, agent, defaultAgent} = useAuth();  
+  const {ok, principal, agent, defaultAgent} = useAuth();
+  agent?.getPrincipal().then(p => { // FIXME: Remove.
+    console.log("MainPage AGENT", p.toString(), '|', principal?.toString());
+  });
   return <MainPage2 ok={ok} principal={principal} agent={agent} defaultAgent={defaultAgent}/>;
 }
 
