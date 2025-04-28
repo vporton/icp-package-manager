@@ -199,7 +199,7 @@ export default function MainPage() {
                             type='checkbox'
                             data-value={p.installationId}
                             onClick={event => {
-                                const checkedBoxes = document.querySelectorAll('input[id=terminateInstall]:checked');
+                                const checkedBoxes = document.querySelectorAll('*[id=terminateInstall] input:checked');
                                 const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
                                 setRepairedPackages({...repairedPackages, install: ids});
                             } }/>{" "}
@@ -215,7 +215,7 @@ export default function MainPage() {
                             type='checkbox'
                             data-value={p.uninstallationId}
                             onClick={event => {
-                                const checkedBoxes = document.querySelectorAll('input[id=terminateUninstall]:checked');
+                                const checkedBoxes = document.querySelectorAll('*[id=terminateUninstall] input:checked');
                                 const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
                                 setRepairedPackages({...repairedPackages, uninstall: ids});
                             } }/>{" "}
@@ -231,7 +231,7 @@ export default function MainPage() {
                             type='checkbox'
                             data-value={p.upgradeId}
                             onClick={event => {
-                                const checkedBoxes = document.querySelectorAll('input[id=terminateUpgrade]:checked');
+                                const checkedBoxes = document.querySelectorAll('*[id=terminateUpgrade] input:checked');
                                 const ids = Array.from(checkedBoxes).map((box: Element, _index, _array) => BigInt(box.getAttribute('data-value')!));
                                 setRepairedPackages({...repairedPackages, upgrade: ids});
                             } }/>{" "}
