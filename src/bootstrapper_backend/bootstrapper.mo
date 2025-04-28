@@ -141,7 +141,6 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        Debug.print("Z0: " # debug_show(user)); // FIXME: Remove.
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
         });
