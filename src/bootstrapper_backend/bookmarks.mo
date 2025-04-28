@@ -69,7 +69,7 @@ persistent actor class Bookmarks(initialOwner: Principal) {
         //     to = {owner = revenueRecipient; subaccount = null};
         //     fee = null;
         //     memo = null;
-        //     created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+        //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         //     amount = env.bookmarkCost - 100_000_000; // minus transfer fee
         // });
         // switch (res) {

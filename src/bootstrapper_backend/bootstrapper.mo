@@ -153,7 +153,7 @@ actor class Bootstrapper() = this {
             fee = null;
             memo = null;
             from_subaccount = ?(principalToSubaccount(user));
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
         })) {
             case (#Err e) {
@@ -166,7 +166,7 @@ actor class Bootstrapper() = this {
             fee = null;
             memo = null;
             from_subaccount = ?(principalToSubaccount(user));
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*cycles_transfer_fee;
         })) {
             case (#Err e) {
@@ -183,7 +183,7 @@ actor class Bootstrapper() = this {
                 fee = null;
                 memo = null;
                 from_subaccount = null;
-                created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
                 amount = returnAmount;
             })) {
                 case (#Err e) {
@@ -238,7 +238,7 @@ actor class Bootstrapper() = this {
             fee = null;
             memo = null;
             from_subaccount = ?(principalToSubaccount(tweaker.user));
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = amountToMove - 2*cycles_transfer_fee;
         })) {
             case (#Err e) {
@@ -266,7 +266,7 @@ actor class Bootstrapper() = this {
             fee = null;
             memo = null;
             from_subaccount = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = returnAmount;
         });
 

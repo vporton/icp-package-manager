@@ -16,7 +16,7 @@ module {
             fee = null;
             memo = null;
             from_subaccount = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         })) {
             case (#Err e) {
                 Debug.trap("withdrawCycles: " # debug_show(e));

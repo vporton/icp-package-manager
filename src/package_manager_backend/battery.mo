@@ -81,9 +81,6 @@ shared({caller = initialOwner}) actor class Battery({
             Debug.trap("already initialized");
         };
 
-        await* addWithdrawer(mainIndirect);
-        await* addWithdrawer(packageManager);
-
         initTimer<system>();
 
         initialized := true;
@@ -213,7 +210,7 @@ shared({caller = initialOwner}) actor class Battery({
                 fee = null;
                 memo = null;
                 from_subaccount = null; // {owner = revenueRecipient; subaccount = ?null};
-                created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
                 amount = fee;
             });
             switch (res) {
@@ -252,9 +249,12 @@ shared({caller = initialOwner}) actor class Battery({
     var withdrawers = principalSet.empty();
 
     /// TODO@P3: Make it editable using user confirmation.
-    private func addWithdrawer(withdrawer: Principal): async* () {
+    private func addWithdrawer(withdrawer: Principal) {
         withdrawers := principalSet.put(withdrawers, withdrawer);
     };
+
+    addWithdrawer(mainIndirect);
+    addWithdrawer(packageManager);
 
     public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(CyclesLedger, amount, payee);
@@ -270,7 +270,7 @@ shared({caller = initialOwner}) actor class Battery({
             fee = null;
             memo = null;
             from_subaccount = null;
-            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         })) {
             case (#Err e) {
                 Debug.trap("withdrawCycles: " # debug_show(e));

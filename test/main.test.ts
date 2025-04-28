@@ -238,8 +238,10 @@ describe('My Test Suite', () => {
 
         console.log("Installing `example` package...");
         const { canisterStatus } = ICManagementCanister.create({agent: backendAgent});
-        const { cycles } = await canisterStatus(pmInst.get('battery')!);
-        console.log(`Cycles in battery canister: ${Number(cycles.toString())/10**12}T`);
+        for (const [moduleName, canister_id] of pmInst.entries()) {
+            const { cycles } = await canisterStatus(canister_id);
+            console.log(`Cycles in canister '${moduleName}': ${Number(cycles.toString())/10**12}T`);
+        }
         const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
             packages: [{
                 packageName: "example",
