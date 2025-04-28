@@ -15,7 +15,7 @@ import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorProvider } from '../../lib/ErrorContext';
-import { useAuth } from './auth/use-auth-client';
+import { useAuth } from '../../lib/use-auth-client';
 
 function App() {
   return (
@@ -69,7 +69,7 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 }
 
 function App2() {
-  const {principal, isLoginSuccess} = useAuth();
+  const {principal, ok, identity} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   // TODO@P3: below correct `!` usage?
@@ -122,7 +122,7 @@ function App2() {
             <Nav>
               <AuthButton/>
             </Nav>
-            <Nav style={{display: isLoginSuccess ? undefined : 'none'}}>
+            <Nav style={{display: ok ? undefined : 'none'}}>
               <Dropdown>
                 <Dropdown.Toggle>
                   Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
@@ -135,7 +135,7 @@ function App2() {
               </Dropdown>
               <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
             </Nav>
-            <Nav style={{display: isLoginSuccess && getIsLocal() ? undefined : 'none'}}>
+            <Nav style={{display: ok && getIsLocal() ? undefined : 'none'}}>
               <Button onClick={mint}>Mint</Button>
             </Nav>
           </Navbar>

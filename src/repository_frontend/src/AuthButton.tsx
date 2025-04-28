@@ -2,18 +2,18 @@ import Button from 'react-bootstrap/Button';
 
 import { useInternetIdentity } from 'ic-use-internet-identity';
 import DisplayPrincipal from './DisplayPrincipal';
-import { AuthContext } from './auth/use-auth-client';
+import { AuthContext } from '../lib/use-auth-client';
 
 export const AuthButton = () => {
-  // const { authenticate,  signout, isLoginSuccess, identity } = useAuth()
+  // const { authenticate,  signout, ok, identity } = useAuth()
   // console.log('>> authenticate', { signin })
   // console.log('>> initialize your actors with', { identity })
   return (
     <AuthContext.Consumer>
-    {({isLoginSuccess, principal, authClient, defaultAgent, options, login, logout}) =>
+    {({ok, principal, authClient, defaultAgent, options, login, logout}) =>
       <span>
-        <Button onClick={() => isLoginSuccess ? logout!() : login!()}>
-          {isLoginSuccess ? 'Logout' : 'Login'}
+        <Button onClick={() => ok ? logout!() : login!()}>
+          {ok ? 'Logout' : 'Login'}
         </Button>
         {" "}
         <DisplayPrincipal value={principal}/>

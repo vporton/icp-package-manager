@@ -2,7 +2,7 @@ import { ChangeEvent, createRef, useContext, useEffect, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client";
 import { getIsLocal } from "../../lib/state";
 import { InstallationId, SharedPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import { GlobalContext } from "./state";
@@ -44,7 +44,7 @@ function DistroAdd(props: {show: boolean, handleClose: () => void, handleReload:
 }
 
 export default function MainPage() {
-    const { agent, defaultAgent, principal, isLoginSuccess } = useAuth();
+    const { agent, defaultAgent, principal, ok } = useAuth();
     const glob = useContext(GlobalContext);
 
     const spentFrontendStr = (new URLSearchParams(window.location.search)).get("spentFrontend");
@@ -104,7 +104,7 @@ export default function MainPage() {
     const handleClose = () => setDistroAddShow(false);
     const distroSel = createRef<HTMLSelectElement>();
     const reloadDistros = () => {
-        if (glob.packageManager === undefined || !isLoginSuccess) { // TODO@P3: It seems to work but is a hack
+        if (glob.packageManager === undefined || !ok) { // TODO@P3: It seems to work but is a hack
             setDistros(undefined);
             return;
         }
@@ -115,7 +115,7 @@ export default function MainPage() {
             }
         });
     };
-    useEffect(reloadDistros, [glob.packageManager, isLoginSuccess]);
+    useEffect(reloadDistros, [glob.packageManager, ok]);
 
     async function deleteChecked() {
         await glob.packageManager!.removeStalled(repairedPackages);

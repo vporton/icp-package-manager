@@ -22,7 +22,7 @@ import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
 import { InternetIdentityProvider } from "ic-use-internet-identity";
-import { useAuth } from './auth/use-auth-client';
+import { useAuth } from '../../lib/use-auth-client';
 
 function App() {
   return (
@@ -54,7 +54,7 @@ function GlobalUI() {
   const spentStr: string | null = (new URLSearchParams(location.href)).get('spent');
   const spent = spentStr === null ? undefined : BigInt(spentStr);
 
-  const {isLoginSuccess, agent, defaultAgent, principal} = useAuth();
+  const {ok, agent, defaultAgent, principal} = useAuth();
   const { setBusy } = useContext(BusyContext);
   const { setError } = useContext(ErrorContext)!;
   const [searchParams, _] = useSearchParams();
@@ -134,7 +134,7 @@ function GlobalUI() {
         }
         <ol>
           <li><AuthButton/></li>
-          <li><Button disabled={!isLoginSuccess} onClick={installBackend}>Install</Button></li>
+          <li><Button disabled={!ok} onClick={installBackend}>Install</Button></li>
         </ol>
       </Container>
     );
@@ -143,7 +143,7 @@ function GlobalUI() {
 }
 
 function App2() {
-  const {isLoginSuccess} = useAuth();
+  const {ok} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
@@ -216,7 +216,7 @@ function App2() {
               <Nav>
                 <AuthButton/>
               </Nav>
-              <Nav style={{display: isLoginSuccess ? undefined : 'none'}}>
+              <Nav style={{display: ok ? undefined : 'none'}}>
                 <Dropdown>
                   <Dropdown.Toggle>
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
@@ -237,7 +237,7 @@ function App2() {
             <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO@P3: repo and packageName can be deduces from installationId */}
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
-            <Route path="/cycles/modules" element={<ModuleCycles/>}/>
+            {/* <Route path="/cycles/modules" element={<ModuleCycles/>}/> */}
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>

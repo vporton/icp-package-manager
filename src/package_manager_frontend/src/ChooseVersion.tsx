@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client.js";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as Repository } from '../../declarations/repository/repository.did';
@@ -55,7 +55,7 @@ function ChooseVersion2(props: {
 }) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
-    const {isLoginSuccess} = useAuth();
+    const {ok} = useAuth();
     const {principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
@@ -177,10 +177,10 @@ function ChooseVersion2(props: {
                         : installedVersions.size == 0
                         ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                         : installedVersions.has(chosenVersion ?? "")
-                        ? <>Already installed. <Button onClick={install} disabled={!isLoginSuccess || installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
-                        : <>Already installed. <Button onClick={install} disabled={!isLoginSuccess || installing || chosenVersion === undefined}>Install it in addition to other versions of this package</Button></>
+                        ? <>Already installed. <Button onClick={install} disabled={!ok || installing || chosenVersion === undefined}>Install an additional copy of this version</Button></>
+                        : <>Already installed. <Button onClick={install} disabled={!ok || installing || chosenVersion === undefined}>Install it in addition to other versions of this package</Button></>
                     }
-                    {!isLoginSuccess && <p>Sign in to install or upgrade packages.</p>}
+                    {!ok && <p>Sign in to install or upgrade packages.</p>}
                 </p>
             </>}
         </>

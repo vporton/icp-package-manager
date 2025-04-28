@@ -2,18 +2,17 @@ import Button from 'react-bootstrap/Button';
 
 import { useInternetIdentity } from 'ic-use-internet-identity';
 import DisplayPrincipal from '../bootstrapper_frontend/src/DisplayPrincipal';
-import { useAuth } from '../bootstrapper_frontend/src/auth/use-auth-client';
+import { useAuth } from './use-auth-client';
 
 export const AuthButton = () => {
-  const { isLoginSuccess, principal, login, clear, loginStatus } = useAuth();
-  // We can't use `isLoginSuccess` because of https://github.com/kristoferlund/ic-use-internet-identity-demo/issues/6
+  const { principal, login, clear, identity } = useAuth();
   return (
     <>
-      <Button onClick={() => loginStatus === 'idle' ? login!() : clear!()}>
-        {loginStatus === 'idle' ? 'Login' : 'Logout'}
-      </Button>[{loginStatus  === 'idle' ? 'not logged in' : 'logged in'}]
+      <Button onClick={identity ? clear! : login!}>
+        {identity ? 'Logout' : 'Login'}
+      </Button>
       {" "}
-      <DisplayPrincipal value={isLoginSuccess ? principal : undefined}/>
+      <DisplayPrincipal value={identity ? principal : undefined}/>
     </>
   );
 }

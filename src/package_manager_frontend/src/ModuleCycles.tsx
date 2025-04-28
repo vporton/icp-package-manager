@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { createActor as createCyclesLedger } from '../../declarations/cycles_ledger';
 import { PackageManager } from "../../declarations/package_manager/package_manager.did";
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client";
 import { URLSearchParams } from "url";
 import { setServers } from "dns";
 import { Button } from "react-bootstrap";
@@ -15,7 +15,7 @@ import { GlobalContext } from "./state";
 export default function ModuleCycles() {
     const params = new URLSearchParams(window.location.search);
     const pmPrincipal = Principal.fromText(params.get('_pm_pkg0.backend')!);
-    const { agent, isLoginSuccess, principal } = useAuth();
+    const { agent, ok, principal } = useAuth();
     const { setError } = useContext(ErrorContext)!;
     const glob = useContext(GlobalContext);
     type Module = {
@@ -26,7 +26,7 @@ export default function ModuleCycles() {
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
     const reloadPackages = () => {
-        if (isLoginSuccess) {
+        if (ok) {
             if (glob.packageManager === undefined) {
                 return;
             }
@@ -67,7 +67,7 @@ export default function ModuleCycles() {
             setPkgs([]);
         }
     };
-    useEffect(reloadPackages, [agent, isLoginSuccess, glob.packageManager]);
+    useEffect(reloadPackages, [agent, ok, glob.packageManager]);
     async function sendTo(module: {
         moduleName: string,
         principal: Principal,
@@ -111,7 +111,7 @@ export default function ModuleCycles() {
                                 {module.cycles !== undefined ?
                                     " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
-                                {isLoginSuccess && <>
+                                {ok && <>
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
                                         to user

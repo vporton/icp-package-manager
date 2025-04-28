@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client";
 import { getIsLocal } from "../../lib/state";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createBootstrapperIndirectActor } from "../../declarations/bootstrapper";
@@ -29,17 +29,17 @@ function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
 }
 
 export default function MainPage() {
-  const {isLoginSuccess, principal, agent, defaultAgent} = useAuth();  
-  return <MainPage2 isLoginSuccess={isLoginSuccess} principal={principal} agent={agent} defaultAgent={defaultAgent}/>;
+  const {ok, principal, agent, defaultAgent} = useAuth();  
+  return <MainPage2 ok={ok} principal={principal} agent={agent} defaultAgent={defaultAgent}/>;
 }
 
-function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
+function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent: Agent | undefined, defaultAgent: Agent | undefined}) {
     const { setBusy } = useContext(BusyContext)!;
     const { setError } = useContext(ErrorContext)!;
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
     useEffect(() => {
-      if (!props.isLoginSuccess || props.agent === undefined) {
+      if (!props.ok || props.agent === undefined) {
         setBookmarks([]);
         return;
       }
@@ -47,7 +47,7 @@ function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undef
       bookmark.getUserBookmarks().then(list => {
         setBookmarks(list);
       });
-    }, [props.isLoginSuccess, props.principal]);
+    }, [props.ok, props.principal]);
     // TODO@P3: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     async function bootstrap() {
@@ -120,7 +120,7 @@ function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undef
         {bookmarks.length !== 0 ?
         <>
           <h2>Installed Package Manager</h2>
-          {!props.isLoginSuccess ? <i>Not logged in</i> :
+          {!props.ok ? <i>Not logged in</i> :
             <ul>
               {bookmarks.map(inst => {
                 const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
@@ -150,7 +150,7 @@ function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undef
                   <span style={{color: 'red'}}>Don't click the below button</span> unless you are sure that you need several bookmarks of the package manager.
                   Also note that multiple package managers will be totally separate, each having its own set of installed packages.
                 </Alert>
-                <p><Button disabled={!props.isLoginSuccess} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
+                <p><Button disabled={!props.ok} onClick={bootstrapAgain}>Install package manager IC Pack AGAIN</Button></p>
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>
@@ -166,7 +166,7 @@ function MainPage2(props: {isLoginSuccess: boolean, principal: Principal | undef
             </label>{" "}
             <small>(for testing)</small>
           </p>
-          <p><Button disabled={!props.isLoginSuccess} onClick={bootstrap}>Install package manager IC Pack</Button></p>
+          <p><Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button></p>
         </>}
       </>
     );

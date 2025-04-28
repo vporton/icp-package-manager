@@ -17,5 +17,5 @@
     "jsx": "react-jsx",
     "types": ["node", "vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "../lib/use-auth-client.tsx"]
 }

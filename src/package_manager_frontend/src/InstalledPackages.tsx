@@ -3,7 +3,7 @@ import { SharedInstalledPackageInfo } from "../../declarations/package_manager/p
 import { GlobalContext } from "./state";
 import { MyLink } from "./MyNavigate";
 import { Guid }  from "js-guid"
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client";
 
 function concatenateUint8Arrays(array1: Uint8Array, array2: Uint8Array): Uint8Array {
     const combinedArray = new Uint8Array(array1.length + array2.length);
@@ -74,9 +74,9 @@ export default function InstalledPackages(props: {}) {
     const [installedVersions, setInstalledVersions] =
         useState<Map<string/*Uint8Array*/, {all: SharedInstalledPackageInfo[]; default: bigint}> | undefined>();
     const glob = useContext(GlobalContext);
-    const { isLoginSuccess } = useAuth();
+    const { ok } = useAuth();
     useEffect(() => {
-        if (glob.packageManager === undefined || !isLoginSuccess) { // TODO@P3: It seems to work but is a hack
+        if (glob.packageManager === undefined || !ok) { // TODO@P3: It seems to work but is a hack
             setInstalledVersions(undefined);
             return;
         }
@@ -104,7 +104,7 @@ export default function InstalledPackages(props: {}) {
                     setInstalledVersions(byName!);
                 });
         });
-    }, [glob.packageManager, isLoginSuccess]);
+    }, [glob.packageManager, ok]);
 
     return (
         <>

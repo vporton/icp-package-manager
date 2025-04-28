@@ -2,7 +2,7 @@ import { Principal } from "@dfinity/principal";
 import React, { createContext, useEffect, useState } from "react";
 import { PackageManager } from "../../declarations/package_manager/package_manager.did";
 import { package_manager } from "../../declarations/package_manager";
-import { useAuth } from "./auth/use-auth-client";
+import { useAuth } from "../../lib/use-auth-client";
 import { idlFactory as packageManagerIDL } from '../../declarations/package_manager/package_manager.did.js';
 import { Actor } from "@dfinity/agent";
 
