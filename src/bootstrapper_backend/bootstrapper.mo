@@ -176,9 +176,7 @@ actor class Bootstrapper() = this {
         };
 
         func finish(): async* {returnAmount: Nat} {
-            Debug.print("Refunding user " # debug_show(Cycles.refunded())); // FIXME: Remove.
             let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-            Debug.print("Transfer back: " # debug_show(returnAmount)); // FIXME: Remove.
             // Return user's fund from current use:
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};

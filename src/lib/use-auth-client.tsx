@@ -37,7 +37,6 @@ export function useAuth() {
     ok: v.identity !== undefined,
     principal: useMemo(() => {
       const p = v.identity?.getPrincipal();
-      console.log("useAuth principal", p?.toString()); // FIXME: Remove
       return p;
     }, [v.identity]),
     agent: agentFetchedKey ? agent : undefined,
