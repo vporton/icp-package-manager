@@ -28,60 +28,54 @@ export default function ModuleCycles() {
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
     const reloadPackages = () => {
-        if (ok) {
-            if (glob.packageManager === undefined) {
-                return;
-            }
-            const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
-            const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
-            glob.packageManager.getAllInstalledPackages().then(packages => {
-                for (const p of packages) {
-                    if ((p[1].package.specific as any).real) {
-                        const modules = p[1].modulesInstalledByDefault.map<{
-                            moduleName: string,
-                            principal: Principal,
-                            cycles1: bigint | undefined;
-                            cycles2: bigint | undefined;
-                        }>(m => {
-                            return {
-                                moduleName: m[0],
-                                principal: m[1],
-                                cycles1: undefined,
-                                cycles2: undefined,
-                            };
-                        });
-                        const { canisterStatus } = ICManagementCanister.create({ // FIXME: It creates canister with null/undefined agent.
-                            agent,
-                        });
-                        for (const m of modules) {
-                            cyclesLedger.icrc1_balance_of({owner: m.principal, subaccount: []}).then(balance => {
-                                m.cycles1 = balance;
-                                setCounter(counter + 1);
-                            }).catch(e => {
-                                setError(e.toString());
-                            });
-                            canisterStatus(m.principal).then(({cycles}) => {
-                                console.log("Cycles", cycles); // FIXME: Remove.    
-                                m.cycles2 = cycles;
-                                setCounter(counter + 1);
-                            }).catch(e => {
-                                setError(e.toString());
-                            });                              
-                        }
-                        const h = {
-                            packageName: p[1].package.base.name,
-                            packageVersion: p[1].package.base.version,
-                            // TODO@P3: `additionalModules`
-                            modules,
-                        };
-                        _pkgs.push(h);
-                    }
-                }
-                setPkgs(_pkgs);
-            });
-        } else {
+        if (glob.packageManager === undefined || agent === undefined || !ok) {
             setPkgs([]);
+            return;
         }
+        const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
+        const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
+        glob.packageManager.getAllInstalledPackages().then(packages => {
+            for (const p of packages) {
+                if ((p[1].package.specific as any).real) {
+                    const modules = p[1].modulesInstalledByDefault.map<{
+                        moduleName: string,
+                        principal: Principal,
+                        cycles1: bigint | undefined;
+                        cycles2: bigint | undefined;
+                    }>(m => {
+                        return {
+                            moduleName: m[0],
+                            principal: m[1],
+                            cycles1: undefined,
+                            cycles2: undefined,
+                        };
+                    });
+                    const { canisterStatus } = ICManagementCanister.create({agent});
+                    for (const m of modules) {
+                        cyclesLedger.icrc1_balance_of({owner: m.principal, subaccount: []}).then(balance => {
+                            m.cycles1 = balance;
+                            setCounter(prev => prev + 1);
+                        }).catch(e => {
+                            setError(e.toString());
+                        });
+                        canisterStatus(m.principal).then(({cycles}) => {
+                            m.cycles2 = cycles;
+                            setCounter(prev => prev + 1);
+                        }).catch(e => {
+                            setError(e.toString());
+                        });                              
+                    }
+                    const h = {
+                        packageName: p[1].package.base.name,
+                        packageVersion: p[1].package.base.version,
+                        // TODO@P3: `additionalModules`
+                        modules,
+                    };
+                    _pkgs.push(h);
+                }
+            }
+            setPkgs(_pkgs);
+        });
     };
     useEffect(reloadPackages, [agent, ok, glob.packageManager]);
     async function sendTo(module: {
