@@ -234,6 +234,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                 };
                 case null {
+                    let batteryActor = actor(Principal.toText(battery)) : actor {
+                        withdrawCycles2: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+                    };
+                    let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
+                    await batteryActor.withdrawCycles2(cyclesAmount, Principal.fromActor(this));
                     ignore await* Install._installModuleCode({
                         installationId;
                         upgradeId = null;
@@ -247,7 +252,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         battery;
                         user;
                         controllers = ?[Principal.fromActor(this)];
-                        cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
+                        cyclesAmount;
                         afterInstallCallback;
                     });
                 };

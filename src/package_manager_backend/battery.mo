@@ -5,6 +5,7 @@ import Int "mo:base/Int";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Map "mo:base/OrderedMap";
+import Set "mo:base/OrderedSet";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
@@ -79,6 +80,9 @@ shared({caller = initialOwner}) actor class Battery({
         if (initialized) {
             Debug.trap("already initialized");
         };
+
+        await* addWithdrawer(mainIndirect);
+        await* addWithdrawer(packageManager);
 
         initTimer<system>();
 
@@ -244,6 +248,37 @@ shared({caller = initialOwner}) actor class Battery({
         };
     };
 
+    let principalSet = Set.Make<Principal>(Principal.compare);
+    var withdrawers = principalSet.empty();
+
+    /// TODO@P3: Make it editable using user confirmation.
+    private func addWithdrawer(withdrawer: Principal): async* () {
+        withdrawers := principalSet.put(withdrawers, withdrawer);
+    };
+
+    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
+    };
+
+    public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
+        if (not principalSet.contains(withdrawers, payee)) {
+            Debug.trap("withdrawCycles: payee is not a controller");
+        };
+        switch (await CyclesLedger.icrc1_transfer({
+            to = {owner = payee; subaccount = null};
+            amount;
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = ?(Nat64.fromNat(Int.abs(Time.now())));
+        })) {
+            case (#Err e) {
+                Debug.trap("withdrawCycles: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+    };
+
     system func inspect({
         caller : Principal;
     }): Bool {
@@ -265,9 +300,5 @@ shared({caller = initialOwner}) actor class Battery({
             Principal.hash,
         );
         _ownersSave := []; // Free memory.
-    };
-
-    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
     };
 }
