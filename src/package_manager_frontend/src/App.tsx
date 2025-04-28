@@ -237,7 +237,7 @@ function App2() {
             <Route path="/choose-upgrade/:repo/:installationId" element={<ChooseVersion/>}/> {/* TODO@P3: repo and packageName can be deduces from installationId */}
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
-            {/* <Route path="/cycles/modules" element={<ModuleCycles/>}/> */}
+            <Route path="/cycles/modules" element={<ModuleCycles/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>

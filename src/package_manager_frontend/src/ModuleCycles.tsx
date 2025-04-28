@@ -9,6 +9,7 @@ import { URLSearchParams } from "url";
 import { setServers } from "dns";
 import { Button } from "react-bootstrap";
 import { Actor } from "@dfinity/agent";
+import { ICManagementCanister } from "@dfinity/ic-management";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
 
@@ -21,7 +22,8 @@ export default function ModuleCycles() {
     type Module = {
         moduleName: string;
         principal: Principal;
-        cycles: bigint | undefined;
+        cycles1: bigint | undefined;
+        cycles2: bigint | undefined;
     };
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
@@ -38,19 +40,33 @@ export default function ModuleCycles() {
                         const modules = p[1].modulesInstalledByDefault.map<{
                             moduleName: string,
                             principal: Principal,
-                            cycles: bigint | undefined;
+                            cycles1: bigint | undefined;
+                            cycles2: bigint | undefined;
                         }>(m => {
                             return {
                                 moduleName: m[0],
                                 principal: m[1],
-                                cycles: undefined,
+                                cycles1: undefined,
+                                cycles2: undefined,
                             };
+                        });
+                        const { canisterStatus } = ICManagementCanister.create({ // FIXME: It creates canister with null/undefined agent.
+                            agent,
                         });
                         for (const m of modules) {
                             cyclesLedger.icrc1_balance_of({owner: m.principal, subaccount: []}).then(balance => {
-                                m.cycles = balance;
+                                m.cycles1 = balance;
                                 setCounter(counter + 1);
+                            }).catch(e => {
+                                setError(e.toString());
                             });
+                            canisterStatus(m.principal).then(({cycles}) => {
+                                console.log("Cycles", cycles); // FIXME: Remove.    
+                                m.cycles2 = cycles;
+                                setCounter(counter + 1);
+                            }).catch(e => {
+                                setError(e.toString());
+                            });                              
                         }
                         const h = {
                             packageName: p[1].package.base.name,
@@ -71,7 +87,8 @@ export default function ModuleCycles() {
     async function sendTo(module: {
         moduleName: string,
         principal: Principal,
-        cycles: bigint | undefined;
+        cycles1: bigint | undefined;
+        cycles2: bigint | undefined;
     }, to: Principal) {
         try {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
@@ -108,9 +125,12 @@ export default function ModuleCycles() {
                         {pkg.modules.map((module) => (
                             <li key={module.moduleName}>
                                 {module.moduleName}
-                                {module.cycles !== undefined ?
-                                    " "+Number(module.cycles.toString())/10**12+"T cycles"
+                                {module.cycles1 !== undefined ?
+                                    " "+Number(module.cycles1.toString())/10**12+"T cycles"
                                 : " Loading..."}
+                                {module.cycles2 !== undefined ?
+                                    "/"+Number(module.cycles2.toString())/10**12+"T cycles"
+                                : "/Loading..."}
                                 {ok && <>
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
