@@ -25,6 +25,7 @@ import { cycles_ledger } from "../src/declarations/cycles_ledger";
 import { principalToSubAccount } from "../src/lib/misc";
 import { commandOutput } from "../src/lib/scripts";
 import { decodeFile } from "../scripts/lib/key";
+import { ICManagementCanister } from "@dfinity/ic-management";
 
 global.fetch = node_fetch as any;
 
@@ -236,6 +237,9 @@ describe('My Test Suite', () => {
         }
 
         console.log("Installing `example` package...");
+        const { canisterStatus } = ICManagementCanister.create({agent: backendAgent});
+        const { cycles } = await canisterStatus(pmInst.get('battery')!);
+        console.log(`Cycles in battery canister: ${Number(cycles.toString())/10**12}T`);
         const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
             packages: [{
                 packageName: "example",

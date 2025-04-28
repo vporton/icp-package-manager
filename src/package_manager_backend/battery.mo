@@ -262,7 +262,7 @@ shared({caller = initialOwner}) actor class Battery({
 
     public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
         if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles: payee is not a controller");
+            Debug.trap("withdrawCycles2: payee is not a controller");
         };
         switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
