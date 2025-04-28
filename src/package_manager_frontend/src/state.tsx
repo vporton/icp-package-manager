@@ -67,7 +67,7 @@ export function GlobalContextProvider(props: { children: any }) {
   const [packageManager, setPackageManager] = useState<PackageManager | undefined>();
   useEffect(() => {
     setPackageManager(backend !== undefined && agent !== undefined
-      ? Actor.createActor(packageManagerIDL, {canisterId: backend!, agent})
+      ? Actor.createActor(packageManagerIDL, {canisterId: backend, agent})
       : undefined);
   }, [agent]);
 

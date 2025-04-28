@@ -10,12 +10,14 @@ import { setServers } from "dns";
 import { Button } from "react-bootstrap";
 import { Actor } from "@dfinity/agent";
 import { ErrorContext } from "../../lib/ErrorContext";
+import { GlobalContext } from "./state";
 
 export default function ModuleCycles() {
     const params = new URLSearchParams(window.location.search);
     const pmPrincipal = Principal.fromText(params.get('_pm_pkg0.backend')!);
     const { agent, isLoginSuccess, principal } = useAuth();
     const { setError } = useContext(ErrorContext)!;
+    const glob = useContext(GlobalContext);
     type Module = {
         moduleName: string;
         principal: Principal;
@@ -25,10 +27,12 @@ export default function ModuleCycles() {
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
     const reloadPackages = () => {
         if (isLoginSuccess) {
+            if (glob.packageManager === undefined) {
+                return;
+            }
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
             const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
-            const packageManager: PackageManager = createPackageManager(pmPrincipal, {agent});
-            packageManager.getAllInstalledPackages().then(packages => {
+            glob.packageManager.getAllInstalledPackages().then(packages => {
                 for (const p of packages) {
                     if ((p[1].package.specific as any).real) {
                         const modules = p[1].modulesInstalledByDefault.map<{
@@ -63,7 +67,7 @@ export default function ModuleCycles() {
             setPkgs([]);
         }
     };
-    useEffect(reloadPackages, [agent, isLoginSuccess]);
+    useEffect(reloadPackages, [agent, isLoginSuccess, glob.packageManager]);
     async function sendTo(module: {
         moduleName: string,
         principal: Principal,
