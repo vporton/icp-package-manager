@@ -32,7 +32,7 @@ export function useAuth() {
       defaultAgent.fetchRootKey().then(() => setDefaultAgentFetchedKey(true));
     }
   }, [defaultAgent]);
-  return {
+  return { // FIXME@P1: When I call `useAuth` multiple times (from different components), I get different [`agent`] values.
     identity: v.identity,
     ok: v.identity !== undefined,
     principal: useMemo(() => {
