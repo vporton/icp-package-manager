@@ -1,5 +1,9 @@
 Remaining things TODO:
 
+- FIXME@P1 Installation of `example` doesn't finish.
+
+- TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.
+
 - TODO@P3 I stupidly used `useEffect`, where `useMemo` would suffice.
 
 - TODO@P3 Close button in the title does not close dialogs.
