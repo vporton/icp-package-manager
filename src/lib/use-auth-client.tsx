@@ -26,10 +26,10 @@ function createAuth(): AuthContextType {
   const host = getIsLocal() ? "http://localhost:4943" : undefined;
   // TODO@P3: Use `HttpAgent.create`.
   const agent = useMemo(
-    () => v.identity ? new HttpAgent({ host, logToConsole: true, identity: v.identity, shouldFetchRootKey: getIsLocal() }) : undefined, // FIXME: Remove `logToConsole`.
+    () => v.identity ? new HttpAgent({ host, identity: v.identity, shouldFetchRootKey: getIsLocal() }) : undefined, // FIXME: Remove `logToConsole`.
     [v.identity],
   );
-  const defaultAgent = useMemo(() => new HttpAgent({ host, logToConsole: true, shouldFetchRootKey: getIsLocal() }), []); // FIXME: Remove `logToConsole`.
+  const defaultAgent = useMemo(() => new HttpAgent({ host, shouldFetchRootKey: getIsLocal() }), []); // FIXME: Remove `logToConsole`.
   return {
     identity: v.identity,
     ok: v.identity !== undefined,
