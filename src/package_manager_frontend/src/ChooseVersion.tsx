@@ -62,7 +62,7 @@ function ChooseVersion2(props: {
     // TODO@P3: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
         console.log('glob.packageManager:', glob.packageManager, 'props.packageName:', props.packageName, 'agent:', agent); // FIXME: Remove
-        if (glob.packageManager !== undefined && props.packageName !== undefined && agent !== undefined) {
+        if (glob.packageManager !== undefined && props.packageName !== undefined) {
             const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: props.repo!, agent: defaultAgent});
             index.getFullPackageInfo(props.packageName!).then(fullInfo => {
                 const versionsMap = new Map(fullInfo.versionsMap);
@@ -79,7 +79,7 @@ function ChooseVersion2(props: {
                 }
             });
         }
-    }, [glob.packageManager, props.packageName, props.repo, agent]); // TODO@P3: Check if `agent` is needed here (without it, it doesn't work properly).
+    }, [glob.packageManager, props.packageName, props.repo]); // TODO@P3: Check if `agent` is needed here (without it, it doesn't work properly).
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
