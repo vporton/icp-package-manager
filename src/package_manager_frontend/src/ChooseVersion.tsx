@@ -90,8 +90,7 @@ function ChooseVersion2(props: {
             setInstalling(true);
 
             // TODO@P3: hack
-            const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
-            const {minInstallationId: id} = await package_manager.installPackages({
+            const {minInstallationId: id} = await glob.packageManager!.installPackages({
                 packages: [{
                     packageName: props.packageName!,
                     version: chosenVersion!,
