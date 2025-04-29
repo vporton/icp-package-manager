@@ -125,18 +125,16 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
               })}
             </ul>
           }
-          <p>
-            {additionalPackages.map(p => {
-              const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
-              return (
-                <p>
-                  <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
-                    Install package <code>{p.packageName}</code>
-                  </Link>
-                </p>
-              );
-            })}
-          </p>
+          {additionalPackages.map(p => {
+            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
+            return (
+              <p>
+                <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                  Install package <code>{p.packageName}</code>
+                </Link>
+              </p>
+            );
+          })}
           <Accordion defaultActiveKey={undefined}>
             <Accordion.Item eventKey="advanced">
               <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
