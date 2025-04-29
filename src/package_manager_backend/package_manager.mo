@@ -14,6 +14,7 @@ import RBTree "mo:base/RBTree";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
+import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
@@ -829,6 +830,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         // The following (typically) does not overflow cycles limit, because we use an one-way function.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
+            /// TODO@P2: Do one transfer instead of transferring in a loop.
+            let batteryActor = actor(Principal.toText(battery)) : actor {
+                withdrawCycles2: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+            };
+            await batteryActor.withdrawCycles2(newCanisterCycles, Principal.fromActor(this));
+            Cycles.add<system>(newCanisterCycles);
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;

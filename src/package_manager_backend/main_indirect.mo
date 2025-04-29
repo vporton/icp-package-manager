@@ -234,11 +234,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                 };
                 case null {
-                    let batteryActor = actor(Principal.toText(battery)) : actor {
-                        withdrawCycles2: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
-                    };
+                    Debug.print("BATTERY: " # debug_show(await CyclesLedger.icrc1_balance_of({ // FIXME: Remove.
+                        owner = battery; subaccount = null})));
+                    Debug.print("Z0"); // FIXME: Remove.
                     let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
-                    await batteryActor.withdrawCycles2(cyclesAmount, Principal.fromActor(this));
+                    Debug.print("A-1: " # debug_show(Cycles.balance())); // FIXME: Remove.
+                    // ignore Cycles.accept<system>(cyclesAmount); // FIXME@P1: needed?
+                    Cycles.add<system>(cyclesAmount); // FIXME@P1: needed?
+                    Debug.print("A0: Creating canister with cycles " # debug_show(cyclesAmount)); // FIXME: Remove.
                     ignore await* Install._installModuleCode({
                         installationId;
                         upgradeId = null;
@@ -255,6 +258,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         cyclesAmount;
                         afterInstallCallback;
                     });
+                    Debug.print("Z3"); // FIXME: Remove.
                 };
             };
         }
