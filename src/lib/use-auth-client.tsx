@@ -25,23 +25,11 @@ function createAuth(): AuthContextType {
   const v = useInternetIdentity();
   const host = getIsLocal() ? "http://localhost:4943" : undefined;
   // TODO@P3: Use `HttpAgent.create`.
-  const [agentFetchedKey, setAgentFetchedKey] = useState(!getIsLocal());
-  const [defaultAgentFetchedKey, setDefaultAgentFetchedKey] = useState(!getIsLocal());
   const agent = useMemo(
-    () => v.identity ? new HttpAgent({ host, identity: v.identity }) : undefined,
+    () => v.identity ? new HttpAgent({ host, logToConsole: true, identity: v.identity, shouldFetchRootKey: getIsLocal() }) : undefined, // FIXME: Remove `logToConsole`.
     [v.identity],
   );
-  const defaultAgent = useMemo(() => new HttpAgent({ host }), []);
-  useEffect(() => {
-    if (getIsLocal() && agent !== undefined && !agentFetchedKey) {
-      agent.fetchRootKey().then(() => setAgentFetchedKey(true));
-    }
-  }, [agent]);
-  useEffect(() => {
-    if (getIsLocal() && defaultAgent !== undefined && !defaultAgentFetchedKey) {
-      defaultAgent.fetchRootKey().then(() => setDefaultAgentFetchedKey(true));
-    }
-  }, [defaultAgent]);
+  const defaultAgent = useMemo(() => new HttpAgent({ host, logToConsole: true, shouldFetchRootKey: getIsLocal() }), []); // FIXME: Remove `logToConsole`.
   return {
     identity: v.identity,
     ok: v.identity !== undefined,
@@ -49,8 +37,8 @@ function createAuth(): AuthContextType {
       const p = v.identity?.getPrincipal();
       return p;
     }, [v.identity]),
-    agent: agentFetchedKey ? agent : undefined,
-    defaultAgent: defaultAgentFetchedKey ? defaultAgent : undefined,
+    agent,
+    defaultAgent,
     login: v.login,
     clear: v.clear,
   };
