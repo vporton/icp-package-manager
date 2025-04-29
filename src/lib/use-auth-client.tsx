@@ -19,7 +19,7 @@ export function useAuth() {
   const [defaultAgentFetchedKey, setDefaultAgentFetchedKey] = useState(!getIsLocal());
   const agent = useMemo(
     () => v.identity ? new HttpAgent({ host, identity: v.identity }) : undefined,
-    [v.identity]
+    [v.identity],
   );
   const defaultAgent = useMemo(() => new HttpAgent({ host }), []);
   useEffect(() => {
