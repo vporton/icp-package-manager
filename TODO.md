@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P3 I stupidly used `useEffect`, where `useMemo` would suffice.
+
 - TODO@P3 Close button in the title does not close dialogs.
 
 - TODO@P2 Should battery be controller of all, for cycles withdrawal? Or do withdrawal through simple_indirect?
