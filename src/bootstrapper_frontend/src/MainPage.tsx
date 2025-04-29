@@ -18,6 +18,7 @@ import { BusyContext } from "../../lib/busy";
 import { Link, useSearchParams } from "react-router-dom";
 import { get } from "http";
 import { ErrorContext } from "../../lib/ErrorContext";
+import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -134,9 +135,9 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
               const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
               return (
                 <p>
-                  <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                  <MyLink to={`/choose-version/${p.repo}/${p.packageName}`}>
                     Install package <code>{p.packageName}</code>
-                  </Link>
+                  </MyLink>
                 </p>
               );
             })}
