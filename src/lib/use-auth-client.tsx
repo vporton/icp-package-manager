@@ -1,7 +1,7 @@
 import { Agent, HttpAgent, Identity } from "@dfinity/agent";
 import { AuthClient, AuthClientCreateOptions, AuthClientLoginOptions } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
-import { useInternetIdentity } from "ic-use-internet-identity";
+import { InternetIdentityProvider, useInternetIdentity } from "ic-use-internet-identity";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 // import sha256 from 'crypto-js/sha256';
 // import * as base64 from 'base64-js';
@@ -11,7 +11,17 @@ export function getIsLocal(): boolean {
   return /localhost/.test(document.location.hostname); // TODO@P3: Cache the result.
 }
 
-export function useAuth() {
+type AuthContextType = {
+  identity: Identity | undefined,
+  ok: boolean,
+  principal: Principal | undefined,
+  agent: Agent | undefined,
+  defaultAgent: Agent | undefined,
+  login: () => Promise<void>,
+  clear: () => Promise<void>,
+};
+
+function createAuth(): AuthContextType {
   const v = useInternetIdentity();
   const host = getIsLocal() ? "http://localhost:4943" : undefined;
   // TODO@P3: Use `HttpAgent.create`.
@@ -32,7 +42,7 @@ export function useAuth() {
       defaultAgent.fetchRootKey().then(() => setDefaultAgentFetchedKey(true));
     }
   }, [defaultAgent]);
-  return { // FIXME@P1: When I call `useAuth` multiple times (from different components), I get different [`agent`] values.
+  return {
     identity: v.identity,
     ok: v.identity !== undefined,
     principal: useMemo(() => {
@@ -44,4 +54,21 @@ export function useAuth() {
     login: v.login,
     clear: v.clear,
   };
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider(props: { children: any }) {
+  const auth = createAuth();
+  return (
+    <InternetIdentityProvider>
+      <AuthContext.Provider value={auth!}>
+        {props.children}
+      </AuthContext.Provider>
+    </InternetIdentityProvider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext)!;
 }

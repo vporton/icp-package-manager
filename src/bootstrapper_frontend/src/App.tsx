@@ -1,7 +1,6 @@
 import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from '../../lib/AuthButton';
-import { InternetIdentityProvider, useInternetIdentity } from "ic-use-internet-identity";
 import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -15,19 +14,19 @@ import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorProvider } from '../../lib/ErrorContext';
-import { useAuth } from '../../lib/use-auth-client';
+import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 
 function App() {
   return (
     <BusyProvider>
       <BusyWidget>
-        <InternetIdentityProvider>
+        <AuthProvider>
           <ErrorProvider>
             <ErrorBoundary>
               <App2/>
             </ErrorBoundary>
           </ErrorProvider>
-        </InternetIdentityProvider>
+        </AuthProvider>
       </BusyWidget>
     </BusyProvider>
   );
@@ -101,7 +100,6 @@ function App2() {
       memo: [],
       created_at_time: [],
     }).then(res => {
-      console.log("Minted: ", res);
       if ((res as any).Err) {
         alert("Minting error!"); // TODO@P3
       } else {

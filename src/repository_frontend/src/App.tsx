@@ -3,14 +3,14 @@ import { Button, Container, Nav, NavDropdown, Navbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthButton }  from './AuthButton';
-import { InternetIdentityProvider } from 'ic-use-internet-identity';
+import { AuthProvider } from 'ic-use-internet-identity';
 
 function App() {
   return (
     <BrowserRouter>
-      <InternetIdentityProvider>
+      <AuthProvider>>
         <App2/>
-      </InternetIdentityProvider>
+      </AuthProvider>>
     </BrowserRouter>
   );
 }
