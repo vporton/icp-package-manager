@@ -21,15 +21,14 @@ import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
-import { InternetIdentityProvider } from "ic-use-internet-identity";
-import { useAuth } from '../../lib/use-auth-client';
+import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 
 function App() {
   return (
     <BusyProvider>
       <BusyWidget>
         <BrowserRouter>
-        <InternetIdentityProvider>
+          <AuthProvider>
             <GlobalContextProvider>
               <h1 style={{textAlign: 'center'}}>
                 <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
@@ -42,7 +41,7 @@ function App() {
                 </ErrorBoundary>
               </ErrorProvider>
             </GlobalContextProvider>
-          </InternetIdentityProvider>
+          </AuthProvider>
         </BrowserRouter>
       </BusyWidget>
     </BusyProvider>

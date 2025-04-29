@@ -61,14 +61,12 @@ function ChooseVersion2(props: {
     // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO@P3: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
-        console.log('glob.packageManager:', glob.packageManager, 'props.packageName:', props.packageName, 'agent:', agent); // FIXME: Remove
         if (glob.packageManager !== undefined && props.packageName !== undefined) {
             const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: props.repo!, agent: defaultAgent});
             index.getFullPackageInfo(props.packageName!).then(fullInfo => {
                 const versionsMap = new Map(fullInfo.versionsMap);
                 const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                const v = fullInfo.versionsMap.map(([name, version]) => [`${name} → ${version}`, version] as [string, string]).concat(p2);
-                console.log("SetVersions", v); // FIXME: Remove
+                const v = fullInfo.versionsMap.map(([name, version]: [string, string]) => [`${name} → ${version}`, version]).concat(p2);
                 setVersions(v);
                 const guid2 = fullInfo.packages[0][1].base.guid as Uint8Array;
                 // setGUIDInfo(guid2);
