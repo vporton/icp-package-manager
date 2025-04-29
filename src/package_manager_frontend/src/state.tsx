@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useMemo, useState } from "react";
 import { PackageManager } from "../../declarations/package_manager/package_manager.did";
-import { package_manager } from "../../declarations/package_manager";
+import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { useAuth } from "../../lib/use-auth-client";
 import { idlFactory as packageManagerIDL } from '../../declarations/package_manager/package_manager.did.js';
 import { Actor } from "@dfinity/agent";
@@ -64,12 +64,9 @@ export function GlobalContextProvider(props: { children: any }) {
     }
   }
   const {agent} = useAuth();
-  const [packageManager, setPackageManager] = useState<PackageManager | undefined>();
-  useEffect(() => {
-    setPackageManager(backend !== undefined && agent !== undefined
-      ? Actor.createActor(packageManagerIDL, {canisterId: backend, agent})
-      : undefined);
-  }, [agent]);
+  const packageManager = useMemo(() =>
+    backend !== undefined && agent !== undefined ? createPackageManager(backend, {agent}) : undefined,
+    [agent]);
 
   const frontendTweakPrivKeyEncoded = params.get('frontendTweakPrivKey');
   const frontendTweakPrivKey: Uint8Array | undefined =
