@@ -2,21 +2,17 @@ import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../lib/use-auth-client";
 import { getIsLocal } from "../../lib/state";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
-import { createActor as createBootstrapperIndirectActor } from "../../declarations/bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
 import { Principal } from "@dfinity/principal";
-import { Actor, Agent } from "@dfinity/agent";
+import { Agent } from "@dfinity/agent";
 import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
-import { Alert, useAccordionButton } from "react-bootstrap";
+import { Alert } from "react-bootstrap";
 import useConfirm from "./useConfirm";
-import { SharedPackageInfo, SharedRealPackageInfo } from "../../declarations/repository/repository.did";
-import { IDL } from "@dfinity/candid";
 import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
 import { Link, useSearchParams } from "react-router-dom";
-import { get } from "http";
 import { ErrorContext } from "../../lib/ErrorContext";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
