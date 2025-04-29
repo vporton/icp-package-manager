@@ -55,19 +55,20 @@ function ChooseVersion2(props: {
 }) {
     const glob = useContext(GlobalContext);
     const navigate = myUseNavigate();
-    const {ok} = useAuth();
-    const {principal, agent, defaultAgent} = useAuth();
+    const {ok, principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO@P3: I doubt consistency, and performance in the case if there is no such package.
     useEffect(() => {
-        if (glob.packageManager !== undefined && props.packageName !== undefined) {
+        console.log('glob.packageManager:', glob.packageManager, 'props.packageName:', props.packageName, 'agent:', agent); // FIXME: Remove
+        if (glob.packageManager !== undefined && props.packageName !== undefined && agent !== undefined) {
             const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: props.repo!, agent: defaultAgent});
             index.getFullPackageInfo(props.packageName!).then(fullInfo => {
                 const versionsMap = new Map(fullInfo.versionsMap);
                 const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
                 const v = fullInfo.versionsMap.map(([name, version]) => [`${name} → ${version}`, version] as [string, string]).concat(p2);
+                console.log("SetVersions", v); // FIXME: Remove
                 setVersions(v);
                 const guid2 = fullInfo.packages[0][1].base.guid as Uint8Array;
                 // setGUIDInfo(guid2);
@@ -78,7 +79,7 @@ function ChooseVersion2(props: {
                 }
             });
         }
-    }, [glob.packageManager, props.packageName, props.repo]);
+    }, [glob.packageManager, props.packageName, props.repo, agent]); // TODO@P3: Check if `agent` is needed here (without it, it doesn't work properly).
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
