@@ -98,13 +98,18 @@ module {
                 // TODO@P3: duplicate work with bootstrapper
                 let oldController = (await to.list_authorized())[0];
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
+                    Debug.print("cycle BEFORE: " # debug_show(Cycles.balance())); // FIXME: Remove.
                     for (principal in [simpleIndirect, user].vals()) {
-                        await to.grant_permission({to_principal = principal; permission});
+                        Debug.print("cycle BEFORE1: " # debug_show(Cycles.balance())); // FIXME: Remove.
+                        await (with cycles = Cycles.balance() - 500_000_000_000) to.grant_permission({to_principal = principal; permission});
+                        Debug.print("cycle AFTER1: " # debug_show(Cycles.balance())); // FIXME: Remove.
                     };
-                    await to.revoke_permission({
+                    Debug.print("cycle MIDDLE: " # debug_show(Cycles.balance())); // FIXME: Remove.
+                    await (with cycles = Cycles.balance() - 500_000_000_000) to.revoke_permission({
                         of_principal = oldController;
                         permission;
                     });
+                    Debug.print("cycle AFTER: " # debug_show(Cycles.balance())); // FIXME: Remove.
                 };
             };
             case _ {};

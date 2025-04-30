@@ -1,5 +1,8 @@
 Remaining things TODO:
 
+- FIXME@P3 Fromntend installation says t spent as many cycles as supplied.
+  In reality, cycles seems to be not spent.
+
 - FIXME@P1 Installation of `example` doesn't finish.
 
 - TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.
