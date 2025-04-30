@@ -1,6 +1,6 @@
 Remaining things TODO:
 
-- FIXME@P3 Fromntend installation says to spent as many cycles as supplied.
+- FIXME@P3 Frontend installation says to spent as many cycles as supplied.
   In reality, cycles seems to be not spent.
   Onto the battery should be placed all remaining cycles!
   Into backend are placed too many cycles.
