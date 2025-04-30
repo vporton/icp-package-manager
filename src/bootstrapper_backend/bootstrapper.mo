@@ -151,7 +151,8 @@ actor class Bootstrapper() = this {
         // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
-        if (not env.isLocal) { // if local, use it directly
+        if (not env.isLocal) {
+            // if local, use it directly
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = Principal.fromActor(this); subaccount = null};
                 fee = null;
@@ -165,49 +166,51 @@ actor class Bootstrapper() = this {
                 };
                 case (#Ok _) {};
             };
-        };
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(principalToSubaccount(user));
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*cycles_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
-
-        func finish(): async* {returnAmount: Nat} {
-            let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-            // Return user's fund from current use:
+            // Don't do ryalty here, because we are testing:
             switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};
+                to = {owner = revenueRecipient; subaccount = null};
                 fee = null;
                 memo = null;
-                from_subaccount = null;
+                from_subaccount = ?(principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = returnAmount;
+                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
                 };
                 case (#Ok _) {};
             };
-            {returnAmount};
         };
+
+        // func finish(): async* {returnAmount: Nat} {
+        //     let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
+        //     // Return user's fund from current use:
+        //     switch(await CyclesLedger.icrc1_transfer({
+        //         to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};
+        //         fee = null;
+        //         memo = null;
+        //         from_subaccount = null;
+        //         created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+        //         amount = returnAmount;
+        //     })) {
+        //         case (#Err e) {
+        //             Debug.trap("transfer failed: " # debug_show(e));
+        //         };
+        //         case (#Ok _) {};
+        //     };
+        //     {returnAmount};
+        // };
 
         let {installedModules} = try {
             Cycles.add<system>(amountToMove);
             await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         }
         catch (e) {
-            ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
+            // ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
             Debug.trap(Error.message(e));
         };
-        let {returnAmount: Nat} = await* finish();
+        // let {returnAmount: Nat} = await* finish();
+        let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
 
         {installedModules; spentCycles = amountToMove - returnAmount};
     };
@@ -238,18 +241,20 @@ actor class Bootstrapper() = this {
         });
 
         // Move user's fund into current use:
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(this); subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(principalToSubaccount(tweaker.user));
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = amountToMove - 2*cycles_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
+        if (not env.isLocal) { // If isLocal, funds are already here.
+            switch(await CyclesLedger.icrc1_transfer({
+                to = {owner = Principal.fromActor(this); subaccount = null};
+                fee = null;
+                memo = null;
+                from_subaccount = ?(principalToSubaccount(tweaker.user));
+                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+                amount = amountToMove - 2*cycles_transfer_fee;
+            })) {
+                case (#Err e) {
+                    Debug.trap("transfer failed: " # debug_show(e));
+                };
+                case (#Ok _) {};
             };
-            case (#Ok _) {};
         };
 
         Cycles.add<system>(amountToMove);
@@ -266,14 +271,21 @@ actor class Bootstrapper() = this {
 
         let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
 
-        ignore await CyclesLedger.icrc1_transfer({
-            to = {owner = battery; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = returnAmount;
-        });
+        // if (env.isLocal) {
+        let batteryActor = actor(Principal.toText(battery)): actor {
+            acceptCycles: shared (amount: Nat) -> async ();
+        };
+        await batteryActor.acceptCycles(returnAmount);
+        // } else {
+        //     ignore await CyclesLedger.icrc1_transfer({
+        //         to = {owner = battery; subaccount = null};
+        //         fee = null;
+        //         memo = null;
+        //         from_subaccount = null;
+        //         created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+        //         amount = returnAmount;
+        //     });
+        // };
 
         {spentCycles = amountToMove - returnAmount};
     };

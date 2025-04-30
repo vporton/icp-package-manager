@@ -828,15 +828,12 @@ shared({caller = initialCaller}) actor class PackageManager({
         // The following (typically) does not overflow cycles limit, because we use an one-way function.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
-            Debug.print("Q0"); // FIXME: Remove.
             /// TODO@P2: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
             await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(this));
-            Debug.print("Q2: " # debug_show(Cycles.balance())); // FIXME: Remove.
             Cycles.add<system>(newCanisterCycles);
-            Debug.print("Q3"); // FIXME: Remove.
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;
@@ -854,7 +851,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 wasmModule = Common.shareModule(m); // TODO@P3: We unshared, then shared it, huh?
                 afterInstallCallback = pkg.afterInstallCallback;
             });
-            Debug.print("Q4"); // FIXME: Remove.
             // TODO@P3: Do two following variables duplicate each other?
             moduleNumber += 1;
             i += 1;

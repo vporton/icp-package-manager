@@ -152,14 +152,12 @@ module {
             canister: Principal; name: Text; data: Blob;
         };
     }): async* Principal {
-        Debug.print("Y0"); // FIXME: Remove.
         ignore Cycles.accept<system>(cyclesAmount);
         let {canister_id} = await* myCreateCanister({
             controllers;
             cyclesAmount;
             subnet_selection = null;
         });
-        Debug.print("Y1"); // FIXME: Remove.
         await* _installModuleCodeOnly({
             moduleNumber;
             moduleName;
@@ -194,7 +192,6 @@ module {
         };
         canister_id: Principal;
     }): async* Principal {
-        Debug.print("X0"); // FIXME: Remove.
         let pm: Callbacks = actor(Principal.toText(packageManager));
     
         await* myInstallCode({
@@ -209,7 +206,6 @@ module {
             battery;
             user;
         });
-        Debug.print("X1"); // FIXME: Remove.
 
         // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
         // Note that packageManager calls it on getMainIndirect(), not by itself, so doesn't freeze.
@@ -226,7 +222,6 @@ module {
                 wasm_memory_limit = null;
             };
         });
-        Debug.print("X2"); // FIXME: Remove.
 
         await pm.onInstallCode({
             moduleNumber;
@@ -238,7 +233,6 @@ module {
             packageManager;
             afterInstallCallback;
         });
-        Debug.print("X3"); // FIXME: Remove.
 
         canister_id;
     };

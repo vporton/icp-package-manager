@@ -261,7 +261,6 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
-        Debug.print("K0"); // FIXME: Remove.
         if (not principalSet.contains(withdrawers, payee)) {
             Debug.trap("withdrawCycles2: payee is not allowed");
         };
