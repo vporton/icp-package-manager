@@ -57,21 +57,16 @@ actor class Bootstrapper() = this {
     public shared({caller}) func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
-        Debug.print("Y0: " # debug_show(Cycles.balance())); // FIXME: Remove.
         checkItself(caller);
 
         ignore Cycles.accept<system>(amountToMove - 500_000_000_000); // TODO@P3: exact amount?
-        Debug.print("Y0.5: " # debug_show(Cycles.balance())); // FIXME: Remove.
         let icPackPkg = await Repository.getPackage("icpack", "stable");
-        Debug.print("Y1: " # debug_show(Cycles.balance())); // FIXME: Remove.
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
-        Debug.print("Y2: " # debug_show(Cycles.balance())); // FIXME: Remove.
         let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
             icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
-        Debug.print("Y3: " # debug_show(Cycles.balance())); // FIXME: Remove.
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
@@ -90,7 +85,6 @@ actor class Bootstrapper() = this {
             });
             installedModules.put(moduleName, canister_id);
         };
-        Debug.print("Y4: " # debug_show(Cycles.balance())); // FIXME: Remove.
 
         let ?frontend = installedModules.get("frontend") else {
             Debug.trap("module not deployed");
@@ -111,7 +105,6 @@ actor class Bootstrapper() = this {
         let ?mFrontend = modulesToInstall.get("frontend") else {
             Debug.trap("module not found");
         };
-        Debug.print("Y5: " # debug_show(Cycles.balance())); // FIXME: Remove.
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({});
@@ -120,21 +113,18 @@ actor class Bootstrapper() = this {
             canister_id = frontend;
             sender_canister_version = null; // TODO@P3
         });
-        Debug.print("Y6: " # debug_show(Cycles.balance())); // FIXME: Remove.
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(mFrontend);
             canister_id = frontend;
             simpleIndirect;
             user;
         });
-        Debug.print("Y7: " # debug_show(Cycles.balance())); // FIXME: Remove.
 
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
             user;
         });
-        Debug.print("Y8"); // FIXME: Remove.
 
         // TODO@P3: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
         //          For this, make the private key a part of the persistent link arguments?
@@ -143,7 +133,6 @@ actor class Bootstrapper() = this {
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
-        Debug.print("Y9"); // FIXME: Remove.
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };
@@ -152,14 +141,12 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        Debug.print("Z0"); // FIXME: Remove.
         let amountToMove =
             Cycles.balance();
             // The following does not work in local net testing mode:
             // await CyclesLedger.icrc1_balance_of({
             //     owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
             // });
-        Debug.print("Z1"); // FIXME: Remove.
 
         // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
@@ -216,7 +203,6 @@ actor class Bootstrapper() = this {
 
         let {installedModules} = try {
             Cycles.add<system>(amountToMove - 500_000_000_000);
-            Debug.print("Z2"); // FIXME: Remove.
             await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         }
         catch (e) {
@@ -225,7 +211,6 @@ actor class Bootstrapper() = this {
         };
         // let {returnAmount: Nat} = await* finish();
         let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-        Debug.print("Z3"); // FIXME: Remove.
 
         {installedModules; spentCycles = amountToMove - returnAmount};
     };
