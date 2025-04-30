@@ -148,10 +148,15 @@ function App2() {
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
   function updateCyclesAmount() {
-    setCyclesAmount(undefined); 
-    const battery = createBatteryActor(process.env.CANISTER_ID_BATTERY!, {agent});
-    battery.getBalance().then((amount) => {
-      setCyclesAmount(parseInt(amount.toString()))
+    setCyclesAmount(undefined);
+    if (glob.packageManager === undefined) {
+      return;
+    } 
+    glob.packageManager.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+      const battery = createBatteryActor(batteryPrincipal, {agent});
+      battery.getBalance().then((amount) => {
+        setCyclesAmount(parseInt(amount.toString()))
+      });
     });
     // if (glob.packageManager !== undefined) {
     //   glob.packageManager.userBalance().then((amount) => {
