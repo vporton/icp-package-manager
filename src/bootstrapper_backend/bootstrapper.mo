@@ -152,7 +152,11 @@ actor class Bootstrapper() = this {
             to = {owner = Principal.fromActor(this); subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(principalToSubaccount(user));
+            from_subaccount = if (env.isLocal) {
+                null; // testing mode
+            } else {
+                ?(principalToSubaccount(user));
+            };
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
         })) {
