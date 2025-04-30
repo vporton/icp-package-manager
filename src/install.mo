@@ -30,7 +30,6 @@ module {
             subnet_selection;
             subnet_type = null;
         });
-        Debug.print("A1: " # debug_show(res));
         let canister_id = switch (res) {
             case (#Ok canister_id) canister_id;
             case (#Err err) {
