@@ -141,29 +141,30 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
-        });
+        let amountToMove =
+            Cycles.balance();
+            // The following does not work in local net testing mode:
+            // await CyclesLedger.icrc1_balance_of({
+            //     owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+            // });
 
         // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(this); subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = if (env.isLocal) {
-                null; // testing mode
-            } else {
-                ?(principalToSubaccount(user));
+        if (not env.isLocal) { // if local, use it directly
+            switch(await CyclesLedger.icrc1_transfer({
+                to = {owner = Principal.fromActor(this); subaccount = null};
+                fee = null;
+                memo = null;
+                from_subaccount = ?(principalToSubaccount(user));
+                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
+            })) {
+                case (#Err e) {
+                    Debug.trap("transfer failed: " # debug_show(e));
+                };
+                case (#Ok _) {};
             };
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
         };
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
