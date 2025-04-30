@@ -446,4 +446,8 @@ actor class Bootstrapper() = this {
         Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
     };
 
+    public query func getBalance(): async Nat {
+        // TODO@P3: Allow only to the owner?
+        Cycles.balance();
+    };
 }

@@ -831,9 +831,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.print("Q0"); // FIXME: Remove.
             /// TODO@P2: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
-                withdrawCycles2: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+                withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
-            await batteryActor.withdrawCycles2(newCanisterCycles, Principal.fromActor(this));
+            await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(this));
             Debug.print("Q2: " # debug_show(Cycles.balance())); // FIXME: Remove.
             Cycles.add<system>(newCanisterCycles);
             Debug.print("Q3"); // FIXME: Remove.
@@ -1430,16 +1430,20 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO@P3: Should be in the frontend.
+    /// If on local net for testing, use null account to transfer it without `icrc1_transfer`
+    /// because `icrc1_transfer` does not work on local net as it should.
     public composite query({caller}) func userAccountBlob(): async Blob {
-        Principal.toLedgerAccount(battery, ?(Principal.toBlob(caller)));
+        Principal.toLedgerAccount(battery, if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) });
     };
 
-    private func userAccount(/*user: Principal*/): CyclesLedger.Account {
-        {owner = battery; subaccount = null/*?(Principal.toBlob(user))*/};
-    };
+    // private func userAccount(/*user: Principal*/): CyclesLedger.Account {
+    //     {owner = battery; subaccount = null/*?(Principal.toBlob(user))*/};
+    // };
 
     public composite query/*({caller})*/ func userBalance(): async Nat {
-        await CyclesLedger.icrc1_balance_of(userAccount(/*caller*/));
+        await batteryActor.getBalance();
+        // /// because `icrc1_balance_of` does not work on local net as it should.
+        // await CyclesLedger.icrc1_balance_of(userAccount(/*caller*/));
     };
 
     // Adjustable values //
@@ -1489,5 +1493,9 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(CyclesLedger, amount, payee);
+    };
+
+    public shared func acceptCycles(): async () {
+        ignore Cycles.accept<system>(Cycles.available());
     };
 }

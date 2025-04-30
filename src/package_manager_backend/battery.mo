@@ -263,7 +263,7 @@ shared({caller = initialOwner}) actor class Battery({
     public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
         Debug.print("K0"); // FIXME: Remove.
         if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles2: payee is not a controller");
+            Debug.trap("withdrawCycles2: payee is not allowed");
         };
         switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
@@ -280,6 +280,17 @@ shared({caller = initialOwner}) actor class Battery({
                 Debug.print("Withdraw cycles from battery: " # debug_show(amount));
             };
         };
+    };
+
+    public shared func withdrawCycles3(amount: Nat, payee: Principal) : async () {
+        if (not principalSet.contains(withdrawers, payee)) {
+            Debug.trap("withdrawCycles2: payee is not allowed");
+        };
+        let whom = actor(Principal.toText(payee)) : actor {
+            acceptCycles: shared () -> async ();
+        };
+        Cycles.add<system>(amount);
+        await whom.acceptCycles();
     };
 
     system func inspect({
@@ -303,5 +314,14 @@ shared({caller = initialOwner}) actor class Battery({
             Principal.hash,
         );
         _ownersSave := []; // Free memory.
+    };
+
+    public shared func acceptCycles(): async () {
+        ignore Cycles.accept<system>(Cycles.available());
+    };
+
+    public query func getBalance(): async Nat {
+        // TODO@P3: Allow only to the owner?
+        Cycles.balance();
     };
 }

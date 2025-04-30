@@ -15,6 +15,7 @@ import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorProvider } from '../../lib/ErrorContext';
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
+import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 
 function App() {
   return (
@@ -68,21 +69,28 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 }
 
 function App2() {
-  const {principal, ok, identity} = useAuth();
+  const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
+  const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}); // TODO@P3: or `defaultAgent`?
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
     if (principal === undefined) {
       return;
     }
-    cycles_ledger.icrc1_balance_of({
-      owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-      subaccount: [principalToSubAccount(principal!)],
-    }).then((amount: bigint) => {
-      setCyclesAmount(parseInt(amount.toString()));
-    });
+    if (getIsLocal()) { // to ease debugging
+      bootstrapper.getBalance().then((amount) => {
+        setCyclesAmount(parseInt(amount.toString()))
+      });
+    } else {
+      cycles_ledger.icrc1_balance_of({
+        owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+        subaccount: [principalToSubAccount(principal!)],
+      }).then((amount: bigint) => {
+        setCyclesAmount(parseInt(amount.toString()));
+      });
+    }
   }
   useEffect(updateCyclesAmount, [principal]);
   useEffect(() => {
@@ -90,23 +98,23 @@ function App2() {
       setCyclesPaymentAddress(b as Uint8Array);
     });
   }, [principal]);
-  function mint() {
-    cycles_ledger.mint({
-      to: {
-        owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        subaccount: [principalToSubAccount(principal!)],  
-      },
-      amount: BigInt(100*10**12),
-      memo: [],
-      created_at_time: [],
-    }).then(res => {
-      if ((res as any).Err) {
-        alert("Minting error!"); // TODO@P3
-      } else {
-        updateCyclesAmount();
-      }
-    });
-  }
+  // function mint() {
+  //   cycles_ledger.mint({
+  //     to: {
+  //       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+  //       subaccount: [principalToSubAccount(principal!)],  
+  //     },
+  //     amount: BigInt(100*10**12),
+  //     memo: [],
+  //     created_at_time: [],
+  //   }).then(res => {
+  //     if ((res as any).Err) {
+  //       alert("Minting error!"); // TODO@P3
+  //     } else {
+  //       updateCyclesAmount();
+  //     }
+  //   });
+  // }
   return (
     <main id="main">
       <h1 style={{textAlign: 'center'}}>
@@ -133,9 +141,9 @@ function App2() {
               </Dropdown>
               <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
             </Nav>
-            <Nav style={{display: ok && getIsLocal() ? undefined : 'none'}}>
+            {/* <Nav style={{display: ok && getIsLocal() ? undefined : 'none'}}>
               <Button onClick={mint}>Mint</Button>
-            </Nav>
+            </Nav> */}
           </Navbar>
         </nav>
         <BrowserRouter>

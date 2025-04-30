@@ -12,6 +12,7 @@ import { AuthButton } from '../../lib/AuthButton';
 import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
+import { createActor as createBatteryActor } from "../../declarations/battery";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did';
 import { Bootstrapper } from '../../declarations/bootstrapper/bootstrapper.did';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
@@ -142,17 +143,21 @@ function GlobalUI() {
 }
 
 function App2() {
-  const {ok} = useAuth();
+  const {ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
   const glob = useContext(GlobalContext);
   function updateCyclesAmount() {
     setCyclesAmount(undefined); 
-    if (glob.packageManager !== undefined) {
-      glob.packageManager.userBalance().then((amount) => {
-        setCyclesAmount(parseInt(amount.toString()))
-      });
-    }
+    const battery = createBatteryActor(process.env.CANISTER_ID_BATTERY!, {agent});
+    battery.getBalance().then((amount) => {
+      setCyclesAmount(parseInt(amount.toString()))
+    });
+    // if (glob.packageManager !== undefined) {
+    //   glob.packageManager.userBalance().then((amount) => {
+    //     setCyclesAmount(parseInt(amount.toString()))
+    //   });
+    // }
   }
   useEffect(updateCyclesAmount, [glob.packageManager]);
   useEffect(() => {

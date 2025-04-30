@@ -328,4 +328,8 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(CyclesLedger, amount, payee);
     };
+
+    public shared func acceptCycles(): async () {
+        ignore Cycles.accept<system>(Cycles.available());
+    };
 };
