@@ -212,6 +212,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         };
     }): () {
         try {
+            Debug.print("W0"); // FIXME: Remove.
             onlyOwner(caller, "installModule");
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));

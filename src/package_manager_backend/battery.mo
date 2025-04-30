@@ -261,6 +261,7 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
+        Debug.print("K0"); // FIXME: Remove.
         if (not principalSet.contains(withdrawers, payee)) {
             Debug.trap("withdrawCycles2: payee is not a controller");
         };
@@ -275,7 +276,9 @@ shared({caller = initialOwner}) actor class Battery({
             case (#Err e) {
                 Debug.trap("withdrawCycles: " # debug_show(e));
             };
-            case (#Ok _) {};
+            case (#Ok _) {
+                Debug.print("Withdraw cycles from battery: " # debug_show(amount));
+            };
         };
     };
 
