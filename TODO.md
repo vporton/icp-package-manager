@@ -3,7 +3,7 @@ Remaining things TODO:
 - FIXME@P3 Fromntend installation says to spent as many cycles as supplied.
   In reality, cycles seems to be not spent.
   Onto the battery should be placed all remaining cycles!
-  Intobacked are placed too many cycles.
+  Into backend are placed too many cycles.
 
 - FIXME@P1 Installation of `example` doesn't finish.
 
