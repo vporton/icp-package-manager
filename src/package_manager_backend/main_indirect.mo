@@ -242,8 +242,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let batteryActor = actor(Principal.toText(battery)) : actor {
                         withdrawCycles3: shared (amount: Nat, payee: Principal) -> async ();
                     };
-                    await batteryActor.withdrawCycles3(cyclesAmount, Principal.fromActor(this));
-                    Cycles.add<system>(cyclesAmount); // FIXME@P1: needed?
+                    // await batteryActor.withdrawCycles3(cyclesAmount, Principal.fromActor(this));
+                    // ignore Cycles.accept<system>(cyclesAmount); // FIXME@P1: needed?
                     ignore await* Install._installModuleCode({
                         installationId;
                         upgradeId = null;

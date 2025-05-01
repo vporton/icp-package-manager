@@ -11,9 +11,6 @@ import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 import RBTree "mo:base/RBTree";
-import Nat64 "mo:base/Nat64";
-import Int "mo:base/Int";
-import Time "mo:base/Time";
 import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
@@ -826,15 +823,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?simple_indirect = coreModules.get("simple_indirect") else {
             Debug.trap("error getting simple_indirect");
         };
-        // The following (typically) does not overflow cycles limit, because we use an one-way function.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
             /// TODO@P2: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
-            await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(this));
-            Cycles.add<system>(newCanisterCycles);
+            await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(main_indirect_));
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;
