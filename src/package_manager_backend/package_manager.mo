@@ -259,6 +259,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
+    // TODO@P2: Rename:
     stable var main_indirect_: MainIndirect.MainIndirect = actor(Principal.toText(mainIndirect));
     stable var simple_indirect_: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
 
@@ -933,22 +934,31 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         onlyOwner(caller, "onInstallCode");
 
+        Debug.print("onInstallCode: Cycles accepted: " # debug_show(Cycles.available()));
+        ignore Cycles.accept<system>(Cycles.available());
+
+        Debug.print("Z0"); // FIXME: Remove
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
+        Debug.print("Z1"); // FIXME: Remove
         switch (moduleName) {
             case (?name) {
                 inst.modulesInstalledByDefault.put(name, canister);
             };
             case null {};
         };
+        Debug.print("Z2"); // FIXME: Remove
         let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
+        Debug.print("Z3"); // FIXME: Remove
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
+            Debug.print("Z4"); // FIXME: Remove
             _updateAfterInstall({installationId});
+            Debug.print("Z5"); // FIXME: Remove
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
@@ -972,6 +982,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case (null) {};
                 };
             };
+            Debug.print("Z6"); // FIXME: Remove
             switch (afterInstallCallback) {
                 case (?afterInstallCallback) {
                     ignore getSimpleIndirect().callAll([{
@@ -983,7 +994,9 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
+            Debug.print("Z7"); // FIXME: Remove
             halfInstalledPackages.delete(installationId);
+            Debug.print("Z8"); // FIXME: Remove
         };
     };
 
@@ -1388,6 +1401,11 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
+        Debug.print("installModulesGroup balance: " # debug_show(Cycles.balance())); // FIXME: Remove.
+        Debug.print("installModulesGroup available: " # debug_show(Cycles.available())); // FIXME: Remove.
+        Debug.print("Principal.fromActor(batteryActor)=" # debug_show(Principal.fromActor(batteryActor))); // FIXME: Remove.
+        Debug.print("Q1"); // FIXME: Remove.
+        // FIXME: Packagge has several, not one, modules.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;
@@ -1396,6 +1414,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback;
             bootstrapping;
         });
+        Debug.print("Q2"); // FIXME: Remove.
 
         {minInstallationId};
     };

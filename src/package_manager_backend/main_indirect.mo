@@ -134,6 +134,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
+            Debug.print("U0: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
             onlyOwner(caller, "installPackagesWrapper");
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
@@ -162,6 +163,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
             };
 
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
+            let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
+            Debug.print("U1x: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
             await pm.installStart({
                 minInstallationId;
                 afterInstallCallback;
@@ -234,8 +237,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                 };
                 case null {
+                    // TODO@P3: Do withdrawing cycles for all package's modules in one call.
                     let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
-                    // ignore Cycles.accept<system>(cyclesAmount); // FIXME@P1: needed?
+                    let batteryActor = actor(Principal.toText(battery)) : actor {
+                        withdrawCycles3: shared (amount: Nat, payee: Principal) -> async ();
+                    };
+                    await batteryActor.withdrawCycles3(cyclesAmount, Principal.fromActor(this));
                     Cycles.add<system>(cyclesAmount); // FIXME@P1: needed?
                     ignore await* Install._installModuleCode({
                         installationId;

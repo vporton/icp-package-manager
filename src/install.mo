@@ -222,6 +222,9 @@ module {
             };
         });
 
+        Debug.print("BEFORE onInstallCode balance: " # debug_show(Cycles.balance())); // FIXME: Remove.
+        Debug.print("BEFORE onInstallCode available: " # debug_show(Cycles.available())); // FIXME: Remove.
+        Cycles.add<system>(Cycles.balance() - 500_000_000_000); // TODO@P3: hack
         await pm.onInstallCode({
             moduleNumber;
             moduleName;
