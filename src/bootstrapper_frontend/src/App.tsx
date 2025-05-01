@@ -9,7 +9,6 @@ import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import { principalToSubAccount } from "../../lib/misc";
 import {  useEffect, useState } from 'react';
-import { bootstrapper } from '../../declarations/bootstrapper';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
