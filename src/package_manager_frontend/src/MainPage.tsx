@@ -126,6 +126,7 @@ export default function MainPage() {
             reloadDistros();
         }
     }
+    // FIXME@P1: `glob` may be not initialied yet:
     const bookmark = {frontend: glob.frontend!, backend: glob.backend!}; // TODO@P3: Don't try to bookmark, if we are on a custom domain.
     const bookmarkingUrlBase = getIsLocal()
         ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:4943/bookmark?`
