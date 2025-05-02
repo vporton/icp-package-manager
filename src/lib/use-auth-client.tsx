@@ -33,10 +33,7 @@ function createAuth(): AuthContextType {
   return {
     identity: v.identity,
     ok: v.identity !== undefined,
-    principal: useMemo(() => {
-      const p = v.identity?.getPrincipal();
-      return p;
-    }, [v.identity]),
+    principal: useMemo(() => v.identity?.getPrincipal(), [v.identity]),
     agent,
     defaultAgent,
     login: v.login,
