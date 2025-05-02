@@ -71,6 +71,7 @@ function App2() {
   const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
+  // FIXME@P1: `agent` may be still not initialized here:
   const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}); // TODO@P3: or `defaultAgent`?
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
