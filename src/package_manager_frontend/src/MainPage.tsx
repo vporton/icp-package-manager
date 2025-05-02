@@ -1,4 +1,4 @@
-import { ChangeEvent, createRef, useContext, useEffect, useState } from "react";
+import { ChangeEvent, createRef, useContext, useEffect, useMemo, useState } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import { Principal } from "@dfinity/principal";
@@ -127,17 +127,22 @@ export default function MainPage() {
         }
     }
     // FIXME@P1: `glob` may be not initialied yet:
-    const bookmark = {frontend: glob.frontend!, backend: glob.backend!}; // TODO@P3: Don't try to bookmark, if we are on a custom domain.
+    const bookmark = useMemo(() => { // TODO@P3: Don't try to bookmark, if we are on a custom domain.
+        return {frontend: glob.frontend!, backend: glob.backend!};
+    }, [glob.frontend, glob.backend]);
     const bookmarkingUrlBase = getIsLocal()
         ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:4943/bookmark?`
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
-    const bookmarkingUrl = `${bookmarkingUrlBase}_pm_pkg0.frontend=${bookmark.frontend}&_pm_pkg0.backend=${bookmark.backend}`;
+    const bookmarkingUrl = useMemo(
+        () => `${bookmarkingUrlBase}_pm_pkg0.frontend=${bookmark.frontend}&_pm_pkg0.backend=${bookmark.backend}`,
+        [bookmark.frontend, bookmark.backend],
+    );
     useEffect(() => {
         if (agent !== undefined) {
             const bookmarks = createBookmarkActor(process.env.CANISTER_ID_BOOKMARK!, {agent});
             bookmarks.hasBookmark(bookmark).then((f: boolean) => setBookmarked(f));
         }
-    }, [agent]);
+    }, [agent, bookmark]);
 
     return (
         <>
