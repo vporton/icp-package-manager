@@ -8,7 +8,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import { principalToSubAccount } from "../../lib/misc";
-import {  useEffect, useState } from 'react';
+import {  useEffect, useMemo, useState } from 'react';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
@@ -71,12 +71,14 @@ function App2() {
   const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
-  // FIXME@P1: `agent` may be still not initialized here:
-  const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}); // TODO@P3: or `defaultAgent`?
+  const bootstrapper = useMemo(() =>
+    agent === undefined ? undefined : createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}), // TODO@P3: or `defaultAgent`?
+    [agent],
+  );
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
-    if (principal === undefined) {
+    if (principal === undefined || bootstrapper === undefined) {
       return;
     }
     if (getIsLocal()) { // to ease debugging
@@ -92,12 +94,14 @@ function App2() {
       });
     }
   }
-  useEffect(updateCyclesAmount, [principal]);
+  useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(() => {
-    bootstrapper.userAccountBlob().then((b) => {
-      setCyclesPaymentAddress(b as Uint8Array);
-    });
-  }, [principal]);
+    if (bootstrapper !== undefined) {
+      bootstrapper.userAccountBlob().then((b) => {
+        setCyclesPaymentAddress(b as Uint8Array);
+      });
+    }
+  }, [bootstrapper]);
   // function mint() {
   //   cycles_ledger.mint({
   //     to: {
