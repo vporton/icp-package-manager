@@ -43,7 +43,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
       bookmark.getUserBookmarks().then(list => {
         setBookmarks(list);
       });
-    }, [props.ok, props.principal]);
+    }, [props.ok, props.agent]);
     // TODO@P3: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     async function bootstrap() {
