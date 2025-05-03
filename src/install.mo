@@ -99,9 +99,9 @@ module {
                 let oldController = (await to.list_authorized())[0];
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
                     for (principal in [simpleIndirect, user].vals()) {
-                        await (with cycles = Cycles.balance() - 500_000_000_000) to.grant_permission({to_principal = principal; permission});
+                        await to.grant_permission({to_principal = principal; permission});
                     };
-                    await (with cycles = Cycles.balance() - 500_000_000_000) to.revoke_permission({
+                    await to.revoke_permission({
                         of_principal = oldController;
                         permission;
                     });
@@ -222,7 +222,6 @@ module {
             };
         });
 
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000); // TODO@P3: hack
         await pm.onInstallCode({
             moduleNumber;
             moduleName;

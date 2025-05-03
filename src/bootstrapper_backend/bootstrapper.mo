@@ -20,6 +20,7 @@ import Nat "mo:base/Nat";
 import Buffer "mo:base/Buffer";
 import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
+import Array "mo:base/Array";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -58,9 +59,8 @@ actor class Bootstrapper() = this {
         : async {installedModules: [(Text, Principal)]}
     {
         checkItself(caller);
-        Debug.print("B0 amountToMove: " # debug_show(amountToMove) # " balance: " # debug_show(Cycles.balance()));  // FIXME: Remove.
 
-        // ignore Cycles.accept<system>(amountToMove - 500_000_000_000); // TODO@P3: exact amount?
+        // ignore Cycles.accept<system>(); // TODO@P3
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -76,8 +76,7 @@ actor class Bootstrapper() = this {
             } else {
                 newCanisterCycles;
             };
-            Debug.print("B1"); // FIXME: Remove. 
-            ignore Cycles.accept<system>(cyclesAmount);
+            // ignore Cycles.accept<system>(cyclesAmount);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 cyclesAmount;
@@ -85,7 +84,6 @@ actor class Bootstrapper() = this {
                     #Filter({subnet_type = ?"Application"})
                 );
             });
-            Debug.print("B2"); // FIXME: Remove. 
             installedModules.put(moduleName, canister_id);
         };
 
@@ -108,7 +106,6 @@ actor class Bootstrapper() = this {
         let ?mFrontend = modulesToInstall.get("frontend") else {
             Debug.trap("module not found");
         };
-        Debug.print("B3"); // FIXME: Remove. 
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
         // ignore Cycles.accept<system>(); // TODO@P2
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
@@ -118,16 +115,13 @@ actor class Bootstrapper() = this {
             canister_id = frontend;
             sender_canister_version = null; // TODO@P3
         });
-        Debug.print("B4: " # debug_show(Cycles.balance())); // FIXME: Remove. 
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(mFrontend);
             canister_id = frontend;
             simpleIndirect;
             user;
         });
-        Debug.print("B5"); // FIXME: Remove. 
 
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
             user;
@@ -139,9 +133,7 @@ actor class Bootstrapper() = this {
         //          Need to ensure that the link is paid for (prevent DoS attacks).
         //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
-        // Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
-        Debug.print("B7"); // FIXME: Remove. 
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };
@@ -211,7 +203,6 @@ actor class Bootstrapper() = this {
         // };
 
         let {installedModules} = try {
-            Cycles.add<system>(amountToMove - 500_000_000_000);
             await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         }
         catch (e) {
@@ -243,7 +234,6 @@ actor class Bootstrapper() = this {
     }): async {spentCycles: Nat} {
         let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
 
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
         let amountToMove = await CyclesLedger.icrc1_balance_of({
@@ -267,7 +257,6 @@ actor class Bootstrapper() = this {
             };
         };
 
-        Cycles.add<system>(amountToMove - 500_000_000_000);
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
         let {battery} = await doBootstrapBackend({
@@ -285,7 +274,6 @@ actor class Bootstrapper() = this {
         let batteryActor = actor(Principal.toText(battery)): actor {
             acceptCycles: shared (amount: Nat) -> async ();
         };
-        await batteryActor.acceptCycles(returnAmount);
         // } else {
         //     ignore await CyclesLedger.icrc1_transfer({
         //         to = {owner = battery; subaccount = null};
@@ -350,7 +338,7 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
-            Cycles.add<system>(1_000_000_000_000);
+            Cycles.add<system>(1_000_000_000_000); // TODO@P2
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
@@ -380,12 +368,10 @@ actor class Bootstrapper() = this {
         // the last stage of installation, not to add failed bookmark:
         await* tweakFrontend(tweaker, controllers, user);
 
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.deleteFrontendTweaker(pubKey);
 
         for (canister_id in installedModules2.vals()) { // including frontend
             // TODO@P3: We can provide these setting initially and thus update just one canister.
-            Cycles.add<system>(Cycles.balance() - 500_000_000_000);
             await ic.update_settings({
                 canister_id;
                 sender_canister_version = null;
@@ -422,11 +408,11 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+        Cycles.add<system>(newCanisterCycles * Array.size(installedModules));
         ignore await backendActor.installPackageWithPreinstalledModules({
           packageName = "icpack";
           version = "stable";
-          preinstalledModules = Iter.toArray(installedModules.vals());
+          preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
           repo = Repository;
           arg = "";
           initArg = null;
@@ -450,18 +436,15 @@ actor class Bootstrapper() = this {
         user: Principal, // to address security vulnerabulities, used only to add a controller.
     ): async* () {
         let assets: Asset.AssetCanister = actor(Principal.toText(tweaker.frontend));
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         let owners = await assets.list_authorized();
         for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
             for (owner in owners.vals()) {
-                Cycles.add<system>(Cycles.balance() - 500_000_000_000);
                 await assets.revoke_permission({
                     of_principal = owner; // TODO@P3: Why isn't it enough to remove `Principal.fromActor(this)`?
                     permission;
                 });
             };
             for (principal in Iter.concat(controllers.vals(), [user].vals())) {
-                Cycles.add<system>(Cycles.balance() - 500_000_000_000);
                 await assets.authorize(principal); // TODO@P3: needed?
                 await assets.grant_permission({to_principal = principal; permission});
             };

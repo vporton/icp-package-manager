@@ -165,7 +165,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
             Debug.print("U1x: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
-            await pm.installStart({
+            await (with cycles = cyclesAmount) pm.installStart({ // FIXME@P2: wrong cycles amount
                 minInstallationId;
                 afterInstallCallback;
                 user;
