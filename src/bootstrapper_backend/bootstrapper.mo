@@ -58,8 +58,9 @@ actor class Bootstrapper() = this {
         : async {installedModules: [(Text, Principal)]}
     {
         checkItself(caller);
+        Debug.print("B0 amountToMove: " # debug_show(amountToMove) # " balance: " # debug_show(Cycles.balance()));  // FIXME: Remove.
 
-        ignore Cycles.accept<system>(amountToMove - 500_000_000_000); // TODO@P3: exact amount?
+        // ignore Cycles.accept<system>(amountToMove - 500_000_000_000); // TODO@P3: exact amount?
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
@@ -75,6 +76,7 @@ actor class Bootstrapper() = this {
             } else {
                 newCanisterCycles;
             };
+            Debug.print("B1"); // FIXME: Remove. 
             ignore Cycles.accept<system>(cyclesAmount);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
@@ -83,6 +85,7 @@ actor class Bootstrapper() = this {
                     #Filter({subnet_type = ?"Application"})
                 );
             });
+            Debug.print("B2"); // FIXME: Remove. 
             installedModules.put(moduleName, canister_id);
         };
 
@@ -105,7 +108,9 @@ actor class Bootstrapper() = this {
         let ?mFrontend = modulesToInstall.get("frontend") else {
             Debug.trap("module not found");
         };
+        Debug.print("B3"); // FIXME: Remove. 
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
+        // ignore Cycles.accept<system>(); // TODO@P2
         await ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({});
             wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
@@ -113,26 +118,30 @@ actor class Bootstrapper() = this {
             canister_id = frontend;
             sender_canister_version = null; // TODO@P3
         });
+        Debug.print("B4: " # debug_show(Cycles.balance())); // FIXME: Remove. 
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(mFrontend);
             canister_id = frontend;
             simpleIndirect;
             user;
         });
+        Debug.print("B5"); // FIXME: Remove. 
 
         Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         await Data.putFrontendTweaker(frontendTweakPubKey, {
             frontend;
             user;
         });
+        Debug.print("B6"); // FIXME: Remove. 
 
         // TODO@P3: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
         //          For this, make the private key a part of the persistent link arguments?
         //          Need to ensure that the link is paid for (prevent DoS attacks).
         //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
-        Cycles.add<system>(Cycles.balance() - 500_000_000_000);
+        // Cycles.add<system>(Cycles.balance() - 500_000_000_000);
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
+        Debug.print("B7"); // FIXME: Remove. 
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };
@@ -211,6 +220,7 @@ actor class Bootstrapper() = this {
         };
         // let {returnAmount: Nat} = await* finish();
         let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
+        Debug.print("returnAmount: " # debug_show(returnAmount));
 
         {installedModules; spentCycles = amountToMove - returnAmount};
     };
