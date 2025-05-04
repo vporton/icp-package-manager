@@ -30,25 +30,10 @@ import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
 
 actor class Bootstrapper() = this {
-    transient let cycles_transfer_fee = 100_000_000_000;
-
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
-
-    private func principalToSubaccount(principal : Principal) : Blob {
-        var sub = Buffer.Buffer<Nat8>(32);
-        let subaccount_blob = Principal.toBlob(principal);
-
-        sub.add(Nat8.fromNat(subaccount_blob.size()));
-        sub.append(Buffer.fromArray<Nat8>(Blob.toArray(subaccount_blob)));
-        while (sub.size() < 32) {
-            sub.add(0);
-        };
-
-        Blob.fromArray(Buffer.toArray(sub));
-    };
 
     /// TODO@P3: Do we need this check?
     private func checkItself(caller: Principal) {
@@ -153,11 +138,11 @@ actor class Bootstrapper() = this {
         } else {
             // The following does not work in local net testing mode:
             await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
 
-        // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
+        // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
         if (not env.isLocal) {
@@ -166,9 +151,9 @@ actor class Bootstrapper() = this {
             //     to = {owner = Principal.fromActor(this); subaccount = null};
             //     fee = null;
             //     memo = null;
-            //     from_subaccount = ?(principalToSubaccount(user));
+            //     from_subaccount = ?(Common.principalToSubaccount(user));
             //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            //     amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - cycles_transfer_fee;
+            //     amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - Common.cycles_transfer_fee;
             // })) {
             //     case (#Err e) {
             //         Debug.trap("transfer failed: " # debug_show(e));
@@ -180,9 +165,9 @@ actor class Bootstrapper() = this {
                 to = {owner = revenueRecipient; subaccount = null};
                 fee = null;
                 memo = null;
-                from_subaccount = ?(principalToSubaccount(user));
+                from_subaccount = ?(Common.principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - cycles_transfer_fee;
+                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - Common.cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -197,7 +182,7 @@ actor class Bootstrapper() = this {
             (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
         } else {
             await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
 
@@ -224,10 +209,13 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
-        // FIXME@P1: It does not work in local net:
-        let amountToMove = await CyclesLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(tweaker.user));
-        });
+        let amountToMove = if (env.isLocal) {
+            Cycles.balance();
+        } else {
+            await CyclesLedger.icrc1_balance_of({
+                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(tweaker.user));
+            });
+        };
 
         // Move user's fund into current use:
         if (not env.isLocal) { // If isLocal, funds are already here.
@@ -235,9 +223,9 @@ actor class Bootstrapper() = this {
                 to = {owner = Principal.fromActor(this); subaccount = null};
                 fee = null;
                 memo = null;
-                from_subaccount = ?(principalToSubaccount(tweaker.user));
+                from_subaccount = ?(Common.principalToSubaccount(tweaker.user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = amountToMove - 2*cycles_transfer_fee;
+                amount = amountToMove - 2*Common.cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -257,7 +245,7 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-        let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
+        let returnAmount = Int.abs(Cycles.refunded() - Common.cycles_transfer_fee);
 
         {spentCycles = amountToMove - returnAmount};
     };
@@ -277,8 +265,6 @@ actor class Bootstrapper() = this {
         tweaker: Data.FrontendTweaker;
     }): async {battery: Principal} {
         checkItself(caller);
-
-        Cycles.add<system>(amountToMove);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {

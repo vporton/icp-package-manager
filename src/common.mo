@@ -9,6 +9,7 @@ import Int "mo:base/Int";
 import Nat32 "mo:base/Nat32";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
+import Nat8 "mo:base/Nat8";
 import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
 
@@ -426,4 +427,19 @@ module {
         threshold: Nat;
         topupAmount: Nat;
     };
+
+    public func principalToSubaccount(principal : Principal) : Blob {
+        var sub = Buffer.Buffer<Nat8>(32);
+        let subaccount_blob = Principal.toBlob(principal);
+
+        sub.add(Nat8.fromNat(subaccount_blob.size()));
+        sub.append(Buffer.fromArray<Nat8>(Blob.toArray(subaccount_blob)));
+        while (sub.size() < 32) {
+            sub.add(0);
+        };
+
+        Blob.fromArray(Buffer.toArray(sub));
+    };
+
+    public let cycles_transfer_fee = 100_000_000_000;
 }
