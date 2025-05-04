@@ -368,6 +368,10 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
+        let totalCanisterCycles = TODO;
+        if (amountToMove > totalCanisterCycles) { // FIXME@P1: This `amountToMove` is probably from frontend not backend.
+            Debug.trap("not enough cycles");
+        };
         Cycles.add<system>(newCanisterCycles * Array.size(installedModules)); // FIXME@P1: Spends unbound amount of our cycles!
         ignore await backendActor.facilitateBootstrap({
           packageName = "icpack";
