@@ -260,6 +260,7 @@ shared({caller = initialOwner}) actor class Battery({
         await* LIB.withdrawCycles(CyclesLedger, amount, payee);
     };
 
+    /// TODO@P3: Unused function.
     public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
         if (not principalSet.contains(withdrawers, payee)) {
             Debug.trap("withdrawCycles2: payee is not allowed");
@@ -283,7 +284,7 @@ shared({caller = initialOwner}) actor class Battery({
 
     public shared func withdrawCycles3(amount: Nat, payee: Principal) : async () {
         if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles2: payee is not allowed");
+            Debug.trap("withdrawCycles3: payee is not allowed");
         };
         let whom = actor(Principal.toText(payee)) : actor {
             acceptCycles: shared () -> async ();
