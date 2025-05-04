@@ -709,6 +709,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             packages = [{packageName; version; repo; preinstalledModules; arg; initArg}]; // HACK
             pmPrincipal = Principal.fromActor(this);
             user;
+            afterInstallCallback = null;
             bootstrapping = true;
         });
 
