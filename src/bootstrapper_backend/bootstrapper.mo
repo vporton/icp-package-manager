@@ -167,7 +167,7 @@ actor class Bootstrapper() = this {
                 };
                 case (#Ok _) {};
             };
-            // Don't do ryalty here, because we are testing:
+            // Don't do royalty here, because we are testing:
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = revenueRecipient; subaccount = null};
                 fee = null;
