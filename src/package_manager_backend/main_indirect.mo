@@ -175,6 +175,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             }, Nat>(packages, 0, func (acc: Nat, pkg) {
                 acc + pkg.preinstalledModules.size()
             });
+            ignore Cycles.accept<system>(totalCyclesAmount);
             await (with cycles = totalCyclesAmount) pm.installStart({ // FIXME@P2: wrong cycles amount
                 minInstallationId;
                 afterInstallCallback;

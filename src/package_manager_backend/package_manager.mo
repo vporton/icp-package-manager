@@ -171,7 +171,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Principal.equal,
             Principal.hash);
 
-    var batteryActor: Battery.Battery = actor("aaaaa-aa");
+    var batteryActor: Battery.Battery = actor(Principal.toText(battery));
 
     public shared({caller}) func init({
         // installationId: Common.InstallationId;
@@ -184,14 +184,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
             owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
             owners.delete(packageManager); // delete bootstrapper
-
-            let ?inst = installedPackages.get(installationId) else {
-                Debug.trap("error getting installation");
-            };
-            let ?b = inst.modulesInstalledByDefault.get("battery") else {
-                Debug.trap("error getting battery");
-            };
-            batteryActor := actor(Principal.toText(b)); // TODO@P3: Initialize without `init()`.
 
             initialized := true;
         }
@@ -765,6 +757,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             });
         };
 
+        // let ?battery = coreModules.get("battery") else {
+        //     Debug.trap("error getting battery");
+        // };
+        let batteryActor = actor(Principal.toText(battery)) : actor {
+            acceptCycles: shared () -> async ();
+        };
         await (with cycles = cyclesToBattery) batteryActor.acceptCycles();
 
         {minInstallationId}
@@ -1442,7 +1440,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         Debug.print("installModulesGroup available: " # debug_show(Cycles.available())); // FIXME: Remove.
         Debug.print("Principal.fromActor(batteryActor)=" # debug_show(Principal.fromActor(batteryActor))); // FIXME: Remove.
         Debug.print("Q1"); // FIXME: Remove.
-        // FIXME: Packagge has several, not one, modules.
+        // FIXME@P1: Pass here cycles.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;
