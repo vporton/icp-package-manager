@@ -1507,8 +1507,8 @@ shared({caller = initialCaller}) actor class PackageManager({
         data.default := installationId;
     };
 
-    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
+    public shared func withdrawCycles(amount: Nat, payee: Principal, caller: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
     };
 
     public shared func acceptCycles(): async () {
