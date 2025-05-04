@@ -691,7 +691,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// Internal used for bootstrapping.
-    public shared({caller}) func installPackageWithPreinstalledModules({
+    public shared({caller}) func facilitateBootstrap({
         packageName: Common.PackageName;
         version: Common.Version;
         repo: Common.RepositoryRO;
@@ -711,7 +711,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        onlyOwner(caller, "installPackageWithPreinstalledModules");
+        onlyOwner(caller, "facilitateBootstrap");
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += /*additionalPackages.size() +*/ 1; // TODO@P3: Account additionalPackages.size() here?

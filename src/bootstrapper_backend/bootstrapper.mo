@@ -10,6 +10,7 @@ import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
+import Battery "../package_manager_backend/battery";
 import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
@@ -135,11 +136,15 @@ actor class Bootstrapper() = this {
         //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
+        Debug.print("B7"); // FIXME: Remove. 
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
+    ///
+    /// In testing mode, cycles are supplied as the main account of the bootstrapper canister
+    /// and returned back to the same account.
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
@@ -163,7 +168,7 @@ actor class Bootstrapper() = this {
             //     memo = null;
             //     from_subaccount = ?(principalToSubaccount(user));
             //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            //     amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
+            //     amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - cycles_transfer_fee;
             // })) {
             //     case (#Err e) {
             //         Debug.trap("transfer failed: " # debug_show(e));
@@ -177,7 +182,7 @@ actor class Bootstrapper() = this {
                 memo = null;
                 from_subaccount = ?(principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 4*cycles_transfer_fee;
+                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -186,34 +191,17 @@ actor class Bootstrapper() = this {
             };
         };
 
-        // func finish(): async* {returnAmount: Nat} {
-        //     let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-        //     // Return user's fund from current use:
-        //     switch(await CyclesLedger.icrc1_transfer({
-        //         to = {owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user))};
-        //         fee = null;
-        //         memo = null;
-        //         from_subaccount = null;
-        //         created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-        //         amount = returnAmount;
-        //     })) {
-        //         case (#Err e) {
-        //             Debug.trap("transfer failed: " # debug_show(e));
-        //         };
-        //         case (#Ok _) {};
-        //     };
-        //     {returnAmount};
-        // };
+        let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
-        let {installedModules} = try {
-            await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
-        }
-        catch (e) {
-            // ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
-            Debug.trap(Error.message(e));
+        let cyclesToBattery = if (env.isLocal) {
+            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
+        } else {
+            await CyclesLedger.icrc1_balance_of({
+                owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+            });
         };
 
-        {installedModules};
+        {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
@@ -236,6 +224,7 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
+        // FIXME@P1: It does not work in local net:
         let amountToMove = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(tweaker.user));
         });
@@ -269,21 +258,6 @@ actor class Bootstrapper() = this {
         });
 
         let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-
-        // if (env.isLocal) {
-        let batteryActor = actor(Principal.toText(battery)): actor {
-            acceptCycles: shared (amount: Nat) -> async ();
-        };
-        // } else {
-        //     ignore await CyclesLedger.icrc1_transfer({
-        //         to = {owner = battery; subaccount = null};
-        //         fee = null;
-        //         memo = null;
-        //         from_subaccount = null;
-        //         created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-        //         amount = returnAmount;
-        //     });
-        // };
 
         {spentCycles = amountToMove - returnAmount};
     };
@@ -346,7 +320,7 @@ actor class Bootstrapper() = this {
                 wasmModule = Common.unshareModule(m);
                 arg = to_candid({});
                 packageManager = if (moduleName == "backend") {
-                    Principal.fromActor(this) // to call `installPackageWithPreinstalledModules` below
+                    Principal.fromActor(this) // to call `facilitateBootstrap` below
                 } else {
                     backend
                 };
@@ -389,7 +363,7 @@ actor class Bootstrapper() = this {
         };
 
         let backendActor = actor(Principal.toText(backend)): actor {
-            installPackageWithPreinstalledModules: shared ({
+            facilitateBootstrap: shared ({
                 packageName: Common.PackageName;
                 version: Common.Version;
                 repo: Common.RepositoryRO; 
@@ -409,7 +383,7 @@ actor class Bootstrapper() = this {
             }) -> async {minInstallationId: Common.InstallationId};
         };
         Cycles.add<system>(newCanisterCycles * Array.size(installedModules));
-        ignore await backendActor.installPackageWithPreinstalledModules({
+        ignore await backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
