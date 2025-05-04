@@ -197,13 +197,6 @@ actor class Bootstrapper() = this {
         frontendTweakPrivKey: PrivKey; // TODO@P3: Rename.
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
-        additionalPackages: [{
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryRO;
-            arg: Blob;
-            initArg: ?Blob;
-        }];
     }): async {spentCycles: Nat} {
         let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
 
@@ -240,7 +233,6 @@ actor class Bootstrapper() = this {
             pubKey;
             installedModules;
             user;
-            additionalPackages;
             amountToMove;
             tweaker
         });
@@ -254,13 +246,6 @@ actor class Bootstrapper() = this {
         pubKey: PubKey;
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
-        additionalPackages: [{
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryRO;
-            arg: Blob;
-            initArg: ?Blob;
-        }];
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
     }): async {battery: Principal} {
@@ -318,7 +303,6 @@ actor class Bootstrapper() = this {
                 // frontend;
                 // frontendTweakPrivKey;
                 // repo = Repository;
-                // additionalPackages;
             });
         };
 
@@ -358,21 +342,10 @@ actor class Bootstrapper() = this {
                 user: Principal;
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
-                additionalPackages: [{
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                    repo: Common.RepositoryRO;
-                    arg: Blob;
-                    initArg: ?Blob;
-                }];
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        let totalCanisterCycles = TODO;
-        if (amountToMove > totalCanisterCycles) { // FIXME@P1: This `amountToMove` is probably from frontend not backend.
-            Debug.trap("not enough cycles");
-        };
-        Cycles.add<system>(newCanisterCycles * Array.size(installedModules)); // FIXME@P1: Spends unbound amount of our cycles!
+        Cycles.add<system>(newCanisterCycles * Array.size(installedModules));
         ignore await backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
@@ -383,7 +356,6 @@ actor class Bootstrapper() = this {
           initArg = null;
           user;
           mainIndirect;
-          additionalPackages;
         });
 
         {battery};

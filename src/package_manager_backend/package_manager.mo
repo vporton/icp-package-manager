@@ -692,13 +692,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         user: Principal;
         mainIndirect: Principal;
         /// Additional packages to install after bootstrapping.
-        additionalPackages: [{
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryRO;
-            arg: Blob;
-            initArg: ?Blob;
-        }];
         preinstalledModules: [(Text, Principal)];
     })
         : async {minInstallationId: Common.InstallationId}
@@ -715,7 +708,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
 
         let minInstallationId = nextInstallationId;
-        nextInstallationId += /*additionalPackages.size() +*/ 1; // TODO@P3: Account additionalPackages.size() here?
+        nextInstallationId += 1;
 
         // Move user's fund into current use:
         if (not env.isLocal) { // If isLocal, funds are already here.
@@ -744,7 +737,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback = ?{
                 canister = Principal.fromActor(this);
                 name = "bootstrapAdditionalPackages";
-                data = to_candid(additionalPackages, user);
+                data = to_candid(user);
             };
             bootstrapping = true;
         });

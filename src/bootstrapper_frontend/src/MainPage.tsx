@@ -153,13 +153,13 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         :
         <>
           <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
-          <p>
+          {/* <p> // Restore it.
             <label>
               <input type="checkbox" checked={addExample} onChange={e => setAddExample(e.target.checked)}/>{" "}
               Add example package
             </label>{" "}
             <small>(for testing)</small>
-          </p>
+          </p> */}
           <p><Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button></p>
         </>}
       </>
