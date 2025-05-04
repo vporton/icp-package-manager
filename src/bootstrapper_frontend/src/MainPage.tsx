@@ -51,9 +51,10 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         setBusy(true);
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const {installedModules, frontendTweakPrivKey, spentCycles} = await bootstrapFrontend({
+        const {installedModules, frontendTweakPrivKey} = await bootstrapFrontend({
           agent: props.agent!,
         });
+        const spentCycles = 0; // FIXME@P1
         const installedModulesMap = new Map(installedModules);
         const url = getIsLocal()
           ? `http://${installedModulesMap.get("frontend")}.localhost:4943`

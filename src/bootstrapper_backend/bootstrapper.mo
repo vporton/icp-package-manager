@@ -21,6 +21,7 @@ import Buffer "mo:base/Buffer";
 import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
 import Array "mo:base/Array";
+import IC "mo:base/ExperimentalInternetComputer";
 import env "mo:env";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
@@ -71,7 +72,7 @@ actor class Bootstrapper() = this {
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
-            let cyclesAmount = if (moduleName == "battery") {
+            let cyclesAmount = if (moduleName == "battery") { // TODO@P2: Use only `newCanisterCycles`, copy to the battery later.
                 30_000_000_000_000 // TODO@P2: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
             } else {
                 newCanisterCycles;
@@ -142,31 +143,33 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove =
-            Cycles.balance();
+        let amountToMove = if (env.isLocal) {
+            Cycles.balance(); // Use the no-subaccount balance in test mode.
+        } else {
             // The following does not work in local net testing mode:
-            // await CyclesLedger.icrc1_balance_of({
-            //     owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
-            // });
+            await CyclesLedger.icrc1_balance_of({
+                owner = Principal.fromActor(this); subaccount = ?(principalToSubaccount(user));
+            });
+        };
 
         // TODO@P3: `- 5*cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
         if (not env.isLocal) {
             // if local, use it directly
-            switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = Principal.fromActor(this); subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = ?(principalToSubaccount(user));
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
-            })) {
-                case (#Err e) {
-                    Debug.trap("transfer failed: " # debug_show(e));
-                };
-                case (#Ok _) {};
-            };
+            // switch(await CyclesLedger.icrc1_transfer({
+            //     to = {owner = Principal.fromActor(this); subaccount = null};
+            //     fee = null;
+            //     memo = null;
+            //     from_subaccount = ?(principalToSubaccount(user));
+            //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            //     amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 5*cycles_transfer_fee;
+            // })) {
+            //     case (#Err e) {
+            //         Debug.trap("transfer failed: " # debug_show(e));
+            //     };
+            //     case (#Ok _) {};
+            // };
             // Don't do royalty here, because we are testing:
             switch(await CyclesLedger.icrc1_transfer({
                 to = {owner = revenueRecipient; subaccount = null};
@@ -209,11 +212,8 @@ actor class Bootstrapper() = this {
             // ignore await* finish(); // After frontend install, we return the money, to continue with backend install.
             Debug.trap(Error.message(e));
         };
-        // let {returnAmount: Nat} = await* finish();
-        let returnAmount = Int.abs(Cycles.refunded() - 3*cycles_transfer_fee);
-        Debug.print("returnAmount: " # debug_show(returnAmount));
 
-        {installedModules; spentCycles = amountToMove - returnAmount};
+        {installedModules};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
