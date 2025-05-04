@@ -126,7 +126,6 @@ export default function MainPage() {
             reloadDistros();
         }
     }
-    // FIXME@P1: `glob` may be not initialied yet:
     const bookmark = useMemo(() => { // TODO@P3: Don't try to bookmark, if we are on a custom domain.
         return {frontend: glob.frontend!, backend: glob.backend!};
     }, [glob.frontend, glob.backend]);
