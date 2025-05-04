@@ -6,8 +6,8 @@ import Nat64 "mo:base/Nat64";
 import ICRC1 "mo:icrc1-types";
 
 module {
-    public func withdrawCycles(ledger: ICRC1.Service, amount: Nat, payee: Principal) : async* () {
-        if (not Principal.isController(payee)) {
+    public func withdrawCycles(ledger: ICRC1.Service, amount: Nat, payee: Principal, caller: Principal) : async* () {
+        if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles: payee is not a controller");
         };
         switch (await ledger.icrc1_transfer({

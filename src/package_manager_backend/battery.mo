@@ -256,14 +256,14 @@ shared({caller = initialOwner}) actor class Battery({
     addWithdrawer(mainIndirect);
     addWithdrawer(packageManager);
 
-    public shared func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(CyclesLedger, amount, payee);
+    public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
     };
 
     /// TODO@P3: Unused function.
-    public shared func withdrawCycles2(amount: Nat, payee: Principal) : async () {
-        if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles2: payee is not allowed");
+    public shared({caller}) func withdrawCycles2(amount: Nat, payee: Principal) : async () {
+        if (not principalSet.contains(withdrawers, caller)) {
+            Debug.trap("withdrawCycles2: caller is not allowed");
         };
         switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
@@ -282,9 +282,9 @@ shared({caller = initialOwner}) actor class Battery({
         };
     };
 
-    public shared func withdrawCycles3(amount: Nat, payee: Principal) : async () {
-        if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles3: payee is not allowed");
+    public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
+        if (not principalSet.contains(withdrawers, caller)) {
+            Debug.trap("withdrawCycles3: caller is not allowed");
         };
         let whom = actor(Principal.toText(payee)) : actor {
             acceptCycles: shared () -> async ();
@@ -293,11 +293,11 @@ shared({caller = initialOwner}) actor class Battery({
         await whom.acceptCycles();
     };
 
-    public shared({caller = payee}) func withdrawCycles4(amount: Nat) : async () {
-        if (not principalSet.contains(withdrawers, payee)) {
-            Debug.trap("withdrawCycles2: payee is not allowed");
+    public shared({caller}) func withdrawCycles4(amount: Nat) : async () {
+        if (not principalSet.contains(withdrawers, caller)) {
+            Debug.trap("withdrawCycles4: caller is not allowed");
         };
-        let whom = actor(Principal.toText(payee)) : actor {
+        let whom = actor(Principal.toText(caller)) : actor {
             acceptCycles: shared () -> async ();
         };
         Cycles.add<system>(amount);
