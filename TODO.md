@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P1 No need for `acceptCycles` function, there is `ic.deposit_cycles`.
+
 - FIXME@P1 Installation of `example` doesn't finish.
 
 - TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.

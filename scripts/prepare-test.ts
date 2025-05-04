@@ -167,11 +167,11 @@ async function main() {
     console.log("Creating packages...");
     const pmReal: SharedRealPackageInfo = {
         modules: [
+            ['battery', pmBatteryModule], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
             ['backend', pmBackendModule],
             ['frontend', pmFrontendModule],
             ['main_indirect', pmMainIndirectModule],
             ['simple_indirect', pmSimpleIndirectModule],
-            ['battery', pmBatteryModule],
         ],
         dependencies: [],
         suggests: [],
