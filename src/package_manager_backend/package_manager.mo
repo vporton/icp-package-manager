@@ -657,31 +657,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    /// Internal. Install packages after bootstrapping IC Pack.
-    public shared({caller}) func bootstrapAdditionalPackages(
-        packages: [{
-            packageName: Common.PackageName;
-            version: Common.Version;
-            repo: Common.RepositoryRO;
-            arg: Blob;
-            initArg: ?Blob;
-        }],
-        user: Principal,
-    ) {
-        try {
-            onlyOwner(caller, "bootstrapAdditionalPackages");
-
-            ignore await this.installPackages({ // TODO@P3: no need for shared call
-                packages;
-                user;
-                afterInstallCallback = null;
-            });
-        }
-        catch(e) {
-            Debug.print(Error.message(e));
-        }
-    };
-
     /// Internal used for bootstrapping.
     public shared({caller}) func facilitateBootstrap({
         packageName: Common.PackageName;
@@ -734,11 +709,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             packages = [{packageName; version; repo; preinstalledModules; arg; initArg}]; // HACK
             pmPrincipal = Principal.fromActor(this);
             user;
-            afterInstallCallback = ?{
-                canister = Principal.fromActor(this);
-                name = "bootstrapAdditionalPackages";
-                data = to_candid(user);
-            };
             bootstrapping = true;
         });
 

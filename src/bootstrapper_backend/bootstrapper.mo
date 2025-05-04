@@ -345,11 +345,9 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
         };
-        Cycles.add<system>(newCanisterCycles * Array.size(installedModules));
-        ignore await backendActor.facilitateBootstrap({
+        ignore await (with cycles = newCanisterCycles * Array.size(installedModules)) backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
-          // FIXME@P1: `installedModules` is from a wrong package! So, we count it wrongly.
           preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
           repo = Repository;
           arg = "";
