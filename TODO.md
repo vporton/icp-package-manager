@@ -1,10 +1,5 @@
 Remaining things TODO:
 
-- FIXME@P3 Frontend installation says to spent as many cycles as supplied.
-  In reality, cycles seems to be not spent.
-  Onto the battery should be placed all remaining cycles!
-  Into backend are placed too many cycles.
-
 - FIXME@P1 Installation of `example` doesn't finish.
 
 - TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.
