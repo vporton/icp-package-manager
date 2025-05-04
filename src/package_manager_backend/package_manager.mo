@@ -833,7 +833,9 @@ shared({caller = initialCaller}) actor class PackageManager({
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
+            Debug.print("R0: " # debug_show(Cycles.balance()));
             await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(main_indirect_));
+            Debug.print("R1: " # debug_show(Cycles.balance()));
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;

@@ -12,10 +12,9 @@ module {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     public func myCreateCanister({
         controllers: ?[Principal];
-        cyclesAmount: Nat;
         subnet_selection: ?cmc.SubnetSelection;
     }): async* {canister_id: Principal} {
-        let res = await (with cycles = cyclesAmount) cmc.create_canister({
+        let res = await (with cycles = 1_000_000_000_000) cmc.create_canister({ // TODO@P2: How many cycles?
             settings = ?{
                 // TODO@P3:
                 compute_allocation = null;
@@ -58,6 +57,14 @@ module {
         let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
+        Debug.print("BALANCE: " # debug_show(Cycles.balance()));
+        // TODO@P3: Do withdrawing cycles for all package's modules in one call.
+        let cyclesAmount = 1_000_000_000_000; // TODO@P2: How many cycles?
+        let batteryActor = actor(Principal.toText(battery)) : actor { // FIXME@P1: The battery isn't yet with code.
+            withdrawCycles4: shared (amount: Nat) -> async ();
+        };
+        await batteryActor.withdrawCycles4(cyclesAmount);
+        Debug.print("BALANCE2: " # debug_show(Cycles.balance()));
         await (with cycles = 1_000_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
@@ -146,15 +153,12 @@ module {
         arg: Blob;
         user: Principal;
         controllers: ?[Principal];
-        cyclesAmount: Nat;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
     }): async* Principal {
-        ignore Cycles.accept<system>(cyclesAmount);
         let {canister_id} = await* myCreateCanister({
             controllers;
-            cyclesAmount;
             subnet_selection = null;
         });
         await* _installModuleCodeOnly({

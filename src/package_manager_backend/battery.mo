@@ -292,6 +292,17 @@ shared({caller = initialOwner}) actor class Battery({
         await whom.acceptCycles();
     };
 
+    public shared({caller = payee}) func withdrawCycles4(amount: Nat) : async () {
+        if (not principalSet.contains(withdrawers, payee)) {
+            Debug.trap("withdrawCycles2: payee is not allowed");
+        };
+        let whom = actor(Principal.toText(payee)) : actor {
+            acceptCycles: shared () -> async ();
+        };
+        Cycles.add<system>(amount);
+        await whom.acceptCycles();
+    };
+
     system func inspect({
         caller : Principal;
     }): Bool {

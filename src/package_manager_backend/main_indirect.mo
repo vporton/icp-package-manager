@@ -175,7 +175,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
             }, Nat>(packages, 0, func (acc: Nat, pkg) {
                 acc + pkg.preinstalledModules.size()
             });
-            ignore Cycles.accept<system>(totalCyclesAmount); // FIXME@P1: Cycles were not added.
             await (with cycles = totalCyclesAmount) pm.installStart({ // FIXME@P2: wrong cycles amount
                 minInstallationId;
                 afterInstallCallback;
@@ -248,13 +247,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
                 };
                 case null {
-                    // TODO@P3: Do withdrawing cycles for all package's modules in one call.
-                    let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
-                    let batteryActor = actor(Principal.toText(battery)) : actor {
-                        withdrawCycles3: shared (amount: Nat, payee: Principal) -> async ();
-                    };
-                    // await batteryActor.withdrawCycles3(cyclesAmount, Principal.fromActor(this));
-                    // ignore Cycles.accept<system>(cyclesAmount); // FIXME@P1: needed?
                     ignore await* Install._installModuleCode({
                         installationId;
                         upgradeId = null;
@@ -268,7 +260,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         battery;
                         user;
                         controllers = ?[Principal.fromActor(this)];
-                        cyclesAmount;
                         afterInstallCallback;
                     });
                 };
