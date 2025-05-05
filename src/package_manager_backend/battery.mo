@@ -9,8 +9,6 @@ import Set "mo:base/OrderedSet";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
-import Time "mo:base/Time";
-import Nat64 "mo:base/Nat64";
 import Cycles "mo:base/ExperimentalCycles";
 import LIB "mo:icpack-lib";
 import Common "../common";
@@ -283,7 +281,7 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
-        if (not principalSet.contains(withdrawers, caller)) {
+        if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles3: caller is not allowed");
         };
         let whom = actor(Principal.toText(payee)) : actor {
@@ -294,7 +292,7 @@ shared({caller = initialOwner}) actor class Battery({
     };
 
     public shared({caller}) func withdrawCycles4(amount: Nat) : async () {
-        if (not principalSet.contains(withdrawers, caller)) {
+        if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles4: caller is not allowed");
         };
         let whom = actor(Principal.toText(caller)) : actor {
