@@ -17,6 +17,7 @@ import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
 import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
+import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import env "mo:env";
 import Battery "battery";
@@ -724,10 +725,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // let ?battery = coreModules.get("battery") else {
         //     Debug.trap("error getting battery");
         // };
-        let batteryActor = actor(Principal.toText(battery)) : actor {
-            acceptCycles: shared () -> async ();
-        };
-        await (with cycles = cyclesToBattery) batteryActor.acceptCycles();
+        await (with cycles = cyclesToBattery) IC.ic.deposit_cycles({canister_id = battery});
 
         {minInstallationId}
     };
@@ -764,6 +762,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     }) {
         onlyOwner(caller, "installStart");
 
+        Debug.print("I0"); // FIXME: Remove.
         for (p0 in packages.keys()) {
             let p = packages[p0];
             let #real realPackage = p.package.specific else {
@@ -789,12 +788,14 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
+            Debug.print("I1"); // FIXME: Remove.
             await* doInstallFinish(minInstallationId + p0, ourHalfInstalled);
         };
     };
 
     // TODO@P3: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
+        Debug.print("J0"); // FIXME: Remove.
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> =
             switch (p.specific) {
@@ -806,6 +807,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case (#virtual _) [].vals();
             };
+        Debug.print("J1"); // FIXME: Remove.
 
         // TODO@P3: `Iter.toArray` is a (small) slowdown.
         let bi = if (pkg.bootstrapping) {
@@ -816,6 +818,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             Iter.toArray(pkg0.modulesInstalledByDefault.entries());
         };
+        Debug.print("J2"); // FIXME: Remove.
         let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
         var moduleNumber = 0;
         let ?backend = coreModules.get("backend") else {
@@ -827,8 +830,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?simple_indirect = coreModules.get("simple_indirect") else {
             Debug.trap("error getting simple_indirect");
         };
+        Debug.print("J3"); // FIXME: Remove.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
+            Debug.print("J4"); // FIXME: Remove.
             /// TODO@P2: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
@@ -1457,7 +1462,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     // };
 
     public composite query/*({caller})*/ func userBalance(): async Nat {
-        await batteryActor.getBalance();
+        await batteryActor.balance();
         // /// because `icrc1_balance_of` does not work on local net as it should.
         // await CyclesLedger.icrc1_balance_of(userAccount(/*caller*/));
     };
@@ -1507,11 +1512,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         data.default := installationId;
     };
 
-    public shared func withdrawCycles(amount: Nat, payee: Principal, caller: Principal) : async () {
+    public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
-    };
-
-    public shared func acceptCycles(): async () {
-        ignore Cycles.accept<system>(Cycles.available());
     };
 }

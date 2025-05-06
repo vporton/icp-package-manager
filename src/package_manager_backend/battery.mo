@@ -10,9 +10,9 @@ import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
+import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import Common "../common";
-import MainIndirect "main_indirect";
 import CyclesLedger "canister:cycles_ledger";
 import env "mo:env";
 
@@ -99,10 +99,6 @@ shared({caller = initialOwner}) actor class Battery({
 
     private func getPM(): OurPMType {
         actor(Principal.toText(packageManager));
-    };
-
-    private func getMainIndirect(): MainIndirect.MainIndirect {
-        actor(Principal.toText(mainIndirect));
     };
 
     public type ModuleLocation = {
@@ -195,7 +191,10 @@ shared({caller = initialOwner}) actor class Battery({
             case null battery.defaultFulfillment;
         };
         Cycles.add<system>(fulfillment.topupAmount); // TODO@P3: If this traps on a too high amount, keep filling other canisters?
-        getMainIndirect().topUpOneCanisterFinish(canister_id, fulfillment);
+        let mainIndirectActor = actor(Principal.toText(mainIndirect)) : actor {
+            topUpOneCanisterFinish: shared (canister_id: Principal, fulfillment: Common.CanisterFulfillment) -> async ();
+        };
+        ignore mainIndirectActor.topUpOneCanisterFinish(canister_id, fulfillment);
     };
 
     private func topUpAllCanisters(): async () {
@@ -284,22 +283,16 @@ shared({caller = initialOwner}) actor class Battery({
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles3: caller is not allowed");
         };
-        let whom = actor(Principal.toText(payee)) : actor {
-            acceptCycles: shared () -> async ();
-        };
         Cycles.add<system>(amount);
-        await whom.acceptCycles();
+        await IC.ic.deposit_cycles({canister_id = payee});
     };
 
     public shared({caller}) func withdrawCycles4(amount: Nat) : async () {
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles4: caller is not allowed");
         };
-        let whom = actor(Principal.toText(caller)) : actor {
-            acceptCycles: shared () -> async ();
-        };
         Cycles.add<system>(amount);
-        await whom.acceptCycles();
+        await IC.ic.deposit_cycles({canister_id = caller});
     };
 
     system func inspect({
@@ -325,11 +318,7 @@ shared({caller = initialOwner}) actor class Battery({
         _ownersSave := []; // Free memory.
     };
 
-    public shared func acceptCycles(): async () {
-        ignore Cycles.accept<system>(Cycles.available());
-    };
-
-    public query func getBalance(): async Nat {
+    public query func balance(): async Nat {
         // TODO@P3: Allow only to the owner?
         Cycles.balance();
     };

@@ -66,7 +66,7 @@ actor class Bootstrapper() = this {
             // ignore Cycles.accept<system>(cyclesAmount);
             let {canister_id} = await* Install.myCreateCanister({
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
-                cyclesAmount;
+                cycles = cyclesAmount;
                 subnet_selection = ?(
                     #Filter({subnet_type = ?"Application"})
                 );
@@ -392,7 +392,7 @@ actor class Bootstrapper() = this {
         Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
     };
 
-    public query func getBalance(): async Nat {
+    public query func balance(): async Nat {
         // TODO@P3: Allow only to the owner?
         Cycles.balance();
     };

@@ -82,7 +82,7 @@ function App2() {
       return;
     }
     if (getIsLocal()) { // to ease debugging
-      bootstrapper.getBalance().then((amount) => {
+      bootstrapper.balance().then((amount) => {
         setCyclesAmount(parseInt(amount.toString()))
       });
     } else {

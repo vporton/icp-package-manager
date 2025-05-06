@@ -14,6 +14,7 @@ import IC "mo:ic";
 import SimpleIndirect "simple_indirect";
 import LIB "mo:icpack-lib";
 import CyclesLedger "canister:cycles_ledger";
+import Battery "battery";
 
 shared({caller = initialCaller}) actor class MainIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -175,7 +176,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
             }, Nat>(packages, 0, func (acc: Nat, pkg) {
                 acc + pkg.preinstalledModules.size()
             });
-            await (with cycles = totalCyclesAmount) pm.installStart({ // FIXME@P2: wrong cycles amount
+            Debug.print("S1: " # debug_show(battery)); // FIXME: Remove.
+            let batteryActor: Battery.Battery = actor(Principal.toText(battery));
+            // Cycles go to `mainIndirect`, instead:
+            await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect);
+            await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // FIXME@P2: need to deliver cycles to main_indirect
                 minInstallationId;
                 afterInstallCallback;
                 user;
@@ -400,8 +405,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 case null {
                     let {canister_id} = await* Install.myCreateCanister({
                         controllers = ?[Principal.fromActor(this), simpleIndirect];
-                        cyclesAmount = await ourPM.getNewCanisterCycles();
                         subnet_selection = null;
+                        cycles = await ourPM.getNewCanisterCycles(); // TODO@P2: How many cycles?
                     });
                     await* Install.myInstallCode({
                         installationId;
@@ -513,11 +518,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 //         };
 //    };
 
-    public shared func withdrawCycles(amount: Nat, payee: Principal, caller: Principal) : async () {
+    public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
-    };
-
-    public shared func acceptCycles(): async () {
-        ignore Cycles.accept<system>(Cycles.available());
     };
 }

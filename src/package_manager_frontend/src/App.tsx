@@ -153,7 +153,7 @@ function App2() {
     } 
     glob.packageManager.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
       const battery = createBatteryActor(batteryPrincipal, {agent});
-      battery.getBalance().then((amount) => {
+      battery.balance().then((amount) => {
         setCyclesAmount(parseInt(amount.toString()))
       });
     });
