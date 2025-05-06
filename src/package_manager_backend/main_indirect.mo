@@ -8,6 +8,7 @@ import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Cycles "mo:base/ExperimentalCycles";
+import Itertools "mo:itertools/Iter";
 import Common "../common";
 import Install "../install";
 import IC "mo:ic";
@@ -166,20 +167,27 @@ shared({caller = initialCaller}) actor class MainIndirect({
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
             Debug.print("U1x: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
-            let totalCyclesAmount = cyclesAmount * Array.foldLeft<{
-                repo: Common.RepositoryRO;
-                packageName: Common.PackageName;
-                version: Common.Version;
-                preinstalledModules: [(Text, Principal)];
-                arg: Blob;
-                initArg: ?Blob;
-            }, Nat>(packages, 0, func (acc: Nat, pkg) {
-                acc + pkg.preinstalledModules.size()
-            });
+            let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
+                0; // We use the bootstrapper cycles, not battery.
+            } else {
+                cyclesAmount * Itertools.fold<?Common.PackageInfo, Nat>(
+                    packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
+                        let ?pkg2 = pkg else {
+                            Debug.trap("programming error");
+                        };
+                        let #real specific = pkg2.specific else {
+                            // TODO@P3: Support virtual packages.
+                            Debug.trap("programming error");
+                        };
+                        acc + specific.modules.size()
+                    });
+            };
             Debug.print("S1: " # debug_show(battery)); // FIXME: Remove.
             let batteryActor: Battery.Battery = actor(Principal.toText(battery));
             // Cycles go to `mainIndirect`, instead:
-            // await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect); // FIXME: Uncomment (only when non-bootstrapping)?
+            if (totalCyclesAmount != 0) {
+                await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect);
+            };
             await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // FIXME@P2: need to deliver cycles to main_indirect
                 minInstallationId;
                 afterInstallCallback;
