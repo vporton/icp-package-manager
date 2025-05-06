@@ -114,7 +114,6 @@ actor class Bootstrapper() = this {
             frontend;
             user;
         });
-        Debug.print("B6"); // FIXME: Remove. 
 
         // TODO@P3: Make adding a bookmark optional. (Or else, remove frontend bookmarking code.)
         //          For this, make the private key a part of the persistent link arguments?
@@ -122,7 +121,6 @@ actor class Bootstrapper() = this {
         //          Another (easy) way is to add "Bookmark" checkbox to bootstrap.
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
-        Debug.print("B7"); // FIXME: Remove. 
 
         {installedModules = Iter.toArray(installedModules.entries())};
     };

@@ -762,7 +762,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     }) {
         onlyOwner(caller, "installStart");
 
-        Debug.print("I0"); // FIXME: Remove.
         for (p0 in packages.keys()) {
             let p = packages[p0];
             let #real realPackage = p.package.specific else {
@@ -788,14 +787,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
 
-            Debug.print("I1"); // FIXME: Remove.
             await* doInstallFinish(minInstallationId + p0, ourHalfInstalled);
         };
     };
 
     // TODO@P3: Check that all useful code has been moved from here and delete this function.
     private func doInstallFinish(p0: Common.InstallationId, pkg: HalfInstalledPackageInfo): async* () {
-        Debug.print("J0"); // FIXME: Remove.
         let p = pkg.package;
         let modules: Iter.Iter<(Text, Common.Module)> =
             switch (p.specific) {
@@ -807,7 +804,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case (#virtual _) [].vals();
             };
-        Debug.print("J1"); // FIXME: Remove.
 
         // TODO@P3: `Iter.toArray` is a (small) slowdown.
         let bi = if (pkg.bootstrapping) {
@@ -818,7 +814,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             };
             Iter.toArray(pkg0.modulesInstalledByDefault.entries());
         };
-        Debug.print("J2"); // FIXME: Remove.
         let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
         var moduleNumber = 0;
         let ?backend = coreModules.get("backend") else {
@@ -830,17 +825,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?simple_indirect = coreModules.get("simple_indirect") else {
             Debug.trap("error getting simple_indirect");
         };
-        Debug.print("J3"); // FIXME: Remove.
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
-            Debug.print("J4"); // FIXME: Remove.
             /// TODO@P2: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
-            Debug.print("R0: " # debug_show(Cycles.balance()));
             // await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(main_indirect_));
-            Debug.print("R1: " # debug_show(Cycles.balance()));
             // Starting installation of all modules in parallel:
             await getMainIndirect().installModule({ // TODO@P3: I added `await` to initialize battery before others.
                 moduleNumber;
@@ -943,28 +934,22 @@ shared({caller = initialCaller}) actor class PackageManager({
         Debug.print("onInstallCode: Cycles accepted: " # debug_show(Cycles.available()));
         ignore Cycles.accept<system>(Cycles.available());
 
-        Debug.print("Z0"); // FIXME: Remove
         let ?inst = halfInstalledPackages.get(installationId) else {
             Debug.trap("no such package"); // better message
         };
-        Debug.print("Z1"); // FIXME: Remove
         switch (moduleName) {
             case (?name) {
                 inst.modulesInstalledByDefault.put(name, canister);
             };
             case null {};
         };
-        Debug.print("Z2"); // FIXME: Remove
         let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
             Debug.trap("trying to directly install a virtual installation");
         };
-        Debug.print("Z3"); // FIXME: Remove
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
-            Debug.print("Z4"); // FIXME: Remove
             _updateAfterInstall({installationId});
-            Debug.print("Z5"); // FIXME: Remove
             for ((moduleName2, module4) in realPackage.modules.entries()) {
                 switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
@@ -988,7 +973,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                     case (null) {};
                 };
             };
-            Debug.print("Z6"); // FIXME: Remove
             switch (afterInstallCallback) {
                 case (?afterInstallCallback) {
                     ignore getSimpleIndirect().callAll([{
@@ -1000,9 +984,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
-            Debug.print("Z7"); // FIXME: Remove
             halfInstalledPackages.delete(installationId);
-            Debug.print("Z8"); // FIXME: Remove
         };
     };
 
@@ -1407,10 +1389,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        Debug.print("installModulesGroup balance: " # debug_show(Cycles.balance())); // FIXME: Remove.
-        Debug.print("installModulesGroup available: " # debug_show(Cycles.available())); // FIXME: Remove.
-        Debug.print("Principal.fromActor(batteryActor)=" # debug_show(Principal.fromActor(batteryActor))); // FIXME: Remove.
-        Debug.print("Q1"); // FIXME: Remove.
         // FIXME@P1: Pass here cycles.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
@@ -1420,7 +1398,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             afterInstallCallback;
             bootstrapping;
         });
-        Debug.print("Q2"); // FIXME: Remove.
 
         {minInstallationId};
     };

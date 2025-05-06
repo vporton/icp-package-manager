@@ -136,7 +136,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
-            Debug.print("U0: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
             onlyOwner(caller, "installPackagesWrapper");
 
             let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
@@ -166,7 +165,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
             let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
-            Debug.print("U1x: " # debug_show(Cycles.balance()) # "/" # debug_show(Cycles.available())); // FIXME: Remove.
             let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
                 0; // We use the bootstrapper cycles, not battery.
             } else {
@@ -182,7 +180,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         acc + specific.modules.size()
                     });
             };
-            Debug.print("S1: " # debug_show(battery)); // FIXME: Remove.
             let batteryActor: Battery.Battery = actor(Principal.toText(battery));
             // Cycles go to `mainIndirect`, instead:
             if (totalCyclesAmount != 0) {

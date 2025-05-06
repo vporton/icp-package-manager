@@ -58,19 +58,11 @@ module {
         let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
 
         Debug.print("Installing code for canister " # debug_show(canister_id));
-        let cyclesAmount = 1_000_000_000_000; // TODO@P2: How many cycles?
         let batteryActor = actor(Principal.toText(battery)) : actor { // FIXME@P1: The battery isn't yet with code.
             withdrawCycles4: shared (amount: Nat) -> async ();
             balance: query () -> async Nat;
         };
-        Debug.print("BALANCE: " # debug_show(Cycles.balance())); // FIXME: Remove.
         // TODO@P3: Do withdrawing cycles for all package's modules in one call.
-        Debug.print("PPP: " # debug_show(canister_id) # " != " # debug_show(battery)); // FIXME: Remove.
-        if (canister_id != battery) { // when battery isn't installed yet
-            Debug.print("BATTERY BALANCE: " # debug_show(await batteryActor.balance())); // FIXME: Remove.
-            // await batteryActor.withdrawCycles4(cyclesAmount); // FIXME: Uncomment (only when non-bootstrapping)?
-        };
-        Debug.print("BALANCE2: " # debug_show(Cycles.balance())); // FIXME: Remove.
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
         // TODO@P2: How many cycles?
@@ -90,7 +82,6 @@ module {
             canister_id;
             sender_canister_version = wasmModule.canisterVersion;
         });
-        Debug.print("T0"); // FIXME: Remove.
 
         await* copyAssetsIfAny({
             wasmModule;
@@ -98,7 +89,6 @@ module {
             simpleIndirect;
             user;
         });
-        Debug.print("T1"); // FIXME: Remove.
     };
 
     public func copyAssetsIfAny({
