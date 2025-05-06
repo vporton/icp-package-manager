@@ -839,7 +839,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
             Debug.print("R0: " # debug_show(Cycles.balance()));
-            await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(main_indirect_));
+            // await batteryActor.withdrawCycles3(newCanisterCycles, Principal.fromActor(main_indirect_));
             Debug.print("R1: " # debug_show(Cycles.balance()));
             // Starting installation of all modules in parallel:
             await getMainIndirect().installModule({ // TODO@P3: I added `await` to initialize battery before others.

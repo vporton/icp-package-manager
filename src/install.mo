@@ -68,13 +68,13 @@ module {
         Debug.print("PPP: " # debug_show(canister_id) # " != " # debug_show(battery)); // FIXME: Remove.
         if (canister_id != battery) { // when battery isn't installed yet
             Debug.print("BATTERY BALANCE: " # debug_show(await batteryActor.balance())); // FIXME: Remove.
-            await batteryActor.withdrawCycles4(cyclesAmount);
+            // await batteryActor.withdrawCycles4(cyclesAmount); // FIXME: Uncomment (only when non-bootstrapping)?
         };
         Debug.print("BALANCE2: " # debug_show(Cycles.balance())); // FIXME: Remove.
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
         // TODO@P2: How many cycles?
-        await (with cycles = 1_000_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        await /*(with cycles = 1_000_000_000_000)*/ ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
                 mainIndirect;

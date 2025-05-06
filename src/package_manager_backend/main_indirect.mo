@@ -179,7 +179,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             Debug.print("S1: " # debug_show(battery)); // FIXME: Remove.
             let batteryActor: Battery.Battery = actor(Principal.toText(battery));
             // Cycles go to `mainIndirect`, instead:
-            await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect);
+            // await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect); // FIXME: Uncomment (only when non-bootstrapping)?
             await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // FIXME@P2: need to deliver cycles to main_indirect
                 minInstallationId;
                 afterInstallCallback;
@@ -251,7 +251,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         packageManager;
                         afterInstallCallback;
                     });
-
                 };
                 case null {
                     ignore await* Install._installModuleCode({
@@ -385,7 +384,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
-                    await simple.install_code({
+                    await simple.install_code({ // TODO@P2: Manage cycles.
                         sender_canister_version = null; // TODO@P3: Set appropriate value.
                         arg = to_candid({
                             packageManager;
