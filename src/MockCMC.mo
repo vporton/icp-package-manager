@@ -2,6 +2,7 @@
 /// IT DOES NOT CONFORM TO THE SPECS!
 /// It's useful for testing code using `CMC.notify_create_canister` on local net.
 import Cycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
 import IC "mo:ic";
 
 actor CMC {
@@ -100,13 +101,16 @@ actor CMC {
 
   public shared func create_canister(arg: CreateCanisterArg): async CreateCanisterResult {
     let amount = Cycles.available();
+    Debug.print("CMC AVAILABLE: " # debug_show(amount)); // FIXME: Remove.
+    Debug.print("CMC BALANCE: " # debug_show(Cycles.balance())); // FIXME: Remove.
     ignore Cycles.accept<system>(amount);
     let sub = arg.settings;
-    Cycles.add<system>(amount);
-    let { canister_id } = await IC.ic.create_canister({
+    let { canister_id } = await (with cycles = amount) IC.ic.create_canister({
         settings = sub;
         sender_canister_version = null; // TODO@P3
     });
+    let res = await IC.ic.canister_status({canister_id});
+    Debug.print("CMC CREATED with: " # debug_show(res.cycles)); // FIXME: Remove.
     #Ok canister_id;
   };
 }

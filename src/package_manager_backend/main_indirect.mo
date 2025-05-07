@@ -168,7 +168,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
                 0; // We use the bootstrapper cycles, not battery.
             } else {
-                cyclesAmount * Itertools.fold<?Common.PackageInfo, Nat>(
+                (cyclesAmount + 500_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P2: 500_000_000_000 is install_code() amount.
                     packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
                         let ?pkg2 = pkg else {
                             Debug.trap("programming error");
@@ -180,6 +180,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         acc + specific.modules.size()
                     });
             };
+            Debug.print("totalCyclesAmount: " # debug_show(totalCyclesAmount)); // FIXME: Remove.
             let batteryActor: Battery.Battery = actor(Principal.toText(battery));
             // Cycles go to `mainIndirect`, instead:
             if (totalCyclesAmount != 0) {
@@ -234,6 +235,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
+        Debug.print("installModule BALANCE: " # debug_show(Cycles.balance()));
         // TODO@P3: `async` is because we need battery initialized before others.
         // TODO@P2: Check that we are not legible to non-returning-call attack!
         try {
@@ -270,7 +272,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         simpleIndirect;
                         battery;
                         user;
-                        controllers = ?[Principal.fromActor(this)];
+                        controllers = ?[Principal.fromActor(this), user]; // TODO@P2: `user` was used only for testing.
                         afterInstallCallback;
                     });
                 };
@@ -389,6 +391,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
+                    let res = await IC.ic.canister_status({canister_id});
+                    Debug.print("BLOCK1"); // FIXME: Remove.
+                    // let res2 = await IC.ic.canister_status({canister_id}); // FIXME: Remove.
+                    // Debug.print("CMC USED1 with: " # debug_show(res2.cycles)); // FIXME: Remove.
                     await simple.install_code({ // TODO@P2: Manage cycles.
                         sender_canister_version = null; // TODO@P3: Set appropriate value.
                         arg = to_candid({
