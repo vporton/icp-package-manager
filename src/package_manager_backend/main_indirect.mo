@@ -271,7 +271,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         simpleIndirect;
                         battery;
                         user;
-                        controllers = ?[Principal.fromActor(this), user]; // TODO@P2: `user` was used only for testing.
+                        controllers = ?[Principal.fromActor(this)];
                         afterInstallCallback;
                     });
                 };
