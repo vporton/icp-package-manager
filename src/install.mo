@@ -163,7 +163,7 @@ module {
         let {canister_id} = await* myCreateCanister({
             controllers;
             subnet_selection = null;
-            cycles = 1_000_000_000_000; // TODO@P2: How many cycles?
+            cycles = 1_500_000_000_000; // TODO@P2: How many cycles?
         });
         await* _installModuleCodeOnly({
             moduleNumber;

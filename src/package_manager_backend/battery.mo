@@ -152,7 +152,7 @@ shared({caller = initialOwner}) actor class Battery({
 
     private func newBattery(): Battery =
         {
-            canisterInitialCycles = 1_000_000_000_000;
+            canisterInitialCycles = 1_500_000_000_000;
             defaultFulfillment = {
                 threshold = 3_000_000_000_000;
                 topupAmount = 2_000_000_000_000;

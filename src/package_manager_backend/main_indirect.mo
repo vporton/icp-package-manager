@@ -391,10 +391,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
-                    let res = await IC.ic.canister_status({canister_id});
-                    Debug.print("BLOCK1"); // FIXME: Remove.
-                    // let res2 = await IC.ic.canister_status({canister_id}); // FIXME: Remove.
-                    // Debug.print("CMC USED1 with: " # debug_show(res2.cycles)); // FIXME: Remove.
                     await simple.install_code({ // TODO@P2: Manage cycles.
                         sender_canister_version = null; // TODO@P3: Set appropriate value.
                         arg = to_candid({
