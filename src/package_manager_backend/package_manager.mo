@@ -249,7 +249,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
-    // TODO@P2: Rename:
+    // TODO@P3: Rename:
     stable var main_indirect_: MainIndirect.MainIndirect = actor(Principal.toText(mainIndirect));
     stable var simple_indirect_: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
 
@@ -823,7 +823,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
-            /// TODO@P2: Do one transfer instead of transferring in a loop.
+            /// TODO@P3: Do one transfer instead of transferring in a loop.
             let batteryActor = actor(Principal.toText(battery)) : actor {
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };

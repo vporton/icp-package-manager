@@ -168,7 +168,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
                 0; // We use the bootstrapper cycles, not battery.
             } else {
-                (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P2: 100_000_000_000 is install_code() amount.
+                (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P3: 100_000_000_000 is install_code() amount.
                     packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
                         let ?pkg2 = pkg else {
                             Debug.trap("programming error");
@@ -390,7 +390,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
-                    await simple.install_code({ // TODO@P2: Manage cycles.
+                    await simple.install_code({
                         sender_canister_version = null; // TODO@P3: Set appropriate value.
                         arg = to_candid({
                             packageManager;
@@ -411,7 +411,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let {canister_id} = await* Install.myCreateCanister({
                         controllers = ?[Principal.fromActor(this), simpleIndirect];
                         subnet_selection = null;
-                        cycles = await ourPM.getNewCanisterCycles(); // TODO@P2: How many cycles?
+                        cycles = await ourPM.getNewCanisterCycles();
                     });
                     await* Install.myInstallCode({
                         installationId;

@@ -58,8 +58,8 @@ actor class Bootstrapper() = this {
 
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
-            let cyclesAmount = if (moduleName == "battery") { // TODO@P2: Use only `newCanisterCycles`, copy to the battery later.
-                3_000_000_000_000 // TODO@P2: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
+            let cyclesAmount = if (moduleName == "battery") { // TODO@P3: Use only `newCanisterCycles`, copy to the battery later.
+                3_000_000_000_000 // TODO@P3: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
             } else {
                 newCanisterCycles;
             };
@@ -323,7 +323,7 @@ actor class Bootstrapper() = this {
             let ?m = modulesToInstall.get(moduleName) else {
                 Debug.trap("module not found");
             };
-            Cycles.add<system>(1_000_000_000_000); // TODO@P2
+            Cycles.add<system>(1_000_000_000_000); // TODO@P3
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;

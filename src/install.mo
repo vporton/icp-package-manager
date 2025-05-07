@@ -62,7 +62,7 @@ module {
         // TODO@P3: Do withdrawing cycles for all package's modules in one call.
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
-        // TODO@P2: How many cycles?
+        // TODO@P3: How many cycles?
         await (with cycles = 100_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
@@ -158,7 +158,7 @@ module {
         let {canister_id} = await* myCreateCanister({
             controllers;
             subnet_selection = null;
-            cycles = 1_500_000_000_000; // TODO@P2: How many cycles?
+            cycles = 1_500_000_000_000;
         });
         await* _installModuleCodeOnly({
             moduleNumber;
