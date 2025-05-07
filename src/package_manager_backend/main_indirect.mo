@@ -180,7 +180,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         acc + specific.modules.size()
                     });
             };
-            Debug.print("totalCyclesAmount: " # debug_show(totalCyclesAmount)); // FIXME: Remove.
             let batteryActor: Battery.Battery = actor(Principal.toText(battery));
             // Cycles go to `mainIndirect`, instead:
             if (totalCyclesAmount != 0) {

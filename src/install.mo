@@ -15,8 +15,6 @@ module {
         subnet_selection: ?cmc.SubnetSelection;
         cycles: Nat;
     }): async* {canister_id: Principal} {
-        Debug.print("BEFORE cmc.create_canister BALANCE: " # debug_show(Cycles.balance()) # " (" # debug_show(Cycles.balance()) # ")"); // FIXME: Remove.
-        Debug.print("PASS: " # debug_show(cycles)); // FIXME: Remove.
         let res = await (with cycles) cmc.create_canister({
             settings = ?{
                 // TODO@P3:
@@ -65,9 +63,6 @@ module {
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
         // TODO@P2: How many cycles?
-        Debug.print("BLOCK0"); // FIXME: Remove.
-        // let res = await ic.canister_status({canister_id}); // FIXME: Remove.
-        // Debug.print("CMC USED0 with: " # debug_show(res.cycles)); // FIXME: Remove.
         await (with cycles = 500_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
