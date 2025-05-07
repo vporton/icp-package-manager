@@ -688,7 +688,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 to = {owner = Principal.fromActor(this); subaccount = null};
                 fee = null;
                 memo = null;
-                from_subaccount = ?(Common.principalToSubaccount(user)); // FIXME@P1: Is `user` for correct frontend?
+                from_subaccount = ?(Common.principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
                 amount = amountToMove - 2 * Common.cycles_transfer_fee;
             })) {
@@ -711,7 +711,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
 
         let cyclesToBattery = if (env.isLocal) {
-            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode. // FIXME@P1
+            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
         } else {
             await CyclesLedger.icrc1_balance_of({
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
