@@ -185,7 +185,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             if (totalCyclesAmount != 0) {
                 await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect);
             };
-            await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // FIXME@P2: need to deliver cycles to main_indirect
+            await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // Cycles are already delivered to `main_indirect`.
                 minInstallationId;
                 afterInstallCallback;
                 user;
