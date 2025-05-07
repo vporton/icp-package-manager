@@ -59,7 +59,7 @@ actor class Bootstrapper() = this {
         let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
             let cyclesAmount = if (moduleName == "battery") { // TODO@P2: Use only `newCanisterCycles`, copy to the battery later.
-                10_000_000_000_000 // TODO@P2: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
+                3_000_000_000_000 // TODO@P2: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
             } else {
                 newCanisterCycles;
             };
