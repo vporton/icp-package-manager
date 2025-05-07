@@ -139,6 +139,9 @@ actor class Bootstrapper() = this {
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
+        if (amountToMove < 13_000_000_000_000) {
+            Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
+        };
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
