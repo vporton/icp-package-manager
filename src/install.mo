@@ -61,10 +61,6 @@ module {
 
         Debug.print("RUNNING balance: " # debug_show(Cycles.balance()));
         Debug.print("Installing code for canister " # debug_show(canister_id));
-        let batteryActor = actor(Principal.toText(battery)) : actor { // FIXME@P1: The battery isn't yet with code.
-            withdrawCycles4: shared (amount: Nat) -> async ();
-            balance: query () -> async Nat;
-        };
         // TODO@P3: Do withdrawing cycles for all package's modules in one call.
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
