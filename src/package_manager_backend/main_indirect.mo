@@ -168,7 +168,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
                 0; // We use the bootstrapper cycles, not battery.
             } else {
-                (cyclesAmount + 500_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P2: 500_000_000_000 is install_code() amount.
+                (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P2: 100_000_000_000 is install_code() amount.
                     packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
                         let ?pkg2 = pkg else {
                             Debug.trap("programming error");

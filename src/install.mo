@@ -63,7 +63,7 @@ module {
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
         // TODO@P2: How many cycles?
-        await (with cycles = 500_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        await (with cycles = 100_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({
                 packageManager;
                 mainIndirect;
