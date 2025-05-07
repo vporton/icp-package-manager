@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P2 In test mode, all cycles should be copied to battery after bootstrapping.
+
 - TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.
 
 - TODO@P3 I stupidly used `useEffect`, where `useMemo` would suffice.
