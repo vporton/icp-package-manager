@@ -178,7 +178,7 @@ actor class Bootstrapper() = this {
         let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let cyclesToBattery = if (env.isLocal) {
-            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
+            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode. // FIXME@P1
         } else {
             await CyclesLedger.icrc1_balance_of({
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
@@ -236,9 +236,15 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-        let returnAmount = Int.abs(Cycles.refunded() - Common.cycles_transfer_fee);
+        let cyclesToBattery = if (env.isLocal) {
+            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode. // FIXME@P1
+        } else {
+            await CyclesLedger.icrc1_balance_of({
+                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
+            });
+        };
 
-        {spentCycles = amountToMove - returnAmount};
+        {spentCycles = amountToMove - cyclesToBattery};
     };
 
     public shared({caller}) func doBootstrapBackend({

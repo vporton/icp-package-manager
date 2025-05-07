@@ -109,8 +109,9 @@ actor CMC {
         settings = sub;
         sender_canister_version = null; // TODO@P3
     });
-    let res = await IC.ic.canister_status({canister_id});
-    Debug.print("CMC CREATED with: " # debug_show(res.cycles)); // FIXME: Remove.
+    // TODO@P3: The below requires controller status:
+    // let res = await IC.ic.canister_status({canister_id});
+    // Debug.print("CMC CREATED with: " # debug_show(res.cycles)); // FIXME: Remove.
     #Ok canister_id;
   };
 }
