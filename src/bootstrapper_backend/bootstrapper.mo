@@ -235,16 +235,22 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-        let cyclesToBattery = if (env.isLocal) {
-            1_000_000_000_000_000; // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
+
+        let lastBalance = if (env.isLocal) {
+            Cycles.balance(); // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
         } else {
             await CyclesLedger.icrc1_balance_of({
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
+        let cyclesToBattery = if (env.isLocal) {
+            1_000_000_000_000_000; // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
+        } else {
+            lastBalance;
+        };
         await (with cycles = cyclesToBattery) ic.deposit_cycles({canister_id = battery});
 
-        {spentCycles = amountToMove - cyclesToBattery};
+        {spentCycles = amountToMove - lastBalance};
     };
 
     public shared({caller}) func doBootstrapBackend({
