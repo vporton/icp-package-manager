@@ -330,10 +330,6 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
-        // FIXME@P1: Cannot calculate number of modules here:
-        // let totalCyclesAmount = newCanisterCycles * Array.foldLeft(packages, 0, func (acc: Nat, packages) {
-        //     acc + pkg.preinstalledModules.size()
-        // });
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
             minInstallationId;
