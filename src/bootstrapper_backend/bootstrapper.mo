@@ -281,12 +281,12 @@ actor class Bootstrapper() = this {
             Debug.trap("module not deployed");
         };
 
-        // FIXME@P1: `this` must be not a controller.
         let controllers = [simpleIndirect, mainIndirect, backend, battery, user, Principal.fromActor(this)]; // TODO@P3: duplicate code
+        let controllers2 = [simpleIndirect, mainIndirect, backend, battery, user]; // TODO@P3: duplicate code
 
         // TODO@P3: It may happen when the app is not installed because of an error.
         // the last stage of installation, not to add failed bookmark:
-        await* tweakFrontend(tweaker, controllers, user);
+        await* tweakFrontend(tweaker, controllers2, user);
         await Data.deleteFrontendTweaker(pubKey);
 
         for (canister_id in installedModules2.vals()) { // including frontend
@@ -360,6 +360,24 @@ actor class Bootstrapper() = this {
           user;
           mainIndirect;
         });
+
+        for (canister_id in installedModules2.vals()) { // including frontend
+            // TODO@P3: We can provide these setting initially and thus update just one canister.
+            await ic.update_settings({
+                canister_id;
+                sender_canister_version = null;
+                settings = { // TODO@P3
+                    compute_allocation = null;
+                    // `indirect_canister_id` here is only for the package manager package:
+                    controllers = ?controllers2;
+                    freezing_threshold = null;
+                    log_visibility = null;
+                    memory_allocation = null;
+                    reserved_cycles_limit = null;
+                    wasm_memory_limit = null;
+                };
+            });
+        };
 
         {battery};
     };
