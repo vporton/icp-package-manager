@@ -177,12 +177,16 @@ actor class Bootstrapper() = this {
         let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let cyclesToBattery = if (env.isLocal) {
-            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
+            1_000_000_000_000_000; // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
         } else {
             await CyclesLedger.icrc1_balance_of({
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
+        let battery = Array.filter<(Text, Principal)>(installedModules, func (moduleName: Text, canister_id: Principal) {
+            moduleName == "battery"
+        })[0].1;
+        await (with cycles = cyclesToBattery) ic.deposit_cycles({canister_id = battery});
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
