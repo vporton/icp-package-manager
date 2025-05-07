@@ -1385,7 +1385,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async* {minInstallationId: Common.InstallationId}
     {
-        // FIXME@P1: Pass here cycles.
+        // Cycles are passed to `main_indirect` in other place of the code.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
             packages;
