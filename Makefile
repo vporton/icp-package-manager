@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+SHELL=/bin/bash
+
 NETWORK = local
 export MOPS_ENV = $(NETWORK)
 USER = $(shell dfx identity get-principal)
@@ -72,7 +74,21 @@ deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
 
 .PHONY: docs
-docs: docs/md/icpack docs/html/icpack
+docs: docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg
+
+.PHONY: deploy-docs
+deploy-docs: docs
+	cleanup() { \
+	  test "$$TMPDIR" != '' && rm -rf "$$TMPDIR"; \
+	} && \
+	trap "cleanup" EXIT && \
+	TMPDIR=`mktemp -d` && \
+	(cd $$TMPDIR && git clone git@github.com:vporton/icpack-docs.git) && \
+	cp -a docs/out/* $$TMPDIR/icpack-docs/ && \
+	cd $$TMPDIR/icpack-docs/ && git add -A && git commit -m "Update docs" && git push
+
+docs/out/%: docs/src/%
+	cp -f $< $@
 
 .PHONY: docs/out/md/icpack
 docs/out/md/icpack:
