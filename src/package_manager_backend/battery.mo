@@ -1,3 +1,4 @@
+/// Battery canister or battery module is a canister that holds cycles and delivers them to other canisters.
 import Timer "mo:base/Timer";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
