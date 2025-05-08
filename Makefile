@@ -74,13 +74,13 @@ deploy-self@bookmark: build@bookmark deploy@bootstrapper
 .PHONY: docs
 docs: docs/md/icpack docs/html/icpack
 
-.PHONY: docs/md/icpack
-docs/md/icpack:
+.PHONY: docs/out/md/icpack
+docs/out/md/icpack:
 	rm -rf $@
 	`dfx cache show`/mo-doc --source src --output $@ --format plain
 
-.PHONY: docs/html/icpack
-docs/html/icpack:
+.PHONY: docs/out/html/icpack
+docs/out/html/icpack:
 	rm -rf $@
 	`dfx cache show`/mo-doc --source src --output $@ --format html
 
