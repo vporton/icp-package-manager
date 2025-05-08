@@ -70,3 +70,14 @@ deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	  --argument "principal \"$(USER)\"" \
 	  bookmark
 	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
+
+.PHONY: docs
+docs: docs/md/icpack docs/html/icpack
+
+docs/md/icpack:
+	rm -rf $@
+	`dfx cache show`/mo-doc --source src --output $@ --format plain
+
+docs/html/icpack:
+	rm -rf $@
+	`dfx cache show`/mo-doc --source src --output $@ --format html

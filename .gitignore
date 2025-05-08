@@ -13,6 +13,8 @@
 
 # generated files
 **/declarations/
+docs/md/
+docs/html/
 
 # rust
 target/
