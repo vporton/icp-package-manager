@@ -8,7 +8,7 @@ import RBTree "mo:base/RBTree";
 persistent actor class BootstrapperData(initialOwner: Principal) {
     public type PubKey = Blob;
 
-    stable var owner = initialOwner;
+    stable var owner = initialOwner; // FIXME@P1: Need to update, if `bootstrapper` canister is replaced.
 
     public type FrontendTweaker = {
         // controllers: [Principal]; // pass them from UI, it's safe.
