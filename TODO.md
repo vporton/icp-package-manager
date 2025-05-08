@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P3 Display canisters' principals somewhere.
+
 - TODO@P3 Don't call `ic.update_settings` several times per module.
 
 - TODO@P3 "Stop checked processes" should re-load the page or at least the list of processes.
