@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { example_backend } from 'declarations/example_backend';
+import { example_backend } from '../../../src/declarations/example_backend';
 
 function App() {
   const [greeting, setGreeting] = useState('');

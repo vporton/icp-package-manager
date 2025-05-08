@@ -81,3 +81,5 @@ docs/md/icpack:
 docs/html/icpack:
 	rm -rf $@
 	`dfx cache show`/mo-doc --source src --output $@ --format html
+
+build@example_frontend: generate@example_backend
