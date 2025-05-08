@@ -234,7 +234,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        Debug.print("installModule BALANCE: " # debug_show(Cycles.balance()));
         // TODO@P3: `async` is because we need battery initialized before others.
         // TODO@P2: Check that we are not legible to non-returning-call attack!
         try {
