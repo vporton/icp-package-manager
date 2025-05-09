@@ -49,6 +49,7 @@ deploy-test: deploy-work \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
 
+ifeq "$(NETWORK)" "local"
 deploy-self@cycles_ledger:
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.cycles_ledger) \
 	  --argument "( record { \
@@ -71,6 +72,7 @@ deploy-self@cycles_ledger:
 		advanced_settings = null; \
 	  })" \
 	  cycles_ledger
+endif
 
 deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
