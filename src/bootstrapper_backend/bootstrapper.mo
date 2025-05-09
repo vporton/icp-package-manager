@@ -146,10 +146,7 @@ actor class Bootstrapper() = this {
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         // Move user's fund into current use:
-        if (env.isLocal) {
-            Cycles.add<system>(Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)));
-            await ic.deposit_cycles({canister_id = Principal.fromActor(ic)});
-        } else {
+        if (not env.isLocal) {
             // if local, use it directly
             // switch(await CyclesLedger.icrc1_transfer({
             //     to = {owner = Principal.fromActor(this); subaccount = null};
