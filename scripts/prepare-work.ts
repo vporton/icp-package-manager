@@ -122,43 +122,6 @@ async function main() {
         ],
     });
 
-    const pmUpgradeable1V1 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable1V1Blob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmUpgradeable2V1 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable2V1Blob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmUpgradeable2V2 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable2V2Blob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmUpgradeable3V2 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable3V2Blob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-
     console.log("Creating packages...");
     const pmReal: SharedRealPackageInfo = {
         modules: [
