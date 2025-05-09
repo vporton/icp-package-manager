@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P3 Deployment to mainnet required to copy several `.did` files manually and run `make deploy-work` several times.
+
 - TODO@P3 Display canisters' principals somewhere.
 
 - TODO@P3 Don't call `ic.update_settings` several times per module.
