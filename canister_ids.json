@@ -1,4 +1,7 @@
 {
+  "battery": {
+    "ic": "cfvvk-tyaaa-aaaad-aampq-cai"
+  },
   "bookmark": {
     "ic": "cqseh-sqaaa-aaaad-aamma-cai"
   },
@@ -8,7 +11,28 @@
   "bootstrapper_data": {
     "ic": "d25g5-qaaaa-aaaad-aamla-cai"
   },
+  "bootstrapper_frontend": {
+    "ic": "hzopp-yqaaa-aaaad-aamqa-cai"
+  },
+  "example_backend": {
+    "ic": "c6qjp-jaaaa-aaaad-aamna-cai"
+  },
+  "example_frontend": {
+    "ic": "czrp3-eyaaa-aaaad-aamnq-cai"
+  },
+  "main_indirect": {
+    "ic": "clxyc-iiaaa-aaaad-aamoq-cai"
+  },
+  "package_manager": {
+    "ic": "cmw6w-fqaaa-aaaad-aamoa-cai"
+  },
+  "package_manager_frontend": {
+    "ic": "h6pj3-viaaa-aaaad-aamqq-cai"
+  },
   "repository": {
     "ic": "d54aj-5yaaa-aaaad-aamlq-cai"
+  },
+  "simple_indirect": {
+    "ic": "ccut6-6aaaa-aaaad-aampa-cai"
   }
 }
