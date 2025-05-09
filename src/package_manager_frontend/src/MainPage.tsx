@@ -143,8 +143,8 @@ export default function MainPage() {
         }
     }, [agent, bookmark]);
 
-    let spentTotalNum = Number(spentTotal!.toString());
-    if (getIsLocal()) {
+    let spentTotalNum = spentTotal != undefined ? Number(spentTotal.toString()) : undefined;
+    if (getIsLocal() && spentTotalNum !== undefined) {
       spentTotalNum /= 0.95; // TODO@P3: hack
     }
     return (
@@ -160,7 +160,7 @@ export default function MainPage() {
                         (provided that you've bookmarked this page).</Alert>
                 </>
             }
-            {spentTotal !== undefined &&
+            {spentTotalNum !== undefined &&
                 <Alert variant="info">
                     You spent total {spentTotalNum / 10**12}T cycles for bootstrapping.
                 </Alert>

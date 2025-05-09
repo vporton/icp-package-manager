@@ -123,8 +123,8 @@ function GlobalUI() {
       }
     }
 
-    let spentNum = Number(spent!.toString());
-    if (getIsLocal()) {
+    let spentNum = spent !== undefined ? Number(spent.toString()) : undefined;
+    if (getIsLocal() && spentNum !== undefined) {
       spentNum /= 0.95; // TODO@P3: hack
     }
     // TODO@P3: Start installation automatically, without clicking a button?
@@ -132,7 +132,7 @@ function GlobalUI() {
       <Container>
         <p>You first need to install the missing components (so called <q>backend</q>) for this software.
           This is just two buttons easy. You have around 45min to do this.</p>
-        {spent !== undefined &&
+        {spentNum !== undefined &&
               <Alert variant="info">You spent {spentNum / 10**12}T cycles for bootstrapping frontend.</Alert>
         }
         <ol>
