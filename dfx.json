@@ -171,6 +171,7 @@
       "main": "src/MockCyclesLedger.mo",
       "type": "motoko",
       "remote": {
+        "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
         "id": {
           "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
         }
