@@ -22,7 +22,7 @@ import InstalledPackage from './InstalledPackage';
 import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
-import { AuthProvider, useAuth } from '../../lib/use-auth-client';
+import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
 
 function App() {
   return (
@@ -123,13 +123,17 @@ function GlobalUI() {
       }
     }
 
+    let spentNum = Number(spent!.toString());
+    if (getIsLocal()) {
+      spentNum /= 0.95; // TODO@P3: hack
+    }
     // TODO@P3: Start installation automatically, without clicking a button?
     return (
       <Container>
         <p>You first need to install the missing components (so called <q>backend</q>) for this software.
           This is just two buttons easy. You have around 45min to do this.</p>
         {spent !== undefined &&
-              <Alert variant="info">You spent {Number(spent.toString()) / 10**12}T cycles for bootstrapping frontend.</Alert>
+              <Alert variant="info">You spent {spentNum / 10**12}T cycles for bootstrapping frontend.</Alert>
         }
         <ol>
           <li><AuthButton/></li>

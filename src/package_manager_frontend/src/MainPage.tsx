@@ -143,6 +143,10 @@ export default function MainPage() {
         }
     }, [agent, bookmark]);
 
+    let spentTotalNum = Number(spentTotal!.toString());
+    if (getIsLocal()) {
+      spentTotalNum /= 0.95; // TODO@P3: hack
+    }
     return (
         <>
             {!bookmarked &&
@@ -158,7 +162,7 @@ export default function MainPage() {
             }
             {spentTotal !== undefined &&
                 <Alert variant="info">
-                    You spent total {Number(spentTotal.toString()) / 10**12}T cycles for bootstrapping.
+                    You spent total {spentTotalNum / 10**12}T cycles for bootstrapping.
                 </Alert>
             }
             <h2>Distribution</h2>
