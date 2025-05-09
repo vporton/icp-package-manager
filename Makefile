@@ -2,7 +2,7 @@
 
 SHELL=/bin/bash
 
-NETWORK = local
+export NETWORK = local
 export MOPS_ENV = $(NETWORK)
 USER = $(shell dfx identity get-principal)
 # DEPLOY_FLAGS.bookmark = --argument "rec { bootstrapper = \"$$()\""; }"
@@ -38,8 +38,12 @@ init:
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 
+.PHONY: deploy-work
+deploy-test: deploy
+	npx tsx scripts/prepare-work.ts
+
 .PHONY: deploy-test
-deploy-test: deploy \
+deploy-test: deploy-work \
   deploy@upgrade_example_backend1_v1 deploy@upgrade_example_backend2_v1 \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
