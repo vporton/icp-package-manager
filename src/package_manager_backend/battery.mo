@@ -265,7 +265,7 @@ shared({caller = initialOwner}) actor class Battery({
         };
         switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
-            amount;
+            amount = amount - Comon.cycles_transfer_fee;
             fee = null;
             memo = null;
             from_subaccount = null;
