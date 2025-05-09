@@ -39,7 +39,7 @@ init:
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 
 .PHONY: deploy-work
-deploy-test: deploy
+deploy-work: deploy
 	npx tsx scripts/prepare-work.ts
 
 .PHONY: deploy-test
