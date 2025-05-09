@@ -134,41 +134,40 @@ module {
         callbacks: [(ModuleEvent, MethodName)];
     };
 
+    /// If `how` is `#methodName`, then the module is considered initialized when
+    /// the method is called and doesn't trap.
+    /// If `how` is `#urlPath`, then the module is considered initialized when
+    /// the URL path (starting with `/`) exists.
     public type CheckInitializedCallback = {
         moduleName: Text;
         how: {
-            /// Considered initialized, when doesn't trap.
             #methodName : Text;
-            /// Considered initialized, when the URL path (starting with /) exists.
             #urlPath : Text;
         };
     };
 
+    /// See `RealPackageInfo`.
     public type SharedRealPackageInfo = {
-        /// it's an array, because may contain several canisters.
         modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
-        /// Empty versions list means any version.
-        /// Akin Debian:
-        dependencies: [(PackageName, [VersionRange])];
-        suggests: [(PackageName, [VersionRange])];
-        recommends: [(PackageName, [VersionRange])];
-        /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
-        functions: [(PackageName, [VersionRange])];
+        dependencies: [(PackageName, ?[VersionRange])];
+        suggests: [(PackageName, ?[VersionRange])];
+        recommends: [(PackageName, ?[VersionRange])];
+        functions: [(PackageName, ?[VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
         frontendModule: ?Text;
     };
 
+    /// `dependencies`, `suggests`, `recommends` (akin Debian) are currently not supported.
+    /// Package's `functions` (currently not supported) are unrelated to Motoko functions.
+    /// `modules` are named canisters. (Names are needed for example to know which module should be
+    /// replaced by which during an upgrade.)
     public type RealPackageInfo = {
-        /// it's an array, because may contain several canisters.
         modules: HashMap.HashMap<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
-        /// Empty versions list means any version.
-        /// Akin Debian:
-        dependencies: [(PackageName, [VersionRange])];
-        suggests: [(PackageName, [VersionRange])];
-        recommends: [(PackageName, [VersionRange])];
-        /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
-        functions: [(PackageName, [VersionRange])];
+        dependencies: [(PackageName, ?[VersionRange])];
+        suggests: [(PackageName, ?[VersionRange])];
+        recommends: [(PackageName, ?[VersionRange])];
+        functions: [(PackageName, ?[VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
         frontendModule: ?Text;
@@ -211,16 +210,13 @@ module {
             frontendModule = package.frontendModule;
         };
 
+    /// See `RealPackageInfo`.
     public type RealPackageInfoUpload = {
-        /// it's an array, because may contain several canisters.
         modules: [(Text, ModuleUpload)]; // Modules are named for correct upgrades.
-        /// Empty versions list means any version.
-        /// Akin Debian:
-        dependencies: [(PackageName, [VersionRange])];
-        suggests: [(PackageName, [VersionRange])];
-        recommends: [(PackageName, [VersionRange])];
-        /// Package functions are unrelated to Motoko functions. Empty versions list means any version.
-        functions: [(PackageName, [VersionRange])];
+        dependencies: [(PackageName, ?[VersionRange])];
+        suggests: [(PackageName, ?[VersionRange])];
+        recommends: [(PackageName, ?[VersionRange])];
+        functions: [(PackageName, ?[VersionRange])];
         permissions: [(Text, [MethodName])];
         checkInitializedCallback: ?CheckInitializedCallback;
         frontendModule: ?Text;
