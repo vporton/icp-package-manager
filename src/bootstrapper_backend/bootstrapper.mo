@@ -139,7 +139,7 @@ actor class Bootstrapper() = this {
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
             });
         };
-        if (amountToMove < 13_000_000_000_000) {
+        if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
