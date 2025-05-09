@@ -424,7 +424,7 @@ module {
         topupAmount: Nat;
     };
 
-    public func principalToSubaccount(principal : Principal) : Blob {
+    public func principalToSubaccount(principal : Principal) : [Nat8] {
         var sub = Buffer.Buffer<Nat8>(32);
         let subaccount_blob = Principal.toBlob(principal);
 
@@ -434,7 +434,7 @@ module {
             sub.add(0);
         };
 
-        Blob.fromArray(Buffer.toArray(sub));
+        Buffer.toArray(sub);
     };
 
     public let cycles_transfer_fee = 100_000_000_000;

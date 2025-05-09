@@ -168,6 +168,7 @@
       "args": "--enhanced-orthogonal-persistence"
     },
     "cycles_ledger": {
+      "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
       "main": "src/MockCyclesLedger.mo",
       "type": "motoko",
       "remote": {
@@ -182,9 +183,11 @@
       "args": "--enhanced-orthogonal-persistence"
     },
     "cmc": {
+      "candid": "https://github.com/dfinity/ic/raw/refs/heads/master/rs/nns/cmc/cmc.did",
       "main": "src/MockCMC.mo",
       "type": "motoko",
       "remote": {
+        "candid": "https://github.com/dfinity/ic/raw/refs/heads/master/rs/nns/cmc/cmc.did",
         "id": {
           "ic": "rkp4c-7iaaa-aaaaa-aaaca-cai"
         }
