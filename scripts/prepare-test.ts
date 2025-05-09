@@ -24,7 +24,7 @@ if (process.env.DFX_NETWORK === 'local') {
 }
 
 async function main() {
-    const key = await commandOutput("dfx identity export Zon"); // secret key
+    const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
 
     const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
