@@ -5,7 +5,6 @@ import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
 import { commandOutput } from "../src/lib/scripts";
 import { Repository, SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
-import { _SERVICE as repository } from '../src/declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/repository';
 import { SharedPackageInfo } from '../src/declarations/repository/repository.did';
 import { SharedFullPackageInfo } from '../src/declarations/repository/repository.did';
