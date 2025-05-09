@@ -222,9 +222,9 @@ module {
         frontendModule: ?Text;
     };
 
+    /// Yet unsupported.
     public type VirtualPackageInfo = {
-        /// Empty versions list means any version.
-        choice: [(PackageName, [VersionRange])];
+        choice: [(PackageName, ?[VersionRange])];
         default: PackageName;
     };
 
