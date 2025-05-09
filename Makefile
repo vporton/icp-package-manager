@@ -2,7 +2,8 @@
 
 SHELL=/bin/bash
 
-export NETWORK = local
+NETWORK = local
+export DFX_NETWORK = $(NETWORK)
 export MOPS_ENV = $(NETWORK)
 USER = $(shell dfx identity get-principal)
 # DEPLOY_FLAGS.bookmark = --argument "rec { bootstrapper = \"$$()\""; }"
