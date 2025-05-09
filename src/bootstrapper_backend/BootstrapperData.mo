@@ -8,7 +8,14 @@ import RBTree "mo:base/RBTree";
 persistent actor class BootstrapperData(initialOwner: Principal) {
     public type PubKey = Blob;
 
-    stable var owner = initialOwner; // FIXME@P1: Need to update, if `bootstrapper` canister is replaced.
+    stable var owner = initialOwner;
+
+    public shared({caller}) func changeOwner(newOwner: Principal) {
+        if (not Principal.isController(caller)) {
+            Debug.trap("bootstrapper_data: not a controller");
+        };
+        owner := newOwner;
+    };
 
     public type FrontendTweaker = {
         // controllers: [Principal]; // pass them from UI, it's safe.
