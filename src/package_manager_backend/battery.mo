@@ -265,7 +265,7 @@ shared({caller = initialOwner}) actor class Battery({
         };
         switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
-            amount = amount - Comon.cycles_transfer_fee;
+            amount = amount - Common.cycles_transfer_fee; // TODO@P3: Does it account for `cycles_transfer_fee` twice?
             fee = null;
             memo = null;
             from_subaccount = null;

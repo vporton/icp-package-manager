@@ -40,7 +40,7 @@ async function main() {
     const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm"));
     const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm"));
 
-    const agent = new HttpAgent({host: "http://localhost:4943", identity})
+    const agent = new HttpAgent({host: "http://localhost:4943", identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
         agent.fetchRootKey();
     }
