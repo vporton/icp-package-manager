@@ -85,6 +85,7 @@ deploy-docs: docs
 	trap "cleanup" EXIT && \
 	TMPDIR=`mktemp -d` && \
 	(cd $$TMPDIR && git clone git@github.com:vporton/icpack-docs.git) && \
+	rm -rf $$TMPDIR/icpack-docs/* && \
 	cp -a docs/out/* $$TMPDIR/icpack-docs/ && \
 	cd $$TMPDIR/icpack-docs/ && git add -A && git commit -m "Update docs" && git push
 
