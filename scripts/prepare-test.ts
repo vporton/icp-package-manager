@@ -17,6 +17,7 @@ dotenv_config({ path: '.env' });
 global.fetch = node_fetch as any;
 
 if (process.env.DFX_NETWORK === 'local') {
+    // TODO@P3: Is it necessary?
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister repository");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
