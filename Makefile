@@ -30,8 +30,12 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 	generate@example_frontend generate@package_manager_frontend deploy-backend
 
 .PHONY: deploy-backend
-deploy-backend: deploy@repository deploy@bookmark generate@battery \
+deploy-backend: prepare deploy@repository deploy@bookmark generate@battery \
   deploy@internet_identity init
+
+.PHONY: prepare
+prepare:
+	dfx extension install nns
 
 .PHONY: init
 init:
