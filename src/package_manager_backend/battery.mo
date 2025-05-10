@@ -255,30 +255,30 @@ shared({caller = initialOwner}) actor class Battery({
     addWithdrawer(packageManager);
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
+        await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
     };
 
     /// TODO@P3: Unused function.
-    public shared({caller}) func withdrawCycles2(amount: Nat, payee: Principal) : async () {
-        if (not principalSet.contains(withdrawers, caller)) {
-            Debug.trap("withdrawCycles2: caller is not allowed");
-        };
-        switch (await CyclesLedger.icrc1_transfer({
-            to = {owner = payee; subaccount = null};
-            amount = amount - Common.cycles_transfer_fee; // TODO@P3: Does it account for `cycles_transfer_fee` twice?
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-        })) {
-            case (#Err e) {
-                Debug.trap("withdrawCycles: " # debug_show(e));
-            };
-            case (#Ok _) {
-                Debug.print("Withdraw cycles from battery: " # debug_show(amount));
-            };
-        };
-    };
+    // public shared({caller}) func withdrawCycles2(amount: Nat, payee: Principal) : async () {
+    //     if (not principalSet.contains(withdrawers, caller)) {
+    //         Debug.trap("withdrawCycles2: caller is not allowed");
+    //     };
+    //     switch (await CyclesLedger.icrc1_transfer({
+    //         to = {owner = payee; subaccount = null};
+    //         amount = amount - Common.cycles_transfer_fee; // TODO@P3: Does it account for `cycles_transfer_fee` twice?
+    //         fee = null;
+    //         memo = null;
+    //         from_subaccount = null;
+    //         created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+    //     })) {
+    //         case (#Err e) {
+    //             Debug.trap("withdrawCycles: " # debug_show(e));
+    //         };
+    //         case (#Ok _) {
+    //             Debug.print("Withdraw cycles from battery: " # debug_show(amount));
+    //         };
+    //     };
+    // };
 
     public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
         if (not Principal.isController(caller)) {

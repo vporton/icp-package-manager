@@ -3,6 +3,7 @@ import Debug "mo:base/Debug";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Nat64 "mo:base/Nat64";
+import CyclesLedger "canister:cycles_ledger"; // TODO@P3: canister import in a library is wrong
 
 module {
     type BlockIndex = Nat;
@@ -29,15 +30,15 @@ module {
         #GenericError : { message : Text; error_code : Nat };
     };
 
-    public type MyICRC1 = actor {
-        icrc1_transfer : shared TransferArgs -> async {#Err : TransferError; #Ok : BlockIndex};
-    };
+    // public type MyICRC1 = actor {
+    //     icrc1_transfer : shared TransferArgs -> async {#Err : TransferError; #Ok : BlockIndex};
+    // };
 
-    public func withdrawCycles(ledger: MyICRC1, amount: Nat, payee: Principal, caller: Principal) : async* () {
+    public func withdrawCycles(/*_ledger: CyclesLedger,*/ amount: Nat, payee: Principal, caller: Principal) : async* () {
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles: payee is not a controller");
         };
-        switch (await ledger.icrc1_transfer({
+        switch (await CyclesLedger.icrc1_transfer({
             to = {owner = payee; subaccount = null};
             amount;
             fee = null;

@@ -24,6 +24,7 @@ import Nat8 "mo:base/Nat8";
 import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
 import env "mo:env";
+import Account "mo:account-identifier";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -420,7 +421,8 @@ actor class Bootstrapper() = this {
 
     // TODO@P3: Should be in th frontend.
     public composite query({caller}) func userAccountBlob(): async Blob {
-        Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
+        Account.accountIdentifier(Principal.fromActor(this), Account.principalToSubaccount(caller));
+        // Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
     };
 
     public query func balance(): async Nat {

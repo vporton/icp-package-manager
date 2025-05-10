@@ -6,6 +6,6 @@ actor {
   public shared func f() {};
 
   public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-    await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
+    await* LIB.withdrawCycles(amount, payee, caller);
   };
 }

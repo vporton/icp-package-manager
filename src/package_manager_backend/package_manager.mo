@@ -17,9 +17,11 @@ import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
 import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
+import Account "../lib/Account";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import env "mo:env";
+// import Account "mo:icrc1/ICRC1/Account";
 import Battery "battery";
 
 shared({caller = initialCaller}) actor class PackageManager({
@@ -1426,8 +1428,12 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO@P3: Should be in the frontend.
     /// If on local net for testing, use null account to transfer it without `icrc1_transfer`
     /// because `icrc1_transfer` does not work on local net as it should.
-    public composite query({caller}) func userAccountBlob(): async Blob {
-        Principal.toLedgerAccount(battery, if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) });
+    public composite query({caller}) func userAccountBlob(): async Text {
+        let owner = battery;
+        // let subaccount = if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) };
+        let subaccount = ?(Principal.toBlob(caller));
+
+        Account.toText({owner; subaccount});
     };
 
     // private func userAccount(/*user: Principal*/): CyclesLedger.Account {
@@ -1486,6 +1492,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
+        await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
     };
 }
