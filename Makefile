@@ -42,7 +42,7 @@ prepare:
 
 .PHONY: init
 init:
-	-dfx ledger fabricate-cycles --t 2000000 --canister repository
+	-dfx ledger fabricate-cycles --t 20000 --canister repository
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 
