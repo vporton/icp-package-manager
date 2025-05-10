@@ -6,7 +6,7 @@ import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";
 import Asset "mo:assets-api";
-import cmc "canister:cmc";
+import cmc "canister:nns-cycles-minting";
 
 module {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.

@@ -16,6 +16,8 @@ See [`TODO.md`](TODO.md) about yet unimplemented features.
 
 I strongly recommend to use [patched](https://github.com/dfinity/sdk/pull/4083) DFX for compiling this faster.
 
+If you didn't run it yet, run `dfx extension install nns`.
+
 `make deploy-work` for deploying the UI.
 
 `make deploy-test && npm test` for automatic tests.

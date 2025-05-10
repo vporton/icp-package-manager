@@ -21,8 +21,8 @@ if (isLocal) {
     // TODO@P3: Is it necessary?
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister repository");
     execSync("dfx ledger fabricate-cycles --amount 100000000 --canister bootstrapper");
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cycles_ledger");
-    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister cmc");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister nns-ledger");
+    execSync("dfx ledger fabricate-cycles --amount 100000000 --canister nns-cycles-minting");
 }
 
 async function main() {
@@ -37,7 +37,7 @@ async function main() {
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
     const pmExampleBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_backend/example_backend.wasm"));
 
-    const agent = new HttpAgent({host: isLocal ? "http://localhost:4943" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
+    const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
         agent.fetchRootKey();
     }

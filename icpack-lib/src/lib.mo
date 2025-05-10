@@ -3,7 +3,7 @@ import Debug "mo:base/Debug";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Nat64 "mo:base/Nat64";
-import CyclesLedger "canister:cycles_ledger"; // TODO@P3: canister import in a library is wrong
+import CyclesLedger "canister:nns-ledger"; // TODO@P3: canister import in a library is wrong
 
 module {
     type BlockIndex = Nat;

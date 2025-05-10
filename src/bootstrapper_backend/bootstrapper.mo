@@ -26,7 +26,7 @@ import IC "mo:base/ExperimentalInternetComputer";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
-import CyclesLedger "canister:cycles_ledger";
+import CyclesLedger "canister:nns-ledger";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 import Bookmarks "canister:bookmark";

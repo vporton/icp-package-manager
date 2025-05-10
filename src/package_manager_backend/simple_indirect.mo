@@ -10,7 +10,7 @@ import Blob "mo:base/Blob";
 import IC "mo:ic";
 import Common "../common";
 import LIB "mo:icpack-lib";
-import CyclesLedger "canister:cycles_ledger";
+import CyclesLedger "canister:nns-ledger";
 
 shared({caller = initialCaller}) actor class SimpleIndirect({
     packageManager: Principal; // may be the bootstrapper instead.

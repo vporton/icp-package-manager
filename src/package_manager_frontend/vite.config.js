@@ -9,7 +9,7 @@ dotenv.config({ path: '../../.env' });
 
 process.env.II_URL =
   process.env.DFX_NETWORK === "local"
-    ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+    ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8080`
     : `https://identity.ic0.app`;
 
 export default defineConfig({
@@ -26,7 +26,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:4943",
+        target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
     },

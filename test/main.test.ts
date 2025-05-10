@@ -103,7 +103,7 @@ declare global {
 }
   
 describe('My Test Suite', () => {
-    const icHost = "http://localhost:4943";
+    const icHost = "http://localhost:8080";
 
     function newAgent(): Agent {
         const identity = Ed25519KeyIdentity.generate();
@@ -134,7 +134,7 @@ describe('My Test Suite', () => {
 
         const key = await commandOutput("dfx identity export Zon"); // secret key
         const identity = decodeFile(key);
-        const mainUserAgent = new HttpAgent({host: "http://localhost:4943", identity})
+        const mainUserAgent = new HttpAgent({host: "http://localhost:8080", identity})
         if (process.env.DFX_NETWORK === 'local') {
             mainUserAgent.fetchRootKey();
         }    

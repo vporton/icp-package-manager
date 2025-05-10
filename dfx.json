@@ -26,8 +26,8 @@
     "bootstrapper": {
       "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
-        "cycles_ledger",
-        "cmc",
+        "nns-ledger",
+        "nns-cycles-minting",
         "bootstrapper_data",
         "repository"
       ],
@@ -68,23 +68,6 @@
       ],
       "type": "assets",
       "workspace": "bootstrapper_frontend"
-    },
-    "cycles_ledger": {
-      "args": "--enhanced-orthogonal-persistence",
-      "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
-      "main": "src/MockCyclesLedger.mo",
-      "metadata": [
-        {
-          "name": "candid:service"
-        }
-      ],
-      "remote": {
-        "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
-        "id": {
-          "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
-        }
-      },
-      "type": "motoko"
     },
     "example_backend": {
       "args": "--enhanced-orthogonal-persistence",
@@ -133,8 +116,8 @@
       "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
         "bootstrapper",
-        "cycles_ledger",
-        "cmc"
+        "nns-ledger",
+        "nns-cycles-minting"
       ],
       "main": "src/package_manager_backend/main_indirect.mo",
       "metadata": [
@@ -172,7 +155,7 @@
       "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
         "bootstrapper",
-        "cycles_ledger",
+        "nns-ledger",
         "repository"
       ],
       "main": "src/package_manager_backend/package_manager.mo",

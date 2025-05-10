@@ -130,7 +130,7 @@ export default function MainPage() {
         return {frontend: glob.frontend!, backend: glob.backend!};
     }, [glob.frontend, glob.backend]);
     const bookmarkingUrlBase = getIsLocal()
-        ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:4943/bookmark?`
+        ? `http://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.localhost:8080/bookmark?`
         : `https://${process.env.CANISTER_ID_BOOTSTRAPPER_FRONTEND!}.icp0.io/bookmark?`;
     const bookmarkingUrl = useMemo(
         () => `${bookmarkingUrlBase}_pm_pkg0.frontend=${bookmark.frontend}&_pm_pkg0.backend=${bookmark.backend}`,

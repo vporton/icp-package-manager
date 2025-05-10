@@ -1,5 +1,5 @@
 import LIB "mo:icpack-lib";
-import CyclesLedger "canister:cycles_ledger";
+import CyclesLedger "canister:nns-ledger";
 
 actor {
   public query func greet(name : Text) : async Text {

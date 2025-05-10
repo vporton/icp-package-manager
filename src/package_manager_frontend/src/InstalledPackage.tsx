@@ -46,7 +46,7 @@ export default function InstalledPackage(props: {}) {
                 const modules = new Map(pkg.modulesInstalledByDefault);
                 const frontendStr = modules.get(piReal.frontendModule[0]!)?.toString(); // `?` because `pkg` may be not yet set
                 if (frontendStr !== undefined) {
-                    let url = getIsLocal() ? `http://${frontendStr}.localhost:4943` : `https://${frontendStr}.icp0.io`;
+                    let url = getIsLocal() ? `http://${frontendStr}.localhost:8080` : `https://${frontendStr}.icp0.io`;
                     url += `?_pm_inst=${installationId}`;
                     for (let m of piReal.modules) {
                         url += `&_pm_pkg.${m[0]}=${modules.get(m[0])!.toString()}`;

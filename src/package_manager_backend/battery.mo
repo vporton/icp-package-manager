@@ -14,7 +14,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import Common "../common";
-import CyclesLedger "canister:cycles_ledger";
+import CyclesLedger "canister:nns-ledger";
 import env "mo:env";
 
 shared({caller = initialOwner}) actor class Battery({

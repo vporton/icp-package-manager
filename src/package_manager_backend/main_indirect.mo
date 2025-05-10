@@ -14,7 +14,7 @@ import Install "../install";
 import IC "mo:ic";
 import SimpleIndirect "simple_indirect";
 import LIB "mo:icpack-lib";
-import CyclesLedger "canister:cycles_ledger";
+import CyclesLedger "canister:nns-ledger";
 import Battery "battery";
 
 shared({caller = initialCaller}) actor class MainIndirect({

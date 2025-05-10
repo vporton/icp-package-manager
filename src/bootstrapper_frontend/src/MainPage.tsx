@@ -56,7 +56,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         });
         const installedModulesMap = new Map(installedModules);
         const url = getIsLocal()
-          ? `http://${installedModulesMap.get("frontend")}.localhost:4943`
+          ? `http://${installedModulesMap.get("frontend")}.localhost:8080`
           : `https://${installedModulesMap.get("frontend")}.icp0.io`;
         // gives the right to set frontend owner and controller to backend:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
@@ -119,14 +119,14 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
           {!props.ok ? <i>Not logged in</i> :
             <ul>
               {bookmarks.map(inst => {
-                const base = getIsLocal() ? `http://${inst.frontend}.localhost:4943?` : `https://${inst.frontend}.icp0.io?`;
+                const base = getIsLocal() ? `http://${inst.frontend}.localhost:8080?` : `https://${inst.frontend}.icp0.io?`;
                 const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
                 return <li key={url}><a href={url}>{url}</a></li>;
               })}
             </ul>
           }
           {additionalPackages.map(p => {
-            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:4943` : `https://${b.frontend}.icp0.io`;
+            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:8080` : `https://${b.frontend}.icp0.io`;
             return (
               <p>
                 <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>

@@ -23,7 +23,7 @@ type AuthContextType = {
 
 function createAuth(): AuthContextType {
   const v = useInternetIdentity();
-  const host = getIsLocal() ? "http://localhost:4943" : undefined;
+  const host = getIsLocal() ? "http://localhost:8080" : undefined;
   // TODO@P3: Use `HttpAgent.create`.
   const agent = useMemo(
     () => v.identity ? new HttpAgent({ host, identity: v.identity, shouldFetchRootKey: getIsLocal() }) : undefined,
