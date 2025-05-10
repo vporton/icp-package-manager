@@ -22,8 +22,7 @@ export default function ModuleCycles() {
     type Module = {
         moduleName: string;
         principal: Principal;
-        cycles1: bigint | undefined;
-        cycles2: bigint | undefined;
+        cycles: bigint | undefined;
     };
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
@@ -32,7 +31,6 @@ export default function ModuleCycles() {
             setPkgs([]);
             return;
         }
-        const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
         const _pkgs: {packageName: string, packageVersion: string, modules: Module[]}[] = [];
         glob.packageManager.getAllInstalledPackages().then(packages => {
             for (const p of packages) {
@@ -40,26 +38,18 @@ export default function ModuleCycles() {
                     const modules = p[1].modulesInstalledByDefault.map<{
                         moduleName: string,
                         principal: Principal,
-                        cycles1: bigint | undefined;
-                        cycles2: bigint | undefined;
+                        cycles: bigint | undefined;
                     }>(m => {
                         return {
                             moduleName: m[0],
                             principal: m[1],
-                            cycles1: undefined,
-                            cycles2: undefined,
+                            cycles: undefined,
                         };
                     });
                     const { canisterStatus } = ICManagementCanister.create({agent});
                     for (const m of modules) {
-                        cyclesLedger.icrc1_balance_of({owner: m.principal, subaccount: []}).then(balance => {
-                            m.cycles1 = balance;
-                            setCounter(prev => prev + 1);
-                        }).catch(e => {
-                            setError(e.toString());
-                        });
                         canisterStatus(m.principal).then(({cycles}) => {
-                            m.cycles2 = cycles;
+                            m.cycles = cycles;
                             setCounter(prev => prev + 1);
                         }).catch(e => {
                             setError(e.toString());
@@ -81,8 +71,7 @@ export default function ModuleCycles() {
     async function sendTo(module: {
         moduleName: string,
         principal: Principal,
-        cycles1: bigint | undefined;
-        cycles2: bigint | undefined;
+        cycles: bigint | undefined;
     }, to: Principal) {
         try {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
@@ -119,12 +108,9 @@ export default function ModuleCycles() {
                         {pkg.modules.map((module) => (
                             <li key={module.moduleName}>
                                 {module.moduleName}
-                                {module.cycles1 !== undefined ?
-                                    " "+Number(module.cycles1.toString())/10**12+"T cycles"
+                                {module.cycles !== undefined ?
+                                    " "+Number(module.cycles.toString())/10**12+"T cycles"
                                 : " Loading..."}
-                                {module.cycles2 !== undefined ?
-                                    "/"+Number(module.cycles2.toString())/10**12+"T cycles"
-                                : "/Loading..."}
                                 {ok && <>
                                     {" "}
                                     <Button onClick={() => sendTo(module, principal!)}>
