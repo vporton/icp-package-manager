@@ -4,6 +4,8 @@ Remaining things TODO:
            and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
            `cxtct-7iaaa-aaaad-aammq-cai` is the bootstrapper canister.
 
+- TODO@P3 Upgrding a package version to itself hangs.
+
 - TODO@P3 Accept payments also in ICP.
 
 - TODO@P3 Option to install additional software after bootstrapping.
