@@ -1,201 +1,265 @@
 {
   "canisters": {
-    "bootstrapper": {
-      "type": "motoko",
-      "main": "src/bootstrapper_backend/bootstrapper.mo",
-      "dependencies": ["cycles_ledger", "cmc", "bootstrapper_data", "repository"],
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "bootstrapper_data": {
-      "type": "motoko",
-      "main": "src/bootstrapper_backend/BootstrapperData.mo",
-      "dependencies": [],
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "main_indirect": {
-      "type": "motoko",
-      "main": "src/package_manager_backend/main_indirect.mo",
-      "dependencies": ["bootstrapper", "cycles_ledger", "cmc"],
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "simple_indirect": {
-      "type": "motoko",
-      "main": "src/package_manager_backend/simple_indirect.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "package_manager": {
-      "type": "motoko",
-      "main": "src/package_manager_backend/package_manager.mo",
-      "dependencies": ["bootstrapper", "cycles_ledger", "repository"],
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
+    "battery": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "src/package_manager_backend/battery.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
     },
     "bookmark": {
-      "type": "motoko",
-      "main": "src/bootstrapper_backend/bookmarks.mo",
-      "dependencies": ["bootstrapper"],
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "repository": {
-      "type": "motoko",
-      "main": "src/repository_backend/Repository.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "battery": {
-      "type": "motoko",
-      "main": "src/package_manager_backend/battery.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "example_backend": {
-      "type": "motoko",
-      "main": "examples/example_backend/main.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "upgrade_example_backend1_v1": {
-      "type": "motoko",
-      "main": "examples/upgrade_example_backend/0.0.1/main1.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "upgrade_example_backend2_v1": {
-      "type": "motoko",
-      "main": "examples/upgrade_example_backend/0.0.1/main2.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "upgrade_example_backend2_v2": {
-      "type": "motoko",
-      "main": "examples/upgrade_example_backend/0.0.2/main2.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "upgrade_example_backend3_v2": {
-      "type": "motoko",
-      "main": "examples/upgrade_example_backend/0.0.2/main3.mo",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "package_manager_frontend": {
+      "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
-        "package_manager", "internet_identity", "bootstrapper"
+        "bootstrapper"
       ],
-      "source": [
-        "src/package_manager_frontend/dist"
+      "main": "src/bootstrapper_backend/bookmarks.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
       ],
-      "type": "assets",
-      "workspace": "package_manager_frontend",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
+      "type": "motoko"
+    },
+    "bootstrapper": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [
+        "cycles_ledger",
+        "cmc",
+        "bootstrapper_data",
+        "repository"
+      ],
+      "main": "src/bootstrapper_backend/bootstrapper.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "bootstrapper_data": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [],
+      "main": "src/bootstrapper_backend/BootstrapperData.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
     },
     "bootstrapper_frontend": {
+      "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
         "bootstrapper",
         "bookmark",
         "internet_identity",
         "repository"
       ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
       "source": [
         "src/bootstrapper_frontend/dist"
       ],
       "type": "assets",
-      "workspace": "bootstrapper_frontend",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "example_frontend": {
-      "dependencies": ["example_backend"],
-      "source": [
-        "examples/example_frontend/dist"
-      ],
-      "type": "assets",
-      "workspace": "example_frontend",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
-    },
-    "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
-      "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
+      "workspace": "bootstrapper_frontend"
     },
     "cycles_ledger": {
+      "args": "--enhanced-orthogonal-persistence",
       "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
       "main": "src/MockCyclesLedger.mo",
-      "type": "motoko",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
       "remote": {
         "candid": "https://github.com/dfinity/cycles-ledger/raw/refs/heads/main/cycles-ledger/cycles-ledger.did",
         "id": {
           "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
         }
       },
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
+      "type": "motoko"
     },
-    "cmc": {
-      "candid": "https://github.com/dfinity/ic/raw/refs/heads/master/rs/nns/cmc/cmc.did",
-      "main": "src/MockCMC.mo",
-      "type": "motoko",
+    "example_backend": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "examples/example_backend/main.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "example_frontend": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [
+        "example_backend"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "source": [
+        "examples/example_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "example_frontend"
+    },
+    "internet_identity": {
+      "args": "--enhanced-orthogonal-persistence",
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "frontend": {},
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
       "remote": {
-        "candid": "https://github.com/dfinity/ic/raw/refs/heads/master/rs/nns/cmc/cmc.did",
         "id": {
-          "ic": "rkp4c-7iaaa-aaaaa-aaaca-cai"
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
       },
-      "metadata": [{
-        "name": "candid:service"
-      }],
-      "args": "--enhanced-orthogonal-persistence"
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    },
+    "main_indirect": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [
+        "bootstrapper",
+        "cycles_ledger",
+        "cmc"
+      ],
+      "main": "src/package_manager_backend/main_indirect.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "nns-cycles-minting": {
+      "build": "",
+      "candid": "candid/nns-cycles-minting.did",
+      "remote": {
+        "id": {
+          "ic": "rkp4c-7iaaa-aaaaa-aaaca-cai",
+          "local": "rkp4c-7iaaa-aaaaa-aaaca-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": ""
+    },
+    "nns-ledger": {
+      "build": "",
+      "candid": "candid/nns-ledger.did",
+      "remote": {
+        "id": {
+          "ic": "ryjl3-tyaaa-aaaaa-aaaba-cai",
+          "local": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": ""
+    },
+    "package_manager": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [
+        "bootstrapper",
+        "cycles_ledger",
+        "repository"
+      ],
+      "main": "src/package_manager_backend/package_manager.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "package_manager_frontend": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": [
+        "package_manager",
+        "internet_identity",
+        "bootstrapper"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "source": [
+        "src/package_manager_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "package_manager_frontend"
+    },
+    "repository": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "src/repository_backend/Repository.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "simple_indirect": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "src/package_manager_backend/simple_indirect.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "upgrade_example_backend1_v1": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "examples/upgrade_example_backend/0.0.1/main1.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "upgrade_example_backend2_v1": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "examples/upgrade_example_backend/0.0.1/main2.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "upgrade_example_backend2_v2": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "examples/upgrade_example_backend/0.0.2/main2.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
+    },
+    "upgrade_example_backend3_v2": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "examples/upgrade_example_backend/0.0.2/main3.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko"
     }
   },
   "defaults": {
