@@ -148,7 +148,7 @@ function GlobalUI() {
 function App2() {
   const {ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
-  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
+  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<string | undefined>();
   const glob = useContext(GlobalContext);
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
@@ -170,8 +170,8 @@ function App2() {
   useEffect(updateCyclesAmount, [glob.packageManager]);
   useEffect(() => {
     if (glob.packageManager !== undefined) {
-      glob.packageManager.userAccountBlob().then((b) => {
-        setCyclesPaymentAddress(b as Uint8Array);
+      glob.packageManager.userAccountText().then((t) => {
+        setCyclesPaymentAddress(t);
       });
     }
   }, [glob.packageManager]);

@@ -18,6 +18,7 @@ import SimpleIndirect "simple_indirect";
 import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
 import Account "../lib/Account";
+import AccountID "mo:account-identifier";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import env "mo:env";
@@ -1428,10 +1429,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO@P3: Should be in the frontend.
     /// If on local net for testing, use null account to transfer it without `icrc1_transfer`
     /// because `icrc1_transfer` does not work on local net as it should.
-    public composite query({caller}) func userAccountBlob(): async Text {
+    public composite query({caller}) func userAccountText(): async Text {
         let owner = battery;
         // let subaccount = if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) };
-        let subaccount = ?(Principal.toBlob(caller));
+        let subaccount = ?(AccountID.principalToSubaccount(caller));
 
         Account.toText({owner; subaccount});
     };

@@ -32,8 +32,8 @@ function App() {
   );
 }
 
-function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAddress: Uint8Array | undefined}) { // TODO@P3: duplicate code
-  const address = Buffer.from(props.cyclesPaymentAddress!).toString('hex');
+function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAddress: string | undefined}) { // TODO@P3: duplicate code
+  const address = props.cyclesPaymentAddress!;
   const [copied, setCopied] = useState(false);
   const copyToClipboard = async () => {
     navigator.clipboard.writeText(address).then(() => {
@@ -71,7 +71,7 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 function App2() {
   const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
-  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Uint8Array | undefined>();
+  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<string | undefined>();
   const bootstrapper = useMemo(() =>
     agent === undefined ? undefined : createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}), // TODO@P3: or `defaultAgent`?
     [agent],
@@ -98,8 +98,8 @@ function App2() {
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(() => {
     if (bootstrapper !== undefined) {
-      bootstrapper.userAccountBlob().then((b) => {
-        setCyclesPaymentAddress(b as Uint8Array);
+      bootstrapper.userAccountText().then((t) => {
+        setCyclesPaymentAddress(t);
       });
     }
   }, [bootstrapper]);

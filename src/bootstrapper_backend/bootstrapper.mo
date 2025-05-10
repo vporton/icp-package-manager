@@ -24,7 +24,8 @@ import Nat8 "mo:base/Nat8";
 import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
 import env "mo:env";
-import Account "mo:account-identifier";
+import Account "../lib/Account";
+import AccountID "mo:account-identifier";
 import CyclesLedger "canister:cycles_ledger";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -420,9 +421,12 @@ actor class Bootstrapper() = this {
     };
 
     // TODO@P3: Should be in th frontend.
-    public composite query({caller}) func userAccountBlob(): async Blob {
-        Account.accountIdentifier(Principal.fromActor(this), Account.principalToSubaccount(caller));
-        // Principal.toLedgerAccount(Principal.fromActor(this), ?(Principal.toBlob(caller)));
+    public composite query({caller}) func userAccountText(): async Text {
+        let owner = Principal.fromActor(this);
+        // let subaccount = if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) };
+        let subaccount = ?(AccountID.principalToSubaccount(caller));
+
+        Account.toText({owner; subaccount});
     };
 
     public query func balance(): async Nat {
