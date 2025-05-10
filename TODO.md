@@ -1,5 +1,11 @@
 Remaining things TODO:
 
+- TODO@P1: Remote deployment (`make NETWORK=ic deploy-work`) has some bugs:
+  - It requires to copy several `.did` files manually.
+  - It disagrees with local version on whether `principalToSubaccount` to return `Blob` or `Nat8`,
+    what requires manually edit source while deploying.
+
+
 - TODO@P3 Accept payments also in ICP.
 
 - TODO@P3 Option to install additional software after bootstrapping.
