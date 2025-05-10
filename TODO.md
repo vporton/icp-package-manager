@@ -1,6 +1,6 @@
 Remaining things TODO:
 
-- TODO@P1: Remote deployment (`make NETWORK=ic deploy-work`) has some bugs:
+- FIXME@P1: Remote deployment (`make NETWORK=ic deploy-work`) has some bugs:
   - It requires to copy several `.did` files manually.
   - It disagrees with local version on whether `principalToSubaccount` to return `Blob` or `Nat8`,
     what requires manually edit source while deploying.
