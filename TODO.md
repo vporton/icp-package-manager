@@ -1,10 +1,12 @@
 Remaining things TODO:
 
+- FIXME@P1 After putting about 13.1T cycles to the bootstrapper (using the blue cycles widget)
+           and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
+
 - FIXME@P1: Remote deployment (`make NETWORK=ic deploy-work`) has some bugs:
   - It requires to copy several `.did` files manually.
   - It disagrees with local version on whether `principalToSubaccount` to return `Blob` or `Nat8`,
     what requires manually edit source while deploying.
-
 
 - TODO@P3 Accept payments also in ICP.
 
