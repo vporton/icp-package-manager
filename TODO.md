@@ -2,6 +2,7 @@ Remaining things TODO:
 
 - FIXME@P1 After putting about 13.1T cycles to the bootstrapper (using the blue cycles widget)
            and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
+           `cxtct-7iaaa-aaaad-aammq-cai` is the bootstrapper canister.
 
 - FIXME@P1: Remote deployment (`make NETWORK=ic deploy-work`) has some bugs:
   - It requires to copy several `.did` files manually.
