@@ -70,7 +70,7 @@ actor class Bootstrapper() = this {
                 controllers = ?[Principal.fromActor(this)]; // `null` does not work at least on localhost.
                 cycles = cyclesAmount;
                 subnet_selection = ?(
-                    #Filter({subnet_type = ?"Application"})
+                    #Filter({subnet_type = if (env.isLocal) { null } else {?"Application"}})
                 );
             });
             installedModules.put(moduleName, canister_id);
