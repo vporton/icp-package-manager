@@ -1,16 +1,28 @@
 # ICP Package Manager
 
-_This software is not yet released._
+This is an MVP alpha.
 
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
-For more information on this project [see here](https://taikai.network/icp-portugal/hackathons/build-on-icp/projects/clxvpfjmb00h8w201vz8opp0j/idea).
+For more information on this project [see here](https://dev.package-manager.com).
 
 See [`TODO.md`](TODO.md) about yet unimplemented features.
 
 [`BOOTSTRAP.md`](BOOTSTRAP.md) describes the proposed algorithm for package manager bootstrapping.
 
 ## Howto guides to running it
+
+I strongly recommend to use [patched](https://github.com/dfinity/sdk/pull/4083) DFX for compiling this faster.
+
+`make deploy-work` for deploying the UI.
+
+`make deploy-test && npm test` for automatic tests.
+
+Currently, there are some errors deploying this in production: `make NETWORK=ic deploy-work`:
+
+- It requires to copy several `.did` files manually.
+- It disagrees with local version on whether `principalToSubaccount` to return `Blob` or `Nat8`,
+  what requires manually edit source while deploying.
 
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
@@ -28,48 +40,6 @@ cd ic-package-manager/
 dfx help
 dfx canister --help
 ```
-
-## Testing
-
-To run a [test/demo](src/example/upload-and-run.test.mo) of how it uploads a package, then installs and run it, run [test.py](test.py). Run it in a virtual environment:
-
-```bash
-dfx start --background
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install ic-py
-./test.py
-```
-
-## Running the project locally
-
-If you want to test your project locally, you can use the following commands:
-
-```bash
-# Starts the replica, running in the background
-dfx start --background
-
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
-```
-
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
-
-If you have made changes to your backend canister, you can generate a new candid interface with
-
-```bash
-npm run generate
-```
-
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
-
-If you are making frontend changes, you can start a development server with
-
-```bash
-npm start
-```
-
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
 
 ### Note on frontend environment variables
 
