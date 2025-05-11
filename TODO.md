@@ -4,9 +4,6 @@ Remaining things TODO:
            and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
            `cxtct-7iaaa-aaaad-aammq-cai` is the bootstrapper canister.
 
-- TODO@P3 Convert to cycles by a special button rather than directly before starting bootstrapping.
-          Save the per-used converted amounts to a special variable, to warrant user has paid.
-
 - TODO@P3: `inspect`.
 
 - TODO@P3 Upgrding a package version to itself hangs.
