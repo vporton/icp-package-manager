@@ -141,10 +141,8 @@ function App2() {
                 <Dropdown.Toggle>
                   Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                 </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item as="div">
-                    <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
-                  </Dropdown.Item>
+                <Dropdown.Menu style={{padding: '10px'}}>
+                  <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
                 </Dropdown.Menu>
               </Dropdown>
               <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
