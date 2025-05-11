@@ -370,14 +370,14 @@ actor class Bootstrapper() = this {
         });
 
         // Deduct revenue:
-        let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * (1.0 - env.revenueShare)));
+        let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - 2*100_000; // TODO@P3: no explicit
+            amount = revenue - 2*Common.cycles_transfer_fee; // TODO@P3: no explicit
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -395,28 +395,33 @@ actor class Bootstrapper() = this {
                 0;
             };
         });
-        let res = await CyclesLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(CMC); subaccount = null/*?Blob.fromArray(subaccountArray)*/};
-            fee = null;
-            memo = ?Blob.toArray("\4d\49\4e\54\00\00\00\00");
+        // let res = await CyclesLedger.icrc1_transfer({
+        //     to = {owner = Principal.fromActor(CMC); subaccount = ?subaccountArray};
+        //     fee = null;
+        //     memo = ?Blob.toArray("\4d\49\4e\54\00\00\00\00");
+        //     from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
+        //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+        //     amount = balance - revenue - 2*Common.cycles_transfer_fee; // TODO@P3: no explicit
+        // });
+        // let #Ok tx = res else {
+        //     Debug.trap("transfer failed: " # debug_show(res));
+        // };
+        // let res2 = await CMC.notify_top_up({
+        //     block_index = Nat64.fromNat(tx);
+        //     canister_id = Principal.fromActor(this);
+        // });
+        // let #Ok _ = res2 else {
+        //     Debug.trap("notify_top_up failed: " # debug_show(res2));
+        // };
+        let res = await CyclesLedger.withdraw({
+            amount = balance - revenue - 2*Common.cycles_transfer_fee;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
+            to = Principal.fromActor(this);
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = balance - revenue - 2*100_000; // TODO@P3: no explicit
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
-        ignore await CMC.notify_top_up({
-            block_index = Nat64.fromNat(tx);
-            canister_id = Principal.fromActor(this);
-        });
-        // let #Ok _ = await CMC.notify_mint_cycles({
-        //     block_index = Nat64.fromNat(tx);
-        //     to_subaccount = ?(Common.principalToSubaccount(user));
-        //     deposit_memo = ?"\4d\49\4e\54\00\00\00\00";
-        // }) else {
-        //     Debug.trap("notify_mint_cycles failed: " # debug_show(res));
-        // };
 
         let oldBalance = switch (userCycleBalance.get(user)) {
             case (?oldBalance) oldBalance;

@@ -8,12 +8,12 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import { principalToSubAccount } from "../../lib/misc";
-import {  useEffect, useMemo, useState } from 'react';
+import {  useContext, useEffect, useMemo, useState } from 'react';
 // import { createActor as cmcActor } from '../../declarations/nns-cycles-minting';
 // import { nns_ledger as icp_ledger } from '../../declarations/nns-ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
-import { ErrorProvider } from '../../lib/ErrorContext';
+import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 import { createActor as createCyclesLedgerActor } from "../../declarations/cycles_ledger";
@@ -43,6 +43,7 @@ function AddressPopup(props: {
   updateCyclesLedgerAmount: () => void;
   // updateICPAmount: () => void;
 }) { // TODO@P3: duplicate code
+  const {setError} = useContext(ErrorContext)!;
   const {agent} = useAuth();
   const address = props.cyclesPaymentAddress!;
   const [copied, setCopied] = useState(false);
@@ -57,11 +58,17 @@ function AddressPopup(props: {
     });
   }
   async function convertToCycles() {
-    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
-    await bootstrapper.convertICPToCycles(); // FIXME@P3: Rename the function.
-    props.updateCyclesAmount();
-    props.updateCyclesLedgerAmount();
-    // props.updateICPAmount();
+    try {
+      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
+      await bootstrapper.convertICPToCycles(); // FIXME@P3: Rename the function.
+      props.updateCyclesAmount();
+      props.updateCyclesLedgerAmount();
+      // props.updateICPAmount();
+    }
+    catch (e) {
+      console.error(e);
+      setError((e as object).toString());
+    }
   }
   const renderTooltip = (props: any) => (
     <Tooltip {...props}>
