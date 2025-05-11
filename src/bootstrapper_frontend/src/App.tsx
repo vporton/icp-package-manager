@@ -9,7 +9,8 @@ import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import { principalToSubAccount } from "../../lib/misc";
 import {  useEffect, useMemo, useState } from 'react';
-import { cycles_ledger } from '../../declarations/cycles_ledger';
+import { createActor as cmcActor } from '../../declarations/nns-cycles-minting';
+import { nns_ledger as icp_ledger } from '../../declarations/nns-ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorProvider } from '../../lib/ErrorContext';
@@ -32,7 +33,14 @@ function App() {
   );
 }
 
-function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAddress: string | undefined}) { // TODO@P3: duplicate code
+function AddressPopup(props: {
+  cyclesAmount: number | undefined,
+  icpAmount: number | undefined,
+  cyclesPaymentAddress: string | undefined,
+  updateCyclesAmount: () => void;
+  updateICPAmount: () => void;
+}) { // TODO@P3: duplicate code
+  const {agent} = useAuth();
   const address = props.cyclesPaymentAddress!;
   const [copied, setCopied] = useState(false);
   const copyToClipboard = async () => {
@@ -45,6 +53,12 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
       }
     });
   }
+  async function convertToCycles() {
+    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})
+    await bootstrapper!.convertICPToCycles();
+    props.updateCyclesAmount();
+    props.updateICPAmount();
+  }
   const renderTooltip = (props: any) => (
     <Tooltip {...props}>
       {copied ? 'Copied!' : 'Copy to clipboard'}
@@ -54,10 +68,12 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
     ? (
       // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
-        <p>Fund it with 13T cycles, at least.</p>
+        <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**9)}T` : "Loading..."}</p>
+        <p><Button onClick={convertToCycles}>Convert ICP to cycles</Button></p>
         <p><strong>Warning: 5% fee applied.</strong></p>
+        <p>Fund it with 13T cycles, at least.</p>
         <p>
-          Send cycles to{" "}
+          Send ICP to{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
             <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
           </OverlayTrigger>
@@ -71,7 +87,8 @@ function AddressPopup(props: {cyclesAmount: number | undefined, cyclesPaymentAdd
 function App2() {
   const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
-  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<string | undefined>();
+  const [icpAmount, setICPAmount] = useState<number | undefined>();
+  const [paymentAddress, setPaymentAddress] = useState<string | undefined>();
   const bootstrapper = useMemo(() =>
     agent === undefined ? undefined : createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}), // TODO@P3: or `defaultAgent`?
     [agent],
@@ -82,24 +99,28 @@ function App2() {
     if (principal === undefined || bootstrapper === undefined) {
       return;
     }
-    if (getIsLocal()) { // to ease debugging
-      bootstrapper.balance().then((amount) => {
-        setCyclesAmount(parseInt(amount.toString()))
-      });
-    } else {
-      cycles_ledger.icrc1_balance_of({
-        owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-        subaccount: [principalToSubAccount(principal!)],
-      }).then((amount: bigint) => {
-        setCyclesAmount(parseInt(amount.toString()));
-      });
+    bootstrapper.balance().then((amount) => {
+      setCyclesAmount(parseInt(amount.toString()))
+    });
+  }
+  function updateICPAmount() {
+    setICPAmount(undefined);
+    if (principal === undefined || bootstrapper === undefined) {
+      return;
     }
+    icp_ledger.icrc1_balance_of({
+      owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+      subaccount: [principalToSubAccount(principal!)],
+    }).then((amount: bigint) => {
+      setICPAmount(parseInt(amount.toString()));
+    });
   }
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
+  useEffect(updateICPAmount, [principal, bootstrapper]);
   useEffect(() => {
     if (bootstrapper !== undefined) {
       bootstrapper.userAccountText().then((t) => {
-        setCyclesPaymentAddress(t);
+        setPaymentAddress(t);
       });
     }
   }, [bootstrapper]);
@@ -142,7 +163,8 @@ function App2() {
                   Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                 </Dropdown.Toggle>
                 <Dropdown.Menu style={{padding: '10px'}}>
-                  <AddressPopup cyclesAmount={cyclesAmount} cyclesPaymentAddress={cyclesPaymentAddress}/>
+                  <AddressPopup cyclesAmount={cyclesAmount} icpAmount={icpAmount} cyclesPaymentAddress={paymentAddress}
+                    updateICPAmount={updateICPAmount} updateCyclesAmount={updateCyclesAmount}/>
                 </Dropdown.Menu>
               </Dropdown>
               <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>

@@ -27,6 +27,7 @@ import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import CyclesLedger "canister:nns-ledger";
+import CMC "canister:nns-cycles-minting";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
@@ -149,7 +150,7 @@ actor class Bootstrapper() = this {
 
         // Move user's fund into current use:
         if (not env.isLocal) {
-            let revenue: Nat = Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare));
+            let revenue = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
             switch(await CyclesLedger.icrc1_transfer({ // Move cycles for actual use.
                 to = {owner = Principal.fromActor(this); subaccount = null};
                 fee = null;
@@ -426,6 +427,37 @@ actor class Bootstrapper() = this {
         let subaccount = ?(AccountID.principalToSubaccount(caller));
 
         Account.toText({owner; subaccount});
+    };
+
+    public shared({caller = user}) func convertICPToCycles() {
+        let balance = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
+        });
+        let subaccountArrayPart = Blob.toArray(Principal.toBlob(user));
+        let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
+            if (i == 0) {
+                Nat8.fromNat(Array.size(subaccountArrayPart));
+            } else if (i-1 < Array.size(subaccountArrayPart)) {
+                subaccountArrayPart[i];
+            } else {
+                0;
+            };
+        });
+        let res = await CyclesLedger.icrc1_transfer({
+            to = {owner = Principal.fromActor(CMC); subaccount = ?Blob.fromArray(subaccountArray)};
+            fee = null;
+            memo = ?"\4d\49\4e\54\00\00\00\00";
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = balance - 2*Common.cycles_transfer_fee;
+        });
+        let #Ok tx = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
+        ignore await CMC.notify_top_up({
+            block_index = Nat64.fromNat(tx);
+            canister_id = Principal.fromActor(this);
+        });
     };
 
     public query func balance(): async Nat {

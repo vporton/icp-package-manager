@@ -19,10 +19,10 @@ const isLocal = process.env.DFX_NETWORK === 'local';
 
 if (isLocal) {
     // TODO@P3: Is it necessary?
-    execSync("dfx ledger fabricate-cycles --amount 20000 --canister repository");
-    execSync("dfx ledger fabricate-cycles --amount 20000 --canister bootstrapper");
-    execSync("dfx ledger fabricate-cycles --amount 20000 --canister nns-ledger");
-    execSync("dfx ledger fabricate-cycles --amount 20000 --canister nns-cycles-minting");
+    // execSync("dfx ledger fabricate-cycles --amount 20000 --canister repository");
+    // execSync("dfx ledger fabricate-cycles --amount 20000 --canister bootstrapper");
+    // execSync("dfx ledger fabricate-cycles --amount 20000 --canister nns-ledger");
+    // execSync("dfx ledger fabricate-cycles --amount 20000 --canister nns-cycles-minting");
 }
 
 async function main() {

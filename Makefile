@@ -47,8 +47,12 @@ init:
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 
 .PHONY: deploy-work
-deploy-work: deploy
+deploy-work: prepare deploy
 	npx tsx scripts/prepare-work.ts
+
+.PHONY: prepare
+prepare:
+	dfx nns install --ledger-accounts $(dfx ledger account-id)
 
 .PHONY: deploy-test
 deploy-test: deploy-work \
