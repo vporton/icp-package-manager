@@ -4,7 +4,7 @@ Remaining things TODO:
            and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
            `cxtct-7iaaa-aaaad-aammq-cai` is the bootstrapper canister.
 
-- FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister.
+- FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
 - TODO@P3: Allow to fund with both ICP or cycles.
 
