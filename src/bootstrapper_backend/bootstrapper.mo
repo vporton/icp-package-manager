@@ -149,13 +149,14 @@ actor class Bootstrapper() = this {
 
         // Move user's fund into current use:
         if (not env.isLocal) {
+            let revenue: Nat = Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare));
             switch(await CyclesLedger.icrc1_transfer({ // Move cycles for actual use.
                 to = {owner = Principal.fromActor(this); subaccount = null};
                 fee = null;
                 memo = null;
                 from_subaccount = ?(Common.principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare))) - 2*Common.cycles_transfer_fee;
+                amount = revenue - 2*Common.cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
@@ -168,7 +169,7 @@ actor class Bootstrapper() = this {
                 memo = null;
                 from_subaccount = ?(Common.principalToSubaccount(user));
                 created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = Int.abs(Float.toInt(Float.fromInt(amountToMove) * env.revenueShare)) - 2*Common.cycles_transfer_fee;
+                amount = amountToMove - revenue - 2*Common.cycles_transfer_fee;
             })) {
                 case (#Err e) {
                     Debug.trap("transfer failed: " # debug_show(e));
