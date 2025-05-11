@@ -692,6 +692,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         // let ?battery = coreModules.get("battery") else {
         //     Debug.trap("error getting battery");
         // };
+        Cycles.accept(cyclesToBattery - Common.cycles_transfer_fee);
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) IC.ic.deposit_cycles({canister_id = battery});
 
         {minInstallationId}

@@ -24,6 +24,7 @@ import Nat8 "mo:base/Nat8";
 import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
 import TrieMap "mo:base/TrieMap";
+import Order "mo:base/Order";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -146,14 +147,15 @@ actor class Bootstrapper() = this {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
-        userCycleBalanceMap.delete(user);
+        userCycleBalanceMap := userCycleBalanceMap.delete(user);
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         let {installedModules} = await (with cycles = amountToMove) doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
+        Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
         let cyclesToBattery = amountToMove - Cycles.refunded();
-        userCycleBalanceMap.put(user, cyclesToBattery);
+        userCycleBalanceMap := userCycleBalanceMap.put(user, cyclesToBattery);
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -175,7 +177,7 @@ actor class Bootstrapper() = this {
             case (?amount) amount;
             case null 0;
         };
-        userCycleBalanceMap.put(user, 0);
+        userCycleBalanceMap := userCycleBalanceMap.put(user, 0);
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
@@ -366,17 +368,16 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    let userCycleBalanceMap = TrieMap.TrieMap<Principal, Nat>(Principal.equal, Principal.hash);
+    let principalMap = Map.Make<Principal>(Principal.compare);
+    stable var userCycleBalanceMap = principalMap.empty<Nat>();
 
     public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
         });
-        Debug.print("INITIAL BALANCE: " # debug_show(balance)); // FIXME: Remove.
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        Debug.print("REVENUE: " # debug_show(balance) # " # MINUSED: " # debug_show(revenue - 2*Common.cycles_transfer_fee)); // FIXME: Remove.
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
@@ -419,7 +420,6 @@ actor class Bootstrapper() = this {
         // let #Ok _ = res2 else {
         //     Debug.trap("notify_top_up failed: " # debug_show(res2));
         // };
-        Debug.print("WITHDRAW: " # debug_show(balance - revenue - 2*Common.cycles_transfer_fee)); // FIXME: Remove.
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
@@ -436,7 +436,7 @@ actor class Bootstrapper() = this {
         };
         Debug.print("oldBalance: " # Nat.toText(oldBalance) # " / user: " # debug_show(user)); // FIXME: Remove.
         Debug.print("SUM: " # Nat.toText(oldBalance + balance - revenue - 2*Common.cycles_transfer_fee) # " / user: " # debug_show(user)); // FIXME: Remove.
-        userCycleBalanceMap.put(user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
+        userCycleBalanceMap := userCycleBalanceMap.put(user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
         {balance = balance - revenue - 2*Common.cycles_transfer_fee};
     };
 
