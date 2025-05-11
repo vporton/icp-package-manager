@@ -134,50 +134,12 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove = if (env.isLocal) {
-            Cycles.balance(); // Use the no-subaccount balance in test mode.
-        } else {
-            // The following does not work in local net testing mode:
-            await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
-            });
-        };
+        let amountToMove = convertICPToCycles(user).balance;
         if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
-
-        // Move user's fund into current use:
-        if (not env.isLocal) {
-            let revenue = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
-            switch(await CyclesLedger.icrc1_transfer({ // Move cycles for actual use.
-                to = {owner = Principal.fromActor(this); subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = ?(Common.principalToSubaccount(user));
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = revenue - 2*Common.cycles_transfer_fee;
-            })) {
-                case (#Err e) {
-                    Debug.trap("transfer failed: " # debug_show(e));
-                };
-                case (#Ok _) {};
-            };
-            switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = revenueRecipient; subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = ?(Common.principalToSubaccount(user));
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = amountToMove - revenue - 2*Common.cycles_transfer_fee;
-            })) {
-                case (#Err e) {
-                    Debug.trap("transfer failed: " # debug_show(e));
-                };
-                case (#Ok _) {};
-            };
-        };
 
         let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
@@ -429,10 +391,27 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    public shared({caller = user}) func convertICPToCycles() {
+    private func convertICPToCycles(user: Principal): {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
         });
+
+        // Deduct revenue:
+        let revenue = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
+        switch(await CyclesLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - 2*Common.cycles_transfer_fee;
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+
         let subaccountArrayPart = Blob.toArray(Principal.toBlob(user));
         let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
             if (i == 0) {
@@ -449,7 +428,7 @@ actor class Bootstrapper() = this {
             memo = ?"\4d\49\4e\54\00\00\00\00";
             from_subaccount = ?(Common.principalToSubaccount(user));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = balance - 2*Common.cycles_transfer_fee;
+            amount = balance - revenue - 2*Common.cycles_transfer_fee;
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
@@ -458,6 +437,7 @@ actor class Bootstrapper() = this {
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
+        {balance};
     };
 
     public query func balance(): async Nat {
