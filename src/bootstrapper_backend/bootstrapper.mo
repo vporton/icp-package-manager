@@ -134,7 +134,7 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove = convertICPToCycles(user).balance;
+        let {balance = amountToMove} = await* convertICPToCycles(user);
         if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
@@ -391,13 +391,13 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    private func convertICPToCycles(user: Principal): {balance: Nat} {
+    private func convertICPToCycles(user: Principal): async* {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
         });
 
         // Deduct revenue:
-        let revenue = Int.abs(Float.toInt(Float.fromInt(amountToMove) * (1.0 - env.revenueShare)));
+        let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * (1.0 - env.revenueShare)));
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
@@ -416,7 +416,7 @@ actor class Bootstrapper() = this {
         let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
             if (i == 0) {
                 Nat8.fromNat(Array.size(subaccountArrayPart));
-            } else if (i-1 < Array.size(subaccountArrayPart)) {
+            } else if ((i-1): Nat < Array.size(subaccountArrayPart)) {
                 subaccountArrayPart[i];
             } else {
                 0;
