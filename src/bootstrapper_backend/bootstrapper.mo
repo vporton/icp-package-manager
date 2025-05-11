@@ -25,6 +25,7 @@ import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
 import TrieMap "mo:base/TrieMap";
 import Order "mo:base/Order";
+import Map "mo:base/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -137,7 +138,7 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove = switch (userCycleBalanceMap.get(user)) {
+        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
             case (?amount) amount;
             case null 0;
         };
@@ -147,7 +148,7 @@ actor class Bootstrapper() = this {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
-        userCycleBalanceMap := userCycleBalanceMap.delete(user);
+        userCycleBalanceMap := principalMap.delete(userCycleBalanceMap, user);
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
@@ -155,7 +156,7 @@ actor class Bootstrapper() = this {
         Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
         let cyclesToBattery = amountToMove - Cycles.refunded();
-        userCycleBalanceMap := userCycleBalanceMap.put(user, cyclesToBattery);
+        userCycleBalanceMap := principalMapput(userCycleBalanceMap, user, cyclesToBattery);
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -173,7 +174,7 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
-        let amountToMove = switch (userCycleBalanceMap.get(user)) {
+        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
             case (?amount) amount;
             case null 0;
         };
@@ -430,7 +431,7 @@ actor class Bootstrapper() = this {
             Debug.trap("transfer failed: " # debug_show(res));
         };
 
-        let oldBalance = switch (userCycleBalanceMap.get(user)) {
+        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
             case (?oldBalance) oldBalance;
             case null 0;
         };
@@ -447,7 +448,7 @@ actor class Bootstrapper() = this {
 
     public query({caller = user}) func userCycleBalance(): async Nat {
         // TODO@P3: Allow only to the owner?
-        switch (userCycleBalanceMap.get(user)) {
+        switch (principalMap.get(userCycleBalanceMap, user)) {
             case (?amount) amount;
             case null 0;
         };
