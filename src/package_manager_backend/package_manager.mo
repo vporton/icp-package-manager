@@ -673,34 +673,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     {
         onlyOwner(caller, "facilitateBootstrap");
 
-        let amountToMove = if (env.isLocal) {
-            Cycles.balance(); // Use the no-subaccount balance in test mode.
-        } else {
-            // The following does not work in local net testing mode:
-            await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
-            });
-        };
-
         let minInstallationId = nextInstallationId;
         nextInstallationId += 1;
-
-        // Move user's fund into current use:
-        if (not env.isLocal) { // If isLocal, funds are already here.
-            switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = Principal.fromActor(this); subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = ?(Common.principalToSubaccount(user));
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = amountToMove - 2 * Common.cycles_transfer_fee;
-            })) {
-                case (#Err e) {
-                    Debug.trap("transfer failed: " # debug_show(e));
-                };
-                case (#Ok _) {};
-            };
-        };
 
         // We first fully install the package manager, and only then other packages.
         ignore await* _installModulesGroup({
@@ -713,13 +687,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             bootstrapping = true;
         });
 
-        let cyclesToBattery = if (env.isLocal) {
-            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
-        } else {
-            await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
-            });
-        };
+        let cyclesToBattery = Cycles.refunded(); // TODO@P2: correct?
 
         // let ?battery = coreModules.get("battery") else {
         //     Debug.trap("error getting battery");
@@ -1431,7 +1399,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// because `icrc1_transfer` does not work on local net as it should.
     public composite query({caller}) func userAccountText(): async Text {
         let owner = battery;
-        // let subaccount = if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) };
         let subaccount = ?(AccountID.principalToSubaccount(caller));
 
         Account.toText({owner; subaccount});

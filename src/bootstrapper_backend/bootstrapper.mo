@@ -23,6 +23,7 @@ import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
 import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
+import TrieMap "mo:base/TrieMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -134,7 +135,10 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let {balance = amountToMove} = await* convertICPToCycles(user);
+        let amountToMove = switch (userCycleBalance.get(user)) {
+            case (?amount) amount;
+            case null 0;
+        };
         if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
@@ -144,6 +148,7 @@ actor class Bootstrapper() = this {
         let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let cyclesToBattery = amountToMove - Cycles.refunded();
+        userCycleBalance.put(user, cyclesToBattery);
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -161,13 +166,11 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
-        let amountToMove = if (env.isLocal) {
-            Cycles.balance();
-        } else {
-            await ICPLedger.icrc1_balance_of({ // FIXME@P1
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(tweaker.user));
-            });
+        let amountToMove = switch (userCycleBalance.get(user)) {
+            case (?amount) amount;
+            case null 0;
         };
+        userCycleBalance.put(user, 0);
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
@@ -358,7 +361,9 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    private func convertICPToCycles(user: Principal): async* {balance: Nat} {
+    let userCycleBalance = TrieMap.TrieMap<Principal, Nat>(Principal.equal, Principal.hash);
+
+    public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
         let balance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
         });
@@ -400,11 +405,22 @@ actor class Bootstrapper() = this {
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
-        ignore await CMC.notify_top_up({
+        // ignore await CMC.notify_top_up({
+        //     block_index = Nat64.fromNat(tx);
+        //     canister_id = Principal.fromActor(this);
+        // });
+        ignore await CMC.notify_mint_cycles({
             block_index = Nat64.fromNat(tx);
-            canister_id = Principal.fromActor(this);
+            to_subaccount = ?(Common.principalToSubaccount(user));
+            deposit_memo = ?"\4d\49\4e\54\00\00\00\00";
         });
-        {balance};
+
+        let oldBalance = switch (userCycleBalance.get(user)) {
+            case (?oldBalance) oldBalance;
+            case null 0;
+        };
+        userCycleBalance.put(user, oldBalance + balance - revenue - 2*100_000); // TODO@P3: no explicit
+        {balance = balance - revenue - 2*100_000};
     };
 
     public query func balance(): async Nat {
