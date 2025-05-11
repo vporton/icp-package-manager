@@ -121,7 +121,7 @@ function App2() {
       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
       subaccount: [principalToSubAccount(principal)],
     }).then((amount) => {
-      setCyclesAmount(parseInt(amount.toString()))
+      setCyclesLedgerAmount(parseInt(amount.toString()));
     });
   }
   // function updateICPAmount() {
