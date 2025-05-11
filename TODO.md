@@ -6,6 +6,8 @@ Remaining things TODO:
 
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
+- FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
+
 - TODO@P3: Allow to fund with both ICP or cycles.
 
 - TODO@P3: `inspect`.
