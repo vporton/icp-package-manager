@@ -68,7 +68,7 @@ function AddressPopup(props: {
     ? (
       // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
-        <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**9)}T` : "Loading..."}</p>
+        <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**9)}` : "Loading..."}</p>
         <p><Button onClick={convertToCycles}>Convert ICP to cycles</Button></p>
         <p><strong>Warning: 5% fee applied.</strong></p>
         <p>Fund it with 13T cycles, at least.</p>
