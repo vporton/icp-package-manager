@@ -136,20 +136,24 @@ actor class Bootstrapper() = this {
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
-        let amountToMove = switch (userCycleBalance.get(user)) {
+        let amountToMove = switch (userCycleBalanceMap.get(user)) {
             case (?amount) amount;
             case null 0;
         };
+        Debug.print("amountToMove: " # Nat.toText(amountToMove) # " / user: " # debug_show(user)); // FIXME: Remove.
+
         if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
+        userCycleBalanceMap.delete(user);
+
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
-        let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
+        let {installedModules} = await (with cycles = amountToMove) doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let cyclesToBattery = amountToMove - Cycles.refunded();
-        userCycleBalance.put(user, cyclesToBattery);
+        userCycleBalanceMap.put(user, cyclesToBattery);
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -167,11 +171,11 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
-        let amountToMove = switch (userCycleBalance.get(user)) {
+        let amountToMove = switch (userCycleBalanceMap.get(user)) {
             case (?amount) amount;
             case null 0;
         };
-        userCycleBalance.put(user, 0);
+        userCycleBalanceMap.put(user, 0);
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
@@ -362,22 +366,24 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    let userCycleBalance = TrieMap.TrieMap<Principal, Nat>(Principal.equal, Principal.hash);
+    let userCycleBalanceMap = TrieMap.TrieMap<Principal, Nat>(Principal.equal, Principal.hash);
 
     public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
         });
+        Debug.print("INITIAL BALANCE: " # debug_show(balance)); // FIXME: Remove.
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
+        Debug.print("REVENUE: " # debug_show(balance) # " # MINUSED: " # debug_show(revenue - 2*Common.cycles_transfer_fee)); // FIXME: Remove.
         switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - 2*Common.cycles_transfer_fee; // TODO@P3: no explicit
+            amount = revenue - Common.cycles_transfer_fee;
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -385,16 +391,16 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        let subaccountArrayPart = Blob.toArray(Principal.toBlob(user));
-        let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
-            if (i == 0) {
-                Nat8.fromNat(Array.size(subaccountArrayPart));
-            } else if ((i-1): Nat < Array.size(subaccountArrayPart)) {
-                subaccountArrayPart[i-1];
-            } else {
-                0;
-            };
-        });
+        // let subaccountArrayPart = Blob.toArray(Principal.toBlob(user));
+        // let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
+        //     if (i == 0) {
+        //         Nat8.fromNat(Array.size(subaccountArrayPart));
+        //     } else if ((i-1): Nat < Array.size(subaccountArrayPart)) {
+        //         subaccountArrayPart[i-1];
+        //     } else {
+        //         0;
+        //     };
+        // });
         // let res = await CyclesLedger.icrc1_transfer({
         //     to = {owner = Principal.fromActor(CMC); subaccount = ?subaccountArray};
         //     fee = null;
@@ -413,8 +419,9 @@ actor class Bootstrapper() = this {
         // let #Ok _ = res2 else {
         //     Debug.trap("notify_top_up failed: " # debug_show(res2));
         // };
+        Debug.print("WITHDRAW: " # debug_show(balance - revenue - 2*Common.cycles_transfer_fee)); // FIXME: Remove.
         let res = await CyclesLedger.withdraw({
-            amount = balance - revenue - 2*Common.cycles_transfer_fee;
+            amount = balance - revenue - Common.cycles_transfer_fee;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             to = Principal.fromActor(this);
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
@@ -423,16 +430,26 @@ actor class Bootstrapper() = this {
             Debug.trap("transfer failed: " # debug_show(res));
         };
 
-        let oldBalance = switch (userCycleBalance.get(user)) {
+        let oldBalance = switch (userCycleBalanceMap.get(user)) {
             case (?oldBalance) oldBalance;
             case null 0;
         };
-        userCycleBalance.put(user, oldBalance + balance - revenue - 2*100_000); // TODO@P3: no explicit
-        {balance = balance - revenue - 2*100_000};
+        Debug.print("oldBalance: " # Nat.toText(oldBalance) # " / user: " # debug_show(user)); // FIXME: Remove.
+        Debug.print("SUM: " # Nat.toText(oldBalance + balance - revenue - 2*Common.cycles_transfer_fee) # " / user: " # debug_show(user)); // FIXME: Remove.
+        userCycleBalanceMap.put(user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
+        {balance = balance - revenue - 2*Common.cycles_transfer_fee};
     };
 
     public query func balance(): async Nat {
         // TODO@P3: Allow only to the owner?
         Cycles.balance();
+    };
+
+    public query({caller = user}) func userCycleBalance(): async Nat {
+        // TODO@P3: Allow only to the owner?
+        switch (userCycleBalanceMap.get(user)) {
+            case (?amount) amount;
+            case null 0;
+        };
     };
 }

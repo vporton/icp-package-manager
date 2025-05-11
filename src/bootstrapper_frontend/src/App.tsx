@@ -114,7 +114,7 @@ function App2() {
     if (principal === undefined || bootstrapper === undefined) {
       return;
     }
-    bootstrapper.balance().then((amount) => {
+    bootstrapper.userCycleBalance().then((amount) => {
       setCyclesAmount(parseInt(amount.toString()))
     });
   }

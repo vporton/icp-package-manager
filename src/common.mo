@@ -437,5 +437,5 @@ module {
         Blob.fromArray(Buffer.toArray(sub));
     };
 
-    public let cycles_transfer_fee = 100_000_000_000;
+    public let cycles_transfer_fee = 100_000_000;
 }
