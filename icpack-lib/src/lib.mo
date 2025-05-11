@@ -1,9 +1,7 @@
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
-import Time "mo:base/Time";
-import Int "mo:base/Int";
 import Nat64 "mo:base/Nat64";
-import CyclesLedger "canister:nns-ledger"; // TODO@P3: canister import in a library is wrong
+import CyclesLedger "canister:cycles_ledger"; // TODO@P3: canister import in a library is wrong
 
 module {
     type BlockIndex = Nat;
@@ -38,18 +36,14 @@ module {
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles: payee is not a controller");
         };
-        switch (await CyclesLedger.icrc1_transfer({
-            to = {owner = payee; subaccount = null};
+        let res = await CyclesLedger.withdraw({
             amount;
-            fee = null;
-            memo = null;
             from_subaccount = null;
+            to = payee;
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-        })) {
-            case (#Err e) {
-                Debug.trap("withdrawCycles: " # debug_show(e));
-            };
-            case (#Ok _) {};
+        });
+        let #Ok tx = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
         };
     };
 };

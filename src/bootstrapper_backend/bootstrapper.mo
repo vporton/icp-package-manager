@@ -155,8 +155,8 @@ actor class Bootstrapper() = this {
         let {installedModules} = await (with cycles = amountToMove) doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
-        let cyclesToBattery = amountToMove - Cycles.refunded();
-        userCycleBalanceMap := principalMapput(userCycleBalanceMap, user, cyclesToBattery);
+        let cyclesToBattery = amountToMove - 12_660_000_000_000/*Cycles.refunded()*/; // TODO@P2
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, cyclesToBattery);
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -174,11 +174,12 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
 
-        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
-            case (?amount) amount;
-            case null 0;
-        };
-        userCycleBalanceMap := userCycleBalanceMap.put(user, 0);
+        // let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) { // wrong user
+        //     case (?amount) amount;
+        //     case null 0;
+        // };
+        // userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
+        let amountToMove = 13_000_000_000_000 - 12_660_000_000; // FIXME@P2
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
@@ -192,9 +193,8 @@ actor class Bootstrapper() = this {
         });
 
 
-        let lastBalance = Cycles.refunded();
-        let cyclesToBattery = lastBalance;
-        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
+        let lastBalance = amountToMove - 12_660_000_000_000; // Cycles.refunded(); // TODO@P2
+        await (with cycles = lastBalance - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
 
         {spentCycles = amountToMove - lastBalance};
     };
@@ -437,7 +437,7 @@ actor class Bootstrapper() = this {
         };
         Debug.print("oldBalance: " # Nat.toText(oldBalance) # " / user: " # debug_show(user)); // FIXME: Remove.
         Debug.print("SUM: " # Nat.toText(oldBalance + balance - revenue - 2*Common.cycles_transfer_fee) # " / user: " # debug_show(user)); // FIXME: Remove.
-        userCycleBalanceMap := userCycleBalanceMap.put(user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
         {balance = balance - revenue - 2*Common.cycles_transfer_fee};
     };
 
