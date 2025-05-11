@@ -26,7 +26,7 @@ import IC "mo:base/ExperimentalInternetComputer";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
-import CyclesLedger "canister:nns-ledger";
+import ICPLedger "canister:nns-ledger";
 import CMC "canister:nns-cycles-minting";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -164,7 +164,7 @@ actor class Bootstrapper() = this {
         let amountToMove = if (env.isLocal) {
             Cycles.balance();
         } else {
-            await CyclesLedger.icrc1_balance_of({
+            await ICPLedger.icrc1_balance_of({ // FIXME@P1
                 owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(tweaker.user));
             });
         };
@@ -181,18 +181,8 @@ actor class Bootstrapper() = this {
         });
 
 
-        let lastBalance = if (env.isLocal) {
-            Cycles.balance(); // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
-        } else {
-            await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
-            });
-        };
-        let cyclesToBattery = if (env.isLocal) {
-            1_000_000_000_000_000; // Use the no-subaccount balance in test mode, deposit much (1000T) for testing.
-        } else {
-            lastBalance;
-        };
+        let lastBalance = Cycles.refunded();
+        let cyclesToBattery = lastBalance;
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
 
         {spentCycles = amountToMove - lastBalance};
@@ -363,26 +353,25 @@ actor class Bootstrapper() = this {
     // TODO@P3: Should be in th frontend.
     public composite query({caller}) func userAccountText(): async Text {
         let owner = Principal.fromActor(this);
-        // let subaccount = if (env.isLocal) { null } else { ?(Principal.toBlob(caller)) };
         let subaccount = ?(AccountID.principalToSubaccount(caller));
 
         Account.toText({owner; subaccount});
     };
 
     private func convertICPToCycles(user: Principal): async* {balance: Nat} {
-        let balance = await CyclesLedger.icrc1_balance_of({
+        let balance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
         });
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * (1.0 - env.revenueShare)));
-        switch(await CyclesLedger.icrc1_transfer({
+        switch(await ICPLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Common.principalToSubaccount(user));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - 2*Common.cycles_transfer_fee;
+            amount = revenue - 2*100_000; // TODO@P3: no explicit
         })) {
             case (#Err e) {
                 Debug.trap("transfer failed: " # debug_show(e));
@@ -400,13 +389,13 @@ actor class Bootstrapper() = this {
                 0;
             };
         });
-        let res = await CyclesLedger.icrc1_transfer({
+        let res = await ICPLedger.icrc1_transfer({
             to = {owner = Principal.fromActor(CMC); subaccount = ?Blob.fromArray(subaccountArray)};
             fee = null;
             memo = ?"\4d\49\4e\54\00\00\00\00";
             from_subaccount = ?(Common.principalToSubaccount(user));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = balance - revenue - 2*Common.cycles_transfer_fee;
+            amount = balance - revenue - 2*100_000; // TODO@P3: no explicit
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
