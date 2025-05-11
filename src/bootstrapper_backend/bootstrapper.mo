@@ -28,6 +28,7 @@ import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICPLedger "canister:nns-ledger";
+import CyclesLedger "canister:cycles_ledger";
 import CMC "canister:nns-cycles-minting";
 import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
@@ -364,17 +365,17 @@ actor class Bootstrapper() = this {
     let userCycleBalance = TrieMap.TrieMap<Principal, Nat>(Principal.equal, Principal.hash);
 
     public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
-        let balance = await ICPLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
+        let balance = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
         });
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * (1.0 - env.revenueShare)));
-        switch(await ICPLedger.icrc1_transfer({
+        switch(await CyclesLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Common.principalToSubaccount(user));
+            from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = revenue - 2*100_000; // TODO@P3: no explicit
         })) {
@@ -394,26 +395,28 @@ actor class Bootstrapper() = this {
                 0;
             };
         });
-        let res = await ICPLedger.icrc1_transfer({
-            to = {owner = Principal.fromActor(CMC); subaccount = ?Blob.fromArray(subaccountArray)};
+        let res = await CyclesLedger.icrc1_transfer({
+            to = {owner = Principal.fromActor(CMC); subaccount = null/*?Blob.fromArray(subaccountArray)*/};
             fee = null;
-            memo = ?"\4d\49\4e\54\00\00\00\00";
-            from_subaccount = ?(Common.principalToSubaccount(user));
+            memo = ?Blob.toArray("\4d\49\4e\54\00\00\00\00");
+            from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = balance - revenue - 2*100_000; // TODO@P3: no explicit
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
-        // ignore await CMC.notify_top_up({
-        //     block_index = Nat64.fromNat(tx);
-        //     canister_id = Principal.fromActor(this);
-        // });
-        ignore await CMC.notify_mint_cycles({
+        ignore await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
-            to_subaccount = ?(Common.principalToSubaccount(user));
-            deposit_memo = ?"\4d\49\4e\54\00\00\00\00";
+            canister_id = Principal.fromActor(this);
         });
+        // let #Ok _ = await CMC.notify_mint_cycles({
+        //     block_index = Nat64.fromNat(tx);
+        //     to_subaccount = ?(Common.principalToSubaccount(user));
+        //     deposit_memo = ?"\4d\49\4e\54\00\00\00\00";
+        // }) else {
+        //     Debug.trap("notify_mint_cycles failed: " # debug_show(res));
+        // };
 
         let oldBalance = switch (userCycleBalance.get(user)) {
             case (?oldBalance) oldBalance;

@@ -66,6 +66,12 @@ deploy-self@bookmark: build@bookmark deploy@bootstrapper
 	  bookmark
 	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
 
+# TODO@P3: Why doens't it work with --no-compile?
+deploy-self@cycles_ledger: build@cycles_ledger
+	dfx deploy --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
+	  --specified-id um5iw-rqaaa-aaaaq-qaaba-cai \
+	  cycles_ledger
+
 .PHONY: docs
 docs: docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg \
 	docs/out/sources/prepare-test.ts.html

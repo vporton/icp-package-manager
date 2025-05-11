@@ -27,6 +27,7 @@
       "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
         "nns-ledger",
+        "cycles_ledger",
         "nns-cycles-minting",
         "bootstrapper_data",
         "repository"
@@ -174,6 +175,17 @@
       },
       "type": "custom",
       "wasm": ""
+    },
+    "cycles_ledger": {
+      "candid": "https://github.com/dfinity/cycles-ledger/releases/download/cycles-ledger-v1.0.4/cycles-ledger.did",
+      "specified_id": "um5iw-rqaaa-aaaaq-qaaba-cai",
+      "remote": {
+        "id": {
+          "remote": "um5iw-rqaaa-aaaaq-qaaba-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/cycles-ledger/releases/download/cycles-ledger-v1.0.4/cycles-ledger.wasm.gz"
     },
     "nns-lifeline": {
       "build": "",
