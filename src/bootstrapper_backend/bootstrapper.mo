@@ -143,13 +143,7 @@ actor class Bootstrapper() = this {
 
         let {installedModules} = await doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
-        let cyclesToBattery = if (env.isLocal) {
-            (Cycles.balance() - 1_000_000_000_000): Nat; // Use the no-subaccount balance in test mode.
-        } else {
-            await CyclesLedger.icrc1_balance_of({
-                owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
-            });
-        };
+        let cyclesToBattery = amountToMove - Cycles.refunded();
 
         {installedModules; spentCycles = amountToMove - cyclesToBattery};
     };
@@ -176,22 +170,6 @@ actor class Bootstrapper() = this {
         };
 
         // Move user's fund into current use:
-        if (not env.isLocal) { // If isLocal, funds are already here.
-            switch(await CyclesLedger.icrc1_transfer({
-                to = {owner = Principal.fromActor(this); subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = ?(Common.principalToSubaccount(tweaker.user));
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = amountToMove - 2*Common.cycles_transfer_fee;
-            })) {
-                case (#Err e) {
-                    Debug.trap("transfer failed: " # debug_show(e));
-                };
-                case (#Ok _) {};
-            };
-        };
-
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
         let {battery} = await doBootstrapBackend({

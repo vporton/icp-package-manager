@@ -53,12 +53,12 @@ function AddressPopup(props: {
       }
     });
   }
-  async function convertToCycles() {
-    const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})
-    await bootstrapper!.convertICPToCycles();
-    props.updateCyclesAmount();
-    props.updateICPAmount();
-  }
+  // async function convertToCycles() {
+  //   const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})
+  //   await bootstrapper!.convertICPToCycles();
+  //   props.updateCyclesAmount();
+  //   props.updateICPAmount();
+  // }
   const renderTooltip = (props: any) => (
     <Tooltip {...props}>
       {copied ? 'Copied!' : 'Copy to clipboard'}
@@ -69,9 +69,8 @@ function AddressPopup(props: {
       // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
         <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**9)}` : "Loading..."}</p>
-        <p><Button onClick={convertToCycles}>Convert ICP to cycles</Button></p>
         <p><strong>Warning: 5% fee applied.</strong></p>
-        <p>Fund it with 13T cycles, at least.</p>
+        <p>Fund it with ICP that converts to 13T cycles, at least.</p>
         <p>
           Send ICP to{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
