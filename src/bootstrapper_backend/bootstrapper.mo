@@ -384,7 +384,7 @@ actor class Bootstrapper() = this {
             if (i == 0) {
                 Nat8.fromNat(Array.size(subaccountArrayPart));
             } else if ((i-1): Nat < Array.size(subaccountArrayPart)) {
-                subaccountArrayPart[i];
+                subaccountArrayPart[i-1];
             } else {
                 0;
             };
