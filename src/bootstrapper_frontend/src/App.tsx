@@ -114,6 +114,10 @@ function App2() {
       setICPAmount(parseInt(amount.toString()));
     });
   }
+  function updateAmounts() {
+    updateCyclesAmount();
+    updateICPAmount();
+  }
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(updateICPAmount, [principal, bootstrapper]);
   useEffect(() => {
@@ -166,7 +170,7 @@ function App2() {
                     updateICPAmount={updateICPAmount} updateCyclesAmount={updateCyclesAmount}/>
                 </Dropdown.Menu>
               </Dropdown>
-              <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
+              <a onClick={updateAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
             </Nav>
             {/* <Nav style={{display: ok && getIsLocal() ? undefined : 'none'}}>
               <Button onClick={mint}>Mint</Button>
