@@ -175,9 +175,8 @@ function App2() {
       });
     }
   }, [glob.packageManager]);
-  // const cyclesPaymentAddress = AccountIdentifier.fromPrincipal({ principal: Principal.fromText(process.env.CANISTER_ID_BATTERY!) });
   function AddressPopup() {
-    const address = Buffer.from(cyclesPaymentAddress!).toString('hex');
+    const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
     const copyToClipboard = async () => {
       navigator.clipboard.writeText(address).then(() => {
@@ -233,10 +232,8 @@ function App2() {
                   <Dropdown.Toggle>
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                   </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item as="div">
-                      <AddressPopup/>
-                    </Dropdown.Item>
+                  <Dropdown.Menu style={{padding: '10px'}}>
+                    <AddressPopup/>
                   </Dropdown.Menu>
                 </Dropdown>
                 <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
