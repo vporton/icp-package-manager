@@ -12,7 +12,7 @@ import { AuthButton } from '../../lib/AuthButton';
 import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
-import { createActor as createBatteryActor } from "../../declarations/battery";
+import { battery, createActor as createBatteryActor } from "../../declarations/battery";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did';
 import { Bootstrapper } from '../../declarations/bootstrapper/bootstrapper.did';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
@@ -23,6 +23,8 @@ import { BusyContext, BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import ModuleCycles from './ModuleCycles';
 import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
+import { package_manager } from '../../declarations/package_manager';
+import { cycles_ledger } from '../../declarations/cycles_ledger';
 
 function App() {
   return (
@@ -147,27 +149,50 @@ function GlobalUI() {
 
 function App2() {
   const {ok, agent} = useAuth();
+  const {setError} = useContext(ErrorContext)!;
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
+  const [cyclesLedgerAmount, setCyclesLedgerAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<string | undefined>();
   const glob = useContext(GlobalContext);
+  async function convertToCycles() {
+    try {
+      await battery.convertCycles();
+      updateCyclesAmount();
+      updateCyclesLedgerAmount();
+      // props.updateICPAmount();
+    }
+    catch (e) {
+      console.error(e);
+      setError((e as object).toString());
+    }
+  }
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
     if (glob.packageManager === undefined) {
       return;
-    } 
+    }
     glob.packageManager.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
       const battery = createBatteryActor(batteryPrincipal, {agent});
       battery.balance().then((amount) => {
         setCyclesAmount(parseInt(amount.toString()))
       });
     });
-    // if (glob.packageManager !== undefined) {
-    //   glob.packageManager.userBalance().then((amount) => {
-    //     setCyclesAmount(parseInt(amount.toString()))
-    //   });
-    // }
+  }
+  function updateCyclesLedgerAmount() {
+    setCyclesLedgerAmount(undefined);
+    if (glob.backend === undefined) {
+      return;
+    }
+    cycles_ledger.icrc1_balance_of({owner: glob.backend, subaccount: []}).then((amount) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+      setCyclesLedgerAmount(parseInt(amount.toString()))
+    });
+  }
+  function updateAllCyclesAmounts() {
+    updateCyclesAmount();
+    updateCyclesLedgerAmount();
   }
   useEffect(updateCyclesAmount, [glob.packageManager]);
+  useEffect(updateCyclesLedgerAmount, [glob.backend]);
   useEffect(() => {
     if (glob.packageManager !== undefined) {
       glob.packageManager.userAccountText().then((t) => {
@@ -175,7 +200,15 @@ function App2() {
       });
     }
   }, [glob.packageManager]);
-  function AddressPopup() {
+  function AddressPopup(props: {
+    cyclesAmount: number | undefined,
+    cyclesLedgerAmount: number | undefined,
+    // icpAmount: number | undefined,
+    cyclesPaymentAddress: string | undefined,
+    updateCyclesAmount: () => void;
+    updateCyclesLedgerAmount: () => void;
+    // updateICPAmount: () => void;
+  }) {
     const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
     const copyToClipboard = async () => {
@@ -197,9 +230,15 @@ function App2() {
       ? (
         // TODO@P3: `stopPropagation` doesn't work in some reason.
         <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+          {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
+          <p>Cycles to top-up:
+            {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
+          </p>
+          <p><Button onClick={convertToCycles}>Use top-up cycles</Button></p>
           <p><strong>Warning: 5% fee applied.</strong></p>
+          <p>Fund it with 13T cycles, at least.</p>
           <p>
-            Send cycles to{" "}
+            Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
               <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
             </OverlayTrigger>
@@ -233,10 +272,11 @@ function App2() {
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{padding: '10px'}}>
-                    <AddressPopup/>
+                    <AddressPopup cyclesAmount={cyclesAmount} cyclesLedgerAmount={cyclesLedgerAmount} cyclesPaymentAddress={cyclesPaymentAddress}
+                      updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount}/>
                   </Dropdown.Menu>
                 </Dropdown>
-                <a onClick={updateCyclesAmount} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
+                <a onClick={updateAllCyclesAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
               </Nav>
             </Navbar>
           </nav>

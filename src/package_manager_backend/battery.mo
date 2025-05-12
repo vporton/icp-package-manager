@@ -14,7 +14,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import Common "../common";
-import CyclesLedger "canister:nns-ledger";
+import CyclesLedger "canister:cycles_ledger";
 import env "mo:env";
 
 shared({caller = initialOwner}) actor class Battery({
@@ -294,6 +294,23 @@ shared({caller = initialOwner}) actor class Battery({
         };
         Cycles.add<system>(amount);
         await IC.ic.deposit_cycles({canister_id = caller});
+    };
+
+    public shared({caller}) func convertCycles() {
+        onlyOwner(caller, "convertCycles");
+
+        let amount = CyclesLedger.icrc1_balance_of({
+            account = {owner = Principal.fromActor(this); subaccount = null};
+        });
+        let res = await CyclesLedger.withdraw({
+            amount = amount - Common.cycles_transfer_fee;
+            from_subaccount = null;
+            to = Principal.fromActor(this);
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+        });
+        let #Ok tx = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
     };
 
     system func inspect({

@@ -256,7 +256,8 @@
       "dependencies": [
         "package_manager",
         "internet_identity",
-        "bootstrapper"
+        "bootstrapper",
+        "battery"
       ],
       "metadata": [
         {
