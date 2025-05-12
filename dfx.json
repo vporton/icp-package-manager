@@ -184,7 +184,7 @@
           "ic": "um5iw-rqaaa-aaaaq-qaaba-cai"
         }
       },
-      "init_arg": "record { index_id = null; max_blocks_per_request = 20 }",
+      "init_arg": "variant { Init = record { index_id = null; max_blocks_per_request = 20 } }",
       "type": "custom",
       "wasm": "https://github.com/dfinity/cycles-ledger/releases/download/cycles-ledger-v1.0.4/cycles-ledger.wasm.gz"
     },
