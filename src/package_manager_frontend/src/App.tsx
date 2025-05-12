@@ -156,7 +156,11 @@ function App2() {
   const glob = useContext(GlobalContext);
   async function convertToCycles() {
     try {
-      await battery.convertCycles();
+      // TODO@P3: `!`
+      glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+        const battery = createBatteryActor(batteryPrincipal, {agent});
+        battery.convertCycles().then(() => {});
+      });
       updateCyclesAmount();
       updateCyclesLedgerAmount();
       // props.updateICPAmount();
@@ -180,11 +184,13 @@ function App2() {
   }
   function updateCyclesLedgerAmount() {
     setCyclesLedgerAmount(undefined);
-    if (glob.backend === undefined) {
+    if (glob.packageManager === undefined) {
       return;
     }
-    cycles_ledger.icrc1_balance_of({owner: glob.backend, subaccount: []}).then((amount) => { // TODO@P3: Don't hardcode `installationId == 0n`.
-      setCyclesLedgerAmount(parseInt(amount.toString()))
+    glob.packageManager.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+      cycles_ledger.icrc1_balance_of({owner: batteryPrincipal, subaccount: []}).then((amount) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+        setCyclesLedgerAmount(parseInt(amount.toString()))
+      });
     });
   }
   function updateAllCyclesAmounts() {
