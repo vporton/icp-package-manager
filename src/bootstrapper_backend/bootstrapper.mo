@@ -159,6 +159,13 @@ actor class Bootstrapper() = this {
         let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/; // TODO@P2
         userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
 
+        let ?battery = installedModules.get("battery") else {
+            Debug.trap("error getting battery");
+        };
+        let cyclesToBattery = 13_000_000_000_000 - lib.bootstrapFrontendCost; // TODO@P3: Make it a constant.
+        // ignore Cycles.accept(cyclesToBattery - Common.cycles_transfer_fee);
+        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) IC.ic.deposit_cycles({canister_id = battery});
+
         {installedModules; spentCycles};
     };
 
@@ -182,7 +189,7 @@ actor class Bootstrapper() = this {
         //     case null 0;
         // };
         // userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
-        let amountToMove = 13_000_000_000_000 - 12_660_000_000; // FIXME@P2
+        let amountToMove = 13_000_000_000_000 - env.bootstrapFrontendCost; // FIXME@P2
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
@@ -196,8 +203,7 @@ actor class Bootstrapper() = this {
         });
 
 
-        let lastBalance = amountToMove - 12_660_000_000_000; // Cycles.refunded(); // TODO@P2
-        await (with cycles = lastBalance - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
+        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
 
         let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
         {spentCycles};
@@ -306,7 +312,7 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId; cyclesToBattery: Nat};
         };
-        let {cyclesToBattery} = await (with cycles = newCanisterCycles * Array.size(installedModules)) backendActor.facilitateBootstrap({
+        ignore await (with cycles = 100_000_000_000 * Array.size(installedModules)) backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
