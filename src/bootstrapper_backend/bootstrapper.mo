@@ -304,7 +304,7 @@ actor class Bootstrapper() = this {
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
                 preinstalledModules: [(Text, Principal)];
-            }) -> async {minInstallationId: Common.InstallationId; cyclesToBattery: Nat};
+            }) -> async {minInstallationId: Common.InstallationId};
         };
         ignore await backendActor.facilitateBootstrap({
           packageName = "icpack";
