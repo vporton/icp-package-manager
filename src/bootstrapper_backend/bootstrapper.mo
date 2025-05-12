@@ -159,8 +159,7 @@ actor class Bootstrapper() = this {
         let ?battery = Iter.filter(installedModules.vals(), func (x: (Text, Principal)): Bool = x.0 == "battery").next() else {
             Debug.trap("error getting battery");
         };
-        let cyclesToBattery = amountToMove - env.bootstrapFrontendCost; // TODO@P3: Make it a constant.
-        // ignore Cycles.accept(cyclesToBattery - Common.cycles_transfer_fee);
+        let cyclesToBattery = amountToMove - env.bootstrapFrontendCost; // FIXME@P1 // TODO@P3: Make it a constant.
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery.1});
 
         let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
