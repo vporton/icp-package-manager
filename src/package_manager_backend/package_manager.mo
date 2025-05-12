@@ -1393,13 +1393,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO@P3: Should be in the frontend.
-    /// If on local net for testing, use null account to transfer it without `icrc1_transfer`
-    /// because `icrc1_transfer` does not work on local net as it should.
-    public composite query({caller}) func userAccountText(): async Text {
-        let owner = battery;
-        let subaccount = ?(AccountID.principalToSubaccount(caller));
-
-        Account.toText({owner; subaccount});
+    public query({caller}) func userAccountText(): async Text {
+        Principal.fromActor(battery);
     };
 
     // private func userAccount(/*user: Principal*/): CyclesLedger.Account {
