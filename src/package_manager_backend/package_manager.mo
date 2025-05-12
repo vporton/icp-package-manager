@@ -795,10 +795,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
             /// TODO@P3: Do one transfer instead of transferring in a loop.
-            let batteryActor = actor(Principal.toText(battery)) : actor {
-                withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
-            };
-            await batteryActor.withdrawCycles3(2_000_000_000_000, Principal.fromActor(main_indirect_)); // TODO@P2
+            // let batteryActor = actor(Principal.toText(battery)) : actor {
+            //     withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+            // };
+            // await batteryActor.withdrawCycles3(2_000_000_000_000, Principal.fromActor(main_indirect_)); // TODO@P2
             // Starting installation of all modules in parallel:
             await getMainIndirect().installModule({ // TODO@P3: I added `await` to initialize battery before others.
                 moduleNumber;
