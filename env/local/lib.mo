@@ -9,5 +9,5 @@ module {
 
     public let bookmarkCost = 10_000_000_000; // charge to limit DoS spam. // TODO@P3: Remove this.
 
-    public let bootstrapFrontendCost = 11_620_000_000_000;
+    public let bootstrapFrontendCost = 11_620_000_000_000; // an experimental value: 11.592288921601053T
 }
