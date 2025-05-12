@@ -1393,8 +1393,8 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO@P3: Should be in the frontend.
-    public query({caller}) func userAccountText(): async Text {
-        Principal.fromActor(battery);
+    public query({caller}) func userAccountText(): async Principal {
+        battery;
     };
 
     // private func userAccount(/*user: Principal*/): CyclesLedger.Account {

@@ -152,7 +152,7 @@ function App2() {
   const {setError} = useContext(ErrorContext)!;
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesLedgerAmount, setCyclesLedgerAmount] = useState<number | undefined>();
-  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<string | undefined>();
+  const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Principal | undefined>();
   const glob = useContext(GlobalContext);
   async function convertToCycles() {
     try {
@@ -204,7 +204,7 @@ function App2() {
     cyclesAmount: number | undefined,
     cyclesLedgerAmount: number | undefined,
     // icpAmount: number | undefined,
-    cyclesPaymentAddress: string | undefined,
+    cyclesPaymentAddress: Principal | undefined,
     updateCyclesAmount: () => void;
     updateCyclesLedgerAmount: () => void;
     // updateICPAmount: () => void;
@@ -212,7 +212,7 @@ function App2() {
     const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
     const copyToClipboard = async () => {
-      navigator.clipboard.writeText(address).then(() => {
+      navigator.clipboard.writeText(address.toText()).then(() => {
         try {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
@@ -240,7 +240,7 @@ function App2() {
           <p>
             Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
+              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address.toText()}</code>
             </OverlayTrigger>
           </p>
           <p>TODO@P3: QR-code</p>

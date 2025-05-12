@@ -299,8 +299,8 @@ shared({caller = initialOwner}) actor class Battery({
     public shared({caller}) func convertCycles() {
         onlyOwner(caller, "convertCycles");
 
-        let amount = CyclesLedger.icrc1_balance_of({
-            account = {owner = Principal.fromActor(this); subaccount = null};
+        let amount = await CyclesLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = null;
         });
         let res = await CyclesLedger.withdraw({
             amount = amount - Common.cycles_transfer_fee;
