@@ -51,7 +51,7 @@
         <p><strong>IC Pack</strong> is the package manager and app store(s) that installs <q>packages</q> (apps) into the Internet Computer (ICP) blockchain and ensures that nobody except of the sovereign user can remove or update his/her app.</p>
         <p>We are releasing an MVP/alpha preview of IC Pack for developers. This is similar to Google Play or Apple App Store, but for online apps. <strong>This is a developer preview, not a finished product, and we provide no warranty whatsoever. Particularly, we don't provide warranty that your cycles spend using this software won't become inaccessible for you.</strong></p>
         <h2>For Developers And Testers</h2>
-        <p><a href="https://app.package-manager.com">MVP alpha-3 online.</a> (<strong>Attention:</strong> It spends cycles in an unorderly way. More than ~13T cycles, if you deposit them, may remain on the account rather than transferred to your battery.)</p>
+        <p><a href="https://app.package-manager.com">MVP alpha-4 online.</a> (<strong>Attention:</strong> The package manager itself installs, but then it is unable to install other software.)</p>
         <p>Currently the only package available is <code>example</code> from the repo <code>d54aj-5yaaa-aaaad-aamlq-cai</code>.</p>
         <p><a href="https://github.com/vporton/icp-package-manager">Source</a> (Your contributions will be valuable.)</p>
         <p><a href="html/icpack/index.html">API docs</a> (<strong>Warning:</strong> Due to a bug, some functions are shown as if they were without arguments despite they have arguments. If in doubt consult the source. This isn't very important now, because at this stage we only create a repository for users, not call other API on it.)</p>
@@ -61,7 +61,7 @@
             <li>Then you upload WASM files of your app.</li>
             <li>Then you create a package, that can be installed using IC Pack from your repository (app store).</li>
         </ul>
-        <p>You are able to bootstrap your own copy of package manager after sending 13T cycles to the account shown in our bootstrapping app. <q>To bootstrap</q> means to install the package manager itself and make it (<code>icpack</code>) one of the installed packages. A big part of the 13T cycles will be transferred to the modules (your own canisters) of <code>icpack</code> package and you can withdraw cycles from them back.</p>
+        <p>You are able to bootstrap your own copy of package manager after sending 13T cycles to the account shown in our bootstrapping app. <q>To bootstrap</q> means to install the package manager itself and make it (<code>icpack</code>) one of the installed packages. A big part of the 13T (or more) cycles will be transferred to the modules (your own canisters) of <code>icpack</code> package and you can withdraw cycles from them back.</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
