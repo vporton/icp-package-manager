@@ -132,7 +132,7 @@ function GlobalUI() {
       <Container>
         <p>You first need to install the missing components (so called <q>backend</q>) for this software.
           This is just two buttons easy. You have around 45min to do this.</p>
-        {spentNum !== undefined &&
+        {getIsLocal() && spentNum !== undefined &&
               <Alert variant="info">You spent {spentNum / 10**12}T cycles for bootstrapping frontend.</Alert>
         }
         <ol>

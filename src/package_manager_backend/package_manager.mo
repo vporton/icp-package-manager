@@ -7,6 +7,7 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
+import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
@@ -669,7 +670,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         /// Additional packages to install after bootstrapping.
         preinstalledModules: [(Text, Principal)];
     })
-        : async {minInstallationId: Common.InstallationId}
+        : async {minInstallationId: Common.InstallationId; cyclesToBattery: Nat}
     {
         onlyOwner(caller, "facilitateBootstrap");
 
@@ -690,11 +691,16 @@ shared({caller = initialCaller}) actor class PackageManager({
         // let ?battery = coreModules.get("battery") else {
         //     Debug.trap("error getting battery");
         // };
-        let cyclesToBattery = Cycles.available();
+        let cyclesToBattery0 = Cycles.available(): Int - 1_000_000_000_000;
+        let cyclesToBattery: Nat = if (cyclesToBattery0 < 0) {
+            0;
+        } else {
+            Int.abs(cyclesToBattery0);
+        };
         ignore Cycles.accept(cyclesToBattery - Common.cycles_transfer_fee);
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) IC.ic.deposit_cycles({canister_id = battery});
 
-        {minInstallationId}
+        {minInstallationId; cyclesToBattery}
     };
 
     // TODO@P3: Remove?

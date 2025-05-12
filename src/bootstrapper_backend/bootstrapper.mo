@@ -137,7 +137,8 @@ actor class Bootstrapper() = this {
     /// and returned back to the same account.
     public shared({caller = user}) func bootstrapFrontend({
         frontendTweakPubKey: PubKey;
-    }): async {installedModules: [(Text, Principal)]; spentCycles: Nat} {
+    }): async {installedModules: [(Text, Principal)]; spentCycles: Int} {
+        let initialBalance = Cycles.balance();
         let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
             case (?amount) amount;
             case null 0;
@@ -152,13 +153,13 @@ actor class Bootstrapper() = this {
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
-        let {installedModules} = await (with cycles = amountToMove) doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
+        let {installedModules} = await /*(with cycles = amountToMove)*/ doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
-        let cyclesToBattery = amountToMove - 12_660_000_000_000/*Cycles.refunded()*/; // TODO@P2
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, cyclesToBattery);
+        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/; // TODO@P2
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
 
-        {installedModules; spentCycles = amountToMove - cyclesToBattery};
+        {installedModules; spentCycles};
     };
 
     /// Installs the backend after frontend is already installed, tweaks frontend.
@@ -169,7 +170,9 @@ actor class Bootstrapper() = this {
         frontendTweakPrivKey: PrivKey; // TODO@P3: Rename.
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
-    }): async {spentCycles: Nat} {
+    }): async {spentCycles: Int} {
+        let initialBalance = Cycles.balance();
+
         let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
 
         let tweaker = await Data.getFrontendTweaker(pubKey);
@@ -184,7 +187,7 @@ actor class Bootstrapper() = this {
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
-        let {battery} = await doBootstrapBackend({
+        let {battery; cyclesToBattery} = await doBootstrapBackend({
             pubKey;
             installedModules;
             user;
@@ -196,7 +199,8 @@ actor class Bootstrapper() = this {
         let lastBalance = amountToMove - 12_660_000_000_000; // Cycles.refunded(); // TODO@P2
         await (with cycles = lastBalance - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
 
-        {spentCycles = amountToMove - lastBalance};
+        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
+        {spentCycles};
     };
 
     public shared({caller}) func doBootstrapBackend({
@@ -205,7 +209,7 @@ actor class Bootstrapper() = this {
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
-    }): async {battery: Principal} {
+    }): async {battery: Principal; cyclesToBattery: Nat} {
         checkItself(caller);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
@@ -300,9 +304,9 @@ actor class Bootstrapper() = this {
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
                 preinstalledModules: [(Text, Principal)];
-            }) -> async {minInstallationId: Common.InstallationId};
+            }) -> async {minInstallationId: Common.InstallationId; cyclesToBattery: Nat};
         };
-        ignore await (with cycles = newCanisterCycles * Array.size(installedModules)) backendActor.facilitateBootstrap({
+        let {cyclesToBattery} = await (with cycles = newCanisterCycles * Array.size(installedModules)) backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
@@ -331,7 +335,7 @@ actor class Bootstrapper() = this {
             });
         };
 
-        {battery};
+        {battery; cyclesToBattery};
     };
 
     public type PubKey = Blob;

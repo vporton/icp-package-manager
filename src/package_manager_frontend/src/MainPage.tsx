@@ -160,7 +160,7 @@ export default function MainPage() {
                         (provided that you've bookmarked this page).</Alert>
                 </>
             }
-            {spentTotalNum !== undefined &&
+            {getIsLocal() && spentTotalNum !== undefined &&
                 <Alert variant="info">
                     You spent total {spentTotalNum / 10**12}T cycles for bootstrapping.
                 </Alert>
