@@ -156,16 +156,14 @@ actor class Bootstrapper() = this {
         let {installedModules} = await /*(with cycles = amountToMove)*/ doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
         Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
-        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/; // TODO@P2
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
-
-        let ?battery = installedModules.get("battery") else {
+        let ?battery = Iter.filter(installedModules.vals(), func (x: (Text, Principal)): Bool = x.0 == "battery").next() else {
             Debug.trap("error getting battery");
         };
-        let cyclesToBattery = 13_000_000_000_000 - lib.bootstrapFrontendCost; // TODO@P3: Make it a constant.
+        let cyclesToBattery = amountToMove - env.bootstrapFrontendCost; // TODO@P3: Make it a constant.
         // ignore Cycles.accept(cyclesToBattery - Common.cycles_transfer_fee);
-        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) IC.ic.deposit_cycles({canister_id = battery});
+        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery.1});
 
+        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
         {installedModules; spentCycles};
     };
 
@@ -194,7 +192,7 @@ actor class Bootstrapper() = this {
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
-        let {battery; cyclesToBattery} = await doBootstrapBackend({
+        let {battery} = await doBootstrapBackend({
             pubKey;
             installedModules;
             user;
@@ -202,10 +200,7 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-
-        await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery});
-
-        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
+        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/; // TODO@P2
         {spentCycles};
     };
 
@@ -215,7 +210,7 @@ actor class Bootstrapper() = this {
         user: Principal; // to address security vulnerabulities, used only to add as a controller.
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
-    }): async {battery: Principal; cyclesToBattery: Nat} {
+    }): async {battery: Principal} {
         checkItself(caller);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
@@ -312,7 +307,7 @@ actor class Bootstrapper() = this {
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId; cyclesToBattery: Nat};
         };
-        ignore await (with cycles = 100_000_000_000 * Array.size(installedModules)) backendActor.facilitateBootstrap({
+        ignore await backendActor.facilitateBootstrap({
           packageName = "icpack";
           version = "stable";
           preinstalledModules = Iter.toArray(installedModules.vals()); // TODO@P3: No need in `.toArray()`.
@@ -341,7 +336,7 @@ actor class Bootstrapper() = this {
             });
         };
 
-        {battery; cyclesToBattery};
+        {battery};
     };
 
     public type PubKey = Blob;
