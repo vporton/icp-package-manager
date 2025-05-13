@@ -8,6 +8,9 @@ Remaining things TODO:
 
 - TODO@P2 Show cycles address in DFX format, too.
 
+- FIXME@P3 When not enough cycles in the package manager battery, installation fails silently.
+           Make it produce a message. Also try to prevent installation when too little cycles.
+
 - FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
 
 - TODO@P3: Allow to fund with both ICP or cycles.
