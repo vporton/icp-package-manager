@@ -30,7 +30,7 @@
     </div>
     <div class="container-fluid">
         <div class="row">
-            <p class="fs-2 text-center"><a href="https://docs.package-manager.com">Our business site</a> / <a href="https://www.fundable.com/ic-pack">Invest Into This Business</a></p>
+            <p class="fs-2 text-center"><a href="https://docs.package-manager.com">Our business site</a> / <a href="https://www.fundable.com/ic-pack">Invest Into This Business</a> / <a href="html/icpack/index.html">API docs</a></p>
         </div>
         <div class="row d-flex">
             <div class="col-md-6 text-end">
@@ -54,8 +54,11 @@
         <p><a href="https://app.package-manager.com">MVP beta-1 online.</a> (<strong>Attention:</strong> It was tested a little and all seems to work.)</p>
         <p>Currently the only package available is <code>example</code> from the repo <code>d54aj-5yaaa-aaaad-aamlq-cai</code>.</p>
         <p><a href="https://github.com/vporton/icp-package-manager">Source</a> (Your contributions will be valuable.)</p>
-        <p><a href="html/icpack/index.html">API docs</a> (<strong>Warning:</strong> Due to a bug, some functions are shown as if they were without arguments despite they have arguments. If in doubt consult the source. This isn't very important now, because at this stage we only create a repository for users, not call other API on it.)</p>
-        <p>For how to create a package, see examples in <a href="sources/prepare-test.ts.html">scripts/prepare-test.ts</a> (a TypeScript source file that creates a repository (app store) with several packages). To upload a package, you may create your own repository (app store), but in the future some repositories are expected to be under control of <a href="https://internetcomputer.org/sns/faq">SNS</a> DAOs.</p>
+        <p><a href="html/icpack/index.html">API docs</a></p>
+        <p>For how to create a package, see examples in
+            <a href="https://github.com/vporton/icp-package-manager/blob/main/scripts/prepare-work.ts"><code>scripts/prepare-work.ts</code></a> and
+            <a href="https://github.com/vporton/icp-package-manager/blob/main/scripts/prepare-test.ts"><code>scripts/prepare-test.ts</code></a>
+            (TypeScript source files that create a repository (app store) with several packages). To upload a package, you may create your own repository (app store), but in the future some repositories are expected to be under control of <a href="https://internetcomputer.org/sns/faq">SNS</a> DAOs.</p>
         <ul>
             <li>You first create the repository (and optionally set its properties such as name).</li>
             <li>Then you upload WASM files of your app.</li>
