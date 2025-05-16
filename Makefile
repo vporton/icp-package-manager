@@ -73,7 +73,7 @@ deploy-self@cycles_ledger: build@cycles_ledger
 	  cycles_ledger
 
 .PHONY: docs
-docs: docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg \
+docs: docs/out/CNAME docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg \
 	docs/out/sources/prepare-test.ts.html
 
 .PHONY: deploy-docs
@@ -84,6 +84,7 @@ deploy-docs: docs
 	trap "cleanup" EXIT && \
 	TMPDIR=`mktemp -d` && \
 	(cd $$TMPDIR && git clone git@github.com:vporton/icpack-docs.git) && \
+	rm -rf $$TMPDIR/icpack-docs/* && \
 	cp -a docs/out/* $$TMPDIR/icpack-docs/ && \
 	cd $$TMPDIR/icpack-docs/ && git add -A && git commit -m "Update docs" && git push
 
