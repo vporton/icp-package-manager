@@ -11,6 +11,7 @@ import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
+import Float "mo:base/Float";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
 import Common "../common";
@@ -299,16 +300,33 @@ shared({caller = initialOwner}) actor class Battery({
     public shared({caller}) func convertCycles() {
         onlyOwner(caller, "convertCycles");
 
-        let amount = await CyclesLedger.icrc1_balance_of({
+        let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = null;
         });
+
+        // Deduct revenue:
+        let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
+        switch(await CyclesLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.cycles_transfer_fee;
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+
         let res = await CyclesLedger.withdraw({
-            amount = amount - Common.cycles_transfer_fee;
+            amount = balance - revenue - 2*Common.cycles_transfer_fee;
             from_subaccount = null;
             to = Principal.fromActor(this);
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
-        let #Ok tx = res else {
+        let #Ok _ = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
     };
