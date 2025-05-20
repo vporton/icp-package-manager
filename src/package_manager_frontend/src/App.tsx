@@ -193,7 +193,7 @@ function App2() {
       });
     });
   }
-  function updateAllCyclesAmounts() {
+  function updateAllCyclesAmounts(event: MouseEvent) {
     updateCyclesAmount();
     updateCyclesLedgerAmount();
   }
@@ -247,6 +247,14 @@ function App2() {
             Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
               <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address.toText()}</code>
+            </OverlayTrigger>
+          </p>
+          <p>
+            You can use DFX command:{" "}
+            <OverlayTrigger placement="right" overlay={renderTooltip}>
+              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>
+                {`dfx cycles transfer ${`address.toText()`}`} <em>CYCLES</em>
+                </code>
             </OverlayTrigger>
           </p>
           <p>TODO@P3: QR-code</p>
