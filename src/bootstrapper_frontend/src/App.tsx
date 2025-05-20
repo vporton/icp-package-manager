@@ -47,8 +47,9 @@ function AddressPopup(props: {
   const {agent} = useAuth();
   const address = props.cyclesPaymentAddress!;
   const [copied, setCopied] = useState(false);
-  const copyToClipboard = async () => {
-    navigator.clipboard.writeText(address).then(() => {
+  const copyToClipboard = async (event: React.MouseEvent) => {
+    const str = (event.target as HTMLElement).innerText;
+    navigator.clipboard.writeText(str).then(() => {
       try {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -89,14 +90,14 @@ function AddressPopup(props: {
         <p>
           Send cyles to{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
-            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>{address}</code>
+            <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address}</code>
           </OverlayTrigger>
         </p>
         <p>
           You can use DFX command:{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
             {/* TODO: Do in backend. */}
-            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
+            <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
               {`dfx cycles --network ${process.env.DFX_NETWORK} transfer ${address.replace(/\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")}`}
               {" "}<em>CYCLES</em>
             </code>

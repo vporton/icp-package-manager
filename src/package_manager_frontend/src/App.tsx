@@ -218,8 +218,9 @@ function App2() {
   }) {
     const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
-    const copyToClipboard = async () => {
-      navigator.clipboard.writeText(address.toText()).then(() => {
+    const copyToClipboard = async (event: React.MouseEvent) => {
+      const str = (event.target as HTMLElement).innerText;
+      navigator.clipboard.writeText(str).then(() => {
         try {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
@@ -246,13 +247,13 @@ function App2() {
           <p>
             Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>{address.toText()}</code>
+              <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address.toText()}</code>
             </OverlayTrigger>
           </p>
           <p>
             You can use DFX command:{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
+              <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
                 {`dfx cycles transfer ${`address.toText()`}`} <em>CYCLES</em>
                 </code>
             </OverlayTrigger>
