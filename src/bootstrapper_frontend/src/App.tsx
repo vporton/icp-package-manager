@@ -93,7 +93,7 @@ function AddressPopup(props: {
           </OverlayTrigger>
         </p>
         <p>
-          You can do this by DFX:{" "}
+          You can use DFX command:{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
             {/* TODO: Do in backend. */}
             <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
