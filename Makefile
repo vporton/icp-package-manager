@@ -42,6 +42,7 @@ prepare:
 
 .PHONY: init
 init:
+	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
 	-dfx ledger fabricate-cycles --t 20000 --canister repository
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
@@ -60,17 +61,7 @@ deploy-test: deploy-work \
   deploy@upgrade_example_backend2_v2 deploy@upgrade_example_backend3_v2
 	npx tsx scripts/prepare-test.ts
 
-deploy-self@bookmark: build@bookmark deploy@bootstrapper
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
-	  --argument "principal \"$(USER)\"" \
-	  bookmark
-	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
-
-# TODO@P3: Why doens't it work with --no-compile?
-deploy-self@cycles_ledger: build@cycles_ledger
-	dfx deploy --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.bookmark) \
-	  --specified-id um5iw-rqaaa-aaaaq-qaaba-cai \
-	  cycles_ledger
+DEPLOY_FLAGS.bookmark = --argument "principal \"$(USER)\""
 
 .PHONY: docs
 docs: docs/out/CNAME docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg \
