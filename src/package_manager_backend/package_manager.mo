@@ -16,7 +16,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
-import CyclesLedger "canister:nns-ledger";
+import CyclesLedger "canister:cycles_ledger";
 import Asset "mo:assets-api";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
