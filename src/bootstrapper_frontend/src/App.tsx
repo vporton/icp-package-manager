@@ -81,7 +81,7 @@ function AddressPopup(props: {
       // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div>
         {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
-        <p>Cycles to top-up:
+        <p>Cycles to top-up:{" "}
           {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
         </p>
         <p><Button onClick={convertToCycles}>Use top-up cycles</Button></p>
