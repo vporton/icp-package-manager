@@ -78,7 +78,7 @@ function AddressPopup(props: {
   return props.cyclesPaymentAddress !== undefined
     ? (
       // TODO@P3: `stopPropagation` doesn't work in some reason.
-      <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+      <div>
         {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
         <p>Cycles to top-up:
           {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
@@ -89,7 +89,7 @@ function AddressPopup(props: {
         <p>
           Send cyles to{" "}
           <OverlayTrigger placement="right" overlay={renderTooltip}>
-            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address}</code>
+            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>{address}</code>
           </OverlayTrigger>
         </p>
         <p>TODO@P3: QR-code</p>
@@ -146,7 +146,7 @@ function App2() {
   function updateAmounts() {
     updateCyclesAmount();
     // updateICPAmount();
-    updateCyclesLedgerAmount();''
+    updateCyclesLedgerAmount();
   }
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(updateCyclesLedgerAmount, [principal, bootstrapper]);
