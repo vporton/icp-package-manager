@@ -397,16 +397,6 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        // let subaccountArrayPart = Blob.toArray(Principal.toBlob(user));
-        // let subaccountArray = Array.tabulate<Nat8>(32, func (i) {
-        //     if (i == 0) {
-        //         Nat8.fromNat(Array.size(subaccountArrayPart));
-        //     } else if ((i-1): Nat < Array.size(subaccountArrayPart)) {
-        //         subaccountArrayPart[i-1];
-        //     } else {
-        //         0;
-        //     };
-        // });
         // let res = await CyclesLedger.icrc1_transfer({
         //     to = {owner = Principal.fromActor(CMC); subaccount = ?subaccountArray};
         //     fee = null;
@@ -439,8 +429,6 @@ actor class Bootstrapper() = this {
             case (?oldBalance) oldBalance;
             case null 0;
         };
-        Debug.print("oldBalance: " # Nat.toText(oldBalance) # " / user: " # debug_show(user)); // FIXME: Remove.
-        Debug.print("SUM: " # Nat.toText(oldBalance + balance - revenue - 2*Common.cycles_transfer_fee) # " / user: " # debug_show(user)); // FIXME: Remove.
         userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
         {balance = balance - revenue - 2*Common.cycles_transfer_fee};
     };
