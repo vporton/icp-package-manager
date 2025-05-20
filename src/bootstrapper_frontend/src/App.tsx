@@ -92,6 +92,15 @@ function AddressPopup(props: {
             <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>{address}</code>
           </OverlayTrigger>
         </p>
+        <p>
+          You can do this by DFX:{" "}
+          <OverlayTrigger placement="right" overlay={renderTooltip}>
+            {/* TODO: Do in backend. */}
+            <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
+              {`dfx cycles transfer ${address.replace(/\..*/, "")} --to-subaccount ${address.replace(/^[^.]*/, "")} CYCLES`}
+            </code>
+          </OverlayTrigger>
+        </p>
         <p>TODO@P3: QR-code</p>
       </div>
     )
