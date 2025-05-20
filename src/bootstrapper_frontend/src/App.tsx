@@ -97,7 +97,7 @@ function AddressPopup(props: {
           <OverlayTrigger placement="right" overlay={renderTooltip}>
             {/* TODO: Do in backend. */}
             <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
-              {`dfx cycles transfer ${address.replace(/\..*/, "")} --to-subaccount ${address.replace(/^[^.]*/, "")} CYCLES`}
+              {`dfx cycles transfer ${address.replace(/\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")} CYCLES`}
             </code>
           </OverlayTrigger>
         </p>
