@@ -2,8 +2,6 @@ NETWORK ?= local
 
 DEPLOY_FLAGS ?= 
 
-ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-
 .PHONY: build@battery
 .PRECIOUS: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
 build@battery: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
