@@ -1,9 +1,5 @@
 Remaining things TODO:
 
-- FIXME@P1 On mainnet: After putting about 13.1T cycles to the bootstrapper (using the blue cycles widget)
-           and starting bootstrap, there was "IC0504: Error from Canister cxtct-7iaaa-aaaad-aammq-cai: Canister cxtct-7iaaa-aaaad-aammq-cai is out of cycles" error, also about 0.6T cycles were spent.
-           `cxtct-7iaaa-aaaad-aammq-cai` is the bootstrapper canister.
-
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
 - TODO@P2 Show cycles address in DFX format, too.
