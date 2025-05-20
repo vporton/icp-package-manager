@@ -32,7 +32,7 @@ module {
     //     icrc1_transfer : shared TransferArgs -> async {#Err : TransferError; #Ok : BlockIndex};
     // };
 
-    // FIXME@P1: It tries to do a wrong thing.
+    // FIXME@P2: It tries to do a wrong thing.
     public func withdrawCycles(/*_ledger: CyclesLedger,*/ amount: Nat, payee: Principal, caller: Principal) : async* () {
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles: payee is not a controller");
