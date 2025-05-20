@@ -143,10 +143,11 @@ function App2() {
   //     setICPAmount(parseInt(amount.toString()));
   //   });
   // }
-  function updateAmounts() {
+  function updateAmounts(event: React.MouseEvent) {
     updateCyclesAmount();
     // updateICPAmount();
     updateCyclesLedgerAmount();
+    event.stopPropagation();
   }
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(updateCyclesLedgerAmount, [principal, bootstrapper]);
