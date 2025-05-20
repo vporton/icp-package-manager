@@ -196,6 +196,7 @@ function App2() {
   function updateAllCyclesAmounts(event: MouseEvent) {
     updateCyclesAmount();
     updateCyclesLedgerAmount();
+    event.stopPropagation(); // prevent closing the dropdown
   }
   useEffect(updateCyclesAmount, [glob.packageManager]);
   useEffect(updateCyclesLedgerAmount, [glob.backend]);
@@ -234,8 +235,7 @@ function App2() {
     );
     return cyclesPaymentAddress !== undefined
       ? (
-        // TODO@P3: `stopPropagation` doesn't work in some reason.
-        <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
+        <div>
           {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
           <p>Cycles to top-up:
             {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
@@ -246,13 +246,13 @@ function App2() {
           <p>
             Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>{address.toText()}</code>
+              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>{address.toText()}</code>
             </OverlayTrigger>
           </p>
           <p>
             You can use DFX command:{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard(); e.stopPropagation()}}>
+              <code style={{cursor: 'pointer'}} onClick={(e) => {copyToClipboard()}}>
                 {`dfx cycles transfer ${`address.toText()`}`} <em>CYCLES</em>
                 </code>
             </OverlayTrigger>
