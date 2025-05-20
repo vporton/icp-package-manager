@@ -43,7 +43,7 @@ module {
             to = payee;
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
-        let #Ok tx = res else {
+        let #Ok _ = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
     };
