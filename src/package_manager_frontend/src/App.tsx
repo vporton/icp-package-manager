@@ -254,7 +254,7 @@ function App2() {
             You can use DFX command:{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
               <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
-                {`dfx cycles transfer ${`address.toText()`}`} <em>CYCLES</em>
+                {`dfx cycles transfer ${address.toText()}`} <em>CYCLES</em>
                 </code>
             </OverlayTrigger>
           </p>
