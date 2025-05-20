@@ -57,8 +57,9 @@ persistent actor class Bookmarks(initialOwner: Principal) {
         bookmarkSet.contains(bookmarks, b);
     };
 
+    // TODO@P3: Remove unused argument `_battery`.
     /// Returns whether bookmark already existed.
-    public shared({caller}) func addBookmark({b: Bookmark; battery: Principal; user: Principal}): async Bool {
+    public shared({caller}) func addBookmark({b: Bookmark; _battery: Principal; user: Principal}): async Bool {
         if (caller != bootstrapper) {
             Debug.trap("bookmarks: not the owner");
         };

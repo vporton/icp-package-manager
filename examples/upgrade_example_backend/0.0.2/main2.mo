@@ -1,5 +1,4 @@
 import LIB "mo:icpack-lib";
-import CyclesLedger "canister:cycles_ledger";
 
 actor {
   public shared func f() {};
