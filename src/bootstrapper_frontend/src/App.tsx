@@ -58,10 +58,10 @@ function AddressPopup(props: {
       }
     });
   }
-  async function convertToCycles() {
+  async function topUpCycles() {
     try {
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
-      await bootstrapper.convertICPToCycles(); // FIXME@P3: Rename the function.
+      await bootstrapper.topUpCycles(); // FIXME@P3: Rename the function.
       props.updateCyclesAmount();
       props.updateCyclesLedgerAmount();
       // props.updateICPAmount();
@@ -84,7 +84,7 @@ function AddressPopup(props: {
         <p>Cycles to top-up:{" "}
           {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
         </p>
-        <p><Button onClick={convertToCycles}>Use top-up cycles</Button></p>
+        <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
         <p><strong>Warning: 5% fee applied.</strong></p>
         <p>Fund it with 13T cycles, at least.</p>
         <p>

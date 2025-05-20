@@ -154,7 +154,7 @@ function App2() {
   const [cyclesLedgerAmount, setCyclesLedgerAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Principal | undefined>();
   const glob = useContext(GlobalContext);
-  async function convertToCycles() {
+  async function topUpCycles() {
     try {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
@@ -241,7 +241,7 @@ function App2() {
           <p>Cycles to top-up:{" "}
             {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
           </p>
-          <p><Button onClick={convertToCycles}>Use top-up cycles</Button></p>
+          <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
           <p><strong>Warning: 5% fee applied.</strong></p>
           <p>
             Send cyles to{" "}
