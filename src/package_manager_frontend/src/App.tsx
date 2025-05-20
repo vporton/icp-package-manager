@@ -243,7 +243,6 @@ function App2() {
           </p>
           <p><Button onClick={convertToCycles}>Use top-up cycles</Button></p>
           <p><strong>Warning: 5% fee applied.</strong></p>
-          <p>Fund it with 13T cycles, at least.</p>
           <p>
             Send cyles to{" "}
             <OverlayTrigger placement="right" overlay={renderTooltip}>
