@@ -193,7 +193,7 @@ function App2() {
       });
     });
   }
-  function updateAllCyclesAmounts(event: MouseEvent) {
+  function updateAllCyclesAmounts(event: React.MouseEvent) {
     updateCyclesAmount();
     updateCyclesLedgerAmount();
     event.stopPropagation(); // prevent closing the dropdown
