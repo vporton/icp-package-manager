@@ -128,6 +128,7 @@ describe('My Test Suite', () => {
 
         const bootstrapperAgent = newAgent();
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
+
         canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
 
         canisterNames.set(process.env.CANISTER_ID_REPOSITORY!, 'repoIndex');
@@ -154,6 +155,8 @@ describe('My Test Suite', () => {
             console.log((initialTransferResult as any).Err);
             throw "transfer failed: " + (initialTransferResult as any).Err.toString();
         }
+        const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
+        await bootstrapper.topUpCycles();
 
         console.log("Bootstrapping frontend...");
         const {installedModules, frontendTweakPrivKey} =
