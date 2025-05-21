@@ -167,7 +167,6 @@ function App2() {
           // updateICPAmount();
         });
       });
-      // props.updateICPAmount();
     }
     catch (e) {
       console.error(e);
