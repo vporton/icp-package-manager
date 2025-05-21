@@ -298,7 +298,7 @@ function App2() {
             <Tab eventKey="cycles" title="Cycles">
               <p>Cycles to top-up:{" "}
                 {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
-                <Button onClick={topUpCycles}>Use</Button>
+                {" "}<Button onClick={topUpCycles}>Use</Button>
               </p>
               <p>
                 Send cycles to{" "}
