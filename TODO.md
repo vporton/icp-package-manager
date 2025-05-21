@@ -9,6 +9,8 @@ Remaining things TODO:
 
 - FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
 
+- TODO@P3 When topping up bootstrapper with ICP, 0.0001 remains.
+
 - TODO@P3 Automatically retrieve the name of the added repo.
 
 - TODO@P3: Allow to fund with both ICP or cycles.

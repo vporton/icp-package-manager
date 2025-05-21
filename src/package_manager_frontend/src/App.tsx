@@ -1,3 +1,4 @@
+import { nns_ledger as icp_ledger } from '../../declarations/nns-ledger';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tab, Tabs, Tooltip } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
@@ -152,6 +153,7 @@ function App2() {
   const {setError} = useContext(ErrorContext)!;
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesLedgerAmount, setCyclesLedgerAmount] = useState<number | undefined>();
+  const [icpAmount, setICPAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Principal | undefined>();
   const glob = useContext(GlobalContext);
   async function topUpCycles() {
@@ -159,11 +161,30 @@ function App2() {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
         const battery = createBatteryActor(batteryPrincipal, {agent});
-        battery.topUpCycles().then(() => {});
+        battery.topUpCycles().then(() => {
+          updateCyclesAmount();
+          updateCyclesLedgerAmount();
+          // updateICPAmount();
+        });
       });
-      updateCyclesAmount();
-      updateCyclesLedgerAmount();
       // props.updateICPAmount();
+    }
+    catch (e) {
+      console.error(e);
+      setError((e as object).toString());
+    }
+  }
+  async function topUpWithICP() {
+    try {
+      // TODO@P3: `!`
+      glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+        const battery = createBatteryActor(batteryPrincipal, {agent});
+        battery.topUpWithICP().then(() => {
+          updateCyclesAmount();
+          // updateCyclesLedgerAmount();
+          updateICPAmount();
+        });
+      });
     }
     catch (e) {
       console.error(e);
@@ -193,13 +214,26 @@ function App2() {
       });
     });
   }
+  function updateICPAmount() {
+    setICPAmount(undefined);
+    if (glob.packageManager === undefined) {
+      return;
+    }
+    glob.packageManager.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+      icp_ledger.icrc1_balance_of({owner: batteryPrincipal, subaccount: []}).then((amount) => { // TODO@P3: Don't hardcode `installationId == 0n`.
+        setICPAmount(parseInt(amount.toString()))
+      });
+    });
+  }
   function updateAllCyclesAmounts(event: React.MouseEvent) {
     updateCyclesAmount();
     updateCyclesLedgerAmount();
+    updateICPAmount();
     event.stopPropagation(); // prevent closing the dropdown
   }
   useEffect(updateCyclesAmount, [glob.packageManager]);
   useEffect(updateCyclesLedgerAmount, [glob.backend]);
+  useEffect(updateICPAmount, [glob.backend]);
   useEffect(() => {
     if (glob.packageManager !== undefined) {
       glob.packageManager.userAccountText().then((t) => {
@@ -210,11 +244,11 @@ function App2() {
   function AddressPopup(props: {
     cyclesAmount: number | undefined,
     cyclesLedgerAmount: number | undefined,
-    // icpAmount: number | undefined,
+    icpAmount: number | undefined,
     cyclesPaymentAddress: Principal | undefined,
     updateCyclesAmount: () => void;
     updateCyclesLedgerAmount: () => void;
-    // updateICPAmount: () => void;
+    updateICPAmount: () => void;
   }) {
     const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
@@ -241,6 +275,26 @@ function App2() {
           <p><strong>Warning: 5% fee applied.</strong></p>
           <Tabs defaultActiveKey="icp">
             <Tab eventKey="icp" title="ICP">
+              <p>ICP to top-up:{" "}
+                {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
+                {" "}<Button onClick={topUpWithICP}>Use</Button>
+              </p>
+              <p>
+                Send ICP to{" "}
+                <OverlayTrigger placement="right" overlay={renderTooltip}>
+                  <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address.toText()}</code>
+                </OverlayTrigger>
+              </p>
+              <p>
+                You can use DFX command:{" "}
+                <OverlayTrigger placement="right" overlay={renderTooltip}>
+                  <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
+                    {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --memo 1 --to-principal ${address.toText().replace(/-[^-]+\..*/, "")} --amount`}
+                    {" "}<em>AMOUNT</em>
+                  </code>
+                </OverlayTrigger>
+              </p>
+              <p>TODO@P3: QR-code</p>
             </Tab>
             <Tab eventKey="cycles" title="Cycles">
               <p>Cycles to top-up:{" "}
@@ -292,8 +346,8 @@ function App2() {
                     Cycles balance: {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{padding: '10px'}}>
-                    <AddressPopup cyclesAmount={cyclesAmount} cyclesLedgerAmount={cyclesLedgerAmount} cyclesPaymentAddress={cyclesPaymentAddress}
-                      updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount}/>
+                    <AddressPopup cyclesAmount={cyclesAmount} cyclesLedgerAmount={cyclesLedgerAmount} icpAmount={icpAmount} cyclesPaymentAddress={cyclesPaymentAddress}
+                      updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount} updateICPAmount={updateICPAmount}/>
                   </Dropdown.Menu>
                 </Dropdown>
                 <a onClick={updateAllCyclesAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>

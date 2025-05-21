@@ -12,10 +12,13 @@ import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Float "mo:base/Float";
+import Common "../common";
 import IC "mo:ic";
 import LIB "mo:icpack-lib";
-import Common "../common";
+import Nat64 "mo:base/Nat64";
+import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
+import CMC "canister:nns-cycles-minting";
 import env "mo:env";
 
 shared({caller = initialOwner}) actor class Battery({
@@ -329,6 +332,52 @@ shared({caller = initialOwner}) actor class Battery({
         let #Ok _ = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
+    };
+
+    public shared({caller = user}) func topUpWithICP(): async {balance: Nat} {
+        let icpBalance = await ICPLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = null;
+        });
+
+        // Deduct revenue:
+        let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
+        switch(await ICPLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.icp_transfer_fee;
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+
+        let res = await ICPLedger.icrc1_transfer({
+            to = {
+                owner = Principal.fromActor(CMC);
+                subaccount = ?(Common.principalToSubaccount(Principal.fromActor(this)));
+            };
+            fee = null;
+            memo = ?"TPUP\00\00\00\00";
+            from_subaccount = null;
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = icpBalance - revenue - 2*Common.icp_transfer_fee;
+        });
+        let #Ok tx = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
+        let res2 = await CMC.notify_top_up({
+            block_index = Nat64.fromNat(tx);
+            canister_id = Principal.fromActor(this);
+        });
+        let #Ok cyclesAmount = res2 else {
+            Debug.trap("notify_top_up failed: " # debug_show(res2));
+        };
+
+        {balance = cyclesAmount};
     };
 
     system func inspect({
