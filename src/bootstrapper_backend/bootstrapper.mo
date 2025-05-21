@@ -442,7 +442,7 @@ actor class Bootstrapper() = this {
                 subaccount = ?(Common.principalToSubaccount(Principal.fromActor(this)));
             };
             fee = null;
-            memo = ?"\4d\49\4e\54\00\00\00\00";
+            memo = ?"TPUP\00\00\00\00";
             from_subaccount = ?(Common.principalToSubaccount(user));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = icpBalance - revenue - 2*Common.icp_transfer_fee;
