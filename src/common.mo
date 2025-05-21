@@ -440,4 +440,6 @@ module {
     public let cycles_transfer_fee = 100_000_000;
 
     public let icp_transfer_fee = 10_000;
+
+    public let minimalFunding = 13_000_000_000_000;
 }

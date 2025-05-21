@@ -145,7 +145,7 @@ actor class Bootstrapper() = this {
         };
         Debug.print("amountToMove: " # Nat.toText(amountToMove) # " / user: " # debug_show(user)); // FIXME: Remove.
 
-        if (amountToMove < ((13_000_000_000_000 - Common.cycles_transfer_fee): Nat)) {
+        if (amountToMove < ((minimalFunding - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
@@ -162,7 +162,7 @@ actor class Bootstrapper() = this {
         let cyclesToBattery = amountToMove - env.bootstrapFrontendCost;
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery.1});
 
-        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/ - cyclesToBattery; // TODO@P2
+        let spentCycles = (initialBalance: Int) - Cycles.balance() - cyclesToBattery;
         {installedModules; spentCycles};
     };
 
@@ -186,7 +186,7 @@ actor class Bootstrapper() = this {
         //     case null 0;
         // };
         // userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, 0);
-        let amountToMove = 13_000_000_000_000 - env.bootstrapFrontendCost; // FIXME@P2
+        let amountToMove = minimalFunding - env.bootstrapFrontendCost;
 
         // Move user's fund into current use:
         // We can't `try` on this, because if it fails, we don't know the battery.
