@@ -1,16 +1,15 @@
-import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tab, Tabs, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from '../../lib/AuthButton';
 import { getIsLocal } from "../../lib/state";
 import MainPage from './MainPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-// import Bookmark from './Bookmark';
 import { BusyProvider, BusyWidget } from '../../lib/busy';
 import "../../lib/busy.css";
 import { principalToSubAccount } from "../../lib/misc";
 import {  useContext, useEffect, useMemo, useState } from 'react';
 // import { createActor as cmcActor } from '../../declarations/nns-cycles-minting';
-// import { nns_ledger as icp_ledger } from '../../declarations/nns-ledger';
+import { nns_ledger as icp_ledger } from '../../declarations/nns-ledger';
 import { Principal } from '@dfinity/principal';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
@@ -37,11 +36,11 @@ function App() {
 function AddressPopup(props: {
   cyclesAmount: number | undefined,
   cyclesLedgerAmount: number | undefined,
-  // icpAmount: number | undefined,
+  icpAmount: number | undefined,
   cyclesPaymentAddress: string | undefined,
   updateCyclesAmount: () => void;
   updateCyclesLedgerAmount: () => void;
-  // updateICPAmount: () => void;
+  updateICPAmount: () => void;
 }) { // TODO@P3: duplicate code
   const {setError} = useContext(ErrorContext)!;
   const {agent} = useAuth();
@@ -64,7 +63,18 @@ function AddressPopup(props: {
       await bootstrapper.topUpCycles(); // FIXME@P3: Rename the function.
       props.updateCyclesAmount();
       props.updateCyclesLedgerAmount();
-      // props.updateICPAmount();
+    }
+    catch (e) {
+      console.error(e);
+      setError((e as object).toString());
+    }
+  }
+  async function convertICPToCycles() {
+    try {
+      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
+      await bootstrapper.topUpWithICP(); // FIXME@P3: Rename the function.
+      props.updateCyclesAmount();
+      props.updateICPAmount();
     }
     catch (e) {
       console.error(e);
@@ -81,29 +91,35 @@ function AddressPopup(props: {
       // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div>
         {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
-        <p>Cycles to top-up:{" "}
-          {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
-        </p>
-        <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
         <p><strong>Warning: 5% fee applied.</strong></p>
         <p>Fund it with 13T cycles, at least.</p>
-        <p>
-          Send cyles to{" "}
-          <OverlayTrigger placement="right" overlay={renderTooltip}>
-            <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address}</code>
-          </OverlayTrigger>
-        </p>
-        <p>
-          You can use DFX command:{" "}
-          <OverlayTrigger placement="right" overlay={renderTooltip}>
-            {/* TODO: Do in backend. */}
-            <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
-              {`dfx cycles --network ${process.env.DFX_NETWORK} transfer ${address.replace(/-[^-]+\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")}`}
-              {" "}<em>CYCLES</em>
-            </code>
-          </OverlayTrigger>
-        </p>
-        <p>TODO@P3: QR-code</p>
+        <Tabs defaultActiveKey="icp">
+          <Tab eventKey="cycles" title="Cycles">
+            <p>Cycles to top-up:{" "}
+              {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
+              {" "}<Button onClick={convertICPToCycles}>Use</Button>
+            </p>
+            <p>
+              Send cycles to{" "}
+              <OverlayTrigger placement="right" overlay={renderTooltip}>
+                <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address}</code>
+              </OverlayTrigger>
+            </p>
+            <p>
+              You can use DFX command:{" "}
+              <OverlayTrigger placement="right" overlay={renderTooltip}>
+                {/* TODO: Do in backend. */}
+                <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
+                  {`dfx cycles --network ${process.env.DFX_NETWORK} transfer ${address.replace(/-[^-]+\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")}`}
+                  {" "}<em>CYCLES</em>
+                </code>
+              </OverlayTrigger>
+            </p>
+            <p>TODO@P3: QR-code</p>
+          </Tab>
+          <Tab eventKey="icp" title="ICP">
+          </Tab>
+        </Tabs>
       </div>
     )
     : undefined;
@@ -113,7 +129,7 @@ function App2() {
   const {principal, ok, agent} = useAuth();
   const [cyclesAmount, setCyclesAmount] = useState<number | undefined>();
   const [cyclesLedgerAmount, setCyclesLedgerAmount] = useState<number | undefined>();
-  // const [icpAmount, setICPAmount] = useState<number | undefined>();
+  const [icpAmount, setICPAmount] = useState<number | undefined>();
   const [paymentAddress, setPaymentAddress] = useState<string | undefined>();
   const bootstrapper = useMemo(() =>
     agent === undefined ? undefined : createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}), // TODO@P3: or `defaultAgent`?
@@ -142,26 +158,27 @@ function App2() {
       setCyclesLedgerAmount(parseInt(amount.toString()));
     });
   }
-  // function updateICPAmount() {
-  //   setICPAmount(undefined);
-  //   if (principal === undefined || bootstrapper === undefined) {
-  //     return;
-  //   }
-  //   icp_ledger.icrc1_balance_of({
-  //     owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-  //     subaccount: [principalToSubAccount(principal!)],
-  //   }).then((amount: bigint) => {
-  //     setICPAmount(parseInt(amount.toString()));
-  //   });
-  // }
+  function updateICPAmount() {
+    setICPAmount(undefined);
+    if (principal === undefined || bootstrapper === undefined) {
+      return;
+    }
+    icp_ledger.icrc1_balance_of({
+      owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
+      subaccount: [principalToSubAccount(principal!)],
+    }).then((amount: bigint) => {
+      setICPAmount(parseInt(amount.toString()));
+    });
+  }
   function updateAmounts(event: React.MouseEvent) {
     updateCyclesAmount();
-    // updateICPAmount();
     updateCyclesLedgerAmount();
+    updateICPAmount();
     event.stopPropagation();
   }
   useEffect(updateCyclesAmount, [principal, bootstrapper]);
   useEffect(updateCyclesLedgerAmount, [principal, bootstrapper]);
+  useEffect(updateICPAmount, [principal, bootstrapper]);
   // useEffect(updateICPAmount, [principal, bootstrapper]);
   useEffect(() => {
     if (bootstrapper !== undefined) {
@@ -211,8 +228,8 @@ function App2() {
                     {cyclesAmount !== undefined ? `${String(cyclesAmount/10**12)}T` : "Loading..."}{" "}
                 </Dropdown.Toggle>
                 <Dropdown.Menu style={{padding: '10px'}}>
-                  <AddressPopup cyclesAmount={cyclesAmount} cyclesLedgerAmount={cyclesLedgerAmount} cyclesPaymentAddress={paymentAddress}
-                    updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount}/>
+                  <AddressPopup cyclesAmount={cyclesAmount} cyclesLedgerAmount={cyclesLedgerAmount} cyclesPaymentAddress={paymentAddress} icpAmount={icpAmount}
+                    updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount} updateICPAmount={updateICPAmount}/>
                 </Dropdown.Menu>
               </Dropdown>
               <a onClick={updateAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>

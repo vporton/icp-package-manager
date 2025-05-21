@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Alert, Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Alert, Button, Container, Dropdown, Nav, NavDropdown, Navbar, OverlayTrigger, Tab, Tabs, Tooltip } from 'react-bootstrap';
 import { createActor as createBootstrapperActor } from '../../declarations/bootstrapper';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Link, Route, Routes, useParams, useSearchParams } from 'react-router-dom';
@@ -159,7 +159,7 @@ function App2() {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
         const battery = createBatteryActor(batteryPrincipal, {agent});
-        battery.convertCycles().then(() => {});
+        battery.topUpCycles().then(() => {});
       });
       updateCyclesAmount();
       updateCyclesLedgerAmount();
@@ -238,26 +238,32 @@ function App2() {
       ? (
         <div>
           {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
-          <p>Cycles to top-up:{" "}
-            {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
-          </p>
-          <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
           <p><strong>Warning: 5% fee applied.</strong></p>
-          <p>
-            Send cyles to{" "}
-            <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address.toText()}</code>
-            </OverlayTrigger>
-          </p>
-          <p>
-            You can use DFX command:{" "}
-            <OverlayTrigger placement="right" overlay={renderTooltip}>
-              <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
-                {`dfx cycles transfer ${address.toText()}`} <em>CYCLES</em>
-                </code>
-            </OverlayTrigger>
-          </p>
-          <p>TODO@P3: QR-code</p>
+          <Tabs defaultActiveKey="icp">
+            <Tab eventKey="cycles" title="Cycles">
+              <p>Cycles to top-up:{" "}
+                {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
+              </p>
+              <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
+              <p>
+                Send cycles to{" "}
+                <OverlayTrigger placement="right" overlay={renderTooltip}>
+                  <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address.toText()}</code>
+                </OverlayTrigger>
+              </p>
+              <p>
+                You can use DFX command:{" "}
+                <OverlayTrigger placement="right" overlay={renderTooltip}>
+                  <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
+                    {`dfx cycles transfer ${address.toText()}`} <em>CYCLES</em>
+                  </code>
+                </OverlayTrigger>
+              </p>
+              <p>TODO@P3: QR-code</p>
+            </Tab>
+            <Tab eventKey="icp" title="ICP">
+            </Tab>
+          </Tabs>
         </div>
       )
       : undefined;

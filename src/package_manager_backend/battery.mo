@@ -297,8 +297,8 @@ shared({caller = initialOwner}) actor class Battery({
         await IC.ic.deposit_cycles({canister_id = caller});
     };
 
-    public shared({caller}) func convertCycles() {
-        onlyOwner(caller, "convertCycles");
+    public shared({caller}) func topUpCycles() {
+        onlyOwner(caller, "topUpCycles");
 
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = null;

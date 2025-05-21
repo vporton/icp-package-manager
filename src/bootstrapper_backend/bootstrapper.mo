@@ -397,24 +397,6 @@ actor class Bootstrapper() = this {
             case (#Ok _) {};
         };
 
-        // let res = await CyclesLedger.icrc1_transfer({
-        //     to = {owner = Principal.fromActor(CMC); subaccount = ?subaccountArray};
-        //     fee = null;
-        //     memo = ?Blob.toArray("\4d\49\4e\54\00\00\00\00");
-        //     from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
-        //     created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-        //     amount = balance - revenue - 2*Common.cycles_transfer_fee; // TODO@P3: no explicit
-        // });
-        // let #Ok tx = res else {
-        //     Debug.trap("transfer failed: " # debug_show(res));
-        // };
-        // let res2 = await CMC.notify_top_up({
-        //     block_index = Nat64.fromNat(tx);
-        //     canister_id = Principal.fromActor(this);
-        // });
-        // let #Ok _ = res2 else {
-        //     Debug.trap("notify_top_up failed: " # debug_show(res2));
-        // };
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
@@ -431,6 +413,57 @@ actor class Bootstrapper() = this {
         };
         userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
         {balance = balance - revenue - 2*Common.cycles_transfer_fee};
+    };
+
+    public shared({caller = user}) func topUpWithICP(): async {balance: Nat} {
+        let icpBalance = await ICPLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
+        });
+
+        // Deduct revenue:
+        let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
+        switch(await ICPLedger.icrc1_transfer({
+            to = {owner = revenueRecipient; subaccount = null};
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.icp_transfer_fee;
+        })) {
+            case (#Err e) {
+                Debug.trap("transfer failed: " # debug_show(e));
+            };
+            case (#Ok _) {};
+        };
+
+        let res = await ICPLedger.icrc1_transfer({
+            to = {
+                owner = Principal.fromActor(CMC);
+                subaccount = ?(Common.principalToSubaccount(Principal.fromActor(this)));
+            };
+            fee = null;
+            memo = ?"\4d\49\4e\54\00\00\00\00"; // TODO@P3: Is it needed?
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = icpBalance - revenue - 2*Common.icp_transfer_fee;
+        });
+        let #Ok tx = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
+        let res2 = await CMC.notify_top_up({
+            block_index = Nat64.fromNat(tx);
+            canister_id = Principal.fromActor(this);
+        });
+        let #Ok cyclesAmount = res2 else {
+            Debug.trap("notify_top_up failed: " # debug_show(res2));
+        };
+
+        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
+            case (?oldBalance) oldBalance;
+            case null 0;
+        };
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + cyclesAmount);
+        {balance = cyclesAmount};
     };
 
     public query func balance(): async Nat {
