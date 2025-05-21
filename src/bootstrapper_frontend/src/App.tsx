@@ -96,8 +96,8 @@ function AddressPopup(props: {
         <Tabs defaultActiveKey="icp">
           <Tab eventKey="cycles" title="Cycles">
             <p>Cycles to top-up:{" "}
-              {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
-              {" "}<Button onClick={convertICPToCycles}>Use</Button>
+              {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}` : "Loading..."}
+              {" "}<Button onClick={topUpCycles}>Use</Button>
             </p>
             <p>
               Send cycles to{" "}
@@ -118,6 +118,27 @@ function AddressPopup(props: {
             <p>TODO@P3: QR-code</p>
           </Tab>
           <Tab eventKey="icp" title="ICP">
+            <p>ICP to top-up:{" "}
+              {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
+              {" "}<Button onClick={convertICPToCycles}>Use</Button>
+            </p>
+            <p>
+              Send ICP to{" "}
+              <OverlayTrigger placement="right" overlay={renderTooltip}>
+                <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>{address}</code>
+              </OverlayTrigger>
+            </p>
+            <p>
+              You can use DFX command:{" "}
+              <OverlayTrigger placement="right" overlay={renderTooltip}>
+                {/* TODO: Do in backend. */}
+                <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
+                  {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${address.replace(/-[^-]+\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")} --memo 1 --amount`}
+                  {" "}<em>AMOUNT</em>
+                </code>
+              </OverlayTrigger>
+            </p>
+            <p>TODO@P3: QR-code</p>
           </Tab>
         </Tabs>
       </div>

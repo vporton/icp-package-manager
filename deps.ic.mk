@@ -504,7 +504,7 @@ deploy-self@bootstrapper_frontend: .dfx/$(NETWORK)/canisters/bootstrapper_fronte
 
 
 
-build@bootstrapper_frontend: generate@bootstrapper generate@bookmark generate@internet_identity generate@repository
+.dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: generate@bootstrapper generate@bookmark generate@internet_identity generate@repository
 
 .PHONY: deploy@bootstrapper_frontend
 deploy@bootstrapper_frontend: deploy@bootstrapper deploy@bookmark deploy@internet_identity deploy@repository deploy-self@bootstrapper_frontend
@@ -530,7 +530,7 @@ deploy-self@example_frontend: .dfx/$(NETWORK)/canisters/example_frontend/assetst
 
 
 
-build@example_frontend: generate@example_backend
+.dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz: generate@example_backend
 
 .PHONY: deploy@example_frontend
 deploy@example_frontend: deploy@example_backend deploy-self@example_frontend
@@ -613,7 +613,7 @@ deploy-self@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_
 
 
 
-build@package_manager_frontend: generate@package_manager generate@internet_identity generate@bootstrapper generate@battery
+.dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: generate@package_manager generate@internet_identity generate@bootstrapper generate@battery
 
 .PHONY: deploy@package_manager_frontend
 deploy@package_manager_frontend: deploy@package_manager deploy@internet_identity deploy@bootstrapper deploy@battery deploy-self@package_manager_frontend
