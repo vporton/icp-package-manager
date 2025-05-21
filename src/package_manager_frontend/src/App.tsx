@@ -240,11 +240,13 @@ function App2() {
           {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
           <p><strong>Warning: 5% fee applied.</strong></p>
           <Tabs defaultActiveKey="icp">
+            <Tab eventKey="icp" title="ICP">
+            </Tab>
             <Tab eventKey="cycles" title="Cycles">
               <p>Cycles to top-up:{" "}
                 {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
+                <Button onClick={topUpCycles}>Use</Button>
               </p>
-              <p><Button onClick={topUpCycles}>Use top-up cycles</Button></p>
               <p>
                 Send cycles to{" "}
                 <OverlayTrigger placement="right" overlay={renderTooltip}>
@@ -260,8 +262,6 @@ function App2() {
                 </OverlayTrigger>
               </p>
               <p>TODO@P3: QR-code</p>
-            </Tab>
-            <Tab eventKey="icp" title="ICP">
             </Tab>
           </Tabs>
         </div>
