@@ -199,7 +199,7 @@ actor class Bootstrapper() = this {
             tweaker
         });
 
-        let spentCycles = (initialBalance: Int) - Cycles.balance()/*Cycles.refunded()*/; // TODO@P2
+        let spentCycles = (initialBalance: Int) - Cycles.balance();
         {spentCycles};
     };
 
