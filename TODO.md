@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- FIXME@P2 Remove old WASMs.
+
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
 - TODO@P2 Show cycles address in DFX format, too.
