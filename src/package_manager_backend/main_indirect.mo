@@ -164,27 +164,22 @@ shared({caller = initialCaller}) actor class MainIndirect({
             };
 
             // TODO@P3: The following can't work during bootstrapping, because we are `bootstrapper`. But bootstrapping succeeds.
-            let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
-            let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
-                0; // We use the bootstrapper cycles, not battery.
-            } else {
-                (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P3: 100_000_000_000 is install_code() amount.
-                    packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
-                        let ?pkg2 = pkg else {
-                            Debug.trap("programming error");
-                        };
-                        let #real specific = pkg2.specific else {
-                            // TODO@P3: Support virtual packages.
-                            Debug.trap("programming error");
-                        };
-                        acc + specific.modules.size()
-                    });
-            };
-            let batteryActor: Battery.Battery = actor(Principal.toText(battery));
-            // Cycles go to `mainIndirect`, instead:
-            if (totalCyclesAmount != 0) {
-                await batteryActor.withdrawCycles3(totalCyclesAmount, mainIndirect);
-            };
+            // let cyclesAmount = await ourPM.getNewCanisterCycles(); // TODO@P3: Don't call it several times.
+            // let totalCyclesAmount = if (minInstallationId == 0) { // TODO@P3: The condition is a hack.
+            //     0; // We use the bootstrapper cycles, not battery.
+            // } else {
+            //     (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P3: 100_000_000_000 is install_code() amount.
+            //         packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
+            //             let ?pkg2 = pkg else {
+            //                 Debug.trap("programming error");
+            //             };
+            //             let #real specific = pkg2.specific else {
+            //                 // TODO@P3: Support virtual packages.
+            //                 Debug.trap("programming error");
+            //             };
+            //             acc + specific.modules.size()
+            //         });
+            // };
             await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // Cycles are already delivered to `main_indirect`.
                 minInstallationId;
                 afterInstallCallback;

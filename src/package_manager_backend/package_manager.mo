@@ -789,14 +789,20 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?simple_indirect = coreModules.get("simple_indirect") else {
             Debug.trap("error getting simple_indirect");
         };
-        // It is done in `mainIndirect` itself.
-        // await batteryActor.withdrawCycles3(newCanisterCycles * modules.size(), Principal.fromActor(main_indirect_)); // TODO@P2
+        let batteryActor = actor(Principal.toText(battery)) : actor {
+            withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+        };
+        if (not pkg.bootstrapping) {
+            await batteryActor.withdrawCycles3(
+                newCanisterCycles * (switch (p.specific) {
+                    case (#real pkgReal) pkgReal.modules.size();
+                    case (#virtual _) 0;
+                }),
+                Principal.fromActor(main_indirect_));
+        };
         var i = 0;
         for ((name, m): (Text, Common.Module) in modules) {
             /// TODO@P3: Do one transfer instead of transferring in a loop.
-            let batteryActor = actor(Principal.toText(battery)) : actor {
-                withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
-            };
             // Starting installation of all modules in parallel:
             getMainIndirect().installModule({
                 moduleNumber;
