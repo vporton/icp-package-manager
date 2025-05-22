@@ -105,9 +105,8 @@ function ChooseVersion2(props: {
         }
         catch (e) {
             const msg = (e as object).toString();
-            const msg2 = /Cannot initialize canisters/.test(msg) ? "not enough cycles on battery, fund your account" : msg;
-            console.log(msg2);
-            setError(msg2);
+            console.log(msg);
+            setError(msg);
         }
         finally {
             setBusy(false);
