@@ -259,26 +259,26 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     Debug.trap("no such package version");
   };
 
-    system func preupgrade() {
-        _ownersSave := Iter.toArray(owners.entries());
-        _packageCreatorsSave := Iter.toArray(packageCreators.entries());
-    };
+  system func preupgrade() {
+    _ownersSave := Iter.toArray(owners.entries());
+    _packageCreatorsSave := Iter.toArray(packageCreators.entries());
+  };
 
-    system func postupgrade() {
-        owners := HashMap.fromIter(
-            _ownersSave.vals(),
-            Array.size(_ownersSave),
-            Principal.equal,
-            Principal.hash,
-        );
-        _ownersSave := []; // Free memory.
+  system func postupgrade() {
+    owners := HashMap.fromIter(
+      _ownersSave.vals(),
+      Array.size(_ownersSave),
+      Principal.equal,
+      Principal.hash,
+    );
+    _ownersSave := []; // Free memory.
 
-        packageCreators := HashMap.fromIter(
-            _packageCreatorsSave.vals(),
-            Array.size(_ownersSave),
-            Principal.equal,
-            Principal.hash,
-        );
-        _packageCreatorsSave := []; // Free memory.
-    };
+    packageCreators := HashMap.fromIter(
+      _packageCreatorsSave.vals(),
+      Array.size(_ownersSave),
+      Principal.equal,
+      Principal.hash,
+    );
+    _packageCreatorsSave := []; // Free memory.
+  };
 }
