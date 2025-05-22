@@ -233,7 +233,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
-    }): async () {
+    }): () {
         // TODO@P3: `async` is because we need battery initialized before others.
         // TODO@P2: Check that we are not legible to non-returning-call attack!
         try {

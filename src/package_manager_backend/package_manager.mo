@@ -798,7 +798,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
             };
             // Starting installation of all modules in parallel:
-            await getMainIndirect().installModule({ // TODO@P3: I added `await` to initialize battery before others. // TODO@P2: Check that we are not legible to non-returning-call attack!
+            getMainIndirect().installModule({
                 moduleNumber;
                 moduleName = ?name;
                 arg = to_candid({

@@ -285,7 +285,7 @@ shared({caller = initialOwner}) actor class Battery({
     // };
 
     public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
-        if (not Principal.isController(caller)) {
+        if (not Principal.isController(caller)) { // important to use controllers not owners, for this to be initialized during bootstrapping
             Debug.trap("withdrawCycles3: caller is not allowed");
         };
         Cycles.add<system>(amount);
