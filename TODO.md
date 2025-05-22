@@ -4,8 +4,6 @@ Remaining things TODO:
 
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
-- TODO@P2 Show cycles address in DFX format, too.
-
 - FIXME@P3 When not enough cycles in the package manager battery, installation fails silently.
            Make it produce a message. Also try to prevent installation when too little cycles.
 
@@ -141,5 +139,3 @@ Remaining things TODO:
 - TODO@P2 Replace some `Principal`s by actor types?
 
 - TODO@P3 Handing names of user's repositories.
-
-- TODO@P2 Report errors such as out-of-cycles.
