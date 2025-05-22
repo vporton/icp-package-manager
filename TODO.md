@@ -33,8 +33,6 @@ Remaining things TODO:
 
 - TODO@P3 Close button in the title does not close dialogs.
 
-- TODO@P2 Should battery be controller of all, for cycles withdrawal? Or do withdrawal through simple_indirect?
-
 - FIXME@P3 After clicking a withdraw button, it has permanent "Loading..." around.
 
 - TODO@P3 Interface for asking the battery for more cycles (if the user accepts). Use for example, for `icpack`.
