@@ -208,23 +208,6 @@ function App2() {
       });
     }
   }, [bootstrapper]);
-  // function mint() {
-  //   cycles_ledger.mint({
-  //     to: {
-  //       owner: Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER!),
-  //       subaccount: [principalToSubAccount(principal!)],  
-  //     },
-  //     amount: BigInt(100*10**12),
-  //     memo: [],
-  //     created_at_time: [],
-  //   }).then(res => {
-  //     if ((res as any).Err) {
-  //       alert("Minting error!"); // TODO@P3
-  //     } else {
-  //       updateCyclesAmount();
-  //     }
-  //   });
-  // }
   return (
     <main id="main">
       <p style={{background: 'red', color: 'white', padding: "3px"}}>
