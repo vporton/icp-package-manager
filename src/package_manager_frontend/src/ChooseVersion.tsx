@@ -103,9 +103,11 @@ function ChooseVersion2(props: {
             await waitTillInitialized(agent!, glob.backend!, id);
             navigate(`/installed/show/${id}`);
         }
-        catch(e) {
-            console.log(e);
-            setError((e as object).toString()); // Shows "cannot initialize canisters" instead of "not enough cycles".
+        catch (e) {
+            const msg = (e as object).toString();
+            const msg2 = /Cannot initialize canisters/.test(msg) ? "not enough cycles on battery, fund your account" : msg;
+            console.log(msg2);
+            setError(msg2);
         }
         finally {
             setBusy(false);
