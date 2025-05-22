@@ -2,9 +2,6 @@ Remaining things TODO:
 
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
-- FIXME@P3 When not enough cycles in the package manager battery, installation fails silently.
-           Make it produce a message. Also try to prevent installation when too little cycles.
-
 - FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
 
 - TODO@P3 When topping up bootstrapper with ICP, 0.0001 remains.
