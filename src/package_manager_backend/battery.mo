@@ -288,6 +288,9 @@ shared({caller = initialOwner}) actor class Battery({
         if (not Principal.isController(caller)) { // important to use controllers not owners, for this to be initialized during bootstrapping
             Debug.trap("withdrawCycles3: caller is not allowed");
         };
+        if (Cycles.balance() < amount) {
+            Debug.trap("not enough cycles");
+        };
         Cycles.add<system>(amount);
         await IC.ic.deposit_cycles({canister_id = payee});
     };

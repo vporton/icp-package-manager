@@ -54,6 +54,7 @@ function ChooseVersion2(props: {
     guid0: any | undefined,
 }) {
     const glob = useContext(GlobalContext);
+    const {setError} = useContext(ErrorContext)!;
     const navigate = myUseNavigate();
     const {ok, principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
@@ -104,7 +105,7 @@ function ChooseVersion2(props: {
         }
         catch(e) {
             console.log(e);
-            throw e; // TODO@P3
+            setError((e as object).toString()); // Shows "cannot initialize canisters" instead of "not enough cycles".
         }
         finally {
             setBusy(false);
@@ -141,7 +142,7 @@ function ChooseVersion2(props: {
         }
         catch(e) {
             console.log(e);
-            throw e; // TODO@P3
+            setError((e as object).toString())
         }
         finally {
             setBusy(false);
