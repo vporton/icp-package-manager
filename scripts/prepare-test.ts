@@ -145,6 +145,9 @@ async function main() {
         versionsMap: [["stable", "0.0.1"], ["beta", "0.0.2"]],
     };
     await repositoryIndex.setFullPackageInfo("upgradeable", upgradeableFullInfo);
+
+    console.log("Cleaning unused WASMs...");
+    await repositoryIndex.cleanUnusedWasms();
 }
 
 main()

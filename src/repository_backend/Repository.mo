@@ -9,6 +9,7 @@ import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
 import Sha256 "mo:sha2/Sha256";
+import Itertools "mo:itertools/Iter";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
@@ -280,5 +281,33 @@ shared ({caller = initialOwner}) actor class Repository() = this {
       Principal.hash,
     );
     _packageCreatorsSave := []; // Free memory.
+  };
+
+  public shared({caller}) func cleanUnusedWasms() {
+    onlyOwner(caller);
+
+    let usedWasms = HashMap.HashMap<Blob, ()>(0, Blob.equal, Blob.hash);
+    for (pkg in packages.vals()) {
+      for (info in pkg.pkg.packages.vals()) {
+        switch (info.specific) {
+          case (#real p) {
+            for ({code} in p.modules.vals()) {
+              let id = switch (code) {
+                case (#Wasm wasm) wasm;
+                case (#Assets {wasm}) wasm;
+              };
+              usedWasms.put(id.1, ());
+            };
+          };
+          case (#virtual _) {};
+        };
+      };
+    };
+
+    for (wasm in wasms.keys()) {
+      if (Option.isNull(usedWasms.get(wasm))) {
+        wasms.delete(wasm);
+      };
+    };
   };
 }

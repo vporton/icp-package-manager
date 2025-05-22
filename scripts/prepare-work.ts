@@ -185,6 +185,9 @@ async function main() {
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.setFullPackageInfo("example", pmEFFullInfo);
+
+    console.log("Cleaning unused WASMs...");
+    await repositoryIndex.cleanUnusedWasms();
 }
 
 main()
