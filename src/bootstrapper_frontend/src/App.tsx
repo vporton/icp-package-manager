@@ -119,7 +119,7 @@ function AddressPopup(props: {
           </Tab>
           <Tab eventKey="cycles" title="Cycles">
             <p>Cycles to top-up:{" "}
-              {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}` : "Loading..."}
+              {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
               {" "}<Button onClick={topUpCycles}>Use</Button>
             </p>
             <p>
