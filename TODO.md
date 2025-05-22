@@ -1,7 +1,5 @@
 Remaining things TODO:
 
-- FIXME@P2 Remove old WASMs.
-
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
 - FIXME@P3 When not enough cycles in the package manager battery, installation fails silently.
