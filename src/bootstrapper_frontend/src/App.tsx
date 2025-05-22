@@ -228,7 +228,7 @@ function App2() {
   return (
     <main id="main">
       <p style={{background: 'red', color: 'white', padding: "3px"}}>
-        This is an alpha test. We explicitly disclaim all warranties, express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. We are not liable for any damages arising from use of this software. If your money is lost due to a software error, we have no obligation to refund it.
+        This is a beta version. We explicitly disclaim all warranties, express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. We are not liable for any damages arising from use of this software. If your money is lost due to a software error, we have no obligation to refund it.
       </p>
       <h1 style={{textAlign: 'center'}}>
         <img src="/internet-computer-icp-logo.svg" alt="DFINITY logo" style={{width: '150px', display: 'inline'}} />
