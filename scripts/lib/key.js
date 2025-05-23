@@ -7,7 +7,7 @@ export function decodeFile(rawKey) {
     let buf/*: Buffer*/ = decode(rawKey);
     if (rawKey.includes('EC PRIVATE KEY')) {
         if (buf.length != 118) {
-                throw 'expecting byte length 118 but got ' + buf.length;
+            throw 'expecting byte length 118 but got ' + buf.length;
         }
         return Secp256k1KeyIdentity.fromSecretKey(buf.subarray(7, 39));
     }
