@@ -1,6 +1,6 @@
 Remaining things TODO:
 
--TODO@P2 Unjustified growth of `simpleIndirect` by passing `1_000_000_000_000` cycles to it when upgrade.
+-TODO@P2 Unjustified growth of `simpleIndirect` and  `mainIdirect` by passing `1_000_000_000_000` cycles to it when upgrade.
 
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
 
