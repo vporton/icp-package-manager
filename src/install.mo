@@ -101,15 +101,18 @@ module {
                 let to: Asset.AssetCanister = actor(Principal.toText(canister_id));
                 await* CopyAssets.copyAll({from; to});
                 // TODO@P3: duplicate work with bootstrapper
+                // TODO@P3: No need to call it every time.
                 let oldController = (await to.list_authorized())[0];
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
                     for (principal in [simpleIndirect, user].vals()) {
                         await to.grant_permission({to_principal = principal; permission});
                     };
-                    await to.revoke_permission({
-                        of_principal = oldController;
-                        permission;
-                    });
+                    if (oldController != simpleIndirect and oldController != user) {
+                        await to.revoke_permission({
+                            of_principal = oldController;
+                            permission;
+                        });
+                    }
                 };
             };
             case _ {};

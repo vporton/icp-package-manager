@@ -379,24 +379,54 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
                     } else {
-                        #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
+                        #upgrade (?{ wasm_memory_persistence = null; skip_pre_upgrade = ?false });
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
-                    await simple.install_code({
-                        sender_canister_version = null; // TODO@P3: Set appropriate value.
-                        arg = to_candid({
-                            packageManager;
-                            mainIndirect;
-                            simpleIndirect;
-                            user;
-                            installationId;
-                            upgradeId;
-                            userArg = arg;
-                        });
-                        wasm_module;
-                        mode = mode2;
-                        canister_id;
-                    }, 1000_000_000_000); // TODO@P3
+                    // TODO@P3: How many cycles to add?
+                    try {
+                        await simple.install_code({
+                            sender_canister_version = null; // TODO@P3: Set appropriate value.
+                            arg = to_candid({
+                                packageManager;
+                                mainIndirect;
+                                simpleIndirect;
+                                user;
+                                installationId;
+                                upgradeId;
+                                userArg = arg;
+                            });
+                            wasm_module;
+                            mode = mode2;
+                            canister_id;
+                        }, 1_000_000_000_000);
+                    }
+                    catch (e) {
+                        if (Text.contains(Error.message(e), #text "Invalid upgrade option: The `wasm_memory_persistence: opt Keep` upgrade option requires that the new canister module supports enhanced orthogonal persistence.")) {
+                            // EOP canisters upgrade with `wasm_memory_persistence = null` fails.
+                            let mode3 = if (wasmModule.forceReinstall) {
+                                #reinstall
+                            } else {
+                                #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
+                            };
+                            await simple.install_code({
+                                sender_canister_version = null; // TODO@P3: Set appropriate value.
+                                arg = to_candid({
+                                    packageManager;
+                                    mainIndirect;
+                                    simpleIndirect;
+                                    user;
+                                    installationId;
+                                    upgradeId;
+                                    userArg = arg;
+                                });
+                                wasm_module;
+                                mode = mode3;
+                                canister_id;
+                            }, 1_000_000_000_000);
+                        } else {
+                            Debug.trap(Error.message(e));
+                        };
+                    };
                     canister_id;
                 };
                 case null {
