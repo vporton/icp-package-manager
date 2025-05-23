@@ -401,7 +401,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         }, 1_000_000_000_000);
                     }
                     catch (e) {
-                        if (Text.contains(Error.message(e), #text "Invalid upgrade option: The `wasm_memory_persistence: opt Keep` upgrade option requires that the new canister module supports enhanced orthogonal persistence.")) {
+                        if (not wasmModule.forceReinstall and
+                            Text.contains(Error.message(e), #text "Invalid upgrade option: The `wasm_memory_persistence: opt Keep` upgrade option requires that the new canister module supports enhanced orthogonal persistence.")
+                        ) {
                             // EOP canisters upgrade with `wasm_memory_persistence = null` fails.
                             let mode3 = if (wasmModule.forceReinstall) {
                                 #reinstall;
