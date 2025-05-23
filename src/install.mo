@@ -109,13 +109,12 @@ module {
                     for (principal in [simpleIndirect, mainIndirect, user].vals()) {
                         await to.grant_permission({to_principal = principal; permission});
                     };
-                    // FIXME@P1: Uncomment the `if`:
-                    // if (oldController != simpleIndirect and oldController != mainIndirect and oldController != user) {
+                    if (oldController != simpleIndirect and oldController != mainIndirect and oldController != user) {
                         await to.revoke_permission({
                             of_principal = oldController;
                             permission;
                         });
-                    // }
+                    };
                 };
             };
             case _ {};
