@@ -1,4 +1,4 @@
-import { Button, Container, Dropdown, Nav, Navbar, OverlayTrigger, Tab, Tabs, Tooltip } from 'react-bootstrap';
+import { Button, Container, Dropdown, Modal, Nav, Navbar, OverlayTrigger, Tab, Tabs, Tooltip } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthButton }  from '../../lib/AuthButton';
 import { getIsLocal } from "../../lib/state";
@@ -208,6 +208,7 @@ function App2() {
       });
     }
   }, [bootstrapper]);
+  const [showHelpLogin, setShowHelpLogin] = useState(false);
   return (
     <main id="main">
       <p style={{background: 'red', color: 'white', padding: "3px"}}>
@@ -219,7 +220,28 @@ function App2() {
         Bootstrapper (Installer) of Package Manager
       </h1>
       <Container>
-        <p><a href="https://dev.package-manager.com">See docs.</a></p>
+        <p>
+          <a href="https://dev.package-manager.com">Docs</a> |{" "}
+          <a href="#" onClick={(event) => {
+            setShowHelpLogin(showHelpLogin => !showHelpLogin);
+            event.preventDefault();
+          }}>How to register/login (video)</a>
+        </p>
+        <Modal show={showHelpLogin} onHide={() => setShowHelpLogin(false)} size="lg" centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Login/Register Help</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="ratio ratio-16x9">
+              <iframe src="https://www.youtube.com/embed/oxEr8UzGeBo" title="Demo | Internet Identity: The End of Usernames and Passwords (Dominic Williams &amp; Joachim Breitner)" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowHelpLogin(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
         <nav>
           <Navbar className="bg-body-secondary" style={{width: "auto"}}>
             <Nav>
