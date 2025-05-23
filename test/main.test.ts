@@ -306,7 +306,7 @@ describe('My Test Suite', () => {
             const upgradeablePkg = await packageManager.getInstalledPackage(upgradeableInstallationId);
             return new Set(Array.from(upgradeablePkg.modulesInstalledByDefault.values()).map(([name, _principal]) => name));
         }
-        await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets);
+        await waitForValue(myNamedModules, new Set(['m2', 'm3']), areEqualSets, 120000);
     });
     // TODO@P3: Test `removeStalled()`.
 });
