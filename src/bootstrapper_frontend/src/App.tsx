@@ -238,9 +238,6 @@ function App2() {
               </Dropdown>
               <a onClick={updateAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
             </Nav>
-            {/* <Nav style={{display: ok && getIsLocal() ? undefined : 'none'}}>
-              <Button onClick={mint}>Mint</Button>
-            </Nav> */}
           </Navbar>
         </nav>
         <BrowserRouter>
