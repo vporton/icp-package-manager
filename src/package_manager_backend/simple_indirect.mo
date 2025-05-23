@@ -131,6 +131,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func canister_info(args: IC.CanisterInfoArgs, amount: Nat): async IC.CanisterInfoResult {
         onlyOwner(caller, "canister_info");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.canister_info(args);
     };
@@ -138,6 +139,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func canister_status(args: IC.CanisterStatusArgs, amount: Nat): async IC.CanisterStatusResult {
         onlyOwner(caller, "canister_status");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.canister_status(args);
     };
@@ -145,6 +147,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func clear_chunk_store(args: IC.ClearChunkStoreArgs, amount: Nat): async () {
         onlyOwner(caller, "clear_chunk_store");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.clear_chunk_store(args);
     };
@@ -152,6 +155,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func create_canister(args: IC.CreateCanisterArgs, amount: Nat): async IC.CreateCanisterResult {
         onlyOwner(caller, "create_canister");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.create_canister(args);
     };
@@ -159,6 +163,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func delete_canister(args: IC.DeleteCanisterArgs, amount: Nat): async () {
         onlyOwner(caller, "delete_canister");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.delete_canister(args);
     };
@@ -166,6 +171,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func delete_canister_snapshot(args: IC.DeleteCanisterSnapshotArgs, amount: Nat): async () {
         onlyOwner(caller, "delete_canister_snapshot");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.delete_canister_snapshot(args);
     };
@@ -173,6 +179,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func deposit_cycles(args: IC.DepositCyclesArgs, amount: Nat): async () {
         onlyOwner(caller, "deposit_cycles");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.deposit_cycles(args);
     };
@@ -180,6 +187,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func ecdsa_public_key(args: IC.EcdsaPublicKeyArgs, amount: Nat): async IC.EcdsaPublicKeyResult {
         onlyOwner(caller, "ecdsa_public_key");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.ecdsa_public_key(args);
     };
@@ -194,6 +202,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func http_request(args: IC.HttpRequestArgs, amount: Nat): async IC.HttpRequestResult {
         onlyOwner(caller, "http_request");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.http_request(args);
     };
@@ -201,6 +210,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func install_chunked_code(args: IC.InstallChunkedCodeArgs, amount: Nat): async () {
         onlyOwner(caller, "install_chunked_code");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.install_chunked_code(args);
     };
@@ -208,6 +218,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func install_code(args: IC.InstallCodeArgs, amount: Nat): async () {
         onlyOwner(caller, "install_code");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.install_code(args);
     };
@@ -215,6 +226,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func list_canister_snapshots(args: IC.ListCanisterSnapshotsArgs, amount: Nat): async IC.ListCanisterSnapshotsResult {
         onlyOwner(caller, "list_canister_snapshots");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.list_canister_snapshots(args);
     };
@@ -222,6 +234,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func load_canister_snapshot(args: IC.LoadCanisterSnapshotArgs, amount: Nat): async () {
         onlyOwner(caller, "load_canister_snapshot");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.load_canister_snapshot(args);
     };
@@ -229,6 +242,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func node_metrics_history(args: IC.NodeMetricsHistoryArgs, amount: Nat): async IC.NodeMetricsHistoryResult {
         onlyOwner(caller, "node_metrics_history");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.node_metrics_history(args);
     };
@@ -236,6 +250,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func provisional_create_canister_with_cycles(args: IC.ProvisionalCreateCanisterWithCyclesArgs, amount: Nat): async IC.ProvisionalCreateCanisterWithCyclesResult {
         onlyOwner(caller, "provisional_create_canister_with_cycles");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.provisional_create_canister_with_cycles(args);
     };
@@ -243,6 +258,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func provisional_top_up_canister(args: IC.ProvisionalTopUpCanisterArgs, amount: Nat): async () {
         onlyOwner(caller, "provisional_top_up_canister");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.provisional_top_up_canister(args);
     };
@@ -250,6 +266,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func raw_rand(amount: Nat): async IC.RawRandResult {
         onlyOwner(caller, "raw_rand");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.raw_rand();
     };
@@ -257,6 +274,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func schnorr_public_key(args: IC.SchnorrPublicKeyArgs, amount: Nat): async IC.SchnorrPublicKeyResult {
         onlyOwner(caller, "schnorr_public_key");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.schnorr_public_key(args);
     };
@@ -264,6 +282,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func sign_with_ecdsa(args: IC.SignWithEcdsaArgs, amount: Nat): async IC.SignWithEcdsaResult {
         onlyOwner(caller, "sign_with_ecdsa");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.sign_with_ecdsa(args);
     };
@@ -271,6 +290,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
     public shared({caller}) func sign_with_schnorr(args: IC.SignWithSchnorrArgs, amount: Nat): async IC.SignWithSchnorrResult {
         onlyOwner(caller, "sign_with_schnorr");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.sign_with_schnorr(args);
     };
@@ -278,6 +298,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func start_canister(args: IC.StartCanisterArgs, amount: Nat): async () {
         onlyOwner(caller, "start_canister");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.start_canister(args);
     };
@@ -285,6 +306,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func stop_canister(args: IC.StopCanisterArgs, amount: Nat): async () {
         onlyOwner(caller, "stop_canister");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.stop_canister(args);
     };
@@ -292,6 +314,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func stored_chunks(args: IC.StoredChunksArgs, amount: Nat): async IC.StoredChunksResult {
         onlyOwner(caller, "stored_chunks");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.stored_chunks(args);
     };
@@ -299,6 +322,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func take_canister_snapshot(args: IC.TakeCanisterSnapshotArgs, amount: Nat): async IC.TakeCanisterSnapshotResult {
         onlyOwner(caller, "take_canister_snapshot");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.take_canister_snapshot(args);
     };
@@ -306,6 +330,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func uninstall_code(args: IC.uninstall_code_args, amount: Nat): async () {
         onlyOwner(caller, "uninstall_code");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.uninstall_code(args);
     };
@@ -313,6 +338,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func update_settings(args: IC.UpdateSettingsArgs, amount: Nat): async () {
         onlyOwner(caller, "update_settings");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.update_settings(args);
     };
@@ -320,6 +346,7 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func upload_chunk(args: IC.UploadChunkArgs, amount: Nat): async IC.UploadChunkResult {
         onlyOwner(caller, "upload_chunk");
 
+        ignore Cycles.accept<system>(amount);
         Cycles.add<system>(amount);
         await IC.ic.upload_chunk(args);
     };

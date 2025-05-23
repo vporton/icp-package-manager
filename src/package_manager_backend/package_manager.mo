@@ -528,6 +528,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 arg = newPkgData.arg;
                 initArg = newPkgData.initArg;
             };
+            // Debug.print("XXX: " # debug_show(pkg2.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
             halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
             await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
         };
@@ -550,7 +551,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         upgrade.modulesInstalledByDefault.put(moduleName, canister_id);
 
         upgrade.remainingModules -= 1;
+        Debug.print("YYY upgrade.remainingModules = " # debug_show(upgrade.remainingModules)); // FIXME: Remove.
         if (upgrade.remainingModules == 0) {
+            Debug.print("Z0"); // FIXME: Remove.
             for ((moduleName, canister_id) in upgrade.modulesToDelete.vals()) {
                 // `ignore` protects against non-returning-function attack.
                 // Another purpose of `ignore` to finish the uninstallation even if a module was previously remove.
@@ -566,13 +569,17 @@ shared({caller = initialCaller}) actor class PackageManager({
                     error = #abort;
                 }]);
             };
+            Debug.print("Z1"); // FIXME: Remove.
             let ?inst = installedPackages.get(upgrade.installationId) else {
                 Debug.trap("no such installed package");
             };
+            Debug.print("Z2"); // FIXME: Remove.
             inst.packageRepoCanister := upgrade.newRepo;
             inst.package := upgrade.package;
             inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault;
+            Debug.print("Z3"); // FIXME: Remove.
             halfUpgradedPackages.delete(upgradeId);
+            Debug.print("Z4"); // FIXME: Remove.
         };
 
         // Call the user's callback if provided
@@ -841,6 +848,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
         // TODO@P3: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgReal.modules;
+
+        let batteryActor = actor(Principal.toText(battery)) : actor {
+            withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
+        };
+        await batteryActor.withdrawCycles3(
+            1_000_000_000_000 * newPkgModules.size(), // TODO@P2: symbolic constant
+            Principal.fromActor(main_indirect_));
 
         // TODO@P3: repeated calculation
         let ?oldPkg = installedPackages.get(pkg.installationId) else {

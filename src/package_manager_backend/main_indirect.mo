@@ -370,13 +370,17 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             Debug.print("upgradeOrInstallModule " # debug_show(moduleName) # " " # debug_show(upgradeId));
 
+            Debug.print("P0"); // FIXME: Remove.
             let wasmModuleLocation = Common.extractModuleLocation(wasmModule.code);
             let repository: Common.RepositoryRO =
                 actor(Principal.toText(wasmModuleLocation.0));
+            Debug.print("P1"); // FIXME: Remove.
 
             let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
+            Debug.print("P2"); // FIXME: Remove.
             let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
+                    Debug.print("P3"); // FIXME: Remove.
                     let mode2 = if (wasmModule.forceReinstall) {
                         #reinstall
                     } else {
@@ -384,8 +388,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     };
                     let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
                     // TODO@P3: How many cycles to add?
+                    Debug.print("P4"); // FIXME: Remove.
                     try {
-                        await simple.install_code({
+                        Debug.print("P5"); // FIXME: Remove.
+                        await (with cycles = 1_000_000_000_000) simple.install_code({
                             sender_canister_version = null; // TODO@P3: Set appropriate value.
                             arg = to_candid({
                                 packageManager;
@@ -400,18 +406,22 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             mode = mode2;
                             canister_id;
                         }, 1_000_000_000_000);
+                        Debug.print("P6"); // FIXME: Remove.
                     }
                     catch (e) {
+                        Debug.print("P7"); // FIXME: Remove.
                         if (not wasmModule.forceReinstall and
                             Text.contains(Error.message(e), #text "Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option.")
                         ) {
+                            Debug.print("P8"); // FIXME: Remove.
                             // EOP canisters upgrade with `wasm_memory_persistence = null` fails.
                             let mode3 = if (wasmModule.forceReinstall) {
                                 #reinstall;
                             } else {
                                 #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                             };
-                            await simple.install_code({
+                            Debug.print("P9"); // FIXME: Remove.
+                            await (with cycles = 1_000_000_000_000) simple.install_code({
                                 sender_canister_version = null; // TODO@P3: Set appropriate value.
                                 arg = to_candid({
                                     packageManager;
@@ -426,7 +436,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
                                 mode = mode3;
                                 canister_id;
                             }, 1_000_000_000_000);
+                            Debug.print("P10"); // FIXME: Remove.
                         } else {
+                            Debug.print("P11: " # Error.message(e)); // FIXME: Remove.
                             Debug.trap(Error.message(e));
                         };
                     };
@@ -474,6 +486,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     canister_id;
                 };
             };
+            Debug.print("P12"); // FIXME: Remove.
             let backendObj = actor (Principal.toText(packageManager)) : actor {
                 onUpgradeOrInstallModule: shared ({
                     upgradeId: Common.UpgradeId;
@@ -484,7 +497,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     };
                 }) -> async ();
             };
+            Debug.print("P13"); // FIXME: Remove.
             await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId; afterUpgradeCallback});
+            Debug.print("P14"); // FIXME: Remove.
             await* Install.copyAssetsIfAny({
                 wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
                 canister_id = newCanisterId;
@@ -492,8 +507,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 mainIndirect;
                 user;
             });
+            Debug.print("P15"); // FIXME: Remove.
         }
         catch (e) {
+            Debug.print("P16: " # Error.message(e)); // FIXME: Remove.
             Debug.print("upgradeOrInstallModule: " # Error.message(e));
         };
     };
