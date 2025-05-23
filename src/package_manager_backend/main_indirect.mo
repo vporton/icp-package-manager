@@ -296,6 +296,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 
             let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
             for (i in packages.keys()) {
+                // TODO@P3: Run in parallel.
                 // unsafe operation, run in main_indirect:
                 let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
                 newPackages[i] := ?(Common.unsharePackageInfo(pkg));
