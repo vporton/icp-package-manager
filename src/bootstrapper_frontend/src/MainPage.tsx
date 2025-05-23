@@ -160,7 +160,10 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
             </label>{" "}
             <small>(for testing)</small>
           </p> */}
-          <p><Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button></p>
+          <p>
+            <Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button>
+            {!props.ok && <>{" "}You need to login to install it.</>}
+          </p>
         </>}
       </>
     );
