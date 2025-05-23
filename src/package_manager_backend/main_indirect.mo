@@ -482,10 +482,11 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 }) -> async ();
             };
             await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId; afterUpgradeCallback});
-            await* Install.copyAssetsIfAny({ // FIXME@P1: Need to copy from simple indirect.
+            await* Install.copyAssetsIfAny({
                 wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
                 canister_id = newCanisterId;
                 simpleIndirect;
+                mainIndirect;
                 user;
             });
         }

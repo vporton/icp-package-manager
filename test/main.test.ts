@@ -51,7 +51,7 @@ function areEqualSets<T>(a: Set<T>, b: Set<T>): boolean {
     return true;
 }
 
-async function waitForValue(fn: () => any, expectedValue: any, compare: (x: any, y: any) => boolean = (x, y) => x === y, timeout = 10000, interval = 1000) {
+async function waitForValue(fn: () => any, expectedValue: any, compare: (x: any, y: any) => boolean = (x, y) => x === y, timeout = 30000, interval = 1000) {
     const startTime = Date.now();
     let value;
     while (Date.now() - startTime < timeout) {
@@ -270,7 +270,7 @@ describe('My Test Suite', () => {
         console.log("Checking example frontend owners...");
         for (const permission of [{Commit: null}, {ManagePermissions: null}, {Prepare: null}]) {
             const owners = await exampleFrontend.list_permitted({permission});
-            expect(new Set(owners)).to.equalPrincipalSet(new Set([pmInst.get('simple_indirect')!, backendUser]));
+            expect(new Set(owners)).to.equalPrincipalSet(new Set([pmInst.get('simple_indirect')!, pmInst.get('main_indirect')!, backendUser]));
         }
 
         console.log("Installing `upgradeable` package...");

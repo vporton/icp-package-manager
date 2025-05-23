@@ -84,6 +84,7 @@ module {
             wasmModule;
             canister_id;
             simpleIndirect;
+            mainIndirect;
             user;
         });
     };
@@ -92,6 +93,7 @@ module {
         wasmModule: Common.Module;
         canister_id: Principal;
         simpleIndirect: Principal;
+        mainIndirect: Principal;
         user: Principal;
     }): async* () {
         switch (wasmModule.code) {
@@ -104,15 +106,16 @@ module {
                 // TODO@P3: No need to call it every time.
                 let oldController = (await to.list_authorized())[0];
                 for (permission in [#Commit, #Prepare, #ManagePermissions].vals()) { // `#ManagePermissions` the last in the list not to revoke early
-                    for (principal in [simpleIndirect, user].vals()) {
+                    for (principal in [simpleIndirect, mainIndirect, user].vals()) {
                         await to.grant_permission({to_principal = principal; permission});
                     };
-                    if (oldController != simpleIndirect and oldController != user) {
+                    // FIXME@P1: Uncomment the `if`:
+                    // if (oldController != simpleIndirect and oldController != mainIndirect and oldController != user) {
                         await to.revoke_permission({
                             of_principal = oldController;
                             permission;
                         });
-                    }
+                    // }
                 };
             };
             case _ {};
