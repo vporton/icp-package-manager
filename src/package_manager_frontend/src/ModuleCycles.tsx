@@ -7,7 +7,7 @@ import { PackageManager } from "../../declarations/package_manager/package_manag
 import { useAuth } from "../../lib/use-auth-client";
 import { URLSearchParams } from "url";
 import { setServers } from "dns";
-import { Button } from "react-bootstrap";
+import Button from "react-bootstrap/Button";
 import { Actor } from "@dfinity/agent";
 import { ICManagementCanister } from "@dfinity/ic-management";
 import { ErrorContext } from "../../lib/ErrorContext";

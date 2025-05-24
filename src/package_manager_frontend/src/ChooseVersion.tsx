@@ -15,7 +15,7 @@ import { InitializedChecker, waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
-import { Alert } from "react-bootstrap";
+import Alert from "react-bootstrap/Alert";
 import { init } from "@dfinity/agent/lib/cjs/canisters/management_service.js";
 
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.

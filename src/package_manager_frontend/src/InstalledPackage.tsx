@@ -8,7 +8,7 @@ import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/rep
 import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
-import { Alert, Modal } from "react-bootstrap";
+import Modal from "react-bootstrap/Modal";
 import { myUseNavigate } from "./MyNavigate";
 
 export default function InstalledPackage(props: {}) {
