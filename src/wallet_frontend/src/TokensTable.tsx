@@ -12,7 +12,7 @@ export default function TokensTable() {
                     <td>ICP</td>
                     <td>Internet Computer</td>
                     <td>1000.00</td>
-                    <td><Button>Send</Button> <Button>Receive</Button></td>
+                    <td><Button>Send</Button> <Button>Receive</Button> <Button>Manage</Button></td>
                 </tr>
                 <tr>
                     <td>LOREM</td>
