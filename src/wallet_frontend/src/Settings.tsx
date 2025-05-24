@@ -4,28 +4,28 @@ import Form from 'react-bootstrap/Form';
 // import FormControlElement from 'react-bootstrap/FormControlElement';
 
 export default function Settings() {
-    const [numberAddCheckbox, setNumberAddCheckbox] = useState<number | undefined>();
-    const [numberAddInput, setNumberAddInput] = useState<number | undefined>();
-    const [numberAddCheckboxText, setNumberAddCheckboxText] = useState<string>("");
-    const [numberAddInputText, setNumberAddInputText] = useState<string>("");
-    const numberAddCheckboxInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
+    const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
+    const [amountAddCheckboxText, setAmountAddCheckboxText] = useState<string>("");
+    const [amountAddInputText, setAmountAddInputText] = useState<string>("");
+    const amountAddCheckboxInput = (e: React.FormEvent<HTMLInputElement>) => {
         const value = (e.target as HTMLInputElement).value;
-        setNumberAddCheckboxText(value);
+        setAmountAddCheckboxText(value);
         const num = Number(value);
         if (!isNaN(num) && num >= 0 && value !== "") {
-            setNumberAddCheckbox(num);
+            setAmountAddCheckbox(num);
         } else {
-            setNumberAddCheckbox(undefined);
+            setAmountAddCheckbox(undefined);
         }
     };
-    const numberAddInputInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const amountAddInputInput = (e: React.FormEvent<HTMLInputElement>) => {
         const value = (e.target as HTMLInputElement).value;
-        setNumberAddInputText(value);
+        setAmountAddInputText(value);
         const num = Number(value);
         if (!isNaN(num) && num >= 0 && value !== "") {
-            setNumberAddInput(num);
+            setAmountAddInput(num);
         } else {
-            setNumberAddInput(undefined);
+            setAmountAddInput(undefined);
         }
     };
     return (
@@ -33,23 +33,23 @@ export default function Settings() {
             <p>This form controls how much confirmations are asked when transferring tokens.</p>
             <p>All amounts are in SDR.</p>
             <Form>
-                <Form.Group controlId="numberAddCheckbox">
+                <Form.Group controlId="amountAddCheckbox">
                     <Form.Label>Starting from this amount, add a confirmation checkbox:</Form.Label>
                     <Form.Control
                         type="number"
                         min="0"
-                        onInput={numberAddCheckboxInput}
-                        isValid={numberAddCheckbox !== undefined || numberAddCheckboxText === ""}
-                        isInvalid={numberAddCheckbox === undefined && numberAddCheckboxText !== ""}/>
+                        onInput={amountAddCheckboxInput}
+                        isValid={amountAddCheckbox !== undefined || amountAddCheckboxText === ""}
+                        isInvalid={amountAddCheckbox === undefined && amountAddCheckboxText !== ""}/>
                 </Form.Group>
-                <Form.Group controlId="numberAddInput">
+                <Form.Group controlId="amountAddInput">
                     <Form.Label>Starting from this amount, add a verification phrase:</Form.Label>
                     <Form.Control
                         type="number"
                         min="0"
-                        onInput={numberAddInputInput}
-                        isValid={numberAddInput !== undefined || numberAddInputText === ""}
-                        isInvalid={numberAddInput === undefined && numberAddInputText !== ""}/>
+                        onInput={amountAddInputInput}
+                        isValid={amountAddInput !== undefined || amountAddInputText === ""}
+                        isInvalid={amountAddInput === undefined && amountAddInputText !== ""}/>
                 </Form.Group>
                 <p style={{marginTop: '1ex'}}>
                     <Button
