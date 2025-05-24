@@ -1,4 +1,12 @@
 body {
   font-family: sans-serif;
   font-size: 1.5rem;
+  margin-top: 0.5ex;
 }
+
+h1 { text-align: center }
+
+.tab-content { padding-top: 1ex }
+
+#tokensTable td { padding-left: 0.5em; padding-right: 0.5em; }
+#tokensTable button { padding-top: 0; padding-bottom: 0; }
