@@ -8,7 +8,7 @@ import { Principal } from "@dfinity/principal";
 import { Agent } from "@dfinity/agent";
 import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
-import { Alert } from "react-bootstrap";
+import Alert from "react-bootstrap/Alert";
 import useConfirm from "./useConfirm";
 import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
