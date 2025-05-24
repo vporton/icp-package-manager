@@ -27,14 +27,16 @@ export default function App() {
                             <td><Button>Send</Button> <Button>Receive</Button></td>
                         </tr>
                         <tr>
-                            <td>-</td>
-                            <td>-</td>
+                            <td>LOREM</td>
+                            <td>Lorem Ipsum</td>
                             <td>-</td>
                         </tr>
                     </tbody>
                 </table>
             </Tab>
             <Tab eventKey="settings" title="Settings">
+            </Tab>
+            <Tab eventKey="settings" title="Invest">
             </Tab>
         </Tabs>
     </Container>
