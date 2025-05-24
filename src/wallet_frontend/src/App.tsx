@@ -3,6 +3,8 @@ import Button from 'react-bootstrap/Button';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import TokensTable from './TokensTable';
+import Settings from './Settings';
 
 export default function App() {
   return (
@@ -14,27 +16,10 @@ export default function App() {
         <Tabs>
             <Tab eventKey="tokens" title="Tokens">
                 <p><Button>Add token</Button></p>
-                <table id='tokensTable'>
-                    {/* <thead>
-                        <tr>
-                        </tr>
-                    </thead> */}
-                    <tbody>
-                        <tr>
-                            <td>ICP</td>
-                            <td>Internet Computer</td>
-                            <td>1000.00</td>
-                            <td><Button>Send</Button> <Button>Receive</Button></td>
-                        </tr>
-                        <tr>
-                            <td>LOREM</td>
-                            <td>Lorem Ipsum</td>
-                            <td>-</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <TokensTable />
             </Tab>
             <Tab eventKey="settings" title="Settings">
+                <Settings/>
             </Tab>
             <Tab eventKey="settings" title="Invest">
             </Tab>
