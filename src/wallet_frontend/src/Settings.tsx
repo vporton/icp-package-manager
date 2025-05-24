@@ -39,7 +39,7 @@ export default function Settings() {
                         type="number"
                         min="0"
                         onInput={numberAddCheckboxInput}
-                        isValid={numberAddCheckbox !== undefined}
+                        isValid={numberAddCheckbox !== undefined || numberAddCheckboxText === ""}
                         isInvalid={numberAddCheckbox === undefined && numberAddCheckboxText !== ""}/>
                 </Form.Group>
                 <Form.Group controlId="numberAddInput">
@@ -48,13 +48,12 @@ export default function Settings() {
                         type="number"
                         min="0"
                         onInput={numberAddInputInput}
-                        isValid={numberAddInput !== undefined}
+                        isValid={numberAddInput !== undefined || numberAddInputText === ""}
                         isInvalid={numberAddInput === undefined && numberAddInputText !== ""}/>
                 </Form.Group>
                 <p style={{marginTop: '1ex'}}>
                     <Button
                         variant="primary"
-                        disabled={numberAddCheckbox === undefined || numberAddInput === undefined}
                     >
                         Submit
                     </Button>
