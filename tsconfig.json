@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
         "strict": true,
-        "target": "ES2020",
+        "target": "ES2022",
         "experimentalDecorators": true,
         "strictPropertyInitialization": false,
-        "moduleResolution": "node",
+        "moduleResolution": "node10",
         "allowJs": true,
-        "module": "ES2020",
+        "module": "ES2022",
         "outDir": "HACK_BECAUSE_OF_ALLOW_JS",
         "allowSyntheticDefaultImports": true,
         "jsx": "react",
