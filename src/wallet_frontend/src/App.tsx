@@ -20,7 +20,7 @@ export default function App() {
                 <img width="128" height="128" src="/img/wallet-256x256.png" alt="Payments Wallet logo" />
                 {" "}Payments Wallet
             </h1>
-            <AuthButton/>
+            <p><AuthButton/></p>
             <Tabs>
                 <Tab eventKey="tokens" title="Tokens">
                     <p><Button>Add token</Button></p>
