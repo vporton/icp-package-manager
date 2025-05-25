@@ -7,12 +7,18 @@ import TokensTable from './TokensTable';
 import Settings from './Settings';
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
+import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
+import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 
 export default function App() {
     return (
-        <AuthProvider>
-            <App2/>
-         </AuthProvider>
+        <ErrorProvider>
+            <ErrorBoundary>
+                <AuthProvider>
+                    <App2/>
+                </AuthProvider>
+            </ErrorBoundary>
+        </ErrorProvider>
     );
 }
 

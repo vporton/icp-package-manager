@@ -1,12 +1,14 @@
-import { FormEventHandler, useEffect, useState } from 'react';
+import { FormEventHandler, useContext, useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { createActor as createWalletActor } from '../../declarations/wallet_backend'
 import { Wallet } from '../../declarations/wallet_backend/wallet_backend.did'
 import { useAuth } from '../../lib/use-auth-client';
 import { Check } from 'react-bootstrap-icons';
+import { ErrorContext } from '../../lib/ErrorContext';
 
 export default function Settings() {
+    const { setError } = useContext(ErrorContext)!;
     const {agent, ok} = useAuth();
     const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
     const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
@@ -44,7 +46,7 @@ export default function Settings() {
         if (backend !== undefined) {
             backend.getLimitAmounts()
                 .then((result: {amountAddCheckbox: [number] | [], amountAddInput: [number] | []}) => {
-                    console.log("getLimitAmounts result:", result);
+                    console.log("getLimitAmounts result:", result); // FIXME: Remove.
                     setAmountAddCheckbox(result.amountAddCheckbox[0]);
                     setAmountAddInput(result.amountAddInput[0]);
                 });
@@ -52,13 +54,19 @@ export default function Settings() {
     }, [backend]);
     const [submitted, setSubmitted] = useState<boolean>(false);
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("XX", amountAddCheckbox);
-        await backend!.setLimitAmounts({
-            amountAddCheckbox: amountAddCheckbox ? [amountAddCheckbox] : [],
-            amountAddInput: amountAddInput ? [amountAddInput] : [],
-        });
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 3000);
+        console.log("XX", amountAddCheckbox); // FIXME: Remove.
+        try {
+            await backend!.setLimitAmounts({
+                amountAddCheckbox: amountAddCheckbox ? [amountAddCheckbox] : [],
+                amountAddInput: amountAddInput ? [amountAddInput] : [],
+            });
+            setSubmitted(true);
+            setTimeout(() => setSubmitted(false), 3000);
+        }
+        catch (e) {
+            console.error(e);
+            setError((e as object).toString());
+        }
     };
     return (
         <>
