@@ -8,7 +8,7 @@ persistent actor class Wallet({
     let owner = user;
 
     private func onlyOwner(caller: Principal, msg: Text) {
-        if (not Principal.isAnonymous(user) and caller != owner) {
+        if (not Principal.isAnonymous(owner) and caller != owner) {
             Debug.trap(msg # ": no owner set");
         };
     };
