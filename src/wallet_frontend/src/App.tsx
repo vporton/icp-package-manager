@@ -12,6 +12,10 @@ export default function App() {
   return (
     <AuthProvider>
         <Container>
+            <p style={{background: 'red', color: 'white', padding: '2px'}}>
+                This is a preliminary release. No warranty is given for the correctness of this software.{" "}
+                We are under no obligation to refund losses caused by possible errors in this software.
+            </p>
             <h1>
                 <img width="128" height="128" src="/img/wallet-256x256.png" alt="Payments Wallet logo" />
                 {" "}Payments Wallet
