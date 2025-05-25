@@ -1,5 +1,6 @@
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
+import Map "mo:base/OrderedMap";
 
 persistent actor class Wallet({
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
@@ -12,19 +13,34 @@ persistent actor class Wallet({
         };
     };
 
-    var amountAddCheckbox = ?10.0;
-    var amountAddInput = ?30.0;
+    type UserData = {
+        var amountAddCheckbox: ?Float;
+        var amountAddInput: ?Float;
+    };
+
+    transient let principalMap = Map.Make<Principal>(Principal.compare);
+    stable var userData = principalMap.empty<UserData>();
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
         onlyOwner(caller, "getLimitAmounts");
 
-        {amountAddCheckbox; amountAddInput};
+        let data = principalMap.get(userData, caller);
+        switch (data) {
+            case (?data) {
+                {amountAddCheckbox = data.amountAddCheckbox; amountAddInput = data.amountAddInput};
+            };
+            case (_) {
+                {amountAddCheckbox = ?10.0; amountAddInput = ?30.0};
+            };
+        };
     };
 
     public shared({caller}) func setLimitAmounts(values: {amountAddCheckbox: ?Float; amountAddInput: ?Float}): async () {
         onlyOwner(caller, "setLimitAmounts");
 
-        amountAddCheckbox := values.amountAddCheckbox;
-        amountAddInput := values.amountAddInput;
+        ignore principalMap.put(userData, caller, {
+            amountAddCheckbox = values.amountAddCheckbox;
+            amountAddInput = values.amountAddInput;
+        });
     };
 };

@@ -5,25 +5,30 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
+import { AuthProvider } from '../../lib/use-auth-client';
+import { AuthButton }  from '../../lib/AuthButton';
 
 export default function App() {
   return (
-    <Container>
-        <h1>
-            <img width="128" height="128" src="/img/wallet-256x256.png" alt="Payments Wallet logo" />
-            {" "}Payments Wallet
-        </h1>
-        <Tabs>
-            <Tab eventKey="tokens" title="Tokens">
-                <p><Button>Add token</Button></p>
-                <TokensTable />
-            </Tab>
-            <Tab eventKey="settings" title="Settings">
-                <Settings/>
-            </Tab>
-            <Tab eventKey="settings" title="Invest">
-            </Tab>
-        </Tabs>
-    </Container>
+    <AuthProvider>
+        <Container>
+            <h1>
+                <img width="128" height="128" src="/img/wallet-256x256.png" alt="Payments Wallet logo" />
+                {" "}Payments Wallet
+            </h1>
+            <AuthButton/>
+            <Tabs>
+                <Tab eventKey="tokens" title="Tokens">
+                    <p><Button>Add token</Button></p>
+                    <TokensTable />
+                </Tab>
+                <Tab eventKey="settings" title="Settings">
+                    <Settings/>
+                </Tab>
+                <Tab eventKey="settings" title="Invest">
+                </Tab>
+            </Tabs>
+        </Container>
+    </AuthProvider>
   );
 }
