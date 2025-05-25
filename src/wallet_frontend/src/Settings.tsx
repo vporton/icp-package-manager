@@ -43,7 +43,6 @@ export default function Settings() {
         if (backend !== undefined) {
             backend.getLimitAmounts()
                 .then((result: {amountAddCheckbox: [number] | [], amountAddInput: [number] | []}) => {
-                    console.log("getLimitAmounts result:", result);
                     setAmountAddCheckbox(result.amountAddCheckbox[0]);
                     setAmountAddInput(result.amountAddInput[0]);
                 });
