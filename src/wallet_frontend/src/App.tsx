@@ -9,9 +9,16 @@ import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 
 export default function App() {
+    return (
+        <AuthProvider>
+            <App2/>
+         </AuthProvider>
+    );
+}
+
+function App2() {
     const {ok} = useAuth();
-  return (
-    <AuthProvider>
+    return (
         <Container>
             <p style={{background: 'red', color: 'white', padding: '2px'}}>
                 This is a preliminary release. No warranty is given for the correctness of this software.{" "}
@@ -25,7 +32,7 @@ export default function App() {
             <Tabs>
                 <Tab eventKey="tokens" title="Tokens">
                     <p>
-                        <Button>Add token</Button>
+                        <Button disabled={!ok}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
                     <TokensTable />
@@ -37,6 +44,5 @@ export default function App() {
                 </Tab>
             </Tabs>
         </Container>
-    </AuthProvider>
-  );
+    );
 }
