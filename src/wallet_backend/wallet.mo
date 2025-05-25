@@ -38,9 +38,18 @@ persistent actor class Wallet({
     public shared({caller}) func setLimitAmounts(values: {amountAddCheckbox: ?Float; amountAddInput: ?Float}): async () {
         onlyOwner(caller, "setLimitAmounts");
 
-        userData := principalMap.put<UserData>(userData, caller, {
-            var amountAddCheckbox = values.amountAddCheckbox;
-            var amountAddInput = values.amountAddInput;
-        });
+        let data = principalMap.get(userData, caller);
+        switch (data) {
+            case (?data) {
+                data.amountAddCheckbox := values.amountAddCheckbox;
+                data.amountAddInput := values.amountAddInput;
+            };
+            case null {
+                userData := principalMap.put<UserData>(
+                    userData,
+                    caller,
+                    {var amountAddCheckbox = ?10.0; var amountAddInput = ?30.0});
+            };
+        };
     };
 };
