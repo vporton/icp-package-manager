@@ -15,6 +15,7 @@
     "src/bootstrapper_frontend",
     "src/package_manager_frontend",
     "src/repository_frontend",
+    "src/wallet_frontend",
     "examples/example_frontend"
   ],
   "dependencies": {

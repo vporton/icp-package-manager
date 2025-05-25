@@ -290,6 +290,31 @@
       ],
       "type": "motoko"
     },
+    "wallet_backend": {
+      "args": "--enhanced-orthogonal-persistence",
+      "main": "src/wallet_backend/wallet.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "type": "motoko",
+      "init_arg": "record { user = principal \"2vxsx-fae\" }"
+    },
+    "wallet_frontend": {
+      "args": "--enhanced-orthogonal-persistence",
+      "dependencies": ["wallet_backend"],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "source": [
+        "src/wallet_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "wallet_frontend"
+    },
     "upgrade_example_backend1_v1": {
       "args": "--enhanced-orthogonal-persistence",
       "main": "examples/upgrade_example_backend/0.0.1/main1.mo",

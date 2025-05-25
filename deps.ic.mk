@@ -190,6 +190,22 @@ build@upgrade_example_backend3_v2: .dfx/$(NETWORK)/canisters/upgrade_example_bac
 	dfx canister create --network $(NETWORK) upgrade_example_backend3_v2
 	dfx build --no-deps --network $(NETWORK) upgrade_example_backend3_v2
 
+.PHONY: build@wallet_backend
+.PRECIOUS: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
+build@wallet_backend: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
+
+.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/wallet_backend/wallet.mo
+	dfx canister create --network $(NETWORK) wallet_backend
+	dfx build --no-deps --network $(NETWORK) wallet_backend
+
+.PHONY: build@wallet_frontend
+.PRECIOUS: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
+build@wallet_frontend: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
+
+.dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz: 
+	dfx canister create --network $(NETWORK) wallet_frontend
+	dfx build --no-deps --network $(NETWORK) wallet_frontend
+
 .PHONY: generate@battery
 .PRECIOUS: src/declarations/battery/battery.did.js src/declarations/battery/index.js src/declarations/battery/battery.did.d.ts src/declarations/battery/index.d.ts src/declarations/battery/battery.did
 generate@battery: src/declarations/battery/battery.did.js src/declarations/battery/index.js src/declarations/battery/battery.did.d.ts src/declarations/battery/index.d.ts src/declarations/battery/battery.did
@@ -372,7 +388,25 @@ generate@upgrade_example_backend3_v2: src/declarations/upgrade_example_backend3_
 src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did.js src/declarations/upgrade_example_backend3_v2/index.js src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did.d.ts src/declarations/upgrade_example_backend3_v2/index.d.ts src/declarations/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did: .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did
 	dfx generate --no-compile --network $(NETWORK) upgrade_example_backend3_v2
 
+.PHONY: generate@wallet_backend
+.PRECIOUS: src/declarations/wallet_backend/wallet_backend.did.js src/declarations/wallet_backend/index.js src/declarations/wallet_backend/wallet_backend.did.d.ts src/declarations/wallet_backend/index.d.ts src/declarations/wallet_backend/wallet_backend.did
+generate@wallet_backend: src/declarations/wallet_backend/wallet_backend.did.js src/declarations/wallet_backend/index.js src/declarations/wallet_backend/wallet_backend.did.d.ts src/declarations/wallet_backend/index.d.ts src/declarations/wallet_backend/wallet_backend.did
+
+src/declarations/wallet_backend/wallet_backend.did.js src/declarations/wallet_backend/index.js src/declarations/wallet_backend/wallet_backend.did.d.ts src/declarations/wallet_backend/index.d.ts src/declarations/wallet_backend/wallet_backend.did: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
+	dfx generate --no-compile --network $(NETWORK) wallet_backend
+
+.PHONY: generate@wallet_frontend
+.PRECIOUS: src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_frontend/index.js src/declarations/wallet_frontend/wallet_frontend.did.d.ts src/declarations/wallet_frontend/index.d.ts src/declarations/wallet_frontend/wallet_frontend.did
+generate@wallet_frontend: src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_frontend/index.js src/declarations/wallet_frontend/wallet_frontend.did.d.ts src/declarations/wallet_frontend/index.d.ts src/declarations/wallet_frontend/wallet_frontend.did
+
+src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_frontend/index.js src/declarations/wallet_frontend/wallet_frontend.did.d.ts src/declarations/wallet_frontend/index.d.ts src/declarations/wallet_frontend/wallet_frontend.did: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
+	dfx generate --no-compile --network $(NETWORK) wallet_frontend
+
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: src/common.mo
+
+.dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
+
+.dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
 
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
 
@@ -387,6 +421,10 @@ src/install.mo:
 .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.wasm .dfx/$(NETWORK)/canisters/bootstrapper/bootstrapper.did: src/install.mo
 
 src/package_manager_backend/battery.mo: src/common.mo
+
+src/package_manager_backend/battery.mo: 
+
+src/package_manager_backend/battery.mo: 
 
 src/package_manager_backend/battery.mo: 
 
@@ -461,6 +499,8 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
 
 .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: src/common.mo
+
+.dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
 
 .PHONY: deploy-self@battery
 deploy-self@battery: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
@@ -671,3 +711,23 @@ deploy-self@upgrade_example_backend3_v2: .dfx/$(NETWORK)/canisters/upgrade_examp
 
 .PHONY: deploy@upgrade_example_backend3_v2
 deploy@upgrade_example_backend3_v2: deploy-self@upgrade_example_backend3_v2
+
+.PHONY: deploy-self@wallet_backend
+deploy-self@wallet_backend: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.wallet_backend) wallet_backend
+
+
+
+.PHONY: deploy@wallet_backend
+deploy@wallet_backend: deploy-self@wallet_backend
+
+.PHONY: deploy-self@wallet_frontend
+deploy-self@wallet_frontend: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.wallet_frontend) wallet_frontend
+
+
+
+.dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz: generate@wallet_backend
+
+.PHONY: deploy@wallet_frontend
+deploy@wallet_frontend: deploy@wallet_backend deploy-self@wallet_frontend

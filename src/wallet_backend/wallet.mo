@@ -2,18 +2,13 @@ import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 
 persistent actor class Wallet({
-    initialOwner: ?Principal;
+    user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
 }) {
-    let owner = initialOwner;
+    let owner = user;
 
     private func onlyOwner(caller: Principal, msg: Text) {
-        switch(owner) {
-            case (?owner) {
-                if (caller != owner) {
-                    Debug.trap("Only the owner can call " # msg);
-                };
-            };
-            case null {};
+        if (not Principal.isAnonymous(user) and caller != owner) {
+            Debug.trap(msg # ": no owner set");
         };
     };
 
