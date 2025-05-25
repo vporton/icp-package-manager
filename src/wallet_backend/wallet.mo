@@ -18,7 +18,7 @@ persistent actor class Wallet({
         var amountAddInput: ?Float;
     };
 
-    transient let principalMap = Map.Make<Principal>(Principal.compare);
+    transient var principalMap = Map.Make<Principal>(Principal.compare);
     stable var userData = principalMap.empty<UserData>();
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
@@ -38,7 +38,7 @@ persistent actor class Wallet({
     public shared({caller}) func setLimitAmounts(values: {amountAddCheckbox: ?Float; amountAddInput: ?Float}): async () {
         onlyOwner(caller, "setLimitAmounts");
 
-        ignore principalMap.put(userData, caller, {
+        principalMap := principalMap.put(userData, caller, {
             amountAddCheckbox = values.amountAddCheckbox;
             amountAddInput = values.amountAddInput;
         });
