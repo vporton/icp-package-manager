@@ -359,7 +359,9 @@ function App2() {
                   </Dropdown.Menu>
                 </Dropdown>
                 <a onClick={updateAllCyclesAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>{" "}
-                <a target="_blank" href="https://github.com/vporton/icp-package-manager">
+              </Nav>
+              <Nav className="ms-auto">
+                <a target="_blank" href="https://github.com/vporton/icp-package-manager" style={{marginRight: '0.5em'}}>
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
               </Nav>
