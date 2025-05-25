@@ -6,7 +6,7 @@ import { Wallet } from '../../declarations/wallet_backend/wallet_backend.did'
 import { useAuth } from '../../lib/use-auth-client';
 
 export default function Settings() {
-    const {agent} = useAuth();
+    const {agent, ok} = useAuth();
     const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
     const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
     const [amountAddCheckboxText, setAmountAddCheckboxText] = useState<string>("");
@@ -60,6 +60,7 @@ export default function Settings() {
                         type="number"
                         min="0"
                         defaultValue={amountAddCheckbox}
+                        disabled={!ok}
                         onInput={amountAddCheckboxInput}
                         isValid={amountAddCheckbox !== undefined || amountAddCheckboxText === ""}
                         isInvalid={amountAddCheckbox === undefined && amountAddCheckboxText !== ""}/>
@@ -70,14 +71,13 @@ export default function Settings() {
                         type="number"
                         min="0"
                         defaultValue={amountAddInput}
+                        disabled={!ok}
                         onInput={amountAddInputInput}
                         isValid={amountAddInput !== undefined || amountAddInputText === ""}
                         isInvalid={amountAddInput === undefined && amountAddInputText !== ""}/>
                 </Form.Group>
                 <p style={{marginTop: '1ex'}}>
-                    <Button
-                        variant="primary"
-                    >
+                    <Button variant="primary" disabled={!ok}>
                         Submit
                     </Button>
                 </p>

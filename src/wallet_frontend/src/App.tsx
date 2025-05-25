@@ -5,10 +5,11 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
-import { AuthProvider } from '../../lib/use-auth-client';
+import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 
 export default function App() {
+    const {ok} = useAuth();
   return (
     <AuthProvider>
         <Container>
@@ -23,7 +24,10 @@ export default function App() {
             <p><AuthButton/></p>
             <Tabs>
                 <Tab eventKey="tokens" title="Tokens">
-                    <p><Button>Add token</Button></p>
+                    <p>
+                        <Button>Add token</Button>
+                        {!ok && <>{" "}Login to add a token.</>}
+                    </p>
                     <TokensTable />
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
