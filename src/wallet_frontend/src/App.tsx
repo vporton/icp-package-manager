@@ -34,7 +34,12 @@ function App2() {
                 <img width="128" height="128" src="/img/wallet-256x256.png" alt="Payments Wallet logo" />
                 {" "}Payments Wallet
             </h1>
-            <p><AuthButton/></p>
+            <p>
+                <AuthButton/>{" "}
+                <a target="_blank" href="https://github.com/vporton/icp-package-manager">
+                    <img src="/github-mark.svg" width="24" height="24"/>
+                </a>
+            </p>
             <Tabs>
                 <Tab eventKey="tokens" title="Tokens">
                     <p>

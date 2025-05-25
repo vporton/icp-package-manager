@@ -233,7 +233,10 @@ function App2() {
           <a href="#" onClick={(event) => {
             setShowHelpLogin(showHelpLogin => !showHelpLogin);
             event.preventDefault();
-          }}>How to register/login (video)</a>
+          }}>How to register/login (video)</a> |{" "}
+          <a target="_blank" href="https://github.com/vporton/icp-package-manager">
+              <img src="/github-mark.svg" width="24" height="24"/>
+          </a>
         </p>
         <Modal show={showHelpLogin} onHide={() => setShowHelpLogin(false)} size="lg" centered>
           <Modal.Header closeButton>

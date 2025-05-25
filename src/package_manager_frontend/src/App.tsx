@@ -358,7 +358,10 @@ function App2() {
                       updateCyclesAmount={updateCyclesAmount} updateCyclesLedgerAmount={updateCyclesLedgerAmount} updateICPAmount={updateICPAmount}/>
                   </Dropdown.Menu>
                 </Dropdown>
-                <a onClick={updateAllCyclesAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>
+                <a onClick={updateAllCyclesAmounts} style={{padding: '0', textDecoration: 'none', cursor: 'pointer'}}>&#x27F3;</a>{" "}
+                <a target="_blank" href="https://github.com/vporton/icp-package-manager">
+                    <img src="/github-mark.svg" width="24" height="24"/>
+                </a>
               </Nav>
             </Navbar>
           </nav>
