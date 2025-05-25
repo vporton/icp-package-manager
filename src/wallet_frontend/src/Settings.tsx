@@ -46,7 +46,6 @@ export default function Settings() {
         if (backend !== undefined) {
             backend.getLimitAmounts()
                 .then((result: {amountAddCheckbox: [number] | [], amountAddInput: [number] | []}) => {
-                    console.log("getLimitAmounts result:", result); // FIXME: Remove.
                     setAmountAddCheckbox(result.amountAddCheckbox[0]);
                     setAmountAddInput(result.amountAddInput[0]);
                 });
@@ -54,7 +53,6 @@ export default function Settings() {
     }, [backend]);
     const [submitted, setSubmitted] = useState<boolean>(false);
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("XX", amountAddCheckbox); // FIXME: Remove.
         try {
             await backend!.setLimitAmounts({
                 amountAddCheckbox: amountAddCheckbox ? [amountAddCheckbox] : [],
