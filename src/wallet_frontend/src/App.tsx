@@ -35,7 +35,7 @@ function App2() {
                         <Button disabled={!ok}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
-                    <TokensTable />
+                    {ok && <TokensTable />}
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>

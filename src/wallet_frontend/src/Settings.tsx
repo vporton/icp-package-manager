@@ -4,6 +4,7 @@ import Form from 'react-bootstrap/Form';
 import { createActor as createWalletActor } from '../../declarations/wallet_backend'
 import { Wallet } from '../../declarations/wallet_backend/wallet_backend.did'
 import { useAuth } from '../../lib/use-auth-client';
+import { Check } from 'react-bootstrap-icons';
 
 export default function Settings() {
     const {agent, ok} = useAuth();
@@ -43,11 +44,22 @@ export default function Settings() {
         if (backend !== undefined) {
             backend.getLimitAmounts()
                 .then((result: {amountAddCheckbox: [number] | [], amountAddInput: [number] | []}) => {
+                    console.log("getLimitAmounts result:", result);
                     setAmountAddCheckbox(result.amountAddCheckbox[0]);
                     setAmountAddInput(result.amountAddInput[0]);
                 });
         }
     }, [backend]);
+    const [submitted, setSubmitted] = useState<boolean>(false);
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        console.log("XX", amountAddCheckbox);
+        await backend!.setLimitAmounts({
+            amountAddCheckbox: amountAddCheckbox ? [amountAddCheckbox] : [],
+            amountAddInput: amountAddInput ? [amountAddInput] : [],
+        });
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
+    };
     return (
         <>
             <p>This form controls how much confirmations are asked when transferring tokens.</p>
@@ -76,9 +88,10 @@ export default function Settings() {
                         isInvalid={amountAddInput === undefined && amountAddInputText !== ""}/>
                 </Form.Group>
                 <p style={{marginTop: '1ex'}}>
-                    <Button variant="primary" disabled={!ok}>
+                    <Button variant="primary" onClick={handleSubmit} disabled={!ok}>
                         Submit
                     </Button>
+                    {submitted && <Check color="lightgreen"/>}
                 </p>
             </Form>
         </>
