@@ -29,7 +29,7 @@ export default function App() {
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>
                 </Tab>
-                <Tab eventKey="settings" title="Invest">
+                <Tab eventKey="invest" title="Invest">
                 </Tab>
             </Tabs>
         </Container>
