@@ -16,7 +16,7 @@ import { ErrorContext } from "../../lib/ErrorContext";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
-import { init } from "@dfinity/agent/lib/cjs/canisters/management_service.js";
+import { ICManagementCanister } from "@dfinity/ic-management";
 
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
 export default function ChooseVersion(props: {}) {
@@ -138,14 +138,66 @@ function ChooseVersion2(props: {
                 console.log(`Modules to delete: ${upgradeResult.modulesToDelete.map(([name, _]) => name).join(', ')}`);
                 
                 // Upgrade modules one by one
+                const infrastructureModules = new Set(['main_indirect', 'simple_indirect']);
+                const managementCanister = ICManagementCanister.create({ agent: agent! });
+                
                 for (const moduleName of upgradeResult.modulesToUpgrade) {
                     console.log(`Upgrading module: ${moduleName}`);
-                    const moduleResult = await package_manager.upgradeModule({
-                        upgradeId: upgradeResult.upgradeId,
-                        moduleName: moduleName,
-                        user: principal!,
-                    });
-                    console.log(`Module ${moduleName} upgrade completed: ${moduleResult.completed}`);
+                    
+                    if (infrastructureModules.has(moduleName)) {
+                        // Handle infrastructure modules directly via Management Canister
+                        console.log(`Upgrading infrastructure module ${moduleName} via Management Canister`);
+                        try {
+                            // Get the canister ID for this module
+                            const moduleCanisterId = await package_manager.getModulePrincipal(BigInt(props.oldInstallation!), moduleName);
+                            console.log(`Infrastructure module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
+                            
+                            // Create repository actor to get the package info
+                            const repositoryActor: Repository = Actor.createActor(repositoryIndexIdl, {
+                                agent: agent!,
+                                canisterId: props.repo!
+                            });
+                            
+                            // Get the new WASM module from the repository
+                            const packageInfo = await repositoryActor.getPackage(props.packageName!, chosenVersion!);
+                            const realPackage = packageInfo.specific as { real: any };
+                            if (realPackage && realPackage.real && realPackage.real.modules[moduleName]) {
+                                const moduleInfo = realPackage.real.modules[moduleName];
+                                const wasmModuleLocation = moduleInfo.code;
+                                
+                                if (wasmModuleLocation && typeof wasmModuleLocation === 'object' && 'Repository' in wasmModuleLocation) {
+                                    const [repoCanister, wasmId] = wasmModuleLocation.Repository;
+                                    const wasmModule = await repositoryActor.getWasmModule(wasmId);
+                                    
+                                    // Upgrade via Management Canister
+                                    const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
+                                    await managementCanister.installCode({
+                                        canisterId: moduleCanisterId,
+                                        wasmModule: wasmModuleBytes,
+                                        arg: new Uint8Array(), // Infrastructure modules typically don't need specific args
+                                        mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
+                                        senderCanisterVersion: 0n
+                                    });
+                                    console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
+                                } else {
+                                    console.error(`Invalid WASM module location for ${moduleName}:`, wasmModuleLocation);
+                                }
+                            } else {
+                                console.error(`Module ${moduleName} not found in package info`);
+                            }
+                        } catch (error) {
+                            console.error(`Failed to upgrade infrastructure module ${moduleName}:`, error);
+                            // Continue with other modules instead of failing the entire upgrade
+                        }
+                    } else {
+                        // Handle regular modules via the backend API
+                        const moduleResult = await package_manager.upgradeModule({
+                            upgradeId: upgradeResult.upgradeId,
+                            moduleName: moduleName,
+                            user: principal!,
+                        });
+                        console.log(`Module ${moduleName} upgrade completed: ${moduleResult.completed}`);
+                    }
                     
                     // Optional: Add a small delay between module upgrades to show progress
                     await new Promise((resolve) => setTimeout(resolve, 500));
