@@ -314,6 +314,80 @@ shared({caller = initialCaller}) actor class PackageManager({
         };
     };
 
+    /// Private helper function to prepare upgrade data structures
+    private func prepareUpgradeData({
+        installationId: Common.InstallationId;
+        newPkg: Common.PackageInfo;
+        newRepo: Principal;
+        arg: Blob;
+        initArg: ?Blob;
+    }): {
+        halfUpgradedInfo: HalfUpgradedPackageInfo;
+        modulesToDelete: [(Text, Principal)];
+        allModulesCount: Nat;
+    } {
+        let #real newPkgReal = newPkg.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let newPkgModules = newPkgReal.modules;
+
+        let ?oldPkg = installedPackages.get(installationId) else {
+            Debug.trap("no such package installation");
+        };
+        let #real oldPkgReal = oldPkg.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+
+        // Calculate modules to delete
+        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
+            Iter.filter<(Text, Common.Module)>(
+                oldPkgReal.modules.entries(),
+                func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
+            ),
+            oldPkgReal.modules.size(),
+            Text.equal,
+            Text.hash,
+        );
+        let modulesToDelete = Iter.toArray(
+            Iter.map<Text, (Text, Principal)>(
+                modulesToDelete0.keys(),
+                func (name: Text) {
+                    let ?m = oldPkg.modulesInstalledByDefault.get(name) else {
+                        Debug.trap("programming error");
+                    };
+                    (name, m);
+                },
+            )
+        );
+
+        // Calculate all modules (old + new)
+        let allModules = HashMap.fromIter<Text, ()>(
+            Iter.map<Text, (Text, ())>(
+                Iter.concat(oldPkg.modulesInstalledByDefault.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
+            ),
+            oldPkg.modulesInstalledByDefault.size() + newPkgModules.size(),
+            Text.equal,
+            Text.hash,
+        );
+
+        let halfUpgradedInfo: HalfUpgradedPackageInfo = {
+            installationId;
+            package = newPkg;
+            newRepo;
+            modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
+            modulesToDelete;
+            var remainingModules = allModules.size() - modulesToDelete.size(); // modules to install or upgrade
+            arg;
+            initArg;
+        };
+
+        {
+            halfUpgradedInfo;
+            modulesToDelete;
+            allModulesCount = allModules.size();
+        };
+    };
+
     public shared({caller}) func installPackages({
         packages: [{
             packageName: Common.PackageName;
@@ -475,62 +549,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         for (newPkgNum in packages.keys()) {
             let newPkgData = packages[newPkgNum];
             let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO@P3: Need to unshare the entire variable?
-            let #real newPkgReal = newPkg.specific else {
-                Debug.trap("trying to directly install a virtual package");
-            };
-            // TODO@P3: virtual packages; upgrading a real package into virtual or vice versa
-            let newPkgModules = newPkgReal.modules;
-            let ?oldPkg = installedPackages.get(newPkgData.installationId) else {
-                Debug.trap("no such package installation");
-            };
-            let #real oldPkgReal = oldPkg.package.specific else {
-                Debug.trap("trying to directly upgrade a virtual package");
-            };
-
-            let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
-                Iter.filter<(Text, Common.Module)>(
-                    oldPkgReal.modules.entries(),
-                    func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
-                ),
-                oldPkgReal.modules.size(), // TODO@P3: It can be smaller.
-                Text.equal,
-                Text.hash,
-            );
-            let modulesToDelete = Iter.toArray(
-                Iter.map<Text, (Text, Principal)>(
-                    modulesToDelete0.keys(),
-                    func (name: Text) {
-                        let ?m = oldPkg.modulesInstalledByDefault.get(name) else {
-                            Debug.trap("programming error");
-                        };
-                        (name, m);
-                    },
-                )
-            );
-
-            // It seems that the below can be optimized:
-            let allModules = HashMap.fromIter<Text, ()>(
-                Iter.map<Text, (Text, ())>(
-                    Iter.concat(oldPkg.modulesInstalledByDefault.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
-                ),
-                oldPkg.modulesInstalledByDefault.size() + newPkgModules.size(),
-                Text.equal,
-                Text.hash,
-            );
-
-            let pkg2: HalfUpgradedPackageInfo = {
+            
+            let {halfUpgradedInfo; modulesToDelete; allModulesCount} = prepareUpgradeData({
                 installationId = newPkgData.installationId;
-                package = newPkg;
+                newPkg;
                 newRepo = Principal.fromActor(newPkgData.repo);
-                modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
-                modulesToDelete;
-                var remainingModules = allModules.size() - modulesToDelete.size(); // the number of modules to install or upgrade
                 arg = newPkgData.arg;
                 initArg = newPkgData.initArg;
-            };
-            // Debug.print("XXX: " # debug_show(pkg2.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
-            halfUpgradedPackages.put(minUpgradeId + newPkgNum, pkg2);
-            await* doUpgradeFinish(minUpgradeId + newPkgNum, pkg2, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
+            });
+
+            // Debug.print("XXX: " # debug_show(halfUpgradedInfo.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
+            halfUpgradedPackages.put(minUpgradeId + newPkgNum, halfUpgradedInfo);
+            await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
         };
     };
 
@@ -1184,7 +1214,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Nat.equal,
             Common.intHash,
         );
-        _halfInstalledPackagesSave := []; // Free memory.
+        _halfInstalledPackagesSave := []; // Free memory;
         halfUninstalledPackages := HashMap.fromIter<Common.UninstallationId, HalfUninstalledPackageInfo>(
             Iter.map<(Common.UninstallationId, SharedHalfUninstalledPackageInfo), (Common.UninstallationId, HalfUninstalledPackageInfo)>(
                 _halfUninstalledPackagesSave.vals(),
@@ -1474,5 +1504,147 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
+    };
+
+    /// New API for step-by-step upgrades
+    /// Initiates an upgrade process and returns upgrade information
+    public shared({caller}) func startModularUpgrade({
+        installationId: Common.InstallationId;
+        packageName: Common.PackageName;
+        version: Common.Version;
+        repo: Common.RepositoryRO;
+        arg: Blob;
+        initArg: ?Blob;
+        user: Principal;
+    })
+        : async {
+            upgradeId: Common.UpgradeId;
+            totalModules: Nat;
+            modulesToUpgrade: [Text];
+            modulesToDelete: [(Text, Principal)];
+        }
+    {
+        onlyOwner(caller, "startModularUpgrade");
+
+        // Get package info from repository first
+        let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
+        
+        // Extract modules for cycles calculation
+        let #real newPkgReal = newPkg.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+
+        await batteryActor.withdrawCycles3(
+            2_000_000_000_000 * newPkgReal.modules.size(), // TODO@P2: symbolic constant, twice 2_000_000_000_000
+            Principal.fromActor(main_indirect_));
+
+        let upgradeId = nextUpgradeId;
+        nextUpgradeId += 1;
+        
+        let {halfUpgradedInfo; modulesToDelete; allModulesCount} = prepareUpgradeData({
+            installationId;
+            newPkg;
+            newRepo = Principal.fromActor(repo);
+            arg;
+            initArg;
+        });
+        
+        halfUpgradedPackages.put(upgradeId, halfUpgradedInfo);
+
+        let modulesToUpgrade = Iter.toArray(newPkgReal.modules.keys());
+
+        {
+            upgradeId;
+            totalModules = halfUpgradedInfo.remainingModules;
+            modulesToUpgrade;
+            modulesToDelete;
+        };
+    };
+
+    /// Upgrade a specific module as part of modular upgrade
+    public shared({caller}) func upgradeModule({
+        upgradeId: Common.UpgradeId;
+        moduleName: Text;
+        user: Principal;
+    }): async {completed: Bool} {
+        onlyOwner(caller, "upgradeModule");
+
+        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        };
+
+        let #real newPkgReal = upgrade.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let newPkgModules = newPkgReal.modules;
+
+        let ?wasmModule = newPkgModules.get(moduleName) else {
+            Debug.trap("no such module: " # moduleName);
+        };
+
+        // Get the old package info
+        let ?oldPkg = installedPackages.get(upgrade.installationId) else {
+            Debug.trap("no such package installation");
+        };
+
+        let canister_id = oldPkg.modulesInstalledByDefault.get(moduleName);
+
+        // Upgrade the module using main_indirect
+        getMainIndirect().upgradeOrInstallModule({
+            upgradeId;
+            installationId = upgrade.installationId;
+            canister_id;
+            user;
+            wasmModule = Common.shareModule(wasmModule);
+            arg = to_candid({
+                packageManager = Principal.fromActor(this);
+                mainIndirect = Principal.fromActor(getMainIndirect());
+                simpleIndirect = Principal.fromActor(getSimpleIndirect());
+                battery;
+                user;
+                installationId = upgrade.installationId;
+                userArg = upgrade.arg;
+            });
+            moduleName;
+            moduleNumber = 0; // Not used for individual upgrades
+            packageManager = Principal.fromActor(this);
+            simpleIndirect = Principal.fromActor(getSimpleIndirect());
+            afterUpgradeCallback = null;
+        });
+
+        {completed = false}; // Will be updated via onUpgradeOrInstallModule callback
+    };
+
+    /// Get the current status of a modular upgrade
+    public query({caller}) func getModularUpgradeStatus(upgradeId: Common.UpgradeId): async {
+        upgradeId: Common.UpgradeId;
+        installationId: Common.InstallationId;
+        packageName: Text;
+        completedModules: Nat;
+        totalModules: Nat;
+        remainingModules: Nat;
+        isCompleted: Bool;
+    } {
+        onlyOwner(caller, "getModularUpgradeStatus");
+
+        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        };
+
+        let #real newPkgReal = upgrade.package.specific else {
+            Debug.trap("trying to directly upgrade a virtual package");
+        };
+        let totalModules = newPkgReal.modules.size();
+        let completedModules = totalModules - upgrade.remainingModules;
+
+        {
+            upgradeId;
+            installationId = upgrade.installationId;
+            packageName = upgrade.package.base.name;
+            completedModules;
+            totalModules;
+            remainingModules = upgrade.remainingModules;
+            isCompleted = upgrade.remainingModules == 0;
+        };
     };
 }

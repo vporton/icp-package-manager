@@ -239,9 +239,8 @@
     "package_manager": {
       "args": "--enhanced-orthogonal-persistence",
       "dependencies": [
-        "bootstrapper",
         "nns-ledger",
-        "repository"
+        "cycles_ledger"
       ],
       "main": "src/package_manager_backend/package_manager.mo",
       "metadata": [

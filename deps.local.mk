@@ -655,7 +655,7 @@ deploy-self@package_manager: .dfx/$(NETWORK)/canisters/package_manager/package_m
 
 
 .PHONY: deploy@package_manager
-deploy@package_manager: deploy@bootstrapper deploy@nns-ledger deploy@repository deploy-self@package_manager
+deploy@package_manager: deploy@nns-ledger deploy@cycles_ledger deploy-self@package_manager
 
 .PHONY: deploy-self@package_manager_frontend
 deploy-self@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz

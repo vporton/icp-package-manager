@@ -119,18 +119,67 @@ function ChooseVersion2(props: {
 
             // TODO@P3: hack
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
-            const {minUpgradeId: id} = await package_manager.upgradePackages({
-                packages: [{
+            
+            // Use modular upgrade API for icpack package, regular upgrade for others
+            if (props.packageName === "icpack") {
+                // Start modular upgrade for icpack
+                const upgradeResult = await package_manager.startModularUpgrade({
                     installationId: BigInt(props.oldInstallation!),
                     packageName: props.packageName!,
                     version: chosenVersion!,
                     repo: props.repo!,
                     arg: new Uint8Array(),
                     initArg: [],
-                }],
-                user: principal!,
-                afterUpgradeCallback: [],
-            });
+                    user: principal!,
+                });
+                
+                console.log(`Started modular upgrade for icpack. Upgrade ID: ${upgradeResult.upgradeId}, Total modules: ${upgradeResult.totalModules}`);
+                console.log(`Modules to upgrade: ${upgradeResult.modulesToUpgrade.join(', ')}`);
+                console.log(`Modules to delete: ${upgradeResult.modulesToDelete.map(([name, _]) => name).join(', ')}`);
+                
+                // Upgrade modules one by one
+                for (const moduleName of upgradeResult.modulesToUpgrade) {
+                    console.log(`Upgrading module: ${moduleName}`);
+                    const moduleResult = await package_manager.upgradeModule({
+                        upgradeId: upgradeResult.upgradeId,
+                        moduleName: moduleName,
+                        user: principal!,
+                    });
+                    console.log(`Module ${moduleName} upgrade completed: ${moduleResult.completed}`);
+                    
+                    // Optional: Add a small delay between module upgrades to show progress
+                    await new Promise((resolve) => setTimeout(resolve, 500));
+                }
+                
+                // Wait for the upgrade to complete
+                for (;;) {
+                    const status = await package_manager.getModularUpgradeStatus(upgradeResult.upgradeId);
+                    console.log(`Upgrade progress: ${status.completedModules}/${status.totalModules} modules completed`);
+                    
+                    if (status.isCompleted) {
+                        console.log("Modular upgrade completed successfully");
+                        break;
+                    }
+                    
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+            } else {
+                // Use existing upgrade method for non-icpack packages
+                const {minUpgradeId: id} = await package_manager.upgradePackages({
+                    packages: [{
+                        installationId: BigInt(props.oldInstallation!),
+                        packageName: props.packageName!,
+                        version: chosenVersion!,
+                        repo: props.repo!,
+                        arg: new Uint8Array(),
+                        initArg: [],
+                    }],
+                    user: principal!,
+                    afterUpgradeCallback: [],
+                });
+            }
+            
+            // Wait for package to be updated in the system
             for (;;) {
                 const cur = await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0);
                 if (cur.all.find(v => v.package.base.version === chosenVersion) !== undefined) {
