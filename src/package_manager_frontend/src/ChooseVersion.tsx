@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ModuleCode, SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
+import { Location, ModuleCode, SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "../../lib/use-auth-client.js";
@@ -147,7 +147,7 @@ function ChooseVersion2(props: {
                     agent: agent!,
                     canisterId: props.repo!
                 });
-                
+
                 // Get the new WASM module from the repository
                 const packageInfo = await repositoryActor.getPackage(props.packageName!, chosenVersion!);
                 const realPackage = packageInfo.specific as { real: any };
@@ -167,27 +167,27 @@ function ChooseVersion2(props: {
                     
                     if (realPackage.real.modules.filter((m: [string, SharedModule]) => m[0] == moduleName)[0][1]) { // TODO@P2: needed?
                         const moduleInfo = pkgModules.get(moduleName)!.code; // TODO@P3: Rename.
-                        const wasmModuleLocation = (moduleInfo as any).Wasm !== undefined
+                        const wasmModuleLocation: Location = (moduleInfo as any).Wasm !== undefined
                             ? (moduleInfo as any).Wasm : (moduleInfo as any).Assets.wasm;
                         
-                        if (wasmModuleLocation && typeof wasmModuleLocation === 'object' && 'Repository' in wasmModuleLocation) {
-                            const [repoCanister, wasmId] = wasmModuleLocation.Repository;
-                            const wasmModule = await repositoryActor.getWasmModule(wasmId);
-                            
-                            // Upgrade via Management Canister
-                            const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-                            // FIXME@P1: Need to have two keep modes, like as in similar Motoko code.
-                            await managementCanister.installCode({
-                                canisterId: moduleCanisterId,
-                                wasmModule: wasmModuleBytes,
-                                arg: new Uint8Array(), // FIXME@P2: pass proper init arg if needed
-                                mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
-                                senderCanisterVersion: undefined,
-                            });
-                            console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
-                        } else {
-                            console.error(`Invalid WASM module location for ${moduleName}:`, wasmModuleLocation);
-                        }
+                        const [repoCanister, wasmId] = wasmModuleLocation;
+                        const repositoryActor2: Repository = Actor.createActor(repositoryIndexIdl, { // TODO@P3: needed separate canister for each module?
+                            agent: agent!,
+                            canisterId: repoCanister,
+                        });
+                        const wasmModule = await repositoryActor2.getWasmModule(wasmId);
+                        
+                        // Upgrade via Management Canister
+                        const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
+                        // FIXME@P1: Need to have two keep modes, like as in similar Motoko code.
+                        await managementCanister.installCode({
+                            canisterId: moduleCanisterId,
+                            wasmModule: wasmModuleBytes,
+                            arg: new Uint8Array(), // FIXME@P1: Must be Candid-encoded. // FIXME@P2: pass proper init arg if needed
+                            mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
+                            senderCanisterVersion: undefined,
+                        });
+                        console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
                     } else {
                         console.error(`Module ${moduleName} not found in package info`);
                     }
