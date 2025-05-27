@@ -28,11 +28,12 @@ if (isLocal) {
 async function main() {
     const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
+    const net = process.env.DFX_NETWORK;
 
-    const pmUpgradeable1V1Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm"));
-    const pmUpgradeable2V1Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm"));
-    const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm"));
-    const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(".dfx/local/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm"));
+    const pmUpgradeable1V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm`));
+    const pmUpgradeable2V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm`));
+    const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm`));
+    const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm`));
 
     const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {

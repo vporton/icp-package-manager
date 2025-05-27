@@ -28,14 +28,15 @@ if (isLocal) {
 async function main() {
     const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
+    const net = process.env.DFX_NETWORK;
 
-    const frontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz"));
-    const pmBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/package_manager/package_manager.wasm"));
-    const pmMainIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/main_indirect/main_indirect.wasm"));
-    const pmSimpleIndirectBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/simple_indirect/simple_indirect.wasm"));
-    const pmBatteryBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/battery/battery.wasm"));
-    const pmExampleFrontendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_frontend/example_frontend.wasm.gz"));
-    const pmExampleBackendBlob = Uint8Array.from(readFileSync(".dfx/local/canisters/example_backend/example_backend.wasm"));
+    const frontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz`));
+    const pmBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/package_manager/package_manager.wasm`));
+    const pmMainIndirectBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/main_indirect/main_indirect.wasm`));
+    const pmSimpleIndirectBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/simple_indirect/simple_indirect.wasm`));
+    const pmBatteryBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/battery/battery.wasm`));
+    const pmExampleFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_frontend/example_frontend.wasm.gz`));
+    const pmExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_backend/example_backend.wasm`));
 
     const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
