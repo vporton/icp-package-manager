@@ -397,6 +397,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                                 packageManager;
                                 mainIndirect;
                                 simpleIndirect;
+                                battery;
                                 user;
                                 installationId;
                                 upgradeId;
