@@ -218,9 +218,16 @@ shared({caller = initialCaller}) actor class SimpleIndirect({
 	public shared({caller}) func install_code(args: IC.InstallCodeArgs, amount: Nat): async () {
         onlyOwner(caller, "install_code");
 
-        ignore Cycles.accept<system>(amount);
-        Cycles.add<system>(amount);
-        await IC.ic.install_code(args);
+        // try { // TODO@P1: Do it for all functions
+            ignore Cycles.accept<system>(amount);
+            Cycles.add<system>(amount);
+            await IC.ic.install_code(args);
+        // }
+        // catch (e) {
+        //     let msg = "install_code: " # Error.message(e);
+        //     Debug.print(msg);
+        //     Debug.trap(msg);
+        // }
     };
 
 	public shared({caller}) func list_canister_snapshots(args: IC.ListCanisterSnapshotsArgs, amount: Nat): async IC.ListCanisterSnapshotsResult {
