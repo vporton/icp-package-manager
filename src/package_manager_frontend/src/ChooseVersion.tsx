@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
+import { ModuleCode, SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
 import { Actor, Agent } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "../../lib/use-auth-client.js";
@@ -13,7 +13,7 @@ import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { InitializedChecker, waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "../../lib/ErrorContext";
-import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback } from '../../declarations/package_manager/package_manager.did';
+import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback, SharedModule } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
 import { ICManagementCanister } from "@dfinity/ic-management";
@@ -122,6 +122,8 @@ function ChooseVersion2(props: {
             
             // Use modular upgrade API for icpack package, regular upgrade for others
             if (props.packageName === "icpack") {
+                // TODO@P2: Extract to a library function and unit test it.
+
                 // Start modular upgrade for icpack
                 const upgradeResult = await package_manager.startModularUpgrade({
                     installationId: BigInt(props.oldInstallation!),
@@ -139,7 +141,21 @@ function ChooseVersion2(props: {
                 
                 // Upgrade modules one by one, because `icpack` cannot upgrade itself.
                 const managementCanister = ICManagementCanister.create({ agent: agent! });
+
+                // Create repository actor to get the package info
+                const repositoryActor: Repository = Actor.createActor(repositoryIndexIdl, {
+                    agent: agent!,
+                    canisterId: props.repo!
+                });
                 
+                // Get the new WASM module from the repository
+                const packageInfo = await repositoryActor.getPackage(props.packageName!, chosenVersion!);
+                const realPackage = packageInfo.specific as { real: any };
+                if (realPackage === undefined || realPackage.real === undefined) {
+                    setError(`Invalid package info for ${props.packageName!} version ${chosenVersion!}`);
+                    return;
+                }
+                const pkgModules = new Map<string, SharedModule>(realPackage.real.modules);
                 for (const moduleName of upgradeResult.modulesToUpgrade) {
                     console.log(`Upgrading module: ${moduleName}`);
                     
@@ -149,18 +165,10 @@ function ChooseVersion2(props: {
                     const moduleCanisterId = await package_manager.getModulePrincipal(BigInt(props.oldInstallation!), moduleName);
                     console.log(`Infrastructure module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
                     
-                    // Create repository actor to get the package info
-                    const repositoryActor: Repository = Actor.createActor(repositoryIndexIdl, {
-                        agent: agent!,
-                        canisterId: props.repo!
-                    });
-                    
-                    // Get the new WASM module from the repository
-                    const packageInfo = await repositoryActor.getPackage(props.packageName!, chosenVersion!);
-                    const realPackage = packageInfo.specific as { real: any };
-                    if (realPackage && realPackage.real && realPackage.real.modules[moduleName]) {
-                        const moduleInfo = realPackage.real.modules[moduleName];
-                        const wasmModuleLocation = moduleInfo.code;
+                    if (realPackage.real.modules.filter((m: [string, SharedModule]) => m[0] == moduleName)[0][1]) { // TODO@P2: needed?
+                        const moduleInfo = pkgModules.get(moduleName)!.code; // TODO@P3: Rename.
+                        const wasmModuleLocation = (moduleInfo as any).Wasm !== undefined
+                            ? (moduleInfo as any).Wasm : (moduleInfo as any).Assets.wasm;
                         
                         if (wasmModuleLocation && typeof wasmModuleLocation === 'object' && 'Repository' in wasmModuleLocation) {
                             const [repoCanister, wasmId] = wasmModuleLocation.Repository;
@@ -172,7 +180,7 @@ function ChooseVersion2(props: {
                             await managementCanister.installCode({
                                 canisterId: moduleCanisterId,
                                 wasmModule: wasmModuleBytes,
-                                arg: new Uint8Array(), // Infrastructure modules typically don't need specific args
+                                arg: new Uint8Array(), // FIXME@P2: pass proper init arg if needed
                                 mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
                                 senderCanisterVersion: undefined,
                             });
@@ -183,6 +191,7 @@ function ChooseVersion2(props: {
                     } else {
                         console.error(`Module ${moduleName} not found in package info`);
                     }
+                    // FIXME@P2: Also remove outdated modules, if any.
                     
                     // Optional: Add a small delay between module upgrades to show progress
                     await new Promise((resolve) => setTimeout(resolve, 500));
