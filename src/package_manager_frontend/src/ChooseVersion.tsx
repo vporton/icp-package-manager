@@ -176,7 +176,7 @@ function ChooseVersion2(props: {
                                         wasmModule: wasmModuleBytes,
                                         arg: new Uint8Array(), // Infrastructure modules typically don't need specific args
                                         mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
-                                        senderCanisterVersion: 0n
+                                        senderCanisterVersion: undefined,
                                     });
                                     console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
                                 } else {
