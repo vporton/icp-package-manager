@@ -171,6 +171,7 @@ function ChooseVersion2(props: {
                                     
                                     // Upgrade via Management Canister
                                     const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
+                                    // FIXME@P1: Need to have two keep modes, like as in similar Motoko code.
                                     await managementCanister.installCode({
                                         canisterId: moduleCanisterId,
                                         wasmModule: wasmModuleBytes,
