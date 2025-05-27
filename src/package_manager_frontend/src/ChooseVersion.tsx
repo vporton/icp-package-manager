@@ -17,6 +17,7 @@ import { InstallationId, PackageName, PackageManager, Version, SharedRealPackage
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
 import { ICManagementCanister } from "@dfinity/ic-management";
+import { IDL } from "@dfinity/candid";
 
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
 export default function ChooseVersion(props: {}) {
@@ -183,7 +184,7 @@ function ChooseVersion2(props: {
                         await managementCanister.installCode({
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
-                            arg: new Uint8Array(), // FIXME@P1: Must be Candid-encoded. // FIXME@P2: pass proper init arg if needed
+                            arg: new Uint8Array(IDL.Record({}).encodeValue({})), // FIXME@P2: pass proper init arg if needed
                             mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
                             senderCanisterVersion: undefined,
                         });
