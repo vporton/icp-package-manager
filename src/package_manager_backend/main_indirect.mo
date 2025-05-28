@@ -393,7 +393,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         Debug.print("P5"); // FIXME: Remove.
                         await (with cycles = 1_000_000_000_000) simple.install_code({
                             sender_canister_version = null; // TODO@P3: Set appropriate value.
-                            arg = to_candid({
+                            arg = to_candid({ // FIXME@P1: Pass the same also in frontend upgrade of `icpack`.
                                 packageManager;
                                 mainIndirect;
                                 simpleIndirect;
