@@ -184,7 +184,7 @@ function ChooseVersion2(props: {
                         await managementCanister.installCode({
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
-                            arg: new Uint8Array(IDL.Record({}).encodeValue({})), // FIXME@P2: pass proper init arg if needed
+                            arg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])), // FIXME@P2: pass proper init arg if needed
                             mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
                             senderCanisterVersion: undefined,
                         });
