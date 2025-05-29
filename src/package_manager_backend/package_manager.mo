@@ -1652,10 +1652,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     /// Mark all modules as upgraded for a modular upgrade (used for frontend-driven upgrades)
     public shared({caller}) func completeModularUpgrade(upgradeId: Common.UpgradeId): async () {
         onlyOwner(caller, "completeModularUpgrade");
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade: " # debug_show(upgradeId));
-        };
-        upgrade.remainingModules := 0;
-        // Optionally, trigger any logic that should run when all modules are upgraded (e.g., cleanup, callbacks)
+
+        halfUpgradedPackages.delete(upgradeId);
     }
 }
