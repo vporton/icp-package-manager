@@ -1534,11 +1534,6 @@ shared({caller = initialCaller}) actor class PackageManager({
             Debug.trap("trying to directly upgrade a virtual package");
         };
 
-        // FIXME@P1: newPkgReal.modules.size() does not take deleted modules into account.
-        await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * newPkgReal.modules.size(), // TODO@P2: symbolic constant, twice 2_000_000_000_000
-            Principal.fromActor(main_indirect_));
-
         let upgradeId = nextUpgradeId;
         nextUpgradeId += 1;
         
@@ -1552,7 +1547,11 @@ shared({caller = initialCaller}) actor class PackageManager({
         
         halfUpgradedPackages.put(upgradeId, halfUpgradedInfo);
 
-        let modulesToUpgrade = Iter.toArray(newPkgReal.modules.keys());
+        let modulesToUpgrade = Iter.toArray(newPkgReal.modules.keys()); // FIXME@P1
+
+        await batteryActor.withdrawCycles3(
+            2_000_000_000_000 * modulesToUpgrade.size(), // TODO@P2: symbolic constant, twice 2_000_000_000_000
+            Principal.fromActor(main_indirect_));
 
         {
             upgradeId;
