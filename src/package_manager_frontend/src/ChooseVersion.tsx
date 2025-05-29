@@ -208,7 +208,7 @@ function ChooseVersion2(props: {
                         await managementCanister.installCode({ // TODO@P3: Run in parallel.
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
-                            arg: new Uint8Array(IDL.encode([argType], [arg])), // FIXME@P2: pass proper init arg if needed
+                            arg: new Uint8Array(IDL.encode([argType], [arg])),
                             mode: moduleInfo.forceReinstall 
                                 ? { reinstall: null }
                                 : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] }, // We are 64-bit.
