@@ -181,10 +181,34 @@ function ChooseVersion2(props: {
                         // Upgrade via Management Canister
                         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
                         // FIXME@P1: Need to have two keep modes, like as in similar Motoko code.
+
+                        const pkg = await glob.packageManager!.getInstalledPackage(0n);
+                        const modules = new Map(pkg.modulesInstalledByDefault);
+                        // duplicate with backend:
+                        const argType = IDL.Record({
+                            packageManager: IDL.Principal,
+                            mainIndirect: IDL.Principal,
+                            simpleIndirect: IDL.Principal,
+                            battery: IDL.Principal,
+                            user: IDL.Principal,
+                            installationId: IDL.Nat,
+                            upgradeId: IDL.Nat,
+                            userArg: IDL.Record({}),
+                        });
+                        const arg = {
+                            packageManager: modules.get("package_manager")!,
+                            mainIndirect: modules.get("main_indirect")!,
+                            simpleIndirect: modules.get("simple_indirect")!,
+                            battery: modules.get("battery")!,
+                            user: principal,
+                            installationId: 0n,
+                            upgradeId: upgradeResult.upgradeId,
+                            userArg: {},
+                        };
                         await managementCanister.installCode({
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
-                            arg: new Uint8Array(IDL.encode([IDL.Record({})], [{}])), // FIXME@P2: pass proper init arg if needed
+                            arg: new Uint8Array(IDL.encode([argType], [arg])), // FIXME@P2: pass proper init arg if needed
                             mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
                             senderCanisterVersion: undefined,
                         });

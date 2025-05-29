@@ -64,7 +64,7 @@ module {
         //          However, in parallel it would be faster.
         // TODO@P3: How many cycles?
         await (with cycles = 100_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
-            arg = to_candid({
+            arg = to_candid({ // duplicate with frontend-base `icpack` update
                 packageManager;
                 mainIndirect;
                 simpleIndirect;
