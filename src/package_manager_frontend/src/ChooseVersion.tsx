@@ -167,9 +167,10 @@ function ChooseVersion2(props: {
                     console.log(`Infrastructure module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
                     
                     if (realPackage.real.modules.filter((m: [string, SharedModule]) => m[0] == moduleName)[0][1]) { // TODO@P2: needed?
-                        const moduleInfo = pkgModules.get(moduleName)!.code; // TODO@P3: Rename.
-                        const wasmModuleLocation: Location = (moduleInfo as any).Wasm !== undefined
-                            ? (moduleInfo as any).Wasm : (moduleInfo as any).Assets.wasm;
+                        const moduleInfo = pkgModules.get(moduleName)!;
+                        const moduleCode = moduleInfo.code;
+                        const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
+                            ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm;
                         
                         const [repoCanister, wasmId] = wasmModuleLocation;
                         const repositoryActor2: Repository = Actor.createActor(repositoryIndexIdl, { // TODO@P3: needed separate canister for each module?
@@ -180,7 +181,6 @@ function ChooseVersion2(props: {
                         
                         // Upgrade via Management Canister
                         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-                        // FIXME@P1: Need to have two keep modes, like as in similar Motoko code.
 
                         const pkg = await glob.packageManager!.getInstalledPackage(0n);
                         const modules = new Map(pkg.modulesInstalledByDefault);
@@ -196,11 +196,11 @@ function ChooseVersion2(props: {
                             userArg: IDL.Record({}),
                         });
                         const arg = {
-                            packageManager: modules.get("package_manager")!,
+                            packageManager: modules.get("backend")!,
                             mainIndirect: modules.get("main_indirect")!,
                             simpleIndirect: modules.get("simple_indirect")!,
                             battery: modules.get("battery")!,
-                            user: principal,
+                            user: principal!,
                             installationId: 0n,
                             upgradeId: upgradeResult.upgradeId,
                             userArg: {},
@@ -209,7 +209,9 @@ function ChooseVersion2(props: {
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
                             arg: new Uint8Array(IDL.encode([argType], [arg])), // FIXME@P2: pass proper init arg if needed
-                            mode: { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
+                            mode: moduleInfo.forceReinstall 
+                                ? { reinstall: null }
+                                : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] }, // We are 64-bit.
                             senderCanisterVersion: undefined,
                         });
                         console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
