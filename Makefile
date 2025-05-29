@@ -64,8 +64,7 @@ deploy-test: deploy-work \
 DEPLOY_FLAGS.bookmark = --argument "principal \"$(USER)\""
 
 .PHONY: docs
-docs: docs/out/CNAME docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg \
-	docs/out/sources/prepare-test.ts.html
+docs: docs/out/CNAME docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg
 
 .PHONY: deploy-docs
 deploy-docs: docs
@@ -91,9 +90,5 @@ docs/out/md/icpack:
 docs/out/html/icpack:
 	rm -rf $@
 	`dfx cache show`/mo-doc --source src --output $@ --format html
-
-docs/out/sources/prepare-test.ts.html: scripts/prepare-test.ts
-	mkdir -p docs/out/sources
-	pygmentize -O full -o $@ $<
 
 build@example_frontend: generate@example_backend
