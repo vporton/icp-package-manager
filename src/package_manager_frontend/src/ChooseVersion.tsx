@@ -237,6 +237,7 @@ function ChooseVersion2(props: {
                     } else {
                         console.error(`Module ${moduleName} not found in package info`);
                     }
+                    // FIXME@P2: Also install new modules, if any.
                     // FIXME@P2: Also remove outdated modules, if any.
                     
                     // Optional: Add a small delay between module upgrades to show progress
