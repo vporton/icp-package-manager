@@ -205,7 +205,7 @@ function ChooseVersion2(props: {
                             upgradeId: upgradeResult.upgradeId,
                             userArg: {},
                         };
-                        await managementCanister.installCode({
+                        await managementCanister.installCode({ // TODO@P3: Run in parallel.
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
                             arg: new Uint8Array(IDL.encode([argType], [arg])), // FIXME@P2: pass proper init arg if needed
