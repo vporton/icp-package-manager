@@ -259,16 +259,16 @@ function ChooseVersion2(props: {
                     user: principal!,
                     afterUpgradeCallback: [],
                 });
-            }
-            
-            // Wait for package to be updated in the system
-            for (;;) {
-                const cur = await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0);
-                if (cur.all.find(v => v.package.base.version === chosenVersion) !== undefined) {
-                    break;
+
+                // Wait for package to be updated in the system
+                for (;;) {
+                    const cur = await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0);
+                    if (cur.all.find(v => v.package.base.version === chosenVersion) !== undefined) {
+                        break;
+                    }
+                    console.log("Waiting till package upgrade...");
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
                 }
-                console.log("Waiting till package upgrade...");
-                await new Promise((resolve) => setTimeout(resolve, 1000));
             }
             navigate(`/installed/show/${props.oldInstallation}`);
         }
