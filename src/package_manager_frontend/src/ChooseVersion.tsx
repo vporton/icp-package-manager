@@ -242,19 +242,9 @@ function ChooseVersion2(props: {
                     // Optional: Add a small delay between module upgrades to show progress
                     await new Promise((resolve) => setTimeout(resolve, 500));
                 }
-                
-                // Wait for the upgrade to complete
-                for (;;) {
-                    const status = await package_manager.getModularUpgradeStatus(upgradeResult.upgradeId);
-                    console.log(`Upgrade progress: ${status.completedModules}/${status.totalModules} modules completed`);
-                    
-                    if (status.isCompleted) {
-                        console.log("Modular upgrade completed successfully");
-                        break;
-                    }
-                    
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                }
+
+                // Notify backend that all modules are upgraded (only once, after all upgrades)
+                await package_manager.completeModularUpgrade(upgradeResult.upgradeId);
             } else {
                 // Use existing upgrade method for non-icpack packages
                 const {minUpgradeId: id} = await package_manager.upgradePackages({
