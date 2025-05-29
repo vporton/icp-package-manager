@@ -193,7 +193,7 @@ function ChooseVersion2(props: {
                             user: IDL.Principal,
                             installationId: IDL.Nat,
                             upgradeId: IDL.Nat,
-                            userArg: IDL.Record({}),
+                            userArg: IDL.Vec(IDL.Nat8),
                         });
                         const arg = {
                             packageManager: modules.get("backend")!,
@@ -203,17 +203,36 @@ function ChooseVersion2(props: {
                             user: principal!,
                             installationId: 0n,
                             upgradeId: upgradeResult.upgradeId,
-                            userArg: {},
+                            userArg: IDL.encode([IDL.Record({})], [{}]),
                         };
-                        await managementCanister.installCode({ // TODO@P3: Run in parallel.
-                            canisterId: moduleCanisterId,
-                            wasmModule: wasmModuleBytes,
-                            arg: new Uint8Array(IDL.encode([argType], [arg])),
-                            mode: moduleInfo.forceReinstall 
-                                ? { reinstall: null }
-                                : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] }, // We are 64-bit.
-                            senderCanisterVersion: undefined,
-                        });
+                        const argEncoded = new Uint8Array(IDL.encode([argType], [arg]));
+                        try {
+                            await managementCanister.installCode({ // TODO@P3: Run in parallel.
+                                canisterId: moduleCanisterId,
+                                wasmModule: wasmModuleBytes,
+                                arg: argEncoded,
+                                mode: moduleInfo.forceReinstall 
+                                    ? { reinstall: null }
+                                    : { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] }, // We are 64-bit.
+                                senderCanisterVersion: undefined,
+                            });
+                        }
+                        catch (e) {
+                            const re = /Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./;
+                            if (re.test((e as object).toString())) {
+                                await managementCanister.installCode({
+                                    canisterId: moduleCanisterId,
+                                    wasmModule: wasmModuleBytes,
+                                    arg: argEncoded,
+                                    mode: moduleInfo.forceReinstall 
+                                        ? { reinstall: null }
+                                        : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] }, // We are 64-bit.
+                                    senderCanisterVersion: undefined,
+                                });
+                            } else {
+                                throw e; // Re-throw if it's not the expected error.
+                            }
+                        }
                         console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
                     } else {
                         console.error(`Module ${moduleName} not found in package info`);
