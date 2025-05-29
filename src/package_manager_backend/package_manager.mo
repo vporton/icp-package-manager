@@ -1645,7 +1645,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             completedModules;
             totalModules;
             remainingModules = upgrade.remainingModules;
-            isCompleted = upgrade.remainingModules == 0;
+            isCompleted = upgrade.remainingModules == 0; // TODO@P3
         };
     };
 
@@ -1653,6 +1653,15 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func completeModularUpgrade(upgradeId: Common.UpgradeId): async () {
         onlyOwner(caller, "completeModularUpgrade");
 
+        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
+            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        };
+        let ?inst = installedPackages.get(upgrade.installationId) else {
+            Debug.trap("no such installed package for upgrade: " # debug_show(upgrade.installationId));
+        };
+        inst.packageRepoCanister := upgrade.newRepo;
+        inst.package := upgrade.package;
+        // inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault; // FIXME@P1: hack
         halfUpgradedPackages.delete(upgradeId);
     }
 }
