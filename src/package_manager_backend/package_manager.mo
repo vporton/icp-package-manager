@@ -1550,7 +1550,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         let modulesToUpgrade = Iter.toArray(newPkgReal.modules.keys()); // FIXME@P1
 
         await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * modulesToUpgrade.size(), // TODO@P2: symbolic constant, twice 2_000_000_000_000
+            2_000_000_000_000 * halfUpgradedInfo.remainingModules, // TODO@P2: symbolic constant, twice 2_000_000_000_000
             Principal.fromActor(main_indirect_));
 
         {
