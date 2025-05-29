@@ -3,6 +3,8 @@ Remaining things TODO:
 - TODO@P2 Unjustified growth of `simpleIndirect` and  `mainIdirect` by passing `1_000_000_000_000` cycles to it when upgrade.
           Need to reduce installation costs in general.
 
+- TODO@P3 Command line utility to upgrade `icpack` after failed upgrade.
+
 - TODO@P3 When upgrading `icpack`, warn user not to close the window!
 
 - TODO@P3 Reload the site after upgrade of `icpack`?
