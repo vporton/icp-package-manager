@@ -239,9 +239,6 @@ function ChooseVersion2(props: {
                     }
                     // FIXME@P2: Also install new modules, if any.
                     // FIXME@P2: Also remove outdated modules, if any.
-                    
-                    // Optional: Add a small delay between module upgrades to show progress
-                    await new Promise((resolve) => setTimeout(resolve, 500));
                 }
 
                 // Notify backend that all modules are upgraded (only once, after all upgrades)
