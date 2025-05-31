@@ -2,15 +2,11 @@
 
 This is an MVP alpha.
 
-It currently does not work. To debug it, consult [CYCLES.md](CYCLES.md), among other.
-
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
-For more information on this project [see here](https://dev.package-manager.com).
+For more information on this project [see here](https://dev.package-manager.com) and [here](https://docs.package-manager.com).
 
 See [`TODO.md`](TODO.md) about yet unimplemented features.
-
-[`BOOTSTRAP.md`](BOOTSTRAP.md) describes the proposed algorithm for package manager bootstrapping.
 
 ## Howto guides to running it
 
@@ -22,11 +18,7 @@ If you didn't run it yet, run `dfx extension install nns`.
 
 `make deploy-test && npm test` for automatic tests.
 
-Currently, there are some errors deploying this in production: `make NETWORK=ic deploy-work`:
-
-- It requires to copy several `.did` files manually.
-- It disagrees with local version on whether `principalToSubaccount` to return `Blob` or `Nat8`,
-  what requires manually edit source while deploying.
+To build a particular canister and its dependencies, issue `make build@CANISTER`; to deploy a canister and its dependencies, `make deploy@CANISTER`; to deploy without dependencies, `make deploy-self@CANISTER`. To generate interface, `make generate@CANISTER`.
 
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
