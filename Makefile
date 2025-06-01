@@ -53,7 +53,9 @@ deploy-work: prepare deploy
 
 .PHONY: prepare
 prepare:
-	-dfx nns --network $(NETWORK) install --ledger-accounts `dfx ledger account-id`
+ifneq($(NETWORK), local)
+	-dfx nns install --ledger-accounts `dfx ledger account-id`
+endif
 
 .PHONY: deploy-test
 deploy-test: deploy-work \
