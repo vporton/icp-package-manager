@@ -53,7 +53,7 @@ deploy-work: prepare deploy
 
 .PHONY: prepare
 prepare:
-ifneq($(NETWORK), local)
+ifeq "$(NETWORK)" "local"
 	-dfx nns install --ledger-accounts `dfx ledger account-id`
 endif
 
