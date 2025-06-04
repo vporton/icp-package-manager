@@ -1503,7 +1503,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         : async {
             upgradeId: Common.UpgradeId;
             totalModules: Nat;
-            modulesToUpgrade: [Text];
+            modulesToUpgrade: [Text]; // TODO@P2: Rename to `modulesToUpgradeOrInstall`.
             modulesToDelete: [(Text, Principal)];
         }
     {
@@ -1530,7 +1530,22 @@ shared({caller = initialCaller}) actor class PackageManager({
         
         halfUpgradedPackages.put(upgradeId, halfUpgradedInfo);
 
-        let modulesToUpgrade = Iter.toArray(newPkgReal.modules.keys()); // FIXME@P1
+        let modulesToDeleteSet = HashMap.fromIter<Text, ()>(
+            Iter.map<(Text, Principal), (Text, ())>(
+                modulesToDelete.vals(),
+                func ((name: Text, _principal: Principal)) = (name, ()),
+            ),
+            modulesToDelete.size(),
+            Text.equal,
+            Text.hash,
+        );
+
+        let modulesToUpgrade = Iter.toArray(
+            Iter.filter<Text>(
+                newPkgReal.modules.keys(),
+                func (name: Text) = Option.isNull(modulesToDeleteSet.get(name)),
+            )
+        );
 
         await batteryActor.withdrawCycles3(
             2_000_000_000_000 * halfUpgradedInfo.remainingModules, // TODO@P2: symbolic constant, twice 2_000_000_000_000
@@ -1632,7 +1647,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     /// Mark all modules as upgraded for a modular upgrade (used for frontend-driven upgrades)
-    public shared({caller}) func completeModularUpgrade(upgradeId: Common.UpgradeId): async () {
+    public shared({caller}) func completeModularUpgrade(
+        upgradeId: Common.UpgradeId,
+        modules: [(Text, Principal)]
+    ): async () {
         onlyOwner(caller, "completeModularUpgrade");
 
         let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
@@ -1647,7 +1665,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         inst.package := upgrade.package;
         
         // Update modules map - keep only the modules that were successfully upgraded/installed
-        // inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault; // FIXME@P1: If I uncomment, modules are lost.
+        inst.modulesInstalledByDefault := HashMap.fromIter(modules.vals(), modules.size(), Text.equal, Text.hash);
         
         // Clean up
         halfUpgradedPackages.delete(upgradeId);
