@@ -1548,7 +1548,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         );
 
         await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * halfUpgradedInfo.remainingModules, // TODO@P2: symbolic constant, twice 2_000_000_000_000
+            2_000_000_000_000 * halfUpgradedInfo.remainingModules, // TODO@P2: symbolic constant, twice 2_000_000_000
             Principal.fromActor(main_indirect_));
 
         {
@@ -1642,7 +1642,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             completedModules;
             totalModules;
             remainingModules = upgrade.remainingModules;
-            isCompleted = upgrade.remainingModules == 0; // TODO@P3
+            isCompleted = upgrade.remainingModules == 0;
         };
     };
 

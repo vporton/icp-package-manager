@@ -163,7 +163,6 @@ function ChooseVersion2(props: {
 
                 // Then upgrade or install modules
                 for (const moduleName of upgradeResult.modulesToUpgrade) {
-                   
                     // Handle infrastructure modules directly via Management Canister
                     console.log(`Processing module ${moduleName} via Management Canister`);
                     
@@ -236,7 +235,7 @@ function ChooseVersion2(props: {
                                 const re = /Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./;
                                 if (re.test((e as object).toString())) {
                                     await managementCanister.installCode({
-                                        canisterId: moduleCanisterId!,
+                                        canisterId: moduleCanisterId,
                                         wasmModule: wasmModuleBytes,
                                         arg: argEncoded,
                                         mode: moduleInfo.forceReinstall 
@@ -298,8 +297,9 @@ function ChooseVersion2(props: {
                         console.log(`Successfully processed module ${moduleName}`);
                         modulesMap.set(moduleName, ourCanisterId);
                     } else {
-                        console.error(`Module ${moduleName} not found in package info`); // TODO@P3: Should never happen.
+                        console.error(`Module ${moduleName} not found in package info`); // TODO@P3: This should never happen as modulesToUpgrade is filtered
                     }
+                }
 
                 // Last, delete modules that are no longer needed // TODO@P3: Do it in background.
                 for (const [moduleName, canisterId] of upgradeResult.modulesToDelete) {
@@ -313,7 +313,6 @@ function ChooseVersion2(props: {
                         console.error(`Error deleting module ${moduleName}:`, e);
                         // Continue with other modules even if one fails
                     }
-                }
                 }
 
                 // Notify backend that all modules are upgraded
