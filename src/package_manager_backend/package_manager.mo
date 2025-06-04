@@ -40,6 +40,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     Debug.trap("argument userArg is wrong");
     // };
 
+    // TODO@P2: It's too big.
+    private let CYCLES_PER_MODULE = 2_000_000_000_000; // 2T cycles per module
+
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
         packageRepoCanister: Principal;
@@ -883,7 +886,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
         };
         await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * newPkgModules.size() - pkg.modulesToDelete.size(), // TODO@P2: symbolic constant, twice 2_000_000_000
+            2_000_000_000_000 * newPkgModules.size() - pkg.modulesToDelete.size(), // TODO@P2: symbolic constant, twice 2_000_000
             Principal.fromActor(main_indirect_));
 
         // TODO@P3: repeated calculation
@@ -1503,7 +1506,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         : async {
             upgradeId: Common.UpgradeId;
             totalModules: Nat;
-            modulesToUpgrade: [Text]; // TODO@P2: Rename to `modulesToUpgradeOrInstall`.
+            modulesToUpgradeOrInstall: [Text];
             modulesToDelete: [(Text, Principal)];
         }
     {
@@ -1540,7 +1543,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Text.hash,
         );
 
-        let modulesToUpgrade = Iter.toArray(
+        let modulesToUpgradeOrInstall = Iter.toArray(
             Iter.filter<Text>(
                 newPkgReal.modules.keys(),
                 func (name: Text) = Option.isNull(modulesToDeleteSet.get(name)),
@@ -1548,13 +1551,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         );
 
         await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * halfUpgradedInfo.remainingModules, // TODO@P2: symbolic constant, twice 2_000_000_000
+            CYCLES_PER_MODULE * halfUpgradedInfo.remainingModules,
             Principal.fromActor(main_indirect_));
 
         {
             upgradeId;
             totalModules = halfUpgradedInfo.remainingModules;
-            modulesToUpgrade;
+            modulesToUpgradeOrInstall;
             modulesToDelete;
         };
     };

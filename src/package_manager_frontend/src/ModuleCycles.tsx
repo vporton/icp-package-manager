@@ -77,7 +77,7 @@ export default function ModuleCycles() {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
             const balance = await cyclesLedger.icrc1_balance_of({owner: module.principal, subaccount: []});
 
-            const methodName = "withdrawCycles"; // FIXME@P3: Use the correct method name from package specs.
+            const methodName = "withdrawCycles3"; // Method name from package specs
             const interfaceFactory = ({ IDL }: { IDL: any }) => { // TODO@P3: `any`
                 return IDL.Service({
                     [methodName]: IDL.Func([IDL.Nat, IDL.Principal], [], ["update"])
