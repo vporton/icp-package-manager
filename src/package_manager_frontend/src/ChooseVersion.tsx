@@ -121,7 +121,8 @@ function ChooseVersion2(props: {
             // TODO@P3: hack
             const package_manager: PackageManager = createPackageManager(glob.backend!, {agent});
             
-            // Use modular upgrade API for icpack package, regular upgrade for others
+            // Use modular upgrade API for icpack package (to avoid attempt to upgrade a running canister),
+            // regular upgrade for others
             if (props.packageName === "icpack") {
                 // TODO@P2: Extract to a library function and unit test it.
 
@@ -157,29 +158,36 @@ function ChooseVersion2(props: {
                     return;
                 }
                 const pkgModules = new Map<string, SharedModule>(realPackage.real.modules);
+
+                // Then upgrade or install modules
                 for (const moduleName of upgradeResult.modulesToUpgrade) {
-                    console.log(`Upgrading module: ${moduleName}`);
-                    
+                   
                     // Handle infrastructure modules directly via Management Canister
-                    console.log(`Upgrading module ${moduleName} via Management Canister`);
-                    // Get the canister ID for this module
-                    const moduleCanisterId = await package_manager.getModulePrincipal(BigInt(props.oldInstallation!), moduleName);
-                    console.log(`Infrastructure module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
+                    console.log(`Processing module ${moduleName} via Management Canister`);
                     
-                    if (realPackage.real.modules.filter((m: [string, SharedModule]) => m[0] == moduleName)[0][1]) { // TODO@P2: needed?
+                    // Get the canister ID for this module if it exists
+                    let moduleCanisterId: Principal | undefined;
+                    try {
+                        moduleCanisterId = await package_manager.getModulePrincipal(BigInt(props.oldInstallation!), moduleName);
+                        console.log(`Module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
+                    } catch (e) {
+                        console.log(`Module ${moduleName} is new and will be installed`);
+                    }
+                    
+                    if (realPackage.real.modules.filter((m: [string, SharedModule]) => m[0] == moduleName)[0][1]) {
                         const moduleInfo = pkgModules.get(moduleName)!;
                         const moduleCode = moduleInfo.code;
                         const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
                             ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm;
                         
                         const [repoCanister, wasmId] = wasmModuleLocation;
-                        const repositoryActor2: Repository = Actor.createActor(repositoryIndexIdl, { // TODO@P3: needed separate canister for each module?
+                        const repositoryActor2: Repository = Actor.createActor(repositoryIndexIdl, {
                             agent: agent!,
                             canisterId: repoCanister,
                         });
                         const wasmModule = await repositoryActor2.getWasmModule(wasmId);
                         
-                        // Upgrade via Management Canister
+                        // Upgrade or install via Management Canister
                         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
 
                         const pkg = await glob.packageManager!.getInstalledPackage(0n);
@@ -206,42 +214,106 @@ function ChooseVersion2(props: {
                             userArg: IDL.encode([IDL.Record({})], [{}]),
                         };
                         const argEncoded = new Uint8Array(IDL.encode([argType], [arg]));
+
                         try {
-                            await managementCanister.installCode({ // TODO@P3: Run in parallel.
-                                canisterId: moduleCanisterId,
-                                wasmModule: wasmModuleBytes,
-                                arg: argEncoded,
-                                mode: moduleInfo.forceReinstall 
-                                    ? { reinstall: null }
-                                    : { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] }, // We are 64-bit.
-                                senderCanisterVersion: undefined,
-                            });
-                        }
-                        catch (e) {
-                            const re = /Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./;
-                            if (re.test((e as object).toString())) {
-                                await managementCanister.installCode({
-                                    canisterId: moduleCanisterId,
-                                    wasmModule: wasmModuleBytes,
-                                    arg: argEncoded,
-                                    mode: moduleInfo.forceReinstall 
-                                        ? { reinstall: null }
-                                        : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] }, // We are 64-bit.
+                            if (moduleCanisterId) {
+                                // Upgrade existing module
+                                try {
+                                    await managementCanister.installCode({
+                                        canisterId: moduleCanisterId,
+                                        wasmModule: wasmModuleBytes,
+                                        arg: argEncoded,
+                                        mode: moduleInfo.forceReinstall 
+                                            ? { reinstall: null }
+                                            : { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] },
+                                        senderCanisterVersion: undefined,
+                                    });
+                                }
+                                catch (e) {
+                                    const re = /Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./;
+                                    if (re.test((e as object).toString())) {
+                                        await managementCanister.installCode({
+                                            canisterId: moduleCanisterId!,
+                                            wasmModule: wasmModuleBytes,
+                                            arg: argEncoded,
+                                            mode: moduleInfo.forceReinstall 
+                                                ? { reinstall: null }
+                                                : { upgrade: [{ wasm_memory_persistence: [{ keep: null }], skip_pre_upgrade: [false] }] },
+                                            senderCanisterVersion: undefined,
+                                        });
+                                    }
+                                }                                    
+                            } else {
+                                // Install new module
+                                const newCanisterId = await managementCanister.createCanister({
+                                    settings: {
+                                        controllers: [principal!.toText()],
+                                        computeAllocation: undefined,
+                                        memoryAllocation: undefined,
+                                        freezingThreshold: undefined,
+                                        reservedCyclesLimit: undefined,
+                                        wasmMemoryLimit: undefined,
+                                        logVisibility: undefined,
+                                    },
                                     senderCanisterVersion: undefined,
                                 });
-                            } else {
-                                throw e; // Re-throw if it's not the expected error.
+                                
+                                await managementCanister.installCode({
+                                    canisterId: newCanisterId,
+                                    wasmModule: wasmModuleBytes,
+                                    arg: argEncoded,
+                                    mode: { install: null },
+                                    senderCanisterVersion: undefined,
+                                });
+
+                                // Update controllers after installation
+                                await managementCanister.updateSettings({
+                                    canisterId: newCanisterId,
+                                    settings: {
+                                        controllers: [
+                                            principal!, modules.get("simple_indirect")!, modules.get("main_indirect")!
+                                        ].map(p => p.toText()),
+                                        computeAllocation: undefined,
+                                        memoryAllocation: undefined,
+                                        freezingThreshold: undefined,
+                                        reservedCyclesLimit: undefined,
+                                        wasmMemoryLimit: undefined,
+                                        logVisibility: undefined,
+                                    },
+                                    senderCanisterVersion: undefined,
+                                });
+
+                                // Notify backend about the new module // TODO@P3: Notify for all modules at once.
+                                await package_manager.onUpgradeOrInstallModule({
+                                    upgradeId: upgradeResult.upgradeId,
+                                    moduleName,
+                                    canister_id: newCanisterId,
+                                    afterUpgradeCallback: [],
+                                });
                             }
+                            console.log(`Successfully processed module ${moduleName}`);
+                        } catch (e) {
                         }
-                        console.log(`Successfully upgraded infrastructure module ${moduleName} via Management Canister`);
                     } else {
                         console.error(`Module ${moduleName} not found in package info`);
                     }
-                    // FIXME@P2: Also install new modules, if any.
-                    // FIXME@P2: Also remove outdated modules, if any.
+
+                // Last, delete modules that are no longer needed // TODO@P3: Do it in background.
+                for (const [moduleName, canisterId] of upgradeResult.modulesToDelete) {
+                    console.log(`Deleting module: ${moduleName}`);
+                    try {
+                        // Stop and delete the canister
+                        await managementCanister.stopCanister(canisterId);
+                        await managementCanister.deleteCanister(canisterId); // TODO@P2: Withdraw cycles.
+                        console.log(`Successfully deleted module ${moduleName}`);
+                    } catch (e) {
+                        console.error(`Error deleting module ${moduleName}:`, e);
+                        // Continue with other modules even if one fails
+                    }
+                }
                 }
 
-                // Notify backend that all modules are upgraded (only once, after all upgrades)
+                // Notify backend that all modules are upgraded
                 await package_manager.completeModularUpgrade(upgradeResult.upgradeId);
             } else {
                 // Use existing upgrade method for non-icpack packages

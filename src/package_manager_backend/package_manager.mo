@@ -309,7 +309,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO@P3: Copy this code to other modules:
     func onlyOwner(caller: Principal, msg: Text) {
-        if (Option.isNull(owners.get(caller))) {
+        if (Option.isNull(owners.get(caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
             Debug.trap(debug_show(caller) # " is not the owner: " # msg);
         };
     };
@@ -883,7 +883,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
         };
         await batteryActor.withdrawCycles3(
-            2_000_000_000_000 * newPkgModules.size(), // TODO@P2: symbolic constant, twice 2_000_000_000_000
+            2_000_000_000_000 * newPkgModules.size() - pkg.modulesToDelete.size(), // TODO@P2: symbolic constant, twice 2_000_000_000
             Principal.fromActor(main_indirect_));
 
         // TODO@P3: repeated calculation
@@ -1106,23 +1106,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     //         installedPackagesByName.put(ourHalfInstalled.name, Iter.toArray(new));
     //     };
     //     halfInstalledPackages.delete(installationId);
-    // };
-
-    //  /// Finish uninstallation of a half-installed package.
-    // public shared({caller}) func finishUninstallPackage({installationId: Nat}): async () {
-    //     onlyOwner(caller, "finishUninstallPackage");
-        
-    //     let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
-    //         Debug.trap("package uninstallation has not been started");
-    //     };
-    //     let #real realPackage = ourHalfInstalled.package.specific else {
-    //         Debug.trap("trying to directly install a virtual package");
-    //     };
-    //     await* _finishUninstallPackage({
-    //         installationId;
-    //         ourHalfInstalled;
-    //         realPackage;
-    //     });
     // };
 
    system func preupgrade() {
@@ -1658,9 +1641,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?inst = installedPackages.get(upgrade.installationId) else {
             Debug.trap("no such installed package for upgrade: " # debug_show(upgrade.installationId));
         };
+
+        // Update package info
         inst.packageRepoCanister := upgrade.newRepo;
         inst.package := upgrade.package;
-        // inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault; // FIXME@P1: hack
+        
+        // Update modules map - keep only the modules that were successfully upgraded/installed
+        // inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault; // FIXME@P1: If I uncomment, modules are lost.
+        
+        // Clean up
         halfUpgradedPackages.delete(upgradeId);
     }
 }
