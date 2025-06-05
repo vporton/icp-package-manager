@@ -1,16 +1,17 @@
-import { Actor } from "@dfinity/agent";
+import { Location, ModuleCode, SharedFullPackageInfo } from '../../../declarations/repository/repository.did.js';
+import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
-import { ICManagementCanister } from "@dfinity/ic-management";
-import { IDL } from "@dfinity/candid";
-import { PackageManager } from "../../declarations/package_manager/package_manager.did.d.ts";
-import { Repository } from "../../declarations/repository_index/repository_index.did.d.ts";
-import { repositoryIndexIdl } from "../../declarations/repository_index/repository_index.did.js";
-import { SharedModule, Location } from "../../declarations/package_manager/package_manager.did.d.ts";
+import { _SERVICE as Repository } from '../../../declarations/repository/repository.did';
+import { idlFactory as repositoryIndexIdl } from '../../../declarations/repository';
+import { PackageManager, SharedModule } from '../../../declarations/package_manager/package_manager.did';
+import { GlobalContextType } from "../state";
+import { ICManagementCanister } from '@dfinity/ic-management';
+import { IDL } from '@dfinity/candid';
 
 interface ModularUpgradeParams {
     package_manager: PackageManager;
-    agent: any;
-    glob: any;
+    agent: Agent;
+    glob: GlobalContextType;
     props: {
         packageName: string;
         oldInstallation: string;
@@ -114,7 +115,7 @@ export async function performModularUpgrade({
                     canisterId: moduleCanisterId,
                     settings: {
                         freezingThreshold: undefined,
-                        controllers: [glob.backend!],
+                        controllers: [glob.backend!.toText()],
                         memoryAllocation: undefined,
                         computeAllocation: undefined,
                     },
@@ -123,25 +124,25 @@ export async function performModularUpgrade({
                     mode: { upgrade: [] },
                     canisterId: moduleCanisterId,
                     wasmModule: wasmModuleBytes,
-                    arg,
+                    arg: new Uint8Array(arg),
                 });
             } else {
                 // Install new module
                 const newCanisterId = await managementCanister.createCanister({
                     settings: {
                         freezingThreshold: undefined,
-                        controllers: [glob.backend!],
+                        controllers: [glob.backend!.toText()],
                         memoryAllocation: undefined,
                         computeAllocation: undefined,
                     },
                 });
                 await managementCanister.installCode({
-                    mode: { install: [] },
-                    canisterId: newCanisterId.canisterId,
+                    mode: { install: null },
+                    canisterId: newCanisterId,
                     wasmModule: wasmModuleBytes,
-                    arg,
+                    arg: new Uint8Array(arg),
                 });
-                modulesMap.set(moduleName, newCanisterId.canisterId);
+                modulesMap.set(moduleName, newCanisterId);
             }
         }
     }
@@ -149,9 +150,7 @@ export async function performModularUpgrade({
     // Delete modules that are no longer needed
     for (const [moduleName, moduleCanisterId] of upgradeResult.modulesToDelete) {
         console.log(`Deleting module ${moduleName} (${moduleCanisterId.toString()})`);
-        await managementCanister.deleteCanister({
-            canisterId: moduleCanisterId,
-        });
+        await managementCanister.deleteCanister(moduleCanisterId);
     }
 
     // Complete the upgrade

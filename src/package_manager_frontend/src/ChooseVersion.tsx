@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Location, ModuleCode, SharedFullPackageInfo } from '../../declarations/repository/repository.did.js';
-import { Actor, Agent } from "@dfinity/agent";
+import { Actor } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "../../lib/use-auth-client.js";
 import Button from "react-bootstrap/Button";
@@ -11,14 +10,12 @@ import { idlFactory as repositoryIndexIdl } from '../../declarations/repository'
 import { createActor as createPackageManager } from '../../declarations/package_manager';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
-import { InitializedChecker, waitTillInitialized } from "../../lib/install";
+import { waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback, SharedModule } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
-import { ICManagementCanister } from "@dfinity/ic-management";
-import { IDL } from "@dfinity/candid";
-import { performModularUpgrade } from '../lib/modularUpgrade';
+import { performModularUpgrade } from './lib/modularUpgrade';
 
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
 export default function ChooseVersion(props: {}) {
@@ -129,7 +126,7 @@ function ChooseVersion2(props: {
             if (props.packageName === "icpack") {
                 await performModularUpgrade({
                     package_manager,
-                    agent,
+                    agent: agent!, // TODO@P3: `!`
                     glob,
                     props,
                     chosenVersion,

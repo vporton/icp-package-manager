@@ -6,12 +6,14 @@ import { useAuth } from "../../lib/use-auth-client";
 import { idlFactory as packageManagerIDL } from '../../declarations/package_manager/package_manager.did.js';
 import { Actor } from "@dfinity/agent";
 
-export const GlobalContext = createContext<{
+export type GlobalContextType = {
   frontend: Principal | undefined,
   backend: Principal | undefined,
   packageManager: PackageManager | undefined,
   frontendTweakPrivKey: Uint8Array | undefined,
-}>({
+};
+
+export const GlobalContext = createContext<GlobalContextType>({
   frontend: undefined,
   backend: undefined,
   packageManager: undefined,
