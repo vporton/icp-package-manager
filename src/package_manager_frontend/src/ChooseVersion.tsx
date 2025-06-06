@@ -123,7 +123,7 @@ function ChooseVersion2(props: {
             
             // Use modular upgrade API for icpack package (to avoid attempt to upgrade a running canister),
             // regular upgrade for others
-            if (props.packageName === "icpack") {
+            if (props.packageName === "icpack") { // TODO@P3: hack
                 await performModularUpgrade({
                     package_manager,
                     agent: agent!, // TODO@P3: `!`
