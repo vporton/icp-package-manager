@@ -106,11 +106,21 @@ export async function performModularUpgrade({
                 packageManager: IDL.Principal,
                 mainIndirect: IDL.Principal,
                 simpleIndirect: IDL.Principal,
+                battery: IDL.Principal,
+                user: IDL.Principal,
+                installationId: IDL.Nat,
+                upgradeId: IDL.Nat,
+                userArg: IDL.Vec(IDL.Nat8),
             });
             const arg = IDL.encode([argType], [{
                 packageManager: glob.backend!,
                 mainIndirect: modules.get("main_indirect")!,
                 simpleIndirect: modules.get("simple_indirect")!,
+                battery: modules.get("battery")!,
+                user: principal!,
+                installationId: 0n,
+                upgradeId: upgradeResult.upgradeId,
+                userArg: IDL.encode([IDL.Record({})], [{}]),
             }]);
             
             if (moduleCanisterId !== undefined) {
@@ -124,12 +134,28 @@ export async function performModularUpgrade({
                 //         computeAllocation: undefined,
                 //     },
                 // });
-                await managementCanister.installCode({
-                    mode: { upgrade: [] },
-                    canisterId: moduleCanisterId,
-                    wasmModule: wasmModuleBytes,
-                    arg: new Uint8Array(arg),
-                });
+                try {
+                    await managementCanister.installCode({
+                        mode: { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] },
+                        canisterId: moduleCanisterId,
+                        wasmModule: wasmModuleBytes,
+                        arg: new Uint8Array(arg),
+                    });
+                }
+                catch (e) {
+                    if (/Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./
+                        .test((e as any).toString()))
+                    {
+                        await managementCanister.installCode({
+                            mode: { upgrade: [{ wasm_memory_persistence: [{keep: null}], skip_pre_upgrade: [false] }] },
+                            canisterId: moduleCanisterId,
+                            wasmModule: wasmModuleBytes,
+                            arg: new Uint8Array(arg),
+                        }); 
+                    } else {
+                        throw e;
+                    }
+                }
             } else {
                 // Install new module
                 const newCanisterId = await managementCanister.createCanister({
