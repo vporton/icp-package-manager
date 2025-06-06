@@ -3,7 +3,7 @@ import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as Repository } from '../../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../../declarations/repository';
-import { PackageManager, SharedModule } from '../../../declarations/package_manager/package_manager.did';
+import { PackageManager, SharedModule, SharedRealPackageInfo } from '../../../declarations/package_manager/package_manager.did';
 import { GlobalContextType } from "../state";
 import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
@@ -14,7 +14,7 @@ interface ModularUpgradeParams {
     glob: GlobalContextType;
     props: {
         packageName: string;
-        oldInstallation: string;
+        oldInstallation: bigint;
         repo: Principal;
     };
     chosenVersion: string;
@@ -33,7 +33,7 @@ export async function performModularUpgrade({
 }: ModularUpgradeParams): Promise<void> {
     // Start modular upgrade for icpack
     const upgradeResult = await package_manager.startModularUpgrade({
-        installationId: BigInt(props.oldInstallation!),
+        installationId: props.oldInstallation,
         packageName: props.packageName!,
         version: chosenVersion!,
         repo: props.repo!,
@@ -59,11 +59,15 @@ export async function performModularUpgrade({
 
     // Get the new WASM module from the repository
     const packageInfo = await repositoryActor.getPackage(props.packageName!, chosenVersion!);
-    const realPackage = packageInfo.specific as { real: any };
+    const realPackage = packageInfo.specific as { real: SharedRealPackageInfo };
     if (realPackage === undefined || realPackage.real === undefined) {
         throw new Error(`Invalid package info for ${props.packageName!} version ${chosenVersion!}`);
     }
     const pkgModules = new Map<string, SharedModule>(realPackage.real.modules);
+    // TODO@P3: inefficienct:
+    const simpleIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'simple_indirect')!;
+    const mainIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'main_indirect')!;
+    const battery = await package_manager.getModulePrincipal(props.oldInstallation, 'battery')!;
 
     // Then upgrade or install modules
     for (const moduleName of upgradeResult.modulesToUpgradeOrInstall) {
@@ -73,7 +77,7 @@ export async function performModularUpgrade({
         // Get the canister ID for this module if it exists
         let moduleCanisterId: Principal | undefined;
         try {
-            moduleCanisterId = await package_manager.getModulePrincipal(BigInt(props.oldInstallation!), moduleName);
+            moduleCanisterId = await package_manager.getModulePrincipal(props.oldInstallation, moduleName);
             console.log(`Module ${moduleName} canister ID: ${moduleCanisterId.toString()}`);
         } catch (e) {
             console.log(`Module ${moduleName} is new and will be installed`);
@@ -111,15 +115,15 @@ export async function performModularUpgrade({
             
             if (moduleCanisterId !== undefined) {
                 // Upgrade existing module
-                await managementCanister.updateSettings({
-                    canisterId: moduleCanisterId,
-                    settings: {
-                        freezingThreshold: undefined,
-                        controllers: [glob.backend!.toText()],
-                        memoryAllocation: undefined,
-                        computeAllocation: undefined,
-                    },
-                });
+                // await managementCanister.updateSettings({
+                //     canisterId: moduleCanisterId,
+                //     settings: {
+                //         freezingThreshold: undefined,
+                //         controllers: [glob.backend!.toText()],
+                //         memoryAllocation: undefined,
+                //         computeAllocation: undefined,
+                //     },
+                // });
                 await managementCanister.installCode({
                     mode: { upgrade: [] },
                     canisterId: moduleCanisterId,
@@ -131,7 +135,7 @@ export async function performModularUpgrade({
                 const newCanisterId = await managementCanister.createCanister({
                     settings: {
                         freezingThreshold: undefined,
-                        controllers: [glob.backend!.toText()],
+                        controllers: [simpleIndirect, mainIndirect, glob.backend!, battery].map(p => p.toText()),
                         memoryAllocation: undefined,
                         computeAllocation: undefined,
                     },
@@ -156,5 +160,5 @@ export async function performModularUpgrade({
     // Complete the upgrade
     await package_manager.completeModularUpgrade(upgradeResult.upgradeId, Array.from(modulesMap.entries()));
 
-    navigate(`/installed/show/${props.oldInstallation}`);
+    navigate(`/installed/show/${props.oldInstallation.toString()}`);
 } 

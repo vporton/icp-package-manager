@@ -39,7 +39,7 @@ export default function ChooseVersion(props: {}) {
         <ChooseVersion2
             packageName={packageName2}
             repo={repo2}
-            oldInstallation={oldInstallation === undefined ? undefined : BigInt(parseInt(oldInstallation))}
+            oldInstallation={oldInstallation === undefined ? undefined : BigInt(oldInstallation)}
             currentVersion={version2}
             guid0={guid0}/>
     );
@@ -128,9 +128,13 @@ function ChooseVersion2(props: {
                     package_manager,
                     agent: agent!, // TODO@P3: `!`
                     glob,
-                    props,
-                    chosenVersion,
-                    principal,
+                    props: {
+                        packageName: props.packageName,
+                        oldInstallation: props.oldInstallation!, // TODO@P3: `!`
+                        repo: props.repo!,
+                    },
+                    chosenVersion: chosenVersion!, // TODO@P3: `!`
+                    principal: principal!, // TODO@P3: `!`
                     navigate
                 });
             } else {
@@ -138,7 +142,7 @@ function ChooseVersion2(props: {
                 const cur = props.guid0 !== undefined ? await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0) : undefined;
                 const upgradeResult = await package_manager.upgradePackages({
                     packages: [{
-                        installationId: BigInt(props.oldInstallation!),
+                        installationId: props.oldInstallation!,
                         packageName: props.packageName!,
                         version: chosenVersion!,
                         repo: props.repo!,

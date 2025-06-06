@@ -9,7 +9,6 @@ import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
 import Sha256 "mo:sha2/Sha256";
-import Itertools "mo:itertools/Iter";
 import Common "../common";
 
 shared ({caller = initialOwner}) actor class Repository() = this {
