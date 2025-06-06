@@ -27,8 +27,6 @@ Remaining things TODO:
 
 - TODO@P3: `inspect`.
 
-- TODO@P3 Upgrding a package version to itself hangs.
-
 - TODO@P3 Accept payments also in ICP.
 
 - TODO@P3 Option to install additional software after bootstrapping.
