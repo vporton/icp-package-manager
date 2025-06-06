@@ -27,8 +27,6 @@ Remaining things TODO:
 
 - TODO@P3: `inspect`.
 
-- TODO@P3 Accept payments also in ICP.
-
 - TODO@P3 Option to install additional software after bootstrapping.
 
 - TODO@P3 Deployment to mainnet required to copy several `.did` files manually and run `make deploy-work` several times.
