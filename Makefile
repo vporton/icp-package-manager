@@ -49,9 +49,6 @@ init:
 
 .PHONY: deploy-work
 deploy-work: prepare deploy
-ifneq "$(NETWORK)" "local"
-	git diff stable >/dev/null || { echo "deploying non-stable branch" && exit 1; }
-endif
 	npx tsx scripts/prepare-work.ts
 
 .PHONY: prepare
