@@ -152,7 +152,7 @@ function ChooseVersion2(props: {
                     user: principal!,
                     afterUpgradeCallback: [],
                 });
-                await waitTillInitialized(agent!, glob.backend!, upgradeResult.minUpgradeId);
+                // await waitTillInitialized(agent!, glob.backend!, upgradeResult.minUpgradeId);
                 navigate(`/installed/show/${upgradeResult.minUpgradeId}`);
             }
         }

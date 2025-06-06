@@ -156,6 +156,7 @@ export async function performModularUpgrade({
                         throw e;
                     }
                 }
+                modulesMap.set(moduleName, moduleCanisterId);
             } else {
                 // Install new module
                 const newCanisterId = await managementCanister.createCanister({
