@@ -14,6 +14,7 @@ import { bootstrapFrontend } from "../../lib/install";
 import { BusyContext } from "../../lib/busy";
 import { Link, useSearchParams } from "react-router-dom";
 import { ErrorContext } from "../../lib/ErrorContext";
+import { track as swetrix_track } from 'swetrix';
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
   const binaryString = String.fromCharCode(...uint8Array);
@@ -48,6 +49,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     async function bootstrap() {
       try {
+        swetrix_track({ev: 'bootstrapStart', unique: false});
         setBusy(true);
 
         // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
