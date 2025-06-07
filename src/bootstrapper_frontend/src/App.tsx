@@ -24,8 +24,14 @@ import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 import { createActor as createCyclesLedgerActor } from "../../declarations/cycles_ledger";
+import { init as swetrix_init, trackViews, track as swetrix_track } from 'swetrix';
 
 function App() {
+  useEffect(() => {
+    swetrix_init('Iu7kSKSALIF3', {disabled: /localhost/.test(location.hostname)});
+    trackViews();
+  });
+
   return (
     <BusyProvider>
       <BusyWidget>
@@ -185,6 +191,7 @@ function App2() {
       subaccount: [principalToSubAccount(principal)],
     }).then((amount) => {
       setCyclesLedgerAmount(parseInt(amount.toString()));
+      swetrix_track({ev: 'paidCycles', unique: false, meta: {amount: amount.toString()}});
     });
   }
   function updateICPAmount() {
@@ -197,6 +204,7 @@ function App2() {
       subaccount: [principalToSubAccount(principal!)],
     }).then((amount: bigint) => {
       setICPAmount(parseInt(amount.toString()));
+      swetrix_track({ev: 'paidICP', unique: false, meta: {amount: amount.toString()}});
     });
   }
   function updateAmounts(event: React.MouseEvent) {
@@ -256,7 +264,7 @@ function App2() {
         <nav>
           <Navbar className="bg-body-secondary" style={{width: "auto"}}>
             <Nav>
-              <AuthButton/>
+              <AuthButton login={() => swetrix_track({ev: 'bootstrapperLogin', unique: true})}/>
             </Nav>
             <Nav style={{display: ok ? undefined : 'none'}}>
               <Dropdown>

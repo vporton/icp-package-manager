@@ -4,11 +4,20 @@ import { useInternetIdentity } from 'ic-use-internet-identity';
 import DisplayPrincipal from '../bootstrapper_frontend/src/DisplayPrincipal';
 import { useAuth } from './use-auth-client';
 
-export const AuthButton = () => {
+export const AuthButton = (props: {login?: () => void, logout?: () => void}) => {
   const { principal, login, clear, identity } = useAuth();
+  const click = async () => {
+    if (identity) {
+      await clear!();
+      props.logout !== undefined && props.logout();
+    } else {
+      await login!()
+      props.login !== undefined && props.login();
+    }
+  };
   return (
     <>
-      <Button onClick={identity ? clear! : login!}>
+      <Button onClick={click}>
         {identity ? 'Logout' : 'Login'}
       </Button>
       {" "}
