@@ -73,6 +73,7 @@ function AddressPopup(props: {
   }
   async function topUpCycles() {
     try {
+      swetrix_track({ev: 'paidCycles', unique: false, meta: {amount: props.cyclesLedgerAmount!.toString()}});
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
       await bootstrapper.topUpCycles(); // FIXME@P3: Rename the function.
       props.updateCyclesAmount();
@@ -85,6 +86,7 @@ function AddressPopup(props: {
   }
   async function convertICPToCycles() {
     try {
+      swetrix_track({ev: 'paidICP', unique: false, meta: {amount: props.icpAmount!.toString()}});
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
       await bootstrapper.topUpWithICP(); // FIXME@P3: Rename the function.
       props.updateCyclesAmount();
@@ -170,6 +172,9 @@ function App2() {
     agent === undefined ? undefined : createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent}), // TODO@P3: or `defaultAgent`?
     [agent],
   );
+  useEffect(() => {
+    ok && swetrix_track({ev: 'bootstrapperLogin', unique: true});
+  }, [ok]);
   // TODO@P3: below correct `!` usage?
   function updateCyclesAmount() {
     setCyclesAmount(undefined);
@@ -191,7 +196,6 @@ function App2() {
       subaccount: [principalToSubAccount(principal)],
     }).then((amount) => {
       setCyclesLedgerAmount(parseInt(amount.toString()));
-      swetrix_track({ev: 'paidCycles', unique: false, meta: {amount: amount.toString()}});
     });
   }
   function updateICPAmount() {
@@ -204,7 +208,6 @@ function App2() {
       subaccount: [principalToSubAccount(principal!)],
     }).then((amount: bigint) => {
       setICPAmount(parseInt(amount.toString()));
-      swetrix_track({ev: 'paidICP', unique: false, meta: {amount: amount.toString()}});
     });
   }
   function updateAmounts(event: React.MouseEvent) {
@@ -264,7 +267,7 @@ function App2() {
         <nav>
           <Navbar className="bg-body-secondary" style={{width: "auto"}}>
             <Nav>
-              <AuthButton login={() => swetrix_track({ev: 'bootstrapperLogin', unique: true})}/>
+              <AuthButton/>
             </Nav>
             <Nav style={{display: ok ? undefined : 'none'}}>
               <Dropdown>
