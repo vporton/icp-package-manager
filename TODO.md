@@ -3,7 +3,7 @@ Remaining things TODO:
 - TODO@P2 Unjustified growth of `simpleIndirect` and  `mainIdirect` by passing `1_000_000_000_000` cycles to it when upgrade.
           Need to reduce installation costs in general.
 
-- TODO@P3 The option for user to deliver Swetrix events in the PM.
+- TODO@P3 Opt-in Swetrix events in the PM.
 
 - TODO@P3 Affiliate program.
 
