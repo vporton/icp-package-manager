@@ -145,3 +145,5 @@ Remaining things TODO:
 - TODO@P2 Replace some `Principal`s by actor types?
 
 - TODO@P3 Handing names of user's repositories.
+
+- TODO@P3 "Buy ICP" (affiliate) link in the UI.
