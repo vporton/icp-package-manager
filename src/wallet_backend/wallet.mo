@@ -20,6 +20,7 @@ persistent actor class Wallet({
         symbol: Text;
         name: Text;
         canisterId: Principal;
+        archiveCanisterId: ?Principal;
     };
 
     type UserData = {
@@ -38,6 +39,7 @@ persistent actor class Wallet({
                 symbol = "ICP";
                 name = "Internet Computer";
                 canisterId = Principal.fromActor(ICPLedger);
+                archiveCanisterId = null; // FIXME@P2
             }
         ]
     };
@@ -106,6 +108,39 @@ persistent actor class Wallet({
                         var tokens = Array.append(defaultTokens(), [token]);
                     });
             };
+        };
+    };
+
+    // TODO@P1: Filter by principal, not symbol.
+    public shared({caller}) func removeToken(symbol: Text): async () {
+        onlyOwner(caller, "removeToken");
+        
+        let data = principalMap.get(userData, caller);
+        switch (data) {
+            case (?data) {
+                data.tokens := Array.filter(data.tokens, func(t: Token): Bool {
+                    t.symbol != symbol
+                });
+            };
+            case null { /* Do nothing */ };
+        };
+    };
+
+    public shared({caller}) func addArchiveCanister(symbol: Text, archiveCanisterId: Principal): async () {
+        onlyOwner(caller, "addArchiveCanister");
+        
+        let data = principalMap.get(userData, caller);
+        switch (data) {
+            case (?data) {
+                data.tokens := Array.map(data.tokens, func(t: Token): Token {
+                    if (t.symbol == symbol) {
+                        {t with archiveCanisterId = ?archiveCanisterId}
+                    } else {
+                        t
+                    }
+                });
+            };
+            case null { /* Do nothing */ };
         };
     };
 };
