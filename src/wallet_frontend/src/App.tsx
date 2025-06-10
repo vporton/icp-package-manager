@@ -9,13 +9,17 @@ import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
+import { useState, useRef } from 'react';
+import { GlobalContextProvider } from './state';
 
 export default function App() {
     return (
         <ErrorProvider>
             <ErrorBoundary>
                 <AuthProvider>
-                    <App2/>
+                    <GlobalContextProvider>
+                        <App2/>
+                    </GlobalContextProvider>
                 </AuthProvider>
             </ErrorBoundary>
         </ErrorProvider>
@@ -24,6 +28,15 @@ export default function App() {
 
 function App2() {
     const {ok} = useAuth();
+    const [activeTab, setActiveTab] = useState('tokens');
+    const tokensTableRef = useRef<{ setShowAddModal: (show: boolean) => void }>(null);
+
+    const handleAddToken = () => {
+        if (tokensTableRef.current) {
+            tokensTableRef.current.setShowAddModal(true);
+        }
+    };
+
     return (
         <Container>
             <p style={{background: 'red', color: 'white', padding: '2px'}}>
@@ -40,18 +53,19 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            <Tabs>
+            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                 <Tab eventKey="tokens" title="Tokens">
                     <p>
-                        <Button disabled={!ok}>Add token</Button>
+                        <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
-                    {ok && <TokensTable />}
+                    {ok && <TokensTable ref={tokensTableRef} />}
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>
                 </Tab>
                 <Tab eventKey="invest" title="Invest">
+                    <p>Investment features coming soon...</p>
                 </Tab>
             </Tabs>
         </Container>
