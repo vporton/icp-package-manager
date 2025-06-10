@@ -7,8 +7,8 @@ import { GlobalContext } from './state';
 
 export default function Settings() {
     const { agent, ok, principal } = useAuth();
-    const [amountAddCheckbox, setAmountAddCheckbox] = useState<number>(10);
-    const [amountAddInput, setAmountAddInput] = useState<number>(30);
+    const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
+    const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
     const [isLoading, setIsLoading] = useState(false);
     const glob = useContext(GlobalContext);
 
@@ -20,6 +20,13 @@ export default function Settings() {
         setAmountAddInput(limits.amountAddInput[0] ?? 30);
     };
 
+    function doSetAmountAddCheckbox(e: HTMLInputElement) {
+        setAmountAddCheckbox(e.value === "" ? undefined : Number(e.value)) 
+    }
+    function doSetAmountAddInput(e: HTMLInputElement) {
+        setAmountAddInput(e.value === "" ? undefined : Number(e.value)) 
+    }
+
     useEffect(() => {
         loadSettings();
     }, [agent, principal]);
@@ -30,8 +37,8 @@ export default function Settings() {
         setIsLoading(true);
         try {
             await glob.walletBackend.setLimitAmounts({
-                amountAddCheckbox: [amountAddCheckbox],
-                amountAddInput: [amountAddInput]
+                amountAddCheckbox: amountAddCheckbox === undefined ? [] : [amountAddCheckbox],
+                amountAddInput: amountAddInput === undefined ? [] : [amountAddInput],
             });
         } catch (error) {
             console.error('Failed to save settings:', error);
@@ -48,11 +55,11 @@ export default function Settings() {
                     <Form.Label>Default Amount for Quick Add (Checkbox)</Form.Label>
                     <Form.Control
                         type="number"
-                        value={amountAddCheckbox}
-                        onChange={(e) => setAmountAddCheckbox(Number(e.target.value))}
+                        onInput={(e) => doSetAmountAddCheckbox(e.target as HTMLInputElement)}
                         min="0"
-                        defaultValue={amountAddCheckbox}
+                        defaultValue={amountAddCheckbox === undefined ? "" : amountAddCheckbox}
                         disabled={!ok}
+                        isInvalid={amountAddCheckbox !== undefined && amountAddCheckbox < 0}
                     />
                     <Form.Text className="text-muted">
                         Default amount to add when using quick add checkbox
@@ -63,11 +70,11 @@ export default function Settings() {
                     <Form.Label>Default Amount for Manual Input</Form.Label>
                     <Form.Control
                         type="number"
-                        value={amountAddInput}
-                        onChange={(e) => setAmountAddInput(Number(e.target.value))}
+                        onInput={(e) => doSetAmountAddInput(e.target as HTMLInputElement)}
                         min="0"
-                        defaultValue={amountAddInput}
+                        defaultValue={amountAddInput === undefined ? "" : amountAddInput}
                         disabled={!ok}
+                        isInvalid={amountAddInput !== undefined && amountAddInput < 0}
                     />
                     <Form.Text className="text-muted">
                         Default amount to show in manual input field
@@ -77,8 +84,9 @@ export default function Settings() {
                 <Button 
                     variant="primary" 
                     onClick={handleSave}
-                    disabled={isLoading}
-                >
+                    disabled={isLoading ||
+                        (amountAddCheckbox !== undefined && amountAddCheckbox < 0) || (amountAddInput !== undefined && amountAddInput < 0)
+                    }>
                     {isLoading ? 'Saving...' : 'Save Settings'}
                 </Button>
             </Form>
