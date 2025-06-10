@@ -1,20 +1,23 @@
-import { useState, useEffect, forwardRef, useImperativeHandle, useContext } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useContext, useMemo } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { createActor } from '../../declarations/wallet_backend';
+import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
+import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
 import { GlobalContext } from './state';
 import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import { Token } from '../../declarations/wallet_backend/wallet_backend.did';
 
-interface Token {
+interface UIToken {
     symbol: string;
     name: string;
     canisterId: Principal | undefined;
-    archiveCanisterId?: Principal;
+    archiveCanisterId: Principal | undefined;
 }
 
 export interface TokensTableRef {
@@ -24,21 +27,22 @@ export interface TokensTableRef {
 const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
     const glob = useContext(GlobalContext);
     const { setError } = useContext(ErrorContext)!;
-    const { agent, principal } = useAuth();
-    const [tokens, setTokens] = useState<Token[]>([]);
+    const { agent, defaultAgent, principal } = useAuth();
+    const [tokens, setTokens] = useState<UIToken[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
-    const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+    const [selectedToken, setSelectedToken] = useState<UIToken | null>(null);
     const [sendAmount, setSendAmount] = useState('');
     const [sendTo, setSendTo] = useState('');
     const [archiveCanisterId, setArchiveCanisterId] = useState('');
     const [copied, setCopied] = useState(false);
-    const [newToken, setNewToken] = useState<Token>({
+    const [newToken, setNewToken] = useState<UIToken>({
         symbol: '',
         name: '',
         canisterId: undefined,
+        archiveCanisterId: undefined,
     });
 
     useImperativeHandle(ref, () => ({
@@ -49,12 +53,14 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
         if (!agent || !principal || !glob.walletBackend) return;
         
         const backendTokens = await glob.walletBackend.getTokens();
-        setTokens(backendTokens.map((t: Token) => ({
-            symbol: t.symbol,
-            name: t.name,
-            canisterId: t.canisterId!,
-            archiveCanisterId: t.archiveCanisterId
-        })));
+        setTokens(backendTokens.map((t: Token) => {
+            return {
+                symbol: t.symbol,
+                name: t.name,
+                canisterId: t.canisterId!,
+                archiveCanisterId: t.archiveCanisterId![0],
+            }
+        }));
     };
 
     useEffect(() => {
@@ -64,10 +70,12 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
     const handleAddToken = async () => {
         if (!agent || !principal || !glob.walletBackend) return;
         
+        // TODO@P3: also `archiveCanisterId`:
         await glob.walletBackend.addToken({
             symbol: newToken.symbol,
             name: newToken.name,
             canisterId: newToken.canisterId!,
+            archiveCanisterId: [],
         });
         
         setShowAddModal(false);
@@ -143,6 +151,27 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
         </Tooltip>
     );
 
+    const [balances, setBalances] = useState(new Map<Principal, number>());
+    const [userWallet, setUserWallet] = useState<Account | undefined>();
+    useEffect(() => {
+        if (glob.walletBackend !== undefined && principal !== undefined) {
+            glob.walletBackend.getUserWallet(principal).then(f => setUserWallet(f));
+        }
+    }, [glob.walletBackend, principal]);
+    useEffect(() => {
+        if (tokens === undefined || userWallet === undefined) {
+            return;
+        }
+        for (const token of tokens) {
+            const actor: NNSLedger = createTokenActor(token.canisterId!, { agent: defaultAgent });
+            Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
+                .then(([balance, digits]) => {
+                    balances.set(token.canisterId!, Number(balance.toString()) / 10**digits); // TODO@P3: Here `!` is superfluous.
+                    setBalances(new Map(balances)); // create new value.
+                });
+        }
+    }, [tokens, defaultAgent, userWallet]);
+
     return (
         <>
             <table className="table">
@@ -159,7 +188,7 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                         <tr key={index}>
                             <td>{token.symbol}</td>
                             <td>{token.name}</td>
-                            <td>TODO</td>
+                            <td>{balances.get(token.canisterId!)}</td>
                             <td>
                                 <Button 
                                     variant="primary" 

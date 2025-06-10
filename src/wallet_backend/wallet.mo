@@ -3,11 +3,13 @@ import Debug "mo:base/Debug";
 import Map "mo:base/OrderedMap";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
+import Account "../lib/Account";
+import AccountID "mo:account-identifier";
 import ICPLedger "canister:nns-ledger";
 
 persistent actor class Wallet({
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
-}) {
+}) = this {
     let owner = user;
 
     private func onlyOwner(caller: Principal, msg: Text) {
@@ -143,4 +145,33 @@ persistent actor class Wallet({
             case null { /* Do nothing */ };
         };
     };
+
+    public query func getUserWallet(user: Principal): async {owner: Principal; subaccount: ?Blob} {
+        // onlyOwner(caller, "getUserWallet");
+
+        let canister = Principal.fromActor(this);
+        {owner = canister; subaccount =
+            if (Principal.isAnonymous(owner)) {
+                ?(AccountID.principalToSubaccount(user));
+            } else {
+                null;
+            }
+        };
+    };
+
+    public query func getUserWalletText(user: Principal): async Text {
+        // onlyOwner(caller, "getUserWallet");
+
+        let canister = Principal.fromActor(this);
+        if (Principal.isAnonymous(owner)) {
+            let subaccount = ?(AccountID.principalToSubaccount(user));
+            Account.toText({owner = canister; subaccount});
+        } else {
+            Principal.toText(canister);
+        }
+    };
+
+    // query func isPersonalWallet(): async Bool {
+    //     not owner.isAnonymous();
+    // };
 };
