@@ -153,9 +153,11 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
 
     const [balances, setBalances] = useState(new Map<Principal, number>());
     const [userWallet, setUserWallet] = useState<Account | undefined>();
+    const [userWalletText, setUserWalletText] = useState<string | undefined>();
     useEffect(() => {
         if (glob.walletBackend !== undefined && principal !== undefined) {
             glob.walletBackend.getUserWallet(principal).then(f => setUserWallet(f));
+            glob.walletBackend.getUserWalletText(principal).then(f => setUserWalletText(f));
         }
     }, [glob.walletBackend, principal]);
     useEffect(() => {
@@ -282,7 +284,7 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                             style={{cursor: 'pointer'}} 
                             onClick={() => copyToClipboard(principal?.toString() || '')}
                         >
-                            {principal?.toString()}
+                            {userWalletText}
                         </code>
                     </OverlayTrigger>
                 </Modal.Body>
