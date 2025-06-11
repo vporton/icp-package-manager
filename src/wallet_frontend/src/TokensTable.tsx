@@ -282,7 +282,7 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                     <OverlayTrigger placement="right" overlay={renderTooltip}>
                         <code 
                             style={{cursor: 'pointer'}} 
-                            onClick={() => copyToClipboard(principal?.toString() || '')}
+                            onClick={() => copyToClipboard(userWalletText!}
                         >
                             {userWalletText}
                         </code>
