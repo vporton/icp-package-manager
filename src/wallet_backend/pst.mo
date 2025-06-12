@@ -114,18 +114,6 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
             case (#Ok _) {};
         };
 
-<<<<<<< HEAD
-        let limit = 3_333_332_000_000; // 2 * 16_666.66 ICP in e8s
-        if (totalInvested + invest > limit) {
-            return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
-        };
-
-        let prev = Int.fromNat(totalInvested);
-        let new = Int.fromNat(totalInvested + invest);
-        let b = Int.fromNat(limit);
-        let numerator = 4 * ((2 * b * (new - prev)) - ((new * new) - (prev * prev)));
-        let denominator = 6 * b;
-=======
         //
         // The number of PST tokens minted for an ICP investment is given by
         // integrating a price curve which gradually increases the cost of a token
@@ -163,7 +151,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         // This evaluates \int_{prevTotal}^{newTotal} f(x) dx where f(x) is the
         // instantaneous ICPACK per ICP rate.  The integer division is intentional
         // as ICP and ICPACK are denominated in e8s.
->>>>>>> 163c221a607bfda9a89c993db575808c835c5191
+
         let minted = Nat.fromInt(numerator / denominator);
         totalInvested += invest;
 
