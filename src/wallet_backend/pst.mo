@@ -82,6 +82,16 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     };
 
     /// Buy ICPACK with ICP transferred to the caller's subaccount.
+<<<<<<< HEAD
+=======
+    ///
+    /// The amount of tokens minted is determined by integrating a price curve
+    /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
+    /// 16,666.66 ICP invested in total the rate drops to half that, and after
+    /// twice that amount of ICP is invested the cost grows without bound.  The
+    /// integral ensures that investing 16,666.66 ICP mints exactly the same
+    /// amount of ICPACK while early investors receive proportionally more.
+>>>>>>> 163c221a607bfda9a89c993db575808c835c5191
     public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
         let subaccount = Common.principalToSubaccount(user);
         let icpBalance = await ICPLedger.icrc1_balance_of({
@@ -104,6 +114,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
             case (#Ok _) {};
         };
 
+<<<<<<< HEAD
         let limit = 3_333_332_000_000; // 2 * 16_666.66 ICP in e8s
         if (totalInvested + invest > limit) {
             return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
@@ -114,6 +125,45 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         let b = Int.fromNat(limit);
         let numerator = 4 * ((2 * b * (new - prev)) - ((new * new) - (prev * prev)));
         let denominator = 6 * b;
+=======
+        //
+        // The number of PST tokens minted for an ICP investment is given by
+        // integrating a price curve which gradually increases the cost of a token
+        // as more ICP is invested.  The shape of the curve is chosen so that:
+        //   * investing 16,666.66 ICP in total results in 16,666.66 newly minted
+        //     ICPACK tokens (one token per ICP on average);
+        //   * at the very beginning the buyer receives twice as many ICPACK per
+        //     ICP as at the 16,666.66 ICP mark; and
+        //   * once twice that amount of ICP (33,333.32 ICP) has been invested,
+        //     the price tends to infinity and no new ICPACK can be purchased.
+        //
+        // These conditions are satisfied when the instantaneous number of
+        // ICPACK tokens obtainable for one ICP is a linear function of the total
+        // amount of ICP already invested, `f(x) = 4/3 * (1 - x/b)` where `b` is
+        // twice 16,666.66 ICP expressed in e8s.  Integrating `f(x)` from the
+        // previous total investment (`prevTotal`) to the new total investment
+        // (`newTotal`) yields the number of ICPACK tokens to mint.  The result is the
+        // expression below.
+
+        let limit = 3_333_332_000_000; // investment cap (2 * 16_666.66 ICP) in e8s
+        if (totalInvested + invest > limit) {
+            // Once the limit is reached the cost of ICPACK grows without bound
+            // because the `f(x)` factor in the integral approaches zero, so the
+            // token price 1/f(x) tends to infinity and no further tokens can be purchased.
+            return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
+        };
+
+        let prevTotal = Int.fromNat(totalInvested);
+        let newTotal = Int.fromNat(totalInvested + invest);
+        let b = Int.fromNat(limit);
+        // Integral of f(x) = 4/3 * (1 - x/b) from `prevTotal` to `newTotal` equals
+        //  [4 * ((2*b*(newTotal-prevTotal)) - (newTotal^2 - prevTotal^2))] / (6*b).
+        let numerator = 4 * ((2 * b * (newTotal - prevTotal)) - ((newTotal * newTotal) - (prevTotal * prevTotal)));
+        let denominator = 6 * b;
+        // This evaluates \int_{prevTotal}^{newTotal} f(x) dx where f(x) is the
+        // instantaneous ICPACK per ICP rate.  The integer division is intentional
+        // as ICP and ICPACK are denominated in e8s.
+>>>>>>> 163c221a607bfda9a89c993db575808c835c5191
         let minted = Nat.fromInt(numerator / denominator);
         totalInvested += invest;
 
