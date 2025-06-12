@@ -185,7 +185,7 @@ persistent actor class Wallet({
         ignore token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack
     };
 
-  /// Dividents and Withdrawals ///
+  /// Dividends and Withdrawals ///
 
   /// Dividends are accounted per token to avoid newly minted PST receiving
   /// a share of previously declared dividends.  `dividendPerToken` stores the
