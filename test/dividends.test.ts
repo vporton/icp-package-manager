@@ -13,6 +13,11 @@ class DividendSystem {
   }
 
   mint(a: string, amount: bigint) {
+    const owed = this.dividendsOwing(a);
+    if (owed > 0n) {
+      this.indebt(a, owed);
+    }
+    this.lastDividendsPerToken.set(a, this.dividendPerToken);
     this.balances.set(a, this.balanceOf(a) + amount);
     this.totalSupply += amount;
   }
