@@ -3,7 +3,7 @@ import ExperimentalCycles "mo:base/ExperimentalCycles";
 import ICRC1 "mo:icrc1/ICRC1";
 // import ICRC1Types "mo:icrc1/ICRC1/Types";
 
-shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface {
+shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface = this {
     stable let token = ICRC1.init({
         advanced_settings = null;
         decimals = 5;
@@ -11,7 +11,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         initial_balances = [({owner = initialOwner; subaccount = null}, 10_000_000_000)];
         max_supply = 10_000_000_000;
         min_burn_amount = 100_000;
-        minting_account = { owner = initialOwner; subaccount = null; }; // wallet can mint // FIXME@P1: There are many wallet installations!
+        minting_account = { owner = Principal.fromActor(this); subaccount = null; }; // wallet can mint // FIXME@P1: There are many wallet installations!
         name = "IC Pack PST token";
         symbol = "ICPACK";
     });
