@@ -34,7 +34,7 @@ To learn more before you start working with ICP Package Manager, see the followi
 If you want to start working on your project right away, you might want to try the following commands:
 
 ```bash
-cd ic-package-manager/
+cd icp-package-manager/
 dfx help
 dfx canister --help
 ```
