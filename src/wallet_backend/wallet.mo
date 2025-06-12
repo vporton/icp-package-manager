@@ -7,6 +7,8 @@ import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICRC1 "mo:icrc1-types";
 import ICPLedger "canister:nns-ledger";
+import Int "mo:base/Int";
+import BTree "mo:base/BTree";
 
 persistent actor class Wallet({
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
@@ -232,6 +234,18 @@ persistent actor class Wallet({
     };
     let totalSupply = await PST.icrc1_total_supply();
     dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
+  };
+
+  /// Withdraw owed dividends and record the snapshot of `dividendPerToken`
+  /// for the caller so that newly minted tokens do not get past dividends.
+  public shared({caller}) func withdrawDividends() : async Nat {
+    let amount = await _dividendsOwing(caller);
+    if (amount == 0) {
+      return 0;
+    };
+    lastDividendsPerToken := BTree.put(lastDividendsPerToken, Principal.compare, caller, dividendPerToken);
+    indebt(caller, amount);
+    amount;
   };
 
   /// Outgoing Payments ///
