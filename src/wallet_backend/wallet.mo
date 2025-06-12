@@ -185,26 +185,25 @@ persistent actor class Wallet({
 
   /// Dividents and Withdrawals ///
 
-  // FIXME@P1: Check whether the below code is correct even in the case, if the total amount of the PST is changeable.
-
-  var totalDividends = 0;
-  var totalDividendsPaid = 0; // actually paid sum
-  // TODO: Set a heavy transfer fee of the PST to ensure that `lastTotalDivedends` doesn't take much memory.
-  stable var lastTotalDivedends: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
+  /// Dividends are accounted per token to avoid newly minted PST receiving
+  /// a share of previously declared dividends.  `dividendPerToken` stores the
+  /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
+  let DIVIDEND_SCALE : Nat = 1_000_000_000;
+  var dividendPerToken = 0;
+  // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
+  stable var lastDividendsPerToken: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
 
   func _dividendsOwing(_account: Principal): async Nat {
-    let lastTotal = switch (BTree.get(lastTotalDivedends, Principal.compare, _account)) {
+    let last = switch (BTree.get(lastDividendsPerToken, Principal.compare, _account)) {
       case (?value) { value };
       case (null) { 0 };
     };
-    let _newDividends = Int.abs((totalDividends: Int) - lastTotal);
-    // rounding down
+    let perTokenDelta = Int.abs((dividendPerToken: Int) - last);
     let balance = await PST.icrc1_balance_of({owner = _account; subaccount = null});
-    let total = await PST.icrc1_total_supply();
-    balance * _newDividends / total;
+    balance * perTokenDelta / DIVIDEND_SCALE;
   };
 
-  func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) {
+  func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
     // Affiliates are delivered by frontend.
     // address payable _buyerAffiliate = affiliates[msg.sender];
     // address payable _sellerAffiliate = affiliates[_author];
@@ -231,7 +230,8 @@ persistent actor class Wallet({
       };
       case (null) {};
     };
-    totalDividends += _shareHoldersAmount;
+    let totalSupply = await PST.icrc1_total_supply();
+    dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
   };
 
   /// Outgoing Payments ///
