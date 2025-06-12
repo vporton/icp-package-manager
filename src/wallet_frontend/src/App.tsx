@@ -11,6 +11,7 @@ import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { useState, useRef } from 'react';
 import { GlobalContextProvider } from './state';
+import AddTokenDialog from './AddTokenDialog';
 
 export default function App() {
     return (
@@ -29,8 +30,15 @@ export default function App() {
 function App2() {
     const {ok} = useAuth();
     const [activeTab, setActiveTab] = useState('tokens');
+    const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
+    const [tokensKey, setTokensKey] = useState(0); // Used to force TokensTable refresh
 
     const handleAddToken = () => {
+        setShowAddTokenDialog(true);
+    };
+
+    const handleTokenAdded = () => {
+        setTokensKey(prev => prev + 1); // Force TokensTable to reload
     };
 
     return (
@@ -55,7 +63,7 @@ function App2() {
                         <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
-                    {ok && <TokensTable/>}
+                    {ok && <TokensTable key={tokensKey}/>}
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>
@@ -64,6 +72,12 @@ function App2() {
                     <p>Investment features coming soon...</p>
                 </Tab>
             </Tabs>
+
+            <AddTokenDialog 
+                show={showAddTokenDialog}
+                onHide={() => setShowAddTokenDialog(false)}
+                onTokenAdded={handleTokenAdded}
+            />
         </Container>
     );
 }
