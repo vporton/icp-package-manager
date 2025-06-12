@@ -207,20 +207,7 @@ shared({caller = initialOwner}) actor class Battery({
         if (newCycles != 0) {
             // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
             let fee = newCycles / 20; // 5%
-            let res = await CyclesLedger.icrc1_transfer({
-                to = {owner = revenueRecipient; subaccount = null};
-                fee = null;
-                memo = null;
-                from_subaccount = null; // {owner = revenueRecipient; subaccount = ?null};
-                created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-                amount = fee;
-            });
-            switch (res) {
-                case (#Err err) {
-                    Debug.trap("cannot transfer fee: " # debug_show(err));
-                };
-                case (#Ok _) {};
-            };
+            indebt(revenueRecipient, fee);
             battery.activatedCycles += newCycles - fee;
         };
 
@@ -312,22 +299,10 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - Common.cycles_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
+        indebt(revenueRecipient, revenue);
 
         let res = await CyclesLedger.withdraw({
-            amount = balance - revenue - 2*Common.cycles_transfer_fee;
+            amount = balance - revenue - Common.cycles_transfer_fee;
             from_subaccount = null;
             to = Principal.fromActor(this);
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
@@ -344,19 +319,7 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        switch(await ICPLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = null;
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - Common.icp_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
+        indebt(revenueRecipient, revenue);
 
         let res = await ICPLedger.icrc1_transfer({
             to = {
@@ -367,7 +330,7 @@ shared({caller = initialOwner}) actor class Battery({
             memo = ?"TPUP\00\00\00\00";
             from_subaccount = null;
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = icpBalance - revenue - 2*Common.icp_transfer_fee;
+            amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));

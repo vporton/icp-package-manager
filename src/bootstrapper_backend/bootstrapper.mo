@@ -384,19 +384,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        switch(await CyclesLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - Common.cycles_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
+        indebt(revenueRecipient, revenue);
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -412,8 +400,8 @@ actor class Bootstrapper() = this {
             case (?oldBalance) oldBalance;
             case null 0;
         };
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - 2*Common.cycles_transfer_fee);
-        {balance = balance - revenue - 2*Common.cycles_transfer_fee};
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - Common.cycles_transfer_fee);
+        {balance = balance - revenue - Common.cycles_transfer_fee};
     };
 
     public shared({caller = user}) func topUpWithICP(): async {balance: Nat} {
@@ -423,19 +411,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        switch(await ICPLedger.icrc1_transfer({
-            to = {owner = revenueRecipient; subaccount = null};
-            fee = null;
-            memo = null;
-            from_subaccount = ?(Common.principalToSubaccount(user));
-            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = revenue - Common.icp_transfer_fee;
-        })) {
-            case (#Err e) {
-                Debug.trap("transfer failed: " # debug_show(e));
-            };
-            case (#Ok _) {};
-        };
+        indebt(revenueRecipient, revenue);
 
         let res = await ICPLedger.icrc1_transfer({
             to = {
@@ -446,7 +422,7 @@ actor class Bootstrapper() = this {
             memo = ?"TPUP\00\00\00\00";
             from_subaccount = ?(Common.principalToSubaccount(user));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
-            amount = icpBalance - revenue - 2*Common.icp_transfer_fee;
+            amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
