@@ -81,7 +81,7 @@ func pairCompare(a: (Text, Principal), b: (Text, Principal)): {#less; #equal; #g
 var i = 0;
 for (t in testsData.vals()) {
     test("test" # debug_show(i), func() {
-        let iter = Common.ModulesIterator(t.arg);
+        let iter = Common.modulesIterator(t.arg);
         let res0 = Iter.sort<(Text, Principal)>(iter, pairCompare);
         let res = Iter.toArray<(Text, Principal)>(res0);
         let expected0 = Iter.toArray<(Text, Principal)>(t.result.vals());

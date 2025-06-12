@@ -174,7 +174,7 @@ actor class Bootstrapper() = this {
     public shared func bootstrapBackend({
         frontendTweakPrivKey: PrivKey; // TODO@P3: Rename.
         installedModules: [(Text, Principal)];
-        user: Principal; // to address security vulnerabulities, used only to add as a controller.
+        user: Principal; // to address security vulnerabilities, used only to add as a controller.
     }): async {spentCycles: Int} {
         let initialBalance = Cycles.balance();
 
@@ -207,7 +207,7 @@ actor class Bootstrapper() = this {
     public shared({caller}) func doBootstrapBackend({
         pubKey: PubKey;
         installedModules: [(Text, Principal)];
-        user: Principal; // to address security vulnerabulities, used only to add as a controller.
+        user: Principal; // to address security vulnerabilities, used only to add as a controller.
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
     }): async {battery: Principal} {
@@ -348,7 +348,7 @@ actor class Bootstrapper() = this {
     private func tweakFrontend(
         tweaker: Data.FrontendTweaker,
         controllers: [Principal],
-        user: Principal, // to address security vulnerabulities, used only to add a controller.
+        user: Principal, // to address security vulnerabilities, used only to add a controller.
     ): async* () {
         let assets: Asset.AssetCanister = actor(Principal.toText(tweaker.frontend));
         let owners = await assets.list_authorized();
