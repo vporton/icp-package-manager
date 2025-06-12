@@ -182,7 +182,7 @@ persistent actor class Wallet({
     public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
         onlyOwner(caller, "do_icrc1_transfer");
 
-        await token.icrc1_transfer(args);
+        ignore token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack
     };
 
   /// Dividents and Withdrawals ///
