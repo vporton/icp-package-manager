@@ -182,4 +182,88 @@ persistent actor class Wallet({
 
         await token.icrc1_transfer(args);
     };
+
+  /// Dividents and Withdrawals ///
+
+  // FIXME@P1: Check whether the below code is correct even in the case, if the total amount of the PST is changeable.
+
+  var totalDividends = 0;
+  var totalDividendsPaid = 0; // actually paid sum
+  // TODO: Set a heavy transfer fee of the PST to ensure that `lastTotalDivedends` doesn't take much memory.
+  stable var lastTotalDivedends: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
+
+  func _dividendsOwing(_account: Principal): async Nat {
+    let lastTotal = switch (BTree.get(lastTotalDivedends, Principal.compare, _account)) {
+      case (?value) { value };
+      case (null) { 0 };
+    };
+    let _newDividends = Int.abs((totalDividends: Int) - lastTotal);
+    // rounding down
+    let balance = await PST.icrc1_balance_of({owner = _account; subaccount = null});
+    let total = await PST.icrc1_total_supply();
+    balance * _newDividends / total;
+  };
+
+  func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) {
+    // Affiliates are delivered by frontend.
+    // address payable _buyerAffiliate = affiliates[msg.sender];
+    // address payable _sellerAffiliate = affiliates[_author];
+    var _shareHoldersAmount = _amount;
+    switch (_buyerAffiliate) {
+      case (?_buyerAffiliate) {
+        let _buyerAffiliateAmount = Int.abs(Fractions.mul(_amount, buyerAffiliateShare));
+        indebt(_buyerAffiliate, _buyerAffiliateAmount);
+        if (_shareHoldersAmount < _buyerAffiliateAmount) {
+          Debug.trap("negative amount to pay");
+        };
+        _shareHoldersAmount -= _buyerAffiliateAmount;
+      };
+      case (null) {};
+    };
+    switch (_sellerAffiliate) {
+      case (?_sellerAffiliate) {
+        let _sellerAffiliateAmount = Int.abs(Fractions.mul(_amount, sellerAffiliateShare));
+        indebt(_sellerAffiliate, _sellerAffiliateAmount);
+        if (_shareHoldersAmount < _sellerAffiliateAmount) {
+          Debug.trap("negative amount to pay");
+        };
+        _shareHoldersAmount -= _sellerAffiliateAmount;
+      };
+      case (null) {};
+    };
+    totalDividends += _shareHoldersAmount;
+  };
+
+  /// Outgoing Payments ///
+
+  type OutgoingPayment = {
+    amount: ICRC1Types.Balance;
+    var time: ?Time.Time;
+  };
+
+  public shared({caller}) func payout(subaccount: ?ICRC1Types.Subaccount) {
+    switch (BTree.get<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller)) {
+      case (?payment) {
+        let time = switch (payment.time) {
+          case (?time) { time };
+          case (null) {
+            let time = Time.now();
+            payment.time := ?time;
+            time;
+          }
+        };
+        let fee = await ledger.icrc1_fee();
+        let result = await ledger.icrc1_transfer({
+          from_subaccount = null;
+          to = {owner = caller; subaccount = subaccount};
+          amount = payment.amount - fee;
+          fee = null;
+          memo = null;
+          created_at_time = ?Nat64.fromNat(Int.abs(time)); // idempotent
+        });
+        ignore BTree.delete<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller);
+      };
+      case (null) {};
+    };
+  };
 };
