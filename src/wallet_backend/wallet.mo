@@ -191,7 +191,7 @@ persistent actor class Wallet({
   /// a share of previously declared dividends.  `dividendPerToken` stores the
   /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
   let DIVIDEND_SCALE : Nat = 1_000_000_000;
-  var dividendPerToken = 0;
+  stable var dividendPerToken = 0;
   // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
   stable var lastDividendsPerToken: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
 
