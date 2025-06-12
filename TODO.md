@@ -152,8 +152,6 @@ Remaining things TODO:
 
 - TODO@P2 Wallet: Investment.
 
-- TODO@P2 Wallet: Add token.
-
 - TODO@P3 Wallet: View payments history.
 
 - TODO@P3 Wallet & other: QR codes for payments.
