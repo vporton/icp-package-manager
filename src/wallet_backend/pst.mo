@@ -11,7 +11,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         advanced_settings = null;
         decimals = 8;
         fee = 10_000; // same as ICP fee
-        initial_balances = [];
+        initial_balances = [({owner = initialOwner; subaccount = null}, 33334 * 4 * 10**8)]; // 80% of the supply
         max_supply = 33334 * 5 * 10**8; // Buying all tokens would mean 20% of the equity.
         min_burn_amount = 100_000;
         minting_account = { owner = Principal.fromActor(this); subaccount = null; }; // wallet can mint
