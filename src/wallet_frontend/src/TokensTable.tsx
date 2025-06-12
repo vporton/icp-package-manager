@@ -3,15 +3,16 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
-import { createActor } from '../../declarations/wallet_backend';
 import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
+import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
 import { GlobalContext } from './state';
 import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
-import { Token } from '../../declarations/wallet_backend/wallet_backend.did';
+import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
+import { Actor } from '@dfinity/agent';
 
 interface UIToken {
     symbol: string;
@@ -86,20 +87,22 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
         if (!selectedToken?.canisterId || !sendAmount || !sendTo) return;
         
         try {
-            const tokenCanister = createActor(selectedToken.canisterId.toString(), { agent });
-            await tokenCanister.icrc1_transfer({
-                from_subaccount: null,
-                to: { owner: Principal.fromText(sendTo), subaccount: null },
+            const to = decodeIcrcAccount(sendTo);
+            const res = await glob.walletBackend!.do_icrc1_transfer(selectedToken?.canisterId, {
+                from_subaccount: [],
+                to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
                 amount: BigInt(sendAmount),
-                fee: null,
-                memo: null,
-                created_at_time: null
+                fee: [],
+                memo: [],
+                created_at_time: [],
             });
-            
             setShowSendModal(false);
             setSendAmount('');
             setSendTo('');
             setSelectedToken(null);
+            if ((res as any).Err) {
+                throw "error sending token"; // TODO@P3: better error message (based on `Err`)
+            }
         } catch (error: any) {
             setError(error?.toString() || 'Failed to send tokens');
         }
@@ -165,7 +168,7 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
             return;
         }
         for (const token of tokens) {
-            const actor: NNSLedger = createTokenActor(token.canisterId!, { agent: defaultAgent });
+            const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
             Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
                 .then(([balance, digits]) => {
                     balances.set(token.canisterId!, Number(balance.toString()) / 10**digits); // TODO@P3: Here `!` is superfluous.
@@ -282,7 +285,7 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                     <OverlayTrigger placement="right" overlay={renderTooltip}>
                         <code 
                             style={{cursor: 'pointer'}} 
-                            onClick={() => copyToClipboard(userWalletText!}
+                            onClick={() => copyToClipboard(userWalletText!)}
                         >
                             {userWalletText}
                         </code>

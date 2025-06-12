@@ -5,6 +5,7 @@ import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
+import ICRC1 "mo:icrc1-types";
 import ICPLedger "canister:nns-ledger";
 
 persistent actor class Wallet({
@@ -174,4 +175,10 @@ persistent actor class Wallet({
     // query func isPersonalWallet(): async Bool {
     //     not owner.isAnonymous();
     // };
+
+    public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
+        onlyOwner(caller, "do_icrc1_transfer");
+
+        await token.icrc1_transfer(args);
+    };
 };
