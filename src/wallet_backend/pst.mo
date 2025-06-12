@@ -82,8 +82,6 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     };
 
     /// Buy ICPACK with ICP transferred to the caller's subaccount.
-<<<<<<< HEAD
-=======
     ///
     /// The amount of tokens minted is determined by integrating a price curve
     /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
@@ -91,7 +89,6 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     /// twice that amount of ICP is invested the cost grows without bound.  The
     /// integral ensures that investing 16,666.66 ICP mints exactly the same
     /// amount of ICPACK while early investors receive proportionally more.
->>>>>>> 163c221a607bfda9a89c993db575808c835c5191
     public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
         let subaccount = Common.principalToSubaccount(user);
         let icpBalance = await ICPLedger.icrc1_balance_of({
