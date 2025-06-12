@@ -93,6 +93,7 @@ persistent actor class Wallet({
         };
     };
 
+    // FIXME@P2: Disallow adding the same token twice.
     public shared({caller}) func addToken(token: Token): async () {
         onlyOwner(caller, "addToken");
         
@@ -106,7 +107,7 @@ persistent actor class Wallet({
                     userData,
                     caller,
                     {
-                        var amountAddCheckbox = ?10.0;
+                        var amountAddCheckbox = ?10.0; // FIXME@P2: duplicate data
                         var amountAddInput = ?30.0;
                         var tokens = Array.append(defaultTokens(), [token]);
                     });
