@@ -29,12 +29,8 @@ export default function App() {
 function App2() {
     const {ok} = useAuth();
     const [activeTab, setActiveTab] = useState('tokens');
-    const tokensTableRef = useRef<{ setShowAddModal: (show: boolean) => void }>(null);
 
     const handleAddToken = () => {
-        if (tokensTableRef.current) {
-            tokensTableRef.current.setShowAddModal(true);
-        }
     };
 
     return (
@@ -59,7 +55,7 @@ function App2() {
                         <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
-                    {ok && <TokensTable ref={tokensTableRef} />}
+                    {ok && <TokensTable/>}
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>
