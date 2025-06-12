@@ -5,6 +5,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
+import Invest from './Invest';
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
@@ -69,7 +70,7 @@ function App2() {
                     <Settings/>
                 </Tab>
                 <Tab eventKey="invest" title="Invest">
-                    <p>Investment features coming soon...</p>
+                    <Invest/>
                 </Tab>
             </Tabs>
 
