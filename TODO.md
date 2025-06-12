@@ -147,3 +147,15 @@ Remaining things TODO:
 - TODO@P3 Handing names of user's repositories.
 
 - TODO@P3 "Buy ICP" (affiliate) link in the UI.
+
+- TODO@P3 Wallet: Use settings.
+
+- TODO@P2 Wallet: Investment.
+
+- TODO@P2 Wallet: Add token.
+
+- TODO@P3 Wallet: View payments history.
+
+- TODO@P3 Wallet & other: QR codes for payments.
+
+- TODO@P3 Wallet: Update Balances button.
