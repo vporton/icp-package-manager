@@ -78,7 +78,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     // Deposit cycles into this archive canister.
     public shared func deposit_cycles() : async () {
         let amount = ExperimentalCycles.available();
-        let accepted = ExperimentalCycles.accept(amount);
+        let accepted = ExperimentalCycles.accept<system>(amount);
         assert (accepted == amount);
     };
 };
