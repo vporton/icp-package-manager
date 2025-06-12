@@ -1,9 +1,11 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { GlobalContext } from './state';
 import { Principal } from '@dfinity/principal';
+import { createActor as createTokenActor } from '../../declarations/nns-ledger';
+import { useAuth } from '../../lib/use-auth-client';
 
 interface AddTokenDialogProps {
     show: boolean;
@@ -11,13 +13,57 @@ interface AddTokenDialogProps {
     onTokenAdded: () => void;
 }
 
+interface TokenInfo {
+    symbol: string;
+    name: string;
+}
+
 export default function AddTokenDialog({ show, onHide, onTokenAdded }: AddTokenDialogProps) {
     const { walletBackend } = useContext(GlobalContext);
-    const [symbol, setSymbol] = useState('');
-    const [name, setName] = useState('');
+    const { defaultAgent } = useAuth();
     const [canisterId, setCanisterId] = useState('');
     const [archiveCanisterId, setArchiveCanisterId] = useState('');
     const [error, setError] = useState('');
+    const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Reset state when dialog is closed
+    useEffect(() => {
+        if (!show) {
+            setCanisterId('');
+            setArchiveCanisterId('');
+            setError('');
+            setTokenInfo(null);
+        }
+    }, [show]);
+
+    // Fetch token info when canister ID changes
+    useEffect(() => {
+        const fetchTokenInfo = async () => {
+            if (!canisterId || !defaultAgent) {
+                setTokenInfo(null);
+                return;
+            }
+
+            try {
+                setIsLoading(true);
+                setError('');
+                const tokenActor = createTokenActor(Principal.fromText(canisterId), { agent: defaultAgent });
+                const [symbol, name] = await Promise.all([
+                    tokenActor.icrc1_symbol(),
+                    tokenActor.icrc1_name()
+                ]);
+                setTokenInfo({ symbol, name });
+            } catch (err) {
+                setError('Failed to fetch token information. Please check the canister ID.');
+                setTokenInfo(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTokenInfo();
+    }, [canisterId, defaultAgent]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,8 +71,8 @@ export default function AddTokenDialog({ show, onHide, onTokenAdded }: AddTokenD
 
         try {
             // Validate inputs
-            if (!symbol || !name || !canisterId) {
-                setError('Symbol, name and canister ID are required');
+            if (!canisterId || !tokenInfo) {
+                setError('Valid canister ID is required');
                 return;
             }
 
@@ -37,17 +83,16 @@ export default function AddTokenDialog({ show, onHide, onTokenAdded }: AddTokenD
 
             // Add token to backend
             await walletBackend.addToken({
-                symbol,
-                name,
+                symbol: tokenInfo.symbol,
+                name: tokenInfo.name,
                 canisterId: Principal.fromText(canisterId),
                 archiveCanisterId: archiveCanisterId ? [Principal.fromText(archiveCanisterId)] : []
             });
 
             // Reset form and close dialog
-            setSymbol('');
-            setName('');
             setCanisterId('');
             setArchiveCanisterId('');
+            setTokenInfo(null);
             onTokenAdded();
             onHide();
         } catch (err) {
@@ -63,26 +108,6 @@ export default function AddTokenDialog({ show, onHide, onTokenAdded }: AddTokenD
             <Form onSubmit={handleSubmit}>
                 <Modal.Body>
                     {error && <div className="alert alert-danger">{error}</div>}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Symbol</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={symbol}
-                            onChange={(e) => setSymbol(e.target.value)}
-                            placeholder="e.g. ICP"
-                            required
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Name</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Internet Computer"
-                            required
-                        />
-                    </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label>Canister ID</Form.Label>
                         <Form.Control
@@ -102,12 +127,31 @@ export default function AddTokenDialog({ show, onHide, onTokenAdded }: AddTokenD
                             placeholder="e.g. qoctq-giaaa-aaaaa-aaaea-cai"
                         />
                     </Form.Group>
+
+                    {isLoading && (
+                        <div className="text-center">
+                            <div className="spinner-border" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {tokenInfo && !isLoading && (
+                        <div className="alert alert-info">
+                            <p><strong>Symbol:</strong> {tokenInfo.symbol}</p>
+                            <p><strong>Name:</strong> {tokenInfo.name}</p>
+                        </div>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={onHide}>
                         Cancel
                     </Button>
-                    <Button variant="primary" type="submit">
+                    <Button 
+                        variant="primary" 
+                        type="submit"
+                        disabled={!tokenInfo || isLoading}
+                    >
                         Add Token
                     </Button>
                 </Modal.Footer>
