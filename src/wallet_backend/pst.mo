@@ -12,7 +12,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         decimals = 8;
         fee = 10_000; // same as ICP fee
         initial_balances = [];
-        max_supply = 10_000_000_000;
+        max_supply = 33334 * 5 * 10**8; // Buying all tokens would mean 20% of the equity.
         min_burn_amount = 100_000;
         minting_account = { owner = Principal.fromActor(this); subaccount = null; }; // wallet can mint // FIXME@P1: There are many wallet installations!
         name = "IC Pack PST token";
