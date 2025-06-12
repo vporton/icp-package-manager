@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import Alert from 'react-bootstrap/Alert';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { useAuth } from '../../lib/use-auth-client';
@@ -50,6 +51,7 @@ export default function Settings() {
     return (
         <div className="settings-container">
             <h3>Transaction Settings</h3>
+            <Alert variant='danger'>These settings are not yet honored in the current version.</Alert>
             <Form>
                 <Form.Group className="mb-3">
                     <Form.Label>Default Amount for Quick Add (Checkbox)</Form.Label>
