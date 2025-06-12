@@ -1,12 +1,14 @@
 # ICP Package Manager
 
-This is an MVP alpha.
+This is a preliminary release.
 
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
 For more information on this project [see here](https://dev.package-manager.com) and [here](https://docs.package-manager.com).
 
 See [`TODO.md`](TODO.md) about yet unimplemented features.
+
+[Read here](https://chatgpt.com/s/cd_684b24efcc20819190b4b7ddf9df132d) about this codebase.
 
 ## Howto guides to running it
 
