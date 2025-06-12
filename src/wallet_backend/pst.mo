@@ -11,7 +11,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         initial_balances = [({owner = initialOwner; subaccount = null}, 10_000_000_000)];
         max_supply = 10_000_000_000;
         min_burn_amount = 100_000;
-        minting_account = { owner = Principal.fromText("aaaaa-aa"); subaccount = null; }; // nobody
+        minting_account = { owner = initialOwner; subaccount = null; }; // wallet can mint
         name = "IC Pack PST token";
         symbol = "ICPACK";
     });
