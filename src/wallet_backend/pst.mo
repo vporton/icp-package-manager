@@ -5,6 +5,7 @@ import ICRC1 "mo:icrc1/ICRC1";
 import ICPLedger "canister:nns-ledger";
 import Common "../common";
 import Int "mo:base/Int";
+import env "mo:env";
 
 shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface = this {
     stable let token = ICRC1.init({
@@ -21,6 +22,8 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
 
     /// Total invested ICP in e8s.
     stable var totalInvested : Nat = 0;
+
+    transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// Functions for the ICRC1 token standard
     public shared query func icrc1_name() : async Text {
@@ -95,7 +98,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
             owner = Principal.fromActor(this);
             subaccount = ?subaccount;
         });
-        if (icpBalance <= Common.icp_transfer_fee) {
+        if (icpBalance <= 2 * Common.icp_transfer_fee) {
             return #Err(#GenericError{ error_code = 0; message = "no ICP" });
         };
         let invest = icpBalance - Common.icp_transfer_fee;
@@ -152,11 +155,29 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         let minted = Nat.fromInt(numerator / denominator);
         totalInvested += invest;
 
-        await this.mint({
+        let mintResult = await this.mint({
             to = { owner = user; subaccount = null };
             amount = minted;
             memo = null;
         });
+
+        switch (mintResult) {
+            case (#Err e) { return #Err e };
+            case (#Ok _) {
+                switch(await ICPLedger.icrc1_transfer({
+                    to = { owner = revenueRecipient; subaccount = null };
+                    fee = null;
+                    memo = null;
+                    from_subaccount = null;
+                    created_at_time = null;
+                    amount = invest - Common.icp_transfer_fee;
+                })) {
+                    case (#Err e2) { return #Err e2 };
+                    case (#Ok _) {};
+                };
+                mintResult;
+            };
+        };
     };
 
     // Deposit cycles into this archive canister.
