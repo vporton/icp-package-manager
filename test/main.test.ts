@@ -80,17 +80,18 @@ function getCanisterNameFromPrincipal(principal: Principal): string {
 }
 
 Assertion.addMethod('equalPrincipalSet', function (expected) {
-    const actual = this._obj;
-    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p as Principal)).sort();
-    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal)).sort();
-    
+    const actual = this._obj as Set<any>;
+    const actualStrings = Array.from(actual).map(p => getCanisterNameFromPrincipal(p as Principal));
+    const expectedStrings = Array.from(expected).map(p => getCanisterNameFromPrincipal(p as Principal));
+
+    const isEqual = areEqualSets(new Set(actualStrings), new Set(expectedStrings));
+
     this.assert(
-        expect(actualStrings).to.deep.equal(expectedStrings),
-        // expect(actualStrings).to.have.same.members(expectedStrings),
+        isEqual,
         "expected #{act} to equal #{exp}",
         "expected #{act} to not equal #{exp}",
-        expectedStrings,
-        actualStrings
+        expectedStrings.sort(),
+        actualStrings.sort()
     );
 });
   
