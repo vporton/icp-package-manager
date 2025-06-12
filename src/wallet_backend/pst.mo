@@ -2,19 +2,25 @@ import Principal "mo:base/Principal";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 import ICRC1 "mo:icrc1/ICRC1";
 // import ICRC1Types "mo:icrc1/ICRC1/Types";
+import ICPLedger "canister:nns-ledger";
+import Common "../common";
+import Int "mo:base/Int";
 
 shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface = this {
     stable let token = ICRC1.init({
         advanced_settings = null;
-        decimals = 5;
-        fee = 10_000; // FIXME@P1: too big for the supply
-        initial_balances = [({owner = initialOwner; subaccount = null}, 10_000_000_000)];
+        decimals = 8;
+        fee = 10_000; // same as ICP fee
+        initial_balances = [];
         max_supply = 10_000_000_000;
         min_burn_amount = 100_000;
         minting_account = { owner = Principal.fromActor(this); subaccount = null; }; // wallet can mint // FIXME@P1: There are many wallet installations!
         name = "IC Pack PST token";
         symbol = "ICPACK";
     });
+
+    /// Total invested ICP in e8s.
+    stable var totalInvested : Nat = 0;
 
     /// Functions for the ICRC1 token standard
     public shared query func icrc1_name() : async Text {
@@ -73,6 +79,49 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     // Additional functions not included in the ICRC1 standard
     public shared func get_transaction(i : ICRC1.TxIndex) : async ?ICRC1.Transaction {
         await* ICRC1.get_transaction(token, i);
+    };
+
+    /// Buy ICPACK with ICP transferred to the caller's subaccount.
+    public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
+        let subaccount = Common.principalToSubaccount(user);
+        let icpBalance = await ICPLedger.icrc1_balance_of({
+            owner = Principal.fromActor(this);
+            subaccount = ?subaccount;
+        });
+        if (icpBalance <= Common.icp_transfer_fee) {
+            return #Err(#GenericError{ error_code = 0; message = "no ICP" });
+        };
+        let invest = icpBalance - Common.icp_transfer_fee;
+        switch(await ICPLedger.icrc1_transfer({
+            to = { owner = Principal.fromActor(this); subaccount = null };
+            fee = null;
+            memo = null;
+            from_subaccount = ?subaccount;
+            created_at_time = null;
+            amount = invest;
+        })) {
+            case (#Err e) { return #Err e };
+            case (#Ok _) {};
+        };
+
+        let limit = 3_333_332_000_000; // 2 * 16_666.66 ICP in e8s
+        if (totalInvested + invest > limit) {
+            return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
+        };
+
+        let prev = Int.fromNat(totalInvested);
+        let new = Int.fromNat(totalInvested + invest);
+        let b = Int.fromNat(limit);
+        let numerator = 4 * ((2 * b * (new - prev)) - ((new * new) - (prev * prev)));
+        let denominator = 6 * b;
+        let minted = Nat.fromInt(numerator / denominator);
+        totalInvested += invest;
+
+        await this.mint({
+            to = { owner = user; subaccount = null };
+            amount = minted;
+            memo = null;
+        });
     };
 
     // Deposit cycles into this archive canister.
