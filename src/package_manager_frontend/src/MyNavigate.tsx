@@ -11,20 +11,20 @@ export function MyLink(props: {to: string, className?: string, children: React.R
     return <Link to={amendPath(props.to)} className={props.className} children={props.children}/>
 }
 
-function amendPath(path: string): string {
+export function amendPath(path: string): string {
     const params = new URLSearchParams(window.location.search);
     const canisterId = params.get('canisterId');
     const backend = params.get('_pm_pkg0.backend');
 
-    let s = path;
-    if (canisterId !== null || backend !== null) {
-        s += "?";
-    }
+    const pieces: string[] = [];
     if (canisterId !== null) {
-        s += "canisterId=" + canisterId;
+        pieces.push(`canisterId=${canisterId}`);
     }
     if (backend !== null) {
-        s += "_pm_pkg0.backend=" + backend;
+        pieces.push(`_pm_pkg0.backend=${backend}`);
     }
-    return s;
+    if (pieces.length > 0) {
+        return path + '?' + pieces.join('&');
+    }
+    return path;
 }
