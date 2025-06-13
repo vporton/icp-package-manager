@@ -96,13 +96,13 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
     public type Token = { #icp; #cycles };
 
-    stable var debtsICP: Debt.Debts = Debt.map().empty<Nat>();
-    stable var debtsCycles: Debt.Debts = Debt.map().empty<Nat>();
+    stable var debtsICP: Debt.Debts = 0;
+    stable var debtsCycles: Debt.Debts = 0;
 
     public shared func indebt({caller: Principal; amount: Nat; token: Token}): () {
         switch token {
-            case (#icp) { Debt.indebt({var debtsICP; p = caller; amount}); };
-            case (#cycles) { Debt.indebt({var debtsCycles; p = caller; amount}); };
+            case (#icp) { Debt.indebt({var debtsICP; amount}); };
+            case (#cycles) { Debt.indebt({var debtsCycles; amount}); };
         };
     };
 }
