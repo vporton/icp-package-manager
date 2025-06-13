@@ -5,7 +5,7 @@ import Int "mo:base/Int";
 import Nat64 "mo:base/Nat64";
 import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
-import BTree "mo:base/BTree";
+import Map "mo:base/OrderedMap";
 import ICRC1Types "mo:icrc1-types";
 import PST "canister:pst";
 import ledger "canister:nns-ledger";
@@ -34,6 +34,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     stable var _frontendTweakersSave = frontendTweakers.share();
     transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
+    let principalMap = Map.Make<Principal>(Principal.compare);
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -119,10 +120,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
     stable var dividendPerToken = 0;
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
-    stable var lastDividendsPerToken: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
+    stable var lastDividendsPerToken = principalMap.empty<Nat>();
 
     func _dividendsOwing(_account: Principal): async Nat {
-        let last = switch (BTree.get(lastDividendsPerToken, Principal.compare, _account)) {
+        let last = switch (principalMap.get(lastDividendsPerToken, _account)) {
             case (?value) { value };
             case (null) { 0 };
         };
@@ -151,7 +152,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         if (amount == 0) {
             return 0;
         };
-        lastDividendsPerToken := BTree.put(lastDividendsPerToken, Principal.compare, caller, dividendPerToken);
+        lastDividendsPerToken := principalMap.put(lastDividendsPerToken, caller, dividendPerToken);
         ignore indebt({caller; amount; token = #icp});
         amount;
     };
@@ -163,10 +164,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         var time: ?Time.Time;
     };
 
-    stable var ourDebts: BTree.BTree<Principal, OutgoingPayment> = BTree.init<Principal, OutgoingPayment>(null);
+    stable var ourDebts = principalMap.empty<OutgoingPayment>();
 
     public shared({caller}) func payout(subaccount: ?ICRC1Types.Subaccount) {
-        switch (BTree.get<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller)) {
+        switch (principalMap.get(ourDebts, caller)) {
             case (?payment) {
                 let time = switch (payment.time) {
                     case (?time) { time };
@@ -185,7 +186,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
                     memo = null;
                     created_at_time = ?Nat64.fromNat(Int.abs(time)); // idempotent
                 });
-                ignore BTree.delete<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller);
+                ignore principalMap.delete(ourDebts, caller);
             };
             case (null) {};
         };
