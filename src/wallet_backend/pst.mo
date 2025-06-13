@@ -148,9 +148,9 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         };
         let mintedF = newMintedF - prevMintedF;
         let mintedInt = Int.abs(Float.toInt(mintedF));
-        let minted : Nat = Nat64.toNat(Int.abs(mintedInt));
+        let minted : Nat = Int.abs(mintedInt);
         totalInvested += invest;
-        totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF)));
+        totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
 
         let mintResult = await this.mint({
             to = { owner = user; subaccount = null };
