@@ -1,15 +1,69 @@
 import { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { ErrorContext } from '../../lib/ErrorContext';
 import { GlobalContext } from './state';
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+
 const DECIMALS = 8;
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
 const LIMIT_TOKENS = 33333.32;
 const TOTAL_SUPPLY = 33334 * 5;
+
+const STEPS = 100;
+const GRAPH_DATA = Array.from({ length: STEPS + 1 }, (_, i) => {
+  const minted = LIMIT_TOKENS * 0.99 * i / STEPS;
+  const icp = investedFromMinted(minted);
+  return { x: icp, y: minted };
+});
+
+const chartData = {
+  datasets: [
+    {
+      label: 'ICPACK vs ICP',
+      data: GRAPH_DATA,
+      borderColor: 'rgb(75, 192, 192)',
+      backgroundColor: 'rgba(75, 192, 192, 0.4)',
+      showLine: true,
+      fill: false,
+      tension: 0.1,
+      pointRadius: 0,
+    },
+  ],
+};
+
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+  },
+  scales: {
+    x: { type: 'linear', title: { display: true, text: 'ICP' } },
+    y: { title: { display: true, text: 'ICPACK' } },
+  },
+};
 
 function investedFromMinted(mintedTokensICP: number): number {
   const l = LIMIT_TOKENS;
@@ -135,6 +189,9 @@ export default function Invest() {
       <Button onClick={handleWithdraw} disabled={!ok || withdrawing}>
         {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
       </Button>
+      <div className="my-4">
+        <Line data={chartData} options={chartOptions} />
+      </div>
       <p className="mt-3">
         We don't warrant any return of investment. Invest on your own risk.
       </p>
