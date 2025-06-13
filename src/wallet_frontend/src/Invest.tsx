@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
+import { GlobalContext } from './state';
 
 const DECIMALS = 8;
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
@@ -21,11 +22,14 @@ function mintedForInvestment(prevMinted: number, invest: number): number {
 }
 
 export default function Invest() {
-  const { agent, ok } = useAuth();
+  const { agent, ok, defaultAgent, principal } = useAuth();
+  const glob = useContext(GlobalContext);
   const [amountICP, setAmountICP] = useState('');
   const [expected, setExpected] = useState<number | null>(null);
   const [totalMinted, setTotalMinted] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [icpackBalance, setIcpackBalance] = useState<number | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     if (!agent) return;
@@ -45,6 +49,21 @@ export default function Invest() {
     };
   }, [agent]);
 
+  const loadBalance = async () => {
+    if (!glob.walletBackend || !principal || !defaultAgent) return;
+    const { createActor } = await import('../../declarations/pst');
+    const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
+    try {
+      const account = await glob.walletBackend.getUserWallet(principal);
+      const bal = await pst.icrc1_balance_of(account);
+      setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => { loadBalance(); }, [glob.walletBackend, principal, defaultAgent]);
+
   useEffect(() => {
     if (totalMinted === null) { setExpected(null); return; }
     const val = parseFloat(amountICP);
@@ -61,10 +80,24 @@ export default function Invest() {
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       await pst.buyWithICP();
       setAmountICP('');
+      loadBalance();
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!agent || !ok || !glob.walletBackend) return;
+    setWithdrawing(true);
+    try {
+      await glob.walletBackend.withdrawDividends();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setWithdrawing(false);
+      loadBalance();
     }
   };
 
@@ -83,8 +116,14 @@ export default function Invest() {
       <div className="mb-3">
         Estimated ICPACK: {expected !== null ? expected.toFixed(4) : 'N/A'}
       </div>
-      <Button onClick={handleBuy} disabled={!ok || loading || !amountICP}>
+      <div className="mb-3">
+        Your ICPACK balance: {icpackBalance !== null ? icpackBalance.toFixed(4) : 'N/A'}
+      </div>
+      <Button onClick={handleBuy} disabled={!ok || loading || !amountICP} className="me-2">
         {loading ? 'Buying...' : 'Buy'}
+      </Button>
+      <Button onClick={handleWithdraw} disabled={!ok || withdrawing}>
+        {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
       </Button>
       <p className="mt-3">
         We don't warrant any return of investment. Invest on your own risk.
@@ -95,7 +134,6 @@ export default function Invest() {
         ICPACK token swiftly goes up, making the investment unprofitable. Invest
         early.
       </p>
-      <p>TODO@P2 There will be added a widget to withdraw your dividends.</p>
     </Form>
   );
 }
