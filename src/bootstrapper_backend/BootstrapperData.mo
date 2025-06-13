@@ -94,9 +94,15 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         frontendTweakerTimes := RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     };
 
-    stable var debts: Debt.Debts = Debt.map().empty<Nat>();
+    public type Token = { #icp; #cycles };
 
-    public shared func indebt({caller: Principal; amount: Nat}): () {
-        Debt.indebt({var debts; p = caller; amount});
+    stable var debtsICP: Debt.Debts = Debt.map().empty<Nat>();
+    stable var debtsCycles: Debt.Debts = Debt.map().empty<Nat>();
+
+    public shared func indebt({caller: Principal; amount: Nat; token: Token}): () {
+        switch token {
+            case (#icp) { Debt.indebt({var debtsICP; p = caller; amount}); };
+            case (#cycles) { Debt.indebt({var debtsCycles; p = caller; amount}); };
+        };
     };
 }

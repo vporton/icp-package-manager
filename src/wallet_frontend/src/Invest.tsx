@@ -96,6 +96,7 @@ export default function Invest() {
   const [icpackBalance, setIcpackBalance] = useState<number | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
   const [owedDividends, setOwedDividends] = useState<number | null>(null);
+  const [owedCycles, setOwedCycles] = useState<number | null>(null);
 
   const chartData = {
     datasets: [
@@ -152,6 +153,7 @@ export default function Invest() {
     try {
       const owed = await (glob.walletBackend as any).dividendsOwing();
       setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
+      setOwedCycles(0);
     } catch (e) {
       console.error(e);
     }
@@ -233,7 +235,9 @@ export default function Invest() {
         {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
       </Button>
       <span>
-        Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP
+        Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP,
+        {" "}
+        {owedCycles !== null ? owedCycles.toString() : 'N/A'} Cycles
       </span>
       <div className="my-4">
         <Line data={chartData} options={chartOptions} />
