@@ -20,6 +20,7 @@ import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
 import CMC "canister:nns-cycles-minting";
 import env "mo:env";
+import Debt "../lib/Debt";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -207,7 +208,7 @@ shared({caller = initialOwner}) actor class Battery({
         if (newCycles != 0) {
             // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
             let fee = newCycles / 20; // 5%
-            indebt(revenueRecipient, fee);
+            Debt.indebt(revenueRecipient, fee);
             battery.activatedCycles += newCycles - fee;
         };
 
@@ -299,7 +300,7 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        indebt(revenueRecipient, revenue);
+        Debt.indebt(revenueRecipient, revenue);
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -319,7 +320,7 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        indebt(revenueRecipient, revenue);
+        Debt.indebt(revenueRecipient, revenue);
 
         let res = await ICPLedger.icrc1_transfer({
             to = {

@@ -27,6 +27,7 @@ import TrieMap "mo:base/TrieMap";
 import Order "mo:base/Order";
 import Map "mo:base/OrderedMap";
 import env "mo:env";
+import Debt "../lib/Debt";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICPLedger "canister:nns-ledger";
@@ -384,7 +385,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        indebt(revenueRecipient, revenue);
+        Debt.indebt(revenueRecipient, revenue);
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -411,7 +412,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        indebt(revenueRecipient, revenue);
+        Debt.indebt(revenueRecipient, revenue);
 
         let res = await ICPLedger.icrc1_transfer({
             to = {
