@@ -9,7 +9,6 @@ import ICRC1 "mo:icrc1-types";
 import ICPLedger "canister:nns-ledger";
 import ICPACK "canister:pst";
 import Int "mo:base/Int";
-
 import Debt "../lib/Debt";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 
@@ -234,38 +233,5 @@ persistent actor class Wallet({
     lastDividendsPerToken := principalMap.put(lastDividendsPerToken, caller, dividendPerToken);
     ignore BootstrapperData.indebt({caller; amount; token = #icp});
     amount;
-  };
-
-  /// Outgoing Payments ///
-
-  type OutgoingPayment = {
-    amount: ICRC1Types.Balance;
-    var time: ?Time.Time;
-  };
-
-  public shared({caller}) func payout(subaccount: ?ICRC1Types.Subaccount) {
-    switch (principalMap.get(ourDebts, caller)) {
-      case (?payment) {
-        let time = switch (payment.time) {
-          case (?time) { time };
-          case (null) {
-            let time = Time.now();
-            payment.time := ?time;
-            time;
-          }
-        };
-        let fee = await ledger.icrc1_fee();
-        let result = await ledger.icrc1_transfer({
-          from_subaccount = null;
-          to = {owner = caller; subaccount = subaccount};
-          amount = payment.amount - fee;
-          fee = null;
-          memo = null;
-          created_at_time = ?Nat64.fromNat(Int.abs(time)); // idempotent
-        });
-        ignore principalMap.delete(ourDebts, caller);
-      };
-      case (null) {};
-    };
   };
 };

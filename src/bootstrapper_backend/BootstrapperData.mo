@@ -34,7 +34,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     stable var _frontendTweakersSave = frontendTweakers.share();
     transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
-    let principalMap = Map.Make<Principal>(Principal.compare);
+    transient let principalMap = Map.Make<Principal>(Principal.compare);
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -107,8 +107,9 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
     public shared func indebt({caller: Principal; amount: Nat; token: Token}): () {
         switch token {
-            case (#icp) { Debt.indebt({var debtsICP; amount}); };
-            case (#cycles) { Debt.indebt({var debtsCycles; amount}); };
+            // FIXME@P1: The variables `debtsICP` and `debtsCycles` are not changed!
+            case (#icp) { Debt.indebt({var debts = debtsICP; amount}); };
+            case (#cycles) { Debt.indebt({var debts = debtsCycles; amount}); };
         };
     };
 
@@ -122,18 +123,19 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
     stable var lastDividendsPerToken = principalMap.empty<Nat>();
 
-    func _dividendsOwing(_account: Principal): async Nat {
+    // TODO@P3: It shouldn't be a shared function.
+    private func _dividendsOwing(_account: Principal, balance: Nat): Nat {
         let last = switch (principalMap.get(lastDividendsPerToken, _account)) {
             case (?value) { value };
             case (null) { 0 };
         };
         let perTokenDelta = Int.abs((dividendPerToken: Int) - last);
-        let balance = await PST.icrc1_balance_of({owner = _account; subaccount = null});
         balance * perTokenDelta / DIVIDEND_SCALE;
     };
 
-    public query({caller}) func dividendsOwing() : async Nat {
-        await _dividendsOwing(caller);
+    // TODO@P3: Two duplicate functions.
+    public composite query({caller}) func dividendsOwing() : async Nat {
+        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}));
     };
 
     func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
@@ -148,7 +150,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends() : async Nat {
-        let amount = await _dividendsOwing(caller);
+        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}));
         if (amount == 0) {
             return 0;
         };
@@ -160,7 +162,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     /// Outgoing Payments ///
 
     type OutgoingPayment = {
-        amount: ICRC1Types.Balance;
+        amount: Nat;
         var time: ?Time.Time;
     };
 
