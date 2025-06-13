@@ -9,6 +9,7 @@ import { GlobalContext } from './state';
 const DECIMALS = 8;
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
 const LIMIT_TOKENS = 33333.32;
+const TOTAL_SUPPLY = 33334 * 5;
 
 function investedFromMinted(mintedTokensICP: number): number {
   const l = LIMIT_TOKENS;
@@ -123,7 +124,7 @@ export default function Invest() {
         />
       </Form.Group>
       <div className="mb-3">
-        Estimated ICPACK: {expected !== null ? expected.toFixed(4) : 'N/A'}
+        Estimated ICPACK: {expected !== null ? `${expected.toFixed(4)} (${(expected / TOTAL_SUPPLY * 100).toFixed(4)}%)` : 'N/A'}
       </div>
       <div className="mb-3">
         Your ICPACK balance: {icpackBalance !== null ? icpackBalance.toFixed(4) : 'N/A'}
