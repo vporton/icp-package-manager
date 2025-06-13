@@ -115,6 +115,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
     /// Dividends and Withdrawals ///
 
+    // FIXME@P1: We should have separate accounting for ICP and Cycles.
+
     /// Dividends are accounted per token to avoid newly minted PST receiving
     /// a share of previously declared dividends.  `dividendPerToken` stores the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
