@@ -62,6 +62,18 @@ const chartOptions = {
   scales: {
     x: { type: 'linear', title: { display: true, text: 'ICP' } },
     y: { title: { display: true, text: 'ICPACK' } },
+    yPercent: {
+      type: 'linear',
+      position: 'right',
+      title: { display: true, text: '% of max ICPACK' },
+      grid: { drawOnChartArea: false },
+      ticks: {
+        callback: (value: string | number) =>
+          `${(Number(value) / TOTAL_SUPPLY * 100).toFixed(1)}%`,
+      },
+      min: 0,
+      max: LIMIT_TOKENS,
+    },
   },
 };
 
