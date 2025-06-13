@@ -5,6 +5,8 @@ import ICRC1 "mo:icrc1/ICRC1";
 import ICPLedger "canister:nns-ledger";
 import Common "../common";
 import Int "mo:base/Int";
+import Nat64 "mo:base/Nat64";
+import Float "mo:base/Float";
 import env "mo:env";
 
 shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface = this {
@@ -22,6 +24,8 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
 
     /// Total invested ICP in e8s.
     stable var totalInvested : Nat = 0;
+    /// Total ICPACK tokens minted via investments.
+    stable var totalMinted : Nat = 0;
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
@@ -89,7 +93,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
     /// The amount of tokens minted is determined by integrating a price curve
     /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
     /// 16,666.66 ICP invested in total the rate drops to half that, and after
-    /// twice that amount of ICP is invested the cost grows without bound.  The
+    /// about twice that amount of ICPACK has been bought the cost grows without bound.  The
     /// integral ensures that investing 16,666.66 ICP mints exactly the same
     /// amount of ICPACK while early investors receive proportionally more.
     public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
@@ -122,38 +126,31 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         //     ICPACK tokens (one token per ICP on average);
         //   * at the very beginning the buyer receives twice as many ICPACK per
         //     ICP as at the 16,666.66 ICP mark; and
-        //   * once twice that amount of ICP (33,333.32 ICP) has been invested,
-        //     the price tends to infinity and no new ICPACK can be purchased.
+        //   * once about twice that amount of ICPACK (33,333.32 ICPACK) has been
+        //     bought, the price tends to infinity and no new ICPACK can be purchased.
         //
         // These conditions are satisfied when the instantaneous number of
-        // ICPACK tokens obtainable for one ICP is a linear function of the total
-        // amount of ICP already invested, `f(x) = 4/3 * (1 - x/b)` where `b` is
-        // twice 16,666.66 ICP expressed in e8s.  Integrating `f(x)` from the
-        // previous total investment (`prevTotal`) to the new total investment
-        // (`newTotal`) yields the number of ICPACK tokens to mint.  The result is the
-        // expression below.
+        // ICPACK tokens obtainable for one ICP depends linearly on the total
+        // number of ICPACK already minted, `g(m) = 4/3 * (1 - m/L)` where `L`
+        // is twice 16,666.66 ICPACK expressed in e8s.  Integrating this
+        // expression yields a curve that approaches `L` tokens as the required
+        // investment tends to infinity.
 
-        let limit = 3_333_332_000_000; // investment cap (2 * 16_666.66 ICP) in e8s
-        if (totalInvested + invest > limit) {
-            // Once the limit is reached the cost of ICPACK grows without bound
-            // because the `f(x)` factor in the integral approaches zero, so the
-            // token price 1/f(x) tends to infinity and no further tokens can be purchased.
+        let limitTokens = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
+
+        let limitF = Float.fromInt(limitTokens);
+        let prevMintedF = Float.fromInt(totalMinted);
+        let investF = Float.fromInt(invest);
+
+        let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
+        if (newMintedF > limitF) {
             return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
         };
-
-        let prevTotal: Int = totalInvested;
-        let newTotal: Int = totalInvested + invest;
-        let b: Int = limit;
-        // Integral of f(x) = 4/3 * (1 - x/b) from `prevTotal` to `newTotal` equals
-        //  [4 * ((2*b*(newTotal-prevTotal)) - (newTotal^2 - prevTotal^2))] / (6*b).
-        let numerator = 4 * ((2 * b * (newTotal - prevTotal)) - ((newTotal * newTotal) - (prevTotal * prevTotal)));
-        let denominator = 6 * b;
-        // This evaluates \int_{prevTotal}^{newTotal} f(x) dx where f(x) is the
-        // instantaneous ICPACK per ICP rate.  The integer division is intentional
-        // as ICP and ICPACK are denominated in e8s.
-
-        let minted = Int.abs(numerator / denominator);
+        let mintedF = newMintedF - prevMintedF;
+        let mintedInt = Int.abs(Float.toInt(mintedF));
+        let minted : Nat = Nat64.toNat(Int.abs(mintedInt));
         totalInvested += invest;
+        totalMinted += Nat64.toNat(Int.abs(Float.toInt(newMintedF - prevMintedF)));
 
         let mintResult = await this.mint({
             to = { owner = user; subaccount = null };
