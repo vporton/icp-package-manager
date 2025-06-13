@@ -95,6 +95,7 @@ export default function Invest() {
   const [loading, setLoading] = useState(false);
   const [icpackBalance, setIcpackBalance] = useState<number | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [owedDividends, setOwedDividends] = useState<number | null>(null);
 
   const chartData = {
     datasets: [
@@ -146,7 +147,20 @@ export default function Invest() {
     }
   };
 
-  useEffect(() => { loadBalance(); }, [glob.walletBackend, principal, defaultAgent]);
+  const loadOwedDividends = async () => {
+    if (!glob.walletBackend || !principal) return;
+    try {
+      const owed = await (glob.walletBackend as any).dividendsOwing();
+      setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    loadBalance();
+    loadOwedDividends();
+  }, [glob.walletBackend, principal, defaultAgent]);
 
   useEffect(() => {
     if (totalMinted === null) { setExpected(null); return; }
@@ -171,6 +185,7 @@ export default function Invest() {
         setAmountICP('');
       }
       loadBalance();
+      loadOwedDividends();
     } catch (err: any) {
       console.error(err);
       setError(err?.toString() || 'Failed to buy tokens');
@@ -189,6 +204,7 @@ export default function Invest() {
     } finally {
       setWithdrawing(false);
       loadBalance();
+      loadOwedDividends();
     }
   };
 
@@ -213,9 +229,12 @@ export default function Invest() {
       <Button onClick={handleBuy} disabled={!ok || loading || !amountICP} className="me-2">
         {loading ? 'Buying...' : 'Buy'}
       </Button>
-      <Button onClick={handleWithdraw} disabled={!ok || withdrawing}>
+      <Button onClick={handleWithdraw} disabled={!ok || withdrawing} className="me-2">
         {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
       </Button>
+      <span>
+        Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP
+      </span>
       <div className="my-4">
         <Line data={chartData} options={chartOptions} />
       </div>
