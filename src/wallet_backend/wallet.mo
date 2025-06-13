@@ -218,13 +218,10 @@ persistent actor class Wallet({
     await _dividendsOwing(caller);
   };
 
-  func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
-    // Affiliates are delivered by frontend.
-    // address payable _buyerAffiliate = affiliates[msg.sender];
-    // address payable _sellerAffiliate = affiliates[_author];
-    var _shareHoldersAmount = _amount;
+  // FIXME@P1: separate per ICP and per Cycles
+  func recalculateShareholdersDebt(amount: Nat) : async () {
     let totalSupply = await PST.icrc1_total_supply();
-    dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
+    dividendPerToken += amount * DIVIDEND_SCALE / totalSupply;
   };
 
   /// Withdraw owed dividends and record the snapshot of `dividendPerToken`
