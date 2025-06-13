@@ -31,6 +31,7 @@
     "fetch": "^1.1.0",
     "ic-use-internet-identity": "^0.2.0",
     "js-guid": "^1.0.2",
+    "node-fetch": "^3.3.2",
     "pem-file": "^1.0.1",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.4",
