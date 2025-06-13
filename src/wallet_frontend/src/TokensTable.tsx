@@ -4,6 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
+import { createActor as createPstActor } from '../../declarations/pst';
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
 import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
@@ -25,10 +26,22 @@ export interface TokensTableRef {
     setShowAddModal: (show: boolean) => void;
 }
 
-const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
+interface TokensTableProps {
+    onInvest?: () => void;
+}
+
+const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) => {
     const glob = useContext(GlobalContext);
     const { setError } = useContext(ErrorContext)!;
     const { agent, defaultAgent, principal } = useAuth();
+    const pstPrincipal = useMemo(() => {
+        try {
+            const pst = createPstActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
+            return Principal.fromActor(pst);
+        } catch {
+            return Principal.fromText(process.env.CANISTER_ID_PST!);
+        }
+    }, [defaultAgent]);
     const [tokens, setTokens] = useState<UIToken[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
@@ -206,9 +219,9 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                                 >
                                     Send
                                 </Button>
-                                <Button 
-                                    variant="success" 
-                                    size="sm" 
+                                <Button
+                                    variant="success"
+                                    size="sm"
                                     className="me-2"
                                     onClick={() => {
                                         setSelectedToken(token);
@@ -217,8 +230,18 @@ const TokensTable = forwardRef<TokensTableRef>((props, ref) => {
                                 >
                                     Receive
                                 </Button>
-                                <Button 
-                                    variant="info" 
+                                {props.onInvest && token.canisterId && token.canisterId.toText() === pstPrincipal.toText() && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="me-2"
+                                        onClick={() => props.onInvest && props.onInvest()}
+                                    >
+                                        Invest
+                                    </Button>
+                                )}
+                                <Button
+                                    variant="info"
                                     size="sm"
                                     onClick={() => {
                                         setSelectedToken(token);
