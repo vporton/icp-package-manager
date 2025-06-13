@@ -10,6 +10,7 @@ import ICPLedger "canister:nns-ledger";
 import Int "mo:base/Int";
 import BTree "mo:base/BTree";
 import Debt "../lib/Debt";
+import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 
 persistent actor class Wallet({
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
@@ -211,28 +212,6 @@ persistent actor class Wallet({
     // address payable _buyerAffiliate = affiliates[msg.sender];
     // address payable _sellerAffiliate = affiliates[_author];
     var _shareHoldersAmount = _amount;
-    switch (_buyerAffiliate) {
-      case (?_buyerAffiliate) {
-        let _buyerAffiliateAmount = Int.abs(Fractions.mul(_amount, buyerAffiliateShare));
-        Debt.indebt(_buyerAffiliate, _buyerAffiliateAmount);
-        if (_shareHoldersAmount < _buyerAffiliateAmount) {
-          Debug.trap("negative amount to pay");
-        };
-        _shareHoldersAmount -= _buyerAffiliateAmount;
-      };
-      case (null) {};
-    };
-    switch (_sellerAffiliate) {
-      case (?_sellerAffiliate) {
-        let _sellerAffiliateAmount = Int.abs(Fractions.mul(_amount, sellerAffiliateShare));
-        Debt.indebt(_sellerAffiliate, _sellerAffiliateAmount);
-        if (_shareHoldersAmount < _sellerAffiliateAmount) {
-          Debug.trap("negative amount to pay");
-        };
-        _shareHoldersAmount -= _sellerAffiliateAmount;
-      };
-      case (null) {};
-    };
     let totalSupply = await PST.icrc1_total_supply();
     dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
   };
@@ -245,7 +224,7 @@ persistent actor class Wallet({
       return 0;
     };
     lastDividendsPerToken := BTree.put(lastDividendsPerToken, Principal.compare, caller, dividendPerToken);
-    Debt.indebt(caller, amount);
+    ignore BootstrapperData.indebt({caller; amount});
     amount;
   };
 

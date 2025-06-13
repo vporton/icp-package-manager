@@ -1,20 +1,22 @@
-import BTree "mo:base/BTree";
+import Map "mo:base/OrderedMap";
 import Principal "mo:base/Principal";
 
 module {
-  public type Debts = BTree.BTree<Principal, Nat>;
-  stable var debts : Debts = BTree.init<Principal, Nat>(null);
+  public func map(): Map.Operations<Principal> = Map.Make<Principal>(Principal.compare);
 
-  public func indebt(p : Principal, amount : Nat) {
-    let prev = switch (BTree.get(debts, Principal.compare, p)) {
+  public type Debts = Map.Map<Principal, Nat>;
+
+  // FIXME@P1: What is `p`?
+  public func indebt(args: {var debts: Debts; p : Principal; amount : Nat}) {
+    let prev = switch (map().get(args.debts, args.p)) {
       case (?v) v;
       case null 0;
     };
-    debts := BTree.put(debts, Principal.compare, p, prev + amount);
+    args.debts := map().put(args.debts, args.p, prev + args.amount);
   };
 
-  public func debtOf(p : Principal) : Nat {
-    switch (BTree.get(debts, Principal.compare, p)) {
+  public func debtOf(args: {var debts: Debts; p : Principal}) : Nat {
+    switch (map().get(args.debts, args.p)) {
       case (?v) v;
       case null 0;
     }

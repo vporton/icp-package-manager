@@ -146,6 +146,14 @@ build@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_fronte
 	dfx canister create --network $(NETWORK) package_manager_frontend
 	dfx build --no-deps --network $(NETWORK) package_manager_frontend
 
+.PHONY: build@pst
+.PRECIOUS: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+build@pst: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+
+.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/wallet_backend/pst.mo
+	dfx canister create --network $(NETWORK) pst
+	dfx build --no-deps --network $(NETWORK) pst
+
 .PHONY: build@repository
 .PRECIOUS: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
 build@repository: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
@@ -350,6 +358,13 @@ generate@package_manager_frontend: src/declarations/package_manager_frontend/pac
 src/declarations/package_manager_frontend/package_manager_frontend.did.js src/declarations/package_manager_frontend/index.js src/declarations/package_manager_frontend/package_manager_frontend.did.d.ts src/declarations/package_manager_frontend/index.d.ts src/declarations/package_manager_frontend/package_manager_frontend.did: .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz
 	dfx generate --no-compile --network $(NETWORK) package_manager_frontend
 
+.PHONY: generate@pst
+.PRECIOUS: src/declarations/pst/pst.did.js src/declarations/pst/index.js src/declarations/pst/pst.did.d.ts src/declarations/pst/index.d.ts src/declarations/pst/pst.did
+generate@pst: src/declarations/pst/pst.did.js src/declarations/pst/index.js src/declarations/pst/pst.did.d.ts src/declarations/pst/index.d.ts src/declarations/pst/pst.did
+
+src/declarations/pst/pst.did.js src/declarations/pst/index.js src/declarations/pst/pst.did.d.ts src/declarations/pst/index.d.ts src/declarations/pst/pst.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+	dfx generate --no-compile --network $(NETWORK) pst
+
 .PHONY: generate@repository
 .PRECIOUS: src/declarations/repository/repository.did.js src/declarations/repository/index.js src/declarations/repository/repository.did.d.ts src/declarations/repository/index.d.ts src/declarations/repository/repository.did
 generate@repository: src/declarations/repository/repository.did.js src/declarations/repository/index.js src/declarations/repository/repository.did.d.ts src/declarations/repository/index.d.ts src/declarations/repository/repository.did
@@ -502,7 +517,15 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
 
+.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: 
+
+.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/common.mo
+
 .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: src/common.mo
+
+.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/lib/Account.mo
+
+.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: 
 
 .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did
 
@@ -667,6 +690,15 @@ deploy-self@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_
 
 .PHONY: deploy@package_manager_frontend
 deploy@package_manager_frontend: deploy@package_manager deploy@internet_identity deploy@bootstrapper deploy@battery deploy-self@package_manager_frontend
+
+.PHONY: deploy-self@pst
+deploy-self@pst: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.pst) pst
+
+
+
+.PHONY: deploy@pst
+deploy@pst: deploy-self@pst
 
 .PHONY: deploy-self@repository
 deploy-self@repository: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did

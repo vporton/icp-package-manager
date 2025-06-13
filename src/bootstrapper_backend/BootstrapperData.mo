@@ -4,6 +4,7 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
+import Debt "../lib/Debt";
 
 persistent actor class BootstrapperData(initialOwner: Principal) {
     public type PubKey = Blob;
@@ -91,5 +92,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         // Free memory:
         frontendTweakers := RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
         frontendTweakerTimes := RBTree.RBTree<Time.Time, PubKey>(Int.compare);
+    };
+
+    stable var debts: Debt.Debts = Debt.map().empty<Nat>();
+
+    public shared func indebt({caller: Principal; amount: Nat}): () {
+        Debt.indebt({var debts; p = caller; amount});
     };
 }

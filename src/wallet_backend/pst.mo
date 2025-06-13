@@ -141,9 +141,9 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
             return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
         };
 
-        let prevTotal = Int.fromNat(totalInvested);
-        let newTotal = Int.fromNat(totalInvested + invest);
-        let b = Int.fromNat(limit);
+        let prevTotal: Int = totalInvested;
+        let newTotal: Int = totalInvested + invest;
+        let b: Int = limit;
         // Integral of f(x) = 4/3 * (1 - x/b) from `prevTotal` to `newTotal` equals
         //  [4 * ((2*b*(newTotal-prevTotal)) - (newTotal^2 - prevTotal^2))] / (6*b).
         let numerator = 4 * ((2 * b * (newTotal - prevTotal)) - ((newTotal * newTotal) - (prevTotal * prevTotal)));
@@ -152,13 +152,14 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         // instantaneous ICPACK per ICP rate.  The integer division is intentional
         // as ICP and ICPACK are denominated in e8s.
 
-        let minted = Nat.fromInt(numerator / denominator);
+        let minted = Int.abs(numerator / denominator);
         totalInvested += invest;
 
         let mintResult = await this.mint({
             to = { owner = user; subaccount = null };
             amount = minted;
             memo = null;
+            created_at_time = null;
         });
 
         switch (mintResult) {

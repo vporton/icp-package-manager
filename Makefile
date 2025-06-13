@@ -17,6 +17,9 @@ deploy:
 build@bootstrapper_frontend: generate@example_frontend generate@package_manager generate@main_indirect generate@simple_indirect generate@bookmark generate@battery generate@bootstrapper
 
 include deps.$(NETWORK).mk
+Makefile: deps.$(NETWORK).mk
+deps.$(NETWORK).mk: dfx.json
+	dfx rules --network $(NETWORK) -o $@
 
 .PHONY: deps
 deps:
@@ -31,7 +34,7 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 
 .PHONY: deploy-backend
 deploy-backend: prepare build@battery build@main_indirect build@package_manager build@simple_indirect deploy@repository deploy@bookmark generate@battery \
-  deploy@internet_identity init
+  deploy@internet_identity deploy@pst generate@pst init
 
 .PHONY: prepare
 prepare:
