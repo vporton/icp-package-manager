@@ -225,7 +225,7 @@ export default function Invest() {
       <p>
         Hereby our company All World Files Corp warrants that we won't mint more
         than 20% of the profit sharing token (PST) and that all our profits on
-        blockchain will be routed through this PST proportionally to holdings.
+        the blockchain will be routed through this PST proportionally to holdings.
         This way we preserve validity of your investment, not to be diluted by
         minting too much PST.
       </p>
