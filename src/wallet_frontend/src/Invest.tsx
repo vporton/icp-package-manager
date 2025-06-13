@@ -125,6 +125,15 @@ export default function Invest() {
       <Button onClick={handleWithdraw} disabled={!ok || withdrawing}>
         {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
       </Button>
+      <p className="mt-3">
+        We don't warrant any return of investment. Invest on your own risk.
+      </p>
+      <p>
+        The investment may be more profitable if you buy the token early,
+        because of a discount for early investors. At later stage the price of
+        ICPACK token swiftly goes up, making the investment unprofitable. Invest
+        early.
+      </p>
     </Form>
   );
 }
