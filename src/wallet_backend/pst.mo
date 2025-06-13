@@ -18,7 +18,7 @@ shared ({ caller = initialOwner }) actor class PST() : async ICRC1.FullInterface
         max_supply = 33334 * 5 * 10**8; // Buying all tokens would mean 20% of the equity.
         min_burn_amount = 100_000;
         minting_account = { owner = Principal.fromActor(this); subaccount = null; }; // wallet can mint
-        name = "IC Pack PST token";
+        name = "IC Pack Profit Share";
         symbol = "ICPACK";
     });
 

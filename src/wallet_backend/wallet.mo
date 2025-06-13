@@ -7,6 +7,7 @@ import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICRC1 "mo:icrc1-types";
 import ICPLedger "canister:nns-ledger";
+import ICPACK "canister:pst";
 import Int "mo:base/Int";
 import BTree "mo:base/BTree";
 import Debt "../lib/Debt";
@@ -47,7 +48,13 @@ persistent actor class Wallet({
                 name = "Internet Computer";
                 canisterId = Principal.fromActor(ICPLedger);
                 archiveCanisterId = null; // FIXME@P2
-            }
+            },
+            {
+                symbol = "ICPACK";
+                name = "IC Pack Profit Share";
+                canisterId = Principal.fromActor(ICPACK);
+                archiveCanisterId = null; // TODO@P3
+            },
         ]
     };
 
