@@ -39,19 +39,15 @@ const GRAPH_DATA = Array.from({ length: STEPS + 1 }, (_, i) => {
   return { x: icp, y: minted };
 });
 
-const chartData = {
-  datasets: [
-    {
-      label: 'ICPACK vs ICP',
-      data: GRAPH_DATA,
-      borderColor: 'rgb(75, 192, 192)',
-      backgroundColor: 'rgba(75, 192, 192, 0.4)',
-      showLine: true,
-      fill: false,
-      tension: 0.1,
-      pointRadius: 0,
-    },
-  ],
+const baseDataset = {
+  label: 'ICPACK vs ICP',
+  data: GRAPH_DATA,
+  borderColor: 'rgb(75, 192, 192)',
+  backgroundColor: 'rgba(75, 192, 192, 0.4)',
+  showLine: true,
+  fill: false,
+  tension: 0.1,
+  pointRadius: 0,
 };
 
 const chartOptions = {
@@ -99,6 +95,25 @@ export default function Invest() {
   const [loading, setLoading] = useState(false);
   const [icpackBalance, setIcpackBalance] = useState<number | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
+
+  const chartData = {
+    datasets: [
+      baseDataset,
+      ...(totalMinted !== null
+        ? [{
+            label: 'Current',
+            data: [{
+              x: investedFromMinted(totalMinted),
+              y: totalMinted,
+            }],
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgb(255, 99, 132)',
+            showLine: false,
+            pointRadius: 5,
+          }]
+        : []),
+    ],
+  };
 
   useEffect(() => {
     if (!agent) return;
