@@ -6,25 +6,25 @@ import { Principal } from '@dfinity/principal';
 
 const DECIMALS = 8;
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
-const LIMIT_ICP = 33333.32;
+const LIMIT_TOKENS = 33333.32;
 
 function investedFromMinted(mintedTokensICP: number): number {
-  const b = LIMIT_ICP;
-  return b - Math.sqrt(b * b - 1.5 * b * mintedTokensICP);
+  const l = LIMIT_TOKENS;
+  if (mintedTokensICP >= l) return Infinity;
+  return 0.75 * l * Math.log(1 / (1 - mintedTokensICP / l));
 }
 
-function mintedForInvestment(prevInvest: number, invest: number): number {
-  const b = LIMIT_ICP;
-  const newTotal = prevInvest + invest;
-  return (4 / 3) * (newTotal - prevInvest) -
-    (2 / (3 * b)) * (newTotal * newTotal - prevInvest * prevInvest);
+function mintedForInvestment(prevMinted: number, invest: number): number {
+  const l = LIMIT_TOKENS;
+  const newMinted = l - (l - prevMinted) * Math.exp(-4 * invest / (3 * l));
+  return newMinted - prevMinted;
 }
 
 export default function Invest() {
   const { agent, ok } = useAuth();
   const [amountICP, setAmountICP] = useState('');
   const [expected, setExpected] = useState<number | null>(null);
-  const [totalInvested, setTotalInvested] = useState<number | null>(null);
+  const [totalMinted, setTotalMinted] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Invest() {
         if (cancelled) return;
         const minted = Number(s.toString()) - INITIAL_SUPPLY;
         const mintedICP = minted / Math.pow(10, DECIMALS);
-        setTotalInvested(investedFromMinted(mintedICP));
+        setTotalMinted(mintedICP);
       }).catch(console.error);
     })();
     return () => {
@@ -46,12 +46,12 @@ export default function Invest() {
   }, [agent]);
 
   useEffect(() => {
-    if (totalInvested === null) { setExpected(null); return; }
+    if (totalMinted === null) { setExpected(null); return; }
     const val = parseFloat(amountICP);
     if (isNaN(val) || val <= 0) { setExpected(null); return; }
-    const res = mintedForInvestment(totalInvested, val);
+    const res = mintedForInvestment(totalMinted, val);
     setExpected(res);
-  }, [amountICP, totalInvested]);
+  }, [amountICP, totalMinted]);
 
   const handleBuy = async () => {
     if (!agent || !ok) return;
