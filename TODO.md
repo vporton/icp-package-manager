@@ -159,3 +159,5 @@ Remaining things TODO:
 - TODO@P3 Wallet: Update Balances button.
 
 - FIXME@P3 Wallet: Remove tokens not by Symbol but by canister ID.
+
+- TODO@P2 Wallet: Introduce a reliable way to invest, without money loss due to network congestion, etc.
