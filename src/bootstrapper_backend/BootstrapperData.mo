@@ -2,8 +2,13 @@ import Blob "mo:base/Blob";
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
+import Nat64 "mo:base/Nat64";
 import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
+import BTree "mo:base/BTree";
+import ICRC1Types "mo:icrc1-types";
+import PST "canister:pst";
+import ledger "canister:nns-ledger";
 import Debt "../lib/Debt";
 
 persistent actor class BootstrapperData(initialOwner: Principal) {
@@ -103,6 +108,86 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         switch token {
             case (#icp) { Debt.indebt({var debtsICP; amount}); };
             case (#cycles) { Debt.indebt({var debtsCycles; amount}); };
+        };
+    };
+
+    /// Dividends and Withdrawals ///
+
+    /// Dividends are accounted per token to avoid newly minted PST receiving
+    /// a share of previously declared dividends.  `dividendPerToken` stores the
+    /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
+    let DIVIDEND_SCALE : Nat = 1_000_000_000;
+    stable var dividendPerToken = 0;
+    // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
+    stable var lastDividendsPerToken: BTree.BTree<Principal, Nat> = BTree.init<Principal, Nat>(null);
+
+    func _dividendsOwing(_account: Principal): async Nat {
+        let last = switch (BTree.get(lastDividendsPerToken, Principal.compare, _account)) {
+            case (?value) { value };
+            case (null) { 0 };
+        };
+        let perTokenDelta = Int.abs((dividendPerToken: Int) - last);
+        let balance = await PST.icrc1_balance_of({owner = _account; subaccount = null});
+        balance * perTokenDelta / DIVIDEND_SCALE;
+    };
+
+    public query({caller}) func dividendsOwing() : async Nat {
+        await _dividendsOwing(caller);
+    };
+
+    func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
+        // Affiliates are delivered by frontend.
+        // address payable _buyerAffiliate = affiliates[msg.sender];
+        // address payable _sellerAffiliate = affiliates[_author];
+        var _shareHoldersAmount = _amount;
+        let totalSupply = await PST.icrc1_total_supply();
+        dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
+    };
+
+    /// Withdraw owed dividends and record the snapshot of `dividendPerToken`
+    /// for the caller so that newly minted tokens do not get past dividends.
+    public shared({caller}) func withdrawDividends() : async Nat {
+        let amount = await _dividendsOwing(caller);
+        if (amount == 0) {
+            return 0;
+        };
+        lastDividendsPerToken := BTree.put(lastDividendsPerToken, Principal.compare, caller, dividendPerToken);
+        ignore indebt({caller; amount; token = #icp});
+        amount;
+    };
+
+    /// Outgoing Payments ///
+
+    type OutgoingPayment = {
+        amount: ICRC1Types.Balance;
+        var time: ?Time.Time;
+    };
+
+    stable var ourDebts: BTree.BTree<Principal, OutgoingPayment> = BTree.init<Principal, OutgoingPayment>(null);
+
+    public shared({caller}) func payout(subaccount: ?ICRC1Types.Subaccount) {
+        switch (BTree.get<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller)) {
+            case (?payment) {
+                let time = switch (payment.time) {
+                    case (?time) { time };
+                    case (null) {
+                        let time = Time.now();
+                        payment.time := ?time;
+                        time;
+                    }
+                };
+                let fee = await ledger.icrc1_fee();
+                let result = await ledger.icrc1_transfer({
+                    from_subaccount = null;
+                    to = {owner = caller; subaccount = subaccount};
+                    amount = payment.amount - fee;
+                    fee = null;
+                    memo = null;
+                    created_at_time = ?Nat64.fromNat(Int.abs(time)); // idempotent
+                });
+                ignore BTree.delete<Principal, OutgoingPayment>(ourDebts, Principal.compare, caller);
+            };
+            case (null) {};
         };
     };
 }
