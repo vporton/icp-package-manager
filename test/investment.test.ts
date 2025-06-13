@@ -1,5 +1,7 @@
 import { expect } from 'chai';
 
+// FIXME@P3: The below tests a mockup, not the actual canister code, making the tests mostly meaningless.
+
 type Currency = 'ICP' | 'cycles';
 
 class InvestmentSystem {
