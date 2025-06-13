@@ -115,48 +115,76 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
     /// Dividends and Withdrawals ///
 
-    // FIXME@P1: We should have separate accounting for ICP and Cycles.
-
     /// Dividends are accounted per token to avoid newly minted PST receiving
-    /// a share of previously declared dividends.  `dividendPerToken` stores the
+    /// a share of previously declared dividends.  `dividendPerToken*` store the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
-    stable var dividendPerToken = 0;
-    // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
-    stable var lastDividendsPerToken = principalMap.empty<Nat>();
+    stable var dividendPerTokenICP = 0;
+    stable var dividendPerTokenCycles = 0;
+    // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
+    stable var lastDividendsPerTokenICP = principalMap.empty<Nat>();
+    stable var lastDividendsPerTokenCycles = principalMap.empty<Nat>();
 
-    private func _dividendsOwing(_account: Principal, balance: Nat): Nat {
-        let last = switch (principalMap.get(lastDividendsPerToken, _account)) {
-            case (?value) { value };
-            case (null) { 0 };
+    private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
+        let last = switch token {
+            case (#icp) { switch (principalMap.get(lastDividendsPerTokenICP, _account)) {
+                    case (?value) { value };
+                    case (null) { 0 };
+                }
+            };
+            case (#cycles) { switch (principalMap.get(lastDividendsPerTokenCycles, _account)) {
+                    case (?value) { value };
+                    case (null) { 0 };
+                }
+            };
         };
-        let perTokenDelta = Int.abs((dividendPerToken: Int) - last);
+        let perTokenDelta = switch token {
+            case (#icp) { Int.abs((dividendPerTokenICP: Int) - last) };
+            case (#cycles) { Int.abs((dividendPerTokenCycles: Int) - last) };
+        };
         balance * perTokenDelta / DIVIDEND_SCALE;
     };
 
     // TODO@P3: Two duplicate functions.
     public composite query({caller}) func dividendsOwing() : async Nat {
-        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}));
+        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #icp);
     };
 
-    func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
+    public composite query({caller}) func dividendsOwingCycles() : async Nat {
+        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #cycles);
+    };
+
+    func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal, token: Token) : async () {
         // Affiliates are delivered by frontend.
         // address payable _buyerAffiliate = affiliates[msg.sender];
         // address payable _sellerAffiliate = affiliates[_author];
         var _shareHoldersAmount = _amount;
         let totalSupply = await PST.icrc1_total_supply();
-        dividendPerToken += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply;
+        switch token {
+            case (#icp) { dividendPerTokenICP += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply };
+            case (#cycles) { dividendPerTokenCycles += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply };
+        };
     };
 
-    /// Withdraw owed dividends and record the snapshot of `dividendPerToken`
+    /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends() : async Nat {
-        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}));
+        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #icp);
         if (amount == 0) {
             return 0;
         };
-        lastDividendsPerToken := principalMap.put(lastDividendsPerToken, caller, dividendPerToken);
+        lastDividendsPerTokenICP := principalMap.put(lastDividendsPerTokenICP, caller, dividendPerTokenICP);
         ignore indebt({caller; amount; token = #icp});
+        amount;
+    };
+
+    public shared({caller}) func withdrawCyclesDividends() : async Nat {
+        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #cycles);
+        if (amount == 0) {
+            return 0;
+        };
+        lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
+        ignore indebt({caller; amount; token = #cycles});
         amount;
     };
 
