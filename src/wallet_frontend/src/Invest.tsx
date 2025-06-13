@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
+import { ErrorContext } from '../../lib/ErrorContext';
 
 const DECIMALS = 8;
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
@@ -22,6 +23,7 @@ function mintedForInvestment(prevMinted: number, invest: number): number {
 
 export default function Invest() {
   const { agent, ok } = useAuth();
+  const { setError } = useContext(ErrorContext)!;
   const [amountICP, setAmountICP] = useState('');
   const [expected, setExpected] = useState<number | null>(null);
   const [totalMinted, setTotalMinted] = useState<number | null>(null);
@@ -59,10 +61,17 @@ export default function Invest() {
     try {
       const { createActor } = await import('../../declarations/pst');
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
-      await pst.buyWithICP();
-      setAmountICP('');
-    } catch (err) {
+      const res = await pst.buyWithICP();
+      if (res && 'Err' in res) {
+        const err = (res as any).Err;
+        const msg = err.GenericError?.message ?? JSON.stringify(err);
+        setError(msg);
+      } else {
+        setAmountICP('');
+      }
+    } catch (err: any) {
       console.error(err);
+      setError(err?.toString() || 'Failed to buy tokens');
     } finally {
       setLoading(false);
     }
