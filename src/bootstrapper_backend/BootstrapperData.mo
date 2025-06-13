@@ -146,29 +146,21 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     };
 
     // TODO@P3: Two duplicate functions.
-    public composite query({caller}) func dividendsOwing() : async Nat {
-        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #icp);
+    public composite query({caller}) func dividendsOwing(token: Token) : async Nat {
+        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
     };
 
-    public composite query({caller}) func dividendsOwingCycles() : async Nat {
-        _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #cycles);
-    };
-
-    func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal, token: Token) : async () {
-        // Affiliates are delivered by frontend.
-        // address payable _buyerAffiliate = affiliates[msg.sender];
-        // address payable _sellerAffiliate = affiliates[_author];
-        var _shareHoldersAmount = _amount;
+    func recalculateShareholdersDebt(amount: Nat, token: Token) : async () {
         let totalSupply = await PST.icrc1_total_supply();
         switch token {
-            case (#icp) { dividendPerTokenICP += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply };
-            case (#cycles) { dividendPerTokenCycles += _shareHoldersAmount * DIVIDEND_SCALE / totalSupply };
+            case (#icp) { dividendPerTokenICP += amount * DIVIDEND_SCALE / totalSupply };
+            case (#cycles) { dividendPerTokenCycles += amount * DIVIDEND_SCALE / totalSupply };
         };
     };
 
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
-    public shared({caller}) func withdrawDividends() : async Nat {
+    public shared({caller}) func withdrawICPDividends() : async Nat {
         let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #icp);
         if (amount == 0) {
             return 0;
@@ -186,40 +178,5 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
         ignore indebt({caller; amount; token = #cycles});
         amount;
-    };
-
-    /// Outgoing Payments ///
-
-    type OutgoingPayment = {
-        amount: Nat;
-        var time: ?Time.Time;
-    };
-
-    stable var ourDebts = principalMap.empty<OutgoingPayment>();
-
-    public shared({caller}) func payout(subaccount: ?ICRC1Types.Subaccount) {
-        switch (principalMap.get(ourDebts, caller)) {
-            case (?payment) {
-                let time = switch (payment.time) {
-                    case (?time) { time };
-                    case (null) {
-                        let time = Time.now();
-                        payment.time := ?time;
-                        time;
-                    }
-                };
-                let fee = await ledger.icrc1_fee();
-                let result = await ledger.icrc1_transfer({
-                    from_subaccount = null;
-                    to = {owner = caller; subaccount = subaccount};
-                    amount = payment.amount - fee;
-                    fee = null;
-                    memo = null;
-                    created_at_time = ?Nat64.fromNat(Int.abs(time)); // idempotent
-                });
-                ignore principalMap.delete(ourDebts, caller);
-            };
-            case (null) {};
-        };
     };
 }
