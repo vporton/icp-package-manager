@@ -223,6 +223,13 @@ export default function Invest() {
         We don't warrant any return of investment. Invest on your own risk.
       </p>
       <p>
+        Hereby our company All World Files Corp warrants that we won't mint more
+        than 20% of the profit sharing token (PST) and that all our profits on
+        blockchain will be routed through this PST proportionally to holdings.
+        This way we preserve validity of your investment, not to be diluted by
+        minting too much PST.
+      </p>
+      <p>
         The investment may be more profitable if you buy the token early,
         because of a discount for early investors. At later stage the price of
         ICPACK token swiftly goes up, making the investment unprofitable. Invest
