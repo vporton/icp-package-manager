@@ -123,7 +123,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken` doesn't take much memory.
     stable var lastDividendsPerToken = principalMap.empty<Nat>();
 
-    // TODO@P3: It shouldn't be a shared function.
     private func _dividendsOwing(_account: Principal, balance: Nat): Nat {
         let last = switch (principalMap.get(lastDividendsPerToken, _account)) {
             case (?value) { value };
