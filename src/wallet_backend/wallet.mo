@@ -235,7 +235,7 @@ persistent actor class Wallet({
       return 0;
     };
     lastDividendsPerToken := BTree.put(lastDividendsPerToken, Principal.compare, caller, dividendPerToken);
-    ignore BootstrapperData.indebt({caller; amount});
+    ignore BootstrapperData.indebt({caller; amount; token = #icp});
     amount;
   };
 

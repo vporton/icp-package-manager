@@ -386,7 +386,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue});
+        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #cycles});
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -413,7 +413,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue});
+        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #icp});
 
         let res = await ICPLedger.icrc1_transfer({
             to = {
