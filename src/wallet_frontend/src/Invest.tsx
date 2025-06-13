@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -178,7 +178,7 @@ export default function Invest() {
         />
       </Form.Group>
       <div className="mb-3">
-        Estimated ICPACK: {expected !== null ? `${expected.toFixed(4)} (${(expected / TOTAL_SUPPLY * 100).toFixed(4)}%)` : 'N/A'}
+        Estimated bought by you ICPACK: {expected !== null ? `${expected.toFixed(4)} (${(expected / TOTAL_SUPPLY * 100).toFixed(4)}%)` : 'N/A'}
       </div>
       <div className="mb-3">
         Your ICPACK balance: {icpackBalance !== null ? icpackBalance.toFixed(4) : 'N/A'}
