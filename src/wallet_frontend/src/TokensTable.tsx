@@ -205,7 +205,21 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                     {tokens.map((token, index) => (
                         <tr key={index}>
                             <td>{token.symbol}</td>
-                            <td>{token.name}</td>
+                            <td>
+                                {token.name}
+                                {props.onInvest && token.canisterId && token.canisterId.toText() === pstPrincipal.toText() && (
+                                    <>
+                                        {" "}<Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="me-2"
+                                            onClick={() => props.onInvest && props.onInvest()}
+                                        >
+                                            Invest
+                                        </Button>
+                                    </>
+                                )}
+                            </td>
                             <td>{balances.get(token.canisterId!)}</td>
                             <td>
                                 <Button 
@@ -230,16 +244,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                                 >
                                     Receive
                                 </Button>
-                                {props.onInvest && token.canisterId && token.canisterId.toText() === pstPrincipal.toText() && (
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="me-2"
-                                        onClick={() => props.onInvest && props.onInvest()}
-                                    >
-                                        Invest
-                                    </Button>
-                                )}
                                 <Button
                                     variant="info"
                                     size="sm"
