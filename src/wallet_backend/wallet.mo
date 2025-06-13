@@ -214,6 +214,10 @@ persistent actor class Wallet({
     balance * perTokenDelta / DIVIDEND_SCALE;
   };
 
+  public query({caller}) func dividendsOwing() : async Nat {
+    await _dividendsOwing(caller);
+  };
+
   func recalculateShareholdersDebt(_amount: Nat, _buyerAffiliate: ?Principal, _sellerAffiliate: ?Principal) : async () {
     // Affiliates are delivered by frontend.
     // address payable _buyerAffiliate = affiliates[msg.sender];
