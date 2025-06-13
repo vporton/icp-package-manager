@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
+import { ErrorContext } from '../../lib/ErrorContext';
 import { GlobalContext } from './state';
 
 const DECIMALS = 8;
@@ -22,6 +23,7 @@ function mintedForInvestment(prevMinted: number, invest: number): number {
 }
 
 export default function Invest() {
+  const { setError } = useContext(ErrorContext)!;
   const { agent, ok, defaultAgent, principal } = useAuth();
   const glob = useContext(GlobalContext);
   const [amountICP, setAmountICP] = useState('');
@@ -78,11 +80,18 @@ export default function Invest() {
     try {
       const { createActor } = await import('../../declarations/pst');
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
-      await pst.buyWithICP();
-      setAmountICP('');
+      const res = await pst.buyWithICP();
+      if (res && 'Err' in res) {
+        const err = (res as any).Err;
+        const msg = err.GenericError?.message ?? JSON.stringify(err);
+        setError(msg);
+      } else {
+        setAmountICP('');
+      }
       loadBalance();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.toString() || 'Failed to buy tokens');
     } finally {
       setLoading(false);
     }
