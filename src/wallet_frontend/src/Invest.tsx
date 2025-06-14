@@ -275,6 +275,9 @@ export default function Invest() {
       <div className="my-4">
         <Line data={chartData} options={chartOptions} />
       </div>
+      <p>
+        You are welcome to invest not just into this wallet but into the entire IC Pack ecosystem.
+      </p>
       <p className="mt-3">
         We don't warrant any return of investment. Invest on your own risk.
       </p>
