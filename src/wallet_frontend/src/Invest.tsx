@@ -149,11 +149,17 @@ export default function Invest() {
   };
 
   const loadOwedDividends = async () => {
-    if (!glob.walletBackend || !principal) return;
+    if (!agent || !ok) return;
     try {
-      const owed = await (glob.walletBackend as any).dividendsOwing();
+      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const dataActor = createActor(
+        Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
+        { agent }
+      );
+      const owed = await (dataActor as any).dividendsOwing({ icp: null });
+      const owedC = await (dataActor as any).dividendsOwing({ cycles: null });
       setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
-      setOwedCycles(0);
+      setOwedCycles(Number(owedC.toString()));
     } catch (e) {
       console.error(e);
     }
