@@ -197,10 +197,34 @@ export default function Invest() {
   };
 
   const handleWithdrawICP = async () => {
-    if (!agent || !ok || !glob.walletBackend) return;
+    if (!agent || !ok) return;
     setWithdrawing(true);
     try {
-      await glob.walletBackend.withdrawICPDividends();
+      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const dataActor = createActor(
+        Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
+        { agent }
+      );
+      await (dataActor as any).withdrawICPDividends();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setWithdrawing(false);
+      loadBalance();
+      loadOwedDividends();
+    }
+  };
+
+  const handleWithdrawCycles = async () => {
+    if (!agent || !ok) return;
+    setWithdrawing(true);
+    try {
+      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const dataActor = createActor(
+        Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
+        { agent }
+      );
+      await (dataActor as any).withdrawCyclesDividends();
     } catch (err) {
       console.error(err);
     } finally {
