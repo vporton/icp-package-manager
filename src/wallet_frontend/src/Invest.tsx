@@ -196,11 +196,11 @@ export default function Invest() {
     }
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdrawICP = async () => {
     if (!agent || !ok || !glob.walletBackend) return;
     setWithdrawing(true);
     try {
-      await glob.walletBackend.withdrawDividends();
+      await glob.walletBackend.withdrawICPDividends();
     } catch (err) {
       console.error(err);
     } finally {
@@ -231,8 +231,11 @@ export default function Invest() {
       <Button onClick={handleBuy} disabled={!ok || loading || !amountICP} className="me-2">
         {loading ? 'Buying...' : 'Buy'}
       </Button>
-      <Button onClick={handleWithdraw} disabled={!ok || withdrawing} className="me-2">
-        {withdrawing ? 'Withdrawing...' : 'Withdraw Dividends'}
+      <Button onClick={handleWithdrawICP} disabled={!ok || withdrawing} className="me-2">
+        {withdrawing ? 'Withdrawing...' : 'Withdraw ICP Dividends'}
+      </Button>
+      <Button onClick={handleWithdrawCycles} disabled={!ok || withdrawing} className="me-2">
+        {withdrawing ? 'Withdrawing...' : 'Withdraw Cycles Dividends'}
       </Button>
       <span>
         Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP,
