@@ -43,6 +43,7 @@ const baseDataset = {
   label: 'ICPACK vs ICP',
   data: GRAPH_DATA,
   borderColor: 'rgb(75, 192, 192)',
+  borderWidth: 5,
   backgroundColor: 'rgba(75, 192, 192, 0.4)',
   showLine: true,
   fill: false,
