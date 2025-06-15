@@ -19,135 +19,130 @@ import ICPLedger "canister:nns-ledger";
 import Common "../common";
 import env "mo:env";
 
-shared ({ caller = _owner }) actor class Token  (args: ?{
-    icrc1 : ?ICRC1.InitArgs;
-    icrc2 : ?ICRC2.InitArgs;
-    icrc3 : ICRC3.InitArgs; //already typed nullable
-    icrc4 : ?ICRC4.InitArgs;
+type InitArgs = {
+  icrc1 : ?ICRC1.InitArgs;
+  icrc2 : ?ICRC2.InitArgs;
+  icrc3 : ICRC3.InitArgs;
+  icrc4 : ?ICRC4.InitArgs;
+};
+
+private func default_icrc1(owner : Principal) : ICRC1.InitArgs {
+  {
+    name = ?"Test Token";
+    symbol = ?"TTT";
+    logo = ?"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InJlZCIvPjwvc3ZnPg==";
+    decimals = 8;
+    fee = ?#Fixed(10000);
+    minting_account = ?{ owner = owner; subaccount = null };
+    max_supply = null;
+    min_burn_amount = ?10000;
+    max_memo = ?64;
+    advanced_settings = null;
+    metadata = null;
+    fee_collector = null;
+    transaction_window = null;
+    permitted_drift = null;
+    max_accounts = ?100000000;
+    settle_to_accounts = ?99999000;
   }
-) = this{
+};
 
-    let default_icrc1_args : ICRC1.InitArgs = {
-      name = ?"Test Token";
-      symbol = ?"TTT";
-      logo = ?"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InJlZCIvPjwvc3ZnPg==";
-      decimals = 8;
-      fee = ?#Fixed(10000);
-      minting_account = ?{
-        owner = _owner;
-        subaccount = null;
-      };
-      max_supply = null;
-      min_burn_amount = ?10000;
-      max_memo = ?64;
-      advanced_settings = null;
-      metadata = null;
-      fee_collector = null;
-      transaction_window = null;
-      permitted_drift = null;
-      max_accounts = ?100000000;
-      settle_to_accounts = ?99999000;
-    };
+private func default_icrc2() : ICRC2.InitArgs {
+  {
+    max_approvals_per_account = ?10000;
+    max_allowance = ?#TotalSupply;
+    fee = ?#ICRC1;
+    advanced_settings = null;
+    max_approvals = ?10000000;
+    settle_to_approvals = ?9990000;
+  }
+};
 
-    let default_icrc2_args : ICRC2.InitArgs = {
-      max_approvals_per_account = ?10000;
-      max_allowance = ?#TotalSupply;
-      fee = ?#ICRC1;
-      advanced_settings = null;
-      max_approvals = ?10000000;
-      settle_to_approvals = ?9990000;
-    };
+private func default_icrc3() : ICRC3.InitArgs {
+  ?{
+    maxActiveRecords = 3000;
+    settleToRecords = 2000;
+    maxRecordsInArchiveInstance = 100000000;
+    maxArchivePages = 62500;
+    archiveIndexType = #Stable;
+    maxRecordsToArchive = 8000;
+    archiveCycles = 20_000_000_000_000;
+    archiveControllers = null;
+    supportedBlocks = [
+      { block_type = "1xfer";   url = "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3" },
+      { block_type = "2xfer";   url = "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3" },
+      { block_type = "2approve"; url = "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3" },
+      { block_type = "1mint";   url = "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3" },
+      { block_type = "1burn";   url = "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3" }
+    ];
+  }
+};
 
-    let default_icrc3_args : ICRC3.InitArgs = ?{
-      maxActiveRecords = 3000;
-      settleToRecords = 2000;
-      maxRecordsInArchiveInstance = 100000000;
-      maxArchivePages = 62500;
-      archiveIndexType = #Stable;
-      maxRecordsToArchive = 8000;
-      archiveCycles = 20_000_000_000_000;
-      archiveControllers = null; //??[put cycle ops prinicpal here];
-      supportedBlocks = [
-        {
-          block_type = "1xfer"; 
-          url="https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3";
-        },
-        {
-          block_type = "2xfer"; 
-          url="https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3";
-        },
-        {
-          block_type = "2approve"; 
-          url="https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3";
-        },
-        {
-          block_type = "1mint"; 
-          url="https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3";
-        },
-        {
-          block_type = "1burn"; 
-          url="https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3";
-        }
-      ];
-    };
+private func default_icrc4() : ICRC4.InitArgs {
+  { max_balances = ?200; max_transfers = ?200; fee = ?#ICRC1 }
+};
 
-    let default_icrc4_args : ICRC4.InitArgs = {
-      max_balances = ?200;
-      max_transfers = ?200;
-      fee = ?#ICRC1;
-    };
-
-    let icrc1_args : ICRC1.InitArgs = switch(args){
-      case(null) default_icrc1_args;
-      case(?args){
-        switch(args.icrc1){
-          case(null) default_icrc1_args;
-          case(?val){
-            {
-              val with minting_account = switch(
-                val.minting_account){
-                  case(?val) ?val;
-                  case(null) {?{
-                    owner = _owner;
-                    subaccount = null;
-                  }};
-                };
+private func compute_icrc1(a : ?InitArgs, owner : Principal) : ICRC1.InitArgs {
+  switch(a){
+    case(null) default_icrc1(owner);
+    case(?args){
+      switch(args.icrc1){
+        case(null) default_icrc1(owner);
+        case(?val){
+          {
+            val with minting_account = switch(val.minting_account){
+              case(?v) ?v;
+              case(null) ?{ owner = owner; subaccount = null };
             };
           };
         };
       };
     };
+  }
+};
 
-    let icrc2_args : ICRC2.InitArgs = switch(args){
-      case(null) default_icrc2_args;
-      case(?args){
-        switch(args.icrc2){
-          case(null) default_icrc2_args;
-          case(?val) val;
-        };
+private func compute_icrc2(a : ?InitArgs) : ICRC2.InitArgs {
+  switch(a){
+    case(null) default_icrc2();
+    case(?args){
+      switch(args.icrc2){
+        case(null) default_icrc2();
+        case(?val) val;
       };
     };
+  }
+};
 
-
-    let icrc3_args : ICRC3.InitArgs = switch(args){
-      case(null) default_icrc3_args;
-      case(?args){
-        switch(args.icrc3){
-          case(null) default_icrc3_args;
-          case(?val) ?val;
-        };
+private func compute_icrc3(a : ?InitArgs) : ICRC3.InitArgs {
+  switch(a){
+    case(null) default_icrc3();
+    case(?args){
+      switch(args.icrc3){
+        case(null) default_icrc3();
+        case(?val) ?val;
       };
     };
+  }
+};
 
-    let icrc4_args : ICRC4.InitArgs = switch(args){
-      case(null) default_icrc4_args;
-      case(?args){
-        switch(args.icrc4){
-          case(null) default_icrc4_args;
-          case(?val) val;
-        };
+private func compute_icrc4(a : ?InitArgs) : ICRC4.InitArgs {
+  switch(a){
+    case(null) default_icrc4();
+    case(?args){
+      switch(args.icrc4){
+        case(null) default_icrc4();
+        case(?val) val;
       };
     };
+  }
+};
+
+shared ({ caller = _owner }) actor class Token  (args : ?InitArgs) = this{
+
+    let icrc1_args : ICRC1.InitArgs = compute_icrc1(args, _owner);
+    let icrc2_args : ICRC2.InitArgs = compute_icrc2(args);
+    let icrc3_args : ICRC3.InitArgs = compute_icrc3(args);
+    let icrc4_args : ICRC4.InitArgs = compute_icrc4(args);
 
     stable let icrc1_migration_state = ICRC1.init(ICRC1.initialState(), #v0_1_0(#id),?icrc1_args, _owner);
     stable let icrc2_migration_state = ICRC2.init(ICRC2.initialState(), #v0_1_0(#id),?icrc2_args, _owner);
