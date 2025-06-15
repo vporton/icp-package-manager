@@ -1,4 +1,5 @@
 // Debt tracking utilities. All debts belong to PST holders collectively.
+/// TODO@P3: Delete this file.
 module {
   /// Mutable debt value.
   public type Debts = Nat;
