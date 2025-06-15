@@ -4,6 +4,8 @@ import ExperimentalCycles "mo:base/ExperimentalCycles";
 
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
+import Int "mo:base/Int";
+import Float "mo:base/Float";
 
 import CertifiedData "mo:base/CertifiedData";
 import CertTree "mo:cert/CertTree";
@@ -12,6 +14,10 @@ import ICRC1 "mo:icrc1-mo/ICRC1";
 import ICRC2 "mo:icrc2-mo/ICRC2";
 import ICRC3 "mo:icrc3-mo/";
 import ICRC4 "mo:icrc4-mo/ICRC4";
+
+import ICPLedger "canister:nns-ledger";
+import Common "../common";
+import env "mo:env";
 
 shared ({ caller = _owner }) actor class Token  (args: ?{
     icrc1 : ?ICRC1.InitArgs;
