@@ -566,6 +566,7 @@ shared ({ caller = _owner }) actor class Token  (args: ?{
     /// integral ensures that investing 16,666.66 ICP mints exactly the same
     /// amount of ICPACK while early investors receive proportionally more.
     public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
+        // FIXME@P1: Ensure that token exchange is reliable.
         let subaccount = Common.principalToSubaccount(user);
         let icpBalance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this);
