@@ -6,6 +6,7 @@ import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Float "mo:base/Float";
+import Result "mo:base/Result";
 
 import CertifiedData "mo:base/CertifiedData";
 import CertTree "mo:cert/CertTree";
@@ -563,23 +564,14 @@ shared ({ caller = _owner }) actor class Token  (args: ?{
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
-    /// Buy ICPACK with ICP transferred to the caller's subaccount.
-    ///
-    /// The amount of tokens minted is determined by integrating a price curve
-    /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
-    /// 16,666.66 ICP invested in total the rate drops to half that, and after
-    /// about twice that amount of ICPACK has been bought the cost grows without bound.  The
-    /// integral ensures that investing 16,666.66 ICP mints exactly the same
-    /// amount of ICPACK while early investors receive proportionally more.
-    public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
-        // FIXME@P1: Ensure that token exchange is reliable.
+    private func collectInvestment(user : Principal) : async Result.Result<Nat, ICRC1.TransferError> {
         let subaccount = Common.principalToSubaccount(user);
         let icpBalance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this);
             subaccount = ?subaccount;
         });
         if (icpBalance <= 2 * Common.icp_transfer_fee) {
-            return #Err(#GenericError{ error_code = 0; message = "no ICP" });
+            return #err(#GenericError{ error_code = 0; message = "no ICP" });
         };
         let invest = icpBalance - Common.icp_transfer_fee;
         switch(await ICPLedger.icrc1_transfer({
@@ -590,28 +582,13 @@ shared ({ caller = _owner }) actor class Token  (args: ?{
             created_at_time = null;
             amount = invest;
         })) {
-            case (#Err e) { return #Err e };
+            case (#Err e) { return #err(e) };
             case (#Ok _) {};
         };
+        #ok(invest);
+    };
 
-        //
-        // The number of PST tokens minted for an ICP investment is given by
-        // integrating a price curve which gradually increases the cost of a token
-        // as more ICP is invested.  The shape of the curve is chosen so that:
-        //   * investing 16,666.66 ICP in total results in 16,666.66 newly minted
-        //     ICPACK tokens (one token per ICP on average);
-        //   * at the very beginning the buyer receives twice as many ICPACK per
-        //     ICP as at the 16,666.66 ICP mark; and
-        //   * once about twice that amount of ICPACK (33,333.32 ICPACK) has been
-        //     bought, the price tends to infinity and no new ICPACK can be purchased.
-        //
-        // These conditions are satisfied when the instantaneous number of
-        // ICPACK tokens obtainable for one ICP depends linearly on the total
-        // number of ICPACK already minted, `g(m) = 4/3 * (1 - m/L)` where `L`
-        // is twice 16,666.66 ICPACK expressed in e8s.  Integrating this
-        // expression yields a curve that approaches `L` tokens as the required
-        // investment tends to infinity.
-
+    private func mintTokens(user : Principal, invest : Nat) : async ICRC1.TransferResult {
         let limitTokens = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
 
         let limitF = Float.fromInt(limitTokens);
@@ -651,6 +628,22 @@ shared ({ caller = _owner }) actor class Token  (args: ?{
                 };
                 mintResult;
             };
+        };
+    };
+
+    /// Buy ICPACK with ICP transferred to the caller's subaccount.
+    ///
+    /// The amount of tokens minted is determined by integrating a price curve
+    /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
+    /// 16,666.66 ICP invested in total the rate drops to half that, and after
+    /// about twice that amount of ICPACK has been bought the cost grows without bound.  The
+    /// integral ensures that investing 16,666.66 ICP mints exactly the same
+    /// amount of ICPACK while early investors receive proportionally more.
+    public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
+        // FIXME@P1: Ensure that token exchange is reliable.
+        switch (await collectInvestment(user)) {
+            case (#err e) { return #Err e };
+            case (#ok invest) { return await mintTokens(user, invest) };
         };
     };
 }
