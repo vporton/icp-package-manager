@@ -103,7 +103,7 @@ export default function Invest() {
     datasets: [
       baseDataset,
       ...(totalMinted !== null
-        ? [{
+        ? [{ // TODO@P3: I don't see this point on the image.
             label: 'Current',
             data: [{
               x: investedFromMinted(totalMinted),
