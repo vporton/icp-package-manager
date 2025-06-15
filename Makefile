@@ -68,7 +68,32 @@ deploy-test: deploy-work \
 
 DEPLOY_FLAGS.bookmark = --argument "principal \"$(USER)\""
 # icrc2, icrc3 and icrc4 are left null so that pst.mo uses its built‑in defaults.
-DEPLOY_FLAGS.pst = --argument 'opt record { icrc1 = opt record { name = "IC Pack Profit Share"; symbol = "ICPACK"; decimals = 8; fee = variant { Fixed = 10000 }; minting_account = record { owner = principal "$(shell dfx canister id pst)"; subaccount = null }; initial_balances = vec { record { record { owner = principal "$(USER)"; subaccount = null }; 13333600000000 } }; max_supply = opt 16667000000000; min_burn_amount = 100000 }; icrc2 = null; icrc3 = null; icrc4 = null }'
+DEPLOY_FLAGS.pst = --argument 'opt record {
+  icrc1 = opt record {
+    name = opt "IC Pack Profit Share";
+    symbol = opt "ICPACK";
+    decimals = 8;
+    fee = opt variant { Fixed = 10000 };
+    minting_account = opt record {
+      owner = principal "$(shell dfx canister id pst)";
+      subaccount = null
+    };
+    initial_balances = vec {
+      record {
+        record {
+          owner = principal "$(USER)";
+          subaccount = null
+        };
+        13333600000000
+      }
+    };
+    max_supply = opt 16667000000000;
+    min_burn_amount = opt 100000
+  };
+  icrc2 = null;
+  icrc3 = null;
+  icrc4 = null
+}'
 
 .PHONY: docs
 docs: docs/out/CNAME docs/out/md/icpack docs/out/html/icpack docs/out/index.html docs/out/internet-computer-icp-logo.svg
