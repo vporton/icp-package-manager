@@ -352,7 +352,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// The amount of tokens minted is determined by integrating a price curve
     /// over the caller's investment.  Initially, each ICP buys 4/3 ICPACK.  At
     /// 16,666.66 ICP invested in total the rate drops to half that, and after
-    /// about twice that amount of ICPACK has been bought the cost grows without bound.  The
+    /// about twice that amount of ICPACK has been bought the cost grows without bound. The
     /// integral ensures that investing 16,666.66 ICP mints exactly the same
     /// amount of ICPACK while early investors receive proportionally more.
     public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
