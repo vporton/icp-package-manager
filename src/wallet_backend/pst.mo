@@ -390,68 +390,82 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// 16,666.66 ICPACK expressed in e8s. Integrating this expression yields a
     /// curve that approaches `L` tokens as the required investment tends to
     /// infinity.
-    public shared({caller = user}) func buyWithICP() : async ICRC1.TransferResult {
-        // FIXME@P1: Ensure that token exchange is reliable.
-        let subaccount = Common.principalToSubaccount(user);
-        let icpBalance = await ICPLedger.icrc1_balance_of({
-            owner = Principal.fromActor(this);
-            subaccount = ?subaccount;
-        });
-        if (icpBalance <= 2 * Common.icp_transfer_fee) {
-            return #Err(#GenericError{ error_code = 0; message = "no ICP" });
-        };
-        let invest = icpBalance - Common.icp_transfer_fee;
+    public shared({caller = user}) func buyWithICP(amount: Nat) : async ICRC1.TransferResult {
         switch(await ICPLedger.icrc1_transfer({
-            to = { owner = Principal.fromActor(this); subaccount = null };
+            to = { owner = Principal.fromActor(this); subaccount = accountWithInvestment(user) };
             fee = null;
             memo = null;
-            from_subaccount = ?subaccount;
+            from_subaccount = ?Common.principalToSubaccount(user);
             created_at_time = null;
-            amount = invest;
+            amount;
         })) {
             case (#Err e) { return #Err e };
             case (#Ok _) {};
         };
 
-        let limitTokens = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
+        await finishBuyWithICP(); // TODO@P3: Use `await*`.
+    };
 
-        let limitF = Float.fromInt(limitTokens);
-        let prevMintedF = Float.fromInt(totalMinted);
-        let investF = Float.fromInt(invest);
+    transient let principalMap = Map.Make<Principal>();
 
-        let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
-        if (newMintedF > limitF) {
-            return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
+    /// The ICPACK token has been delivered to user.
+    stable let tokenToDeliver = principalMap.empty<Nat>(); // FIXME@P1: Limit the storage.
+
+    // TODO@P1: Reach reliability.
+    // FIXME: Needs some rewrite.
+    public shared({caller = user}) func finishBuyWithICP() : async ICRC1.TransferResult {
+        let minted = switch (principalMap.get(tokenToDeliver, user)) {
+          case (?minted) {
+            minted;
+          };
+          case null {
+            let investmentAccount = accountWithInvestment(user);
+            let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
+            if (icpBalance <= Common.icp_transfer_fee) {
+                return #Err(#GenericError{ error_code = 0; message = "no ICP" });
+            };
+            let invest = icpBalance - Common.icp_transfer_fee;
+
+            let limitTokens = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
+
+            let limitF = Float.fromInt(limitTokens);
+            let prevMintedF = Float.fromInt(totalMinted);
+            let investF = Float.fromInt(invest);
+
+            let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
+            if (newMintedF > limitF) {
+                return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
+            };
+            let mintedF = newMintedF - prevMintedF;
+            let mintedInt = Int.abs(Float.toInt(mintedF));
+            let minted : Nat = Int.abs(mintedInt);
+            totalInvested += invest;
+            totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
+            tokenToDeliver := principalMap.put(tokenToDeliver, user, minted);
+            minted;
+          };
         };
-        let mintedF = newMintedF - prevMintedF;
-        let mintedInt = Int.abs(Float.toInt(mintedF));
-        let minted : Nat = Int.abs(mintedInt);
-        totalInvested += invest;
-        totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
-
-        let mintResult = await this.mint({
-            to = { owner = user; subaccount = null };
-            amount = minted;
-            memo = null;
-            created_at_time = null;
+        await icrc1_transfer({
+          memo = null;
+          amount = invest;
+          fee = null;
+          from_subaccount = ?investmentAccount.subaccount;
+          to = recipientAccount;
+          created_at_time = null;
         });
 
-        switch (mintResult) {
-            case (#Err e) { return #Err e };
-            case (#Ok _) {
-                switch(await ICPLedger.icrc1_transfer({
-                    to = { owner = revenueRecipient; subaccount = null };
-                    fee = null;
-                    memo = null;
-                    from_subaccount = null;
-                    created_at_time = null;
-                    amount = invest - Common.icp_transfer_fee;
-                })) {
-                    case (#Err e2) { return #Err e2 };
-                    case (#Ok _) {};
-                };
-                mintResult;
-            };
+        // We don't use `await mint()` also because it's async and breaks reliability.
+        switch (await* icrc1().mint_tokens(caller, {
+          to = Common.userAccount(user);
+          amount = minted;
+          memo = null;
+          created_at_time = null;
+        })) {
+          case(#trappable(val)) val;
+          case(#awaited(val)) val;
+          case(#err(#trappable(err))) D.trap(err);
+          case(#err(#awaited(err))) D.trap(err);
         };
+        tokenToDeliver := principalMap.delete(tokenToDeliver, user);
     };
 }
