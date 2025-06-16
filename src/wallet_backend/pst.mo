@@ -8,10 +8,12 @@ import Int "mo:base/Int";
 import Float "mo:base/Float";
 
 import CertifiedData "mo:base/CertifiedData";
+import Array "mo:base/Array";
 import CertTree "mo:cert/CertTree";
 
 import ICRC1 "mo:icrc1-mo/ICRC1";
 import ICRC2 "mo:icrc2-mo/ICRC2";
+import Sha256 "mo:sha2/Sha256";
 
 import ICPLedger "canister:nns-ledger";
 import Common "../common";
@@ -347,6 +349,20 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
+    /// A temporary account to put investment to before it is finally withdrawn.
+    private func accountWithInvestment(user: Principal): Account {
+      let random = b"\e9\ad\41\82\0f\f5\01\db\08\7a\11\1f\97\8e\d6\9b\16\db\55\70\25\d6\e3\ce\a0\76\04\cb\a6\3c\ef\c5"; // unique 256 bit
+      let binPrincipal = Principal.toBlob(random);
+      let randomArray = Blob.toArray(random);
+      let principalArray = Blob.toArray(binPrincipal);
+      let joined = Array.tabulate(
+        32 + Array.size(principalArray),
+        func (i: Nat) = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
+      );
+      let subaccount = Sha256.fromBlob(#sha256, Blob.fromArray(joined));
+      { owner = Principal.fromActor(this); subaccount };
+    };
+
     /// Buy ICPACK with ICP transferred to the caller's subaccount.
     ///
     /// The amount of tokens minted is determined by integrating a price curve
@@ -378,7 +394,6 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             case (#Ok _) {};
         };
 
-        //
         // The number of PST tokens minted for an ICP investment is given by
         // integrating a price curve which gradually increases the cost of a token
         // as more ICP is invested.  The shape of the curve is chosen so that:
