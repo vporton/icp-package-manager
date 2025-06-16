@@ -92,8 +92,6 @@ DEPLOY_FLAGS.pst = --argument 'opt record { \
     min_burn_amount = opt 100000 \
   }; \
   icrc2 = null; \
-  icrc3 = null; \
-  icrc4 = null \
 }'
 
 .PHONY: docs
