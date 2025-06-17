@@ -177,7 +177,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
       let random: Blob = "\c2\78\8d\f0\0e\52\bb\5b\0b\b8\e6\98\ae\b3\87\d2\aa\54\91\ee\61\36\c9\86\85\df\78\09\cd\98\90\50"; // unique 256 bit
       let principalArray = Blob.toArray(random);
       let randomArray = Blob.toArray(random);
-    //   let principalArray = Blob.toArray(binPrincipal);
       let joined = Array.tabulate(
         32 + Array.size(principalArray),
         func (i: Nat): Nat8 = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
