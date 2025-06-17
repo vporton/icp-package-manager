@@ -13,6 +13,7 @@ import Sha256 "mo:sha2/Sha256";
 import Account "../lib/Account";
 import PST "canister:pst";
 import ledger "canister:nns-ledger";
+import CyclesLedger "canister:cycles_ledger";
 
 persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public type PubKey = Blob;
@@ -105,6 +106,13 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public type Token = { #icp; #cycles };
 
+    private func tokenPrincipal(token: Token) : Principal {
+        switch token {
+            case (#icp) { Principal.fromActor(ledger) };
+            case (#cycles) { Principal.fromActor(CyclesLedger) };
+        };
+    };
+
     // TODO@P1: Use a map from token principal, instead?
     stable var debtsICP: Nat = 0;
     stable var debtsCycles: Nat = 0;
@@ -180,23 +188,22 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
-    public shared({caller}) func withdrawICPDividends() : async Nat {
-        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #icp);
+    public shared({caller}) func withdrawDividends(token: Token) : async Nat {
+        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
         if (amount == 0) {
             return 0;
         };
-        lastDividendsPerTokenICP := principalMap.put(lastDividendsPerTokenICP, caller, dividendPerTokenICP);
-        ignore indebt({amount; token = #icp}); // FIXME@P1: seems superfluous
-        amount;
-    };
-
-    public shared({caller}) func withdrawCyclesDividends() : async Nat {
-        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), #cycles);
-        if (amount == 0) {
-            return 0;
+        switch (token) {
+            case (#icp) {
+                lastDividendsPerTokenICP := principalMap.put(lastDividendsPerTokenICP, caller, dividendPerTokenICP);
+            };
+            case (#cycles) {
+                lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
+            };
         };
-        lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
-        ignore indebt({amount; token = #cycles}); // FIXME@P1: seems superfluous
+        ignore indebt({amount; token}); // FIXME@P1: seems superfluous
+        // example usage of tokenPrincipal for future ledger operations
+        let _ = tokenPrincipal(token);
         amount;
     };
 }
