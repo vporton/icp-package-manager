@@ -144,6 +144,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable let dividendPerToken = [var 0, 0];
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
     stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
+    /// Dividends that have been moved to a temporary account but not yet
+    /// delivered to the user.
+    stable var dividendsToDeliver = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
+    /// Indicates whether a withdrawal operation is in progress for a user.
+    stable var withdrawalInProgress = [var principalMap.empty<Bool>(), principalMap.empty<Bool>()];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
@@ -182,18 +187,55 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
       { owner = Principal.fromActor(this); subaccount = ?subaccount };
     };
 
+    /// Move owed dividends to a temporary account and mark the withdrawal as started.
+    private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
+        let amount = _dividendsOwing(user, await PST.icrc1_balance_of({owner = user; subaccount = null}), token);
+        if (amount == 0) { return 0; };
+        let i = tokenIndex(token);
+        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
+        dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
+        withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, true);
+        ignore icrc1Token(token).icrc1_transfer({
+            memo = null;
+            amount;
+            fee = null;
+            from_subaccount = null;
+            to = accountWithDividends(user);
+            created_at_time = null;
+        });
+        amount;
+    };
+
+    /// Finish the withdrawal by sending dividends from the temporary account to the user.
+    public shared({caller}) func finishWithdrawDividends(token: Token) : async Nat {
+        let i = tokenIndex(token);
+        let ?amount = principalMap.get(dividendsToDeliver[i], caller) else { return 0; };
+        let acc = accountWithDividends(caller);
+        ignore icrc1Token(token).icrc1_transfer({
+            memo = null;
+            amount;
+            fee = null;
+            from_subaccount = acc.subaccount;
+            to = { owner = caller; subaccount = null };
+            created_at_time = null;
+        });
+        dividendsToDeliver[i] := principalMap.delete(dividendsToDeliver[i], caller);
+        withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
+        amount;
+    };
+
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends(token: Token) : async Nat {
-        let amount = _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
-        if (amount == 0) {
-            return 0;
-        };
         let i = tokenIndex(token);
-        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], caller, dividendPerToken[i]);
-        ignore indebt({amount; token}); // FIXME@P1: seems superfluous
-        // example usage of tokenPrincipal for future ledger operations
-        let _ = tokenPrincipal(token);
-        amount;
+        let ongoing = principalMap.get(withdrawalInProgress[i], caller);
+        if (ongoing == ?true) {
+            return await finishWithdrawDividends(token);
+        } else {
+            let moved = await startWithdrawDividends(caller, token);
+            if (moved == 0) { return 0; };
+            ignore indebt({amount = moved; token}); // FIXME@P1: seems superfluous
+            return await finishWithdrawDividends(token);
+        };
     };
 }
