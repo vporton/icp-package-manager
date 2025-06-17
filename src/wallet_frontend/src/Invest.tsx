@@ -212,7 +212,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      await (dataActor as any).withdrawICPDividends();
+      await (dataActor as any).withdrawDividends({ icp: null });
     } catch (err) {
       console.error(err);
     } finally {
@@ -231,7 +231,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      await (dataActor as any).withdrawCyclesDividends();
+      await (dataActor as any).withdrawDividends({ cycles: null });
     } catch (err) {
       console.error(err);
     } finally {
