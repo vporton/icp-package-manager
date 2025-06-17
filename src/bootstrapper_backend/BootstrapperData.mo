@@ -11,6 +11,7 @@ import Nat8 "mo:base/Nat8";
 import ICRC1Types "mo:icrc1-types";
 import Sha256 "mo:sha2/Sha256";
 import Account "../lib/Account";
+import Common "../common";
 import PST "canister:pst";
 import ledger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
@@ -234,7 +235,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         } else {
             let moved = await startWithdrawDividends(caller, token);
             if (moved == 0) { return 0; };
-            ignore indebt({amount = moved; token}); // FIXME@P1: seems superfluous
+        ignore icrc1Token(token).icrc1_transfer({
+            memo = null;
+            amount = moved;
+            fee = null;
+            from_subaccount = accountWithDividends(caller).subaccount; // TODO@P3: inefficient
+            to = Common.userAccount(caller);
+            created_at_time = null;
+        });
             return await finishWithdrawDividends(token);
         };
     };
