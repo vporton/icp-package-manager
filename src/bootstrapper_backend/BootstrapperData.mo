@@ -113,16 +113,29 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         };
     };
 
+    /// Return the ICRC1 token canister for the provided token tag.
+    private func icrc1Token(token: Token) : ICRC1Types.ICRC1 {
+        switch token {
+            case (#icp) { ledger };
+            case (#cycles) { CyclesLedger };
+        };
+    };
+
+    /// Helper to convert `Token` to an array index.
+    private func tokenIndex(token: Token) : Nat {
+        switch token {
+            case (#icp) { 0 };
+            case (#cycles) { 1 };
+        };
+    };
+
     // TODO@P1: Use a map from token principal, instead?
-    stable var debtsICP: Nat = 0;
-    stable var debtsCycles: Nat = 0;
+    stable var debts = [0, 0];
 
     /// I don't make this function reliable, because it is usually about small amounts of money.
     public shared func indebt({amount: Nat; token: Token}): () {
-        switch token {
-            case (#icp) { debtsICP += amount; };
-            case (#cycles) { debtsCycles += amount; };
-        };
+        let i = tokenIndex(token);
+        debts[i] += amount;
     };
 
     /// Dividends and Withdrawals ///
@@ -131,29 +144,18 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// a share of previously declared dividends.  `dividendPerToken*` store the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
-    stable var dividendPerTokenICP = 0;
-    stable var dividendPerTokenCycles = 0;
+    stable var dividendPerToken = [0, 0];
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
-    stable var lastDividendsPerTokenICP = principalMap.empty<Nat>();
-    stable var lastDividendsPerTokenCycles = principalMap.empty<Nat>();
+    stable var lastDividendsPerToken = [principalMap.empty<Nat>(), principalMap.empty<Nat>()];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
-        let last = switch token {
-            case (#icp) { switch (principalMap.get(lastDividendsPerTokenICP, _account)) {
-                    case (?value) { value };
-                    case (null) { 0 };
-                }
-            };
-            case (#cycles) { switch (principalMap.get(lastDividendsPerTokenCycles, _account)) {
-                    case (?value) { value };
-                    case (null) { 0 };
-                }
-            };
+        let i = tokenIndex(token);
+        let lastMap = lastDividendsPerToken[i];
+        let last = switch (principalMap.get(lastMap, _account)) {
+            case (?value) { value };
+            case (null) { 0 };
         };
-        let perTokenDelta = switch token {
-            case (#icp) { Int.abs((dividendPerTokenICP: Int) - last) };
-            case (#cycles) { Int.abs((dividendPerTokenCycles: Int) - last) };
-        };
+        let perTokenDelta = Int.abs((dividendPerToken[i]: Int) - last);
         balance * perTokenDelta / DIVIDEND_SCALE;
     };
 
@@ -164,10 +166,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     func recalculateShareholdersDebt(amount: Nat, token: Token) : async () {
         let totalSupply = await PST.icrc1_total_supply();
-        switch token {
-            case (#icp) { dividendPerTokenICP += amount * DIVIDEND_SCALE / totalSupply };
-            case (#cycles) { dividendPerTokenCycles += amount * DIVIDEND_SCALE / totalSupply };
-        };
+        let i = tokenIndex(token);
+        dividendPerToken[i] += amount * DIVIDEND_SCALE / totalSupply;
     };
 
     // TODO@P2: needed?
@@ -192,14 +192,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         if (amount == 0) {
             return 0;
         };
-        switch (token) {
-            case (#icp) {
-                lastDividendsPerTokenICP := principalMap.put(lastDividendsPerTokenICP, caller, dividendPerTokenICP);
-            };
-            case (#cycles) {
-                lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
-            };
-        };
+        let i = tokenIndex(token);
+        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], caller, dividendPerToken[i]);
         ignore indebt({amount; token}); // FIXME@P1: seems superfluous
         // example usage of tokenPrincipal for future ledger operations
         let _ = tokenPrincipal(token);
