@@ -21,7 +21,6 @@ import CyclesLedger "canister:cycles_ledger";
 import CMC "canister:nns-cycles-minting";
 import BootstrapperData "canister:bootstrapper_data";
 import env "mo:env";
-import Debt "../lib/Debt";
 
 shared({caller = initialOwner}) actor class Battery({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -209,7 +208,7 @@ shared({caller = initialOwner}) actor class Battery({
         if (newCycles != 0) {
             // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
             let fee = newCycles / 20; // 5%
-            ignore BootstrapperData.indebt({caller = revenueRecipient; amount = fee; token = #cycles});
+            ignore BootstrapperData.indebt({amount = fee; token = #cycles});
             battery.activatedCycles += newCycles - fee;
         };
 
@@ -301,7 +300,7 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #cycles});
+        ignore BootstrapperData.indebt({amount = revenue; token = #cycles});
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -321,7 +320,7 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #icp});
+        ignore BootstrapperData.indebt({amount = revenue; token = #icp});
 
         let res = await ICPLedger.icrc1_transfer({
             to = {

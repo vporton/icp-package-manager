@@ -2,6 +2,7 @@ import Buffer "mo:base/Buffer";
 import D "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 
+import Blob "mo:base/Blob";
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
@@ -14,10 +15,13 @@ import CertTree "mo:cert/CertTree";
 import ICRC1 "mo:icrc1-mo/ICRC1";
 import ICRC2 "mo:icrc2-mo/ICRC2";
 import Sha256 "mo:sha2/Sha256";
+import Map "mo:base/OrderedMap";
 
 import ICPLedger "canister:nns-ledger";
+import Account "../lib/Account";
 import Common "../common";
 import env "mo:env";
+import Wallet "wallet";
 
 shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc1 : ?ICRC1.InitArgs;
@@ -350,17 +354,17 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// A temporary account to put investment to before it is finally withdrawn.
-    private func accountWithInvestment(user: Principal): Account {
-      let random = b"\e9\ad\41\82\0f\f5\01\db\08\7a\11\1f\97\8e\d6\9b\16\db\55\70\25\d6\e3\ce\a0\76\04\cb\a6\3c\ef\c5"; // unique 256 bit
-      let binPrincipal = Principal.toBlob(random);
+    private func accountWithInvestment(user: Principal): Account.Account {
+      let random: Blob = "\e9\ad\41\82\0f\f5\01\db\08\7a\11\1f\97\8e\d6\9b\16\db\55\70\25\d6\e3\ce\a0\76\04\cb\a6\3c\ef\c5"; // unique 256 bit
       let randomArray = Blob.toArray(random);
+      let binPrincipal = Principal.toBlob(user);
       let principalArray = Blob.toArray(binPrincipal);
       let joined = Array.tabulate(
         32 + Array.size(principalArray),
-        func (i: Nat) = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
+        func (i: Nat): Nat8 = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
       );
       let subaccount = Sha256.fromBlob(#sha256, Blob.fromArray(joined));
-      { owner = Principal.fromActor(this); subaccount };
+      { owner = Principal.fromActor(this); subaccount = ?subaccount };
     };
 
     /// Buy ICPACK with ICP transferred to the caller's subaccount.
@@ -390,30 +394,31 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// 16,666.66 ICPACK expressed in e8s. Integrating this expression yields a
     /// curve that approaches `L` tokens as the required investment tends to
     /// infinity.
-    public shared({caller = user}) func buyWithICP(amount: Nat) : async ICRC1.TransferResult {
+    public shared({caller = user}) func buyWithICP(wallet: Principal, amount: Nat) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
         switch(await ICPLedger.icrc1_transfer({
-            to = { owner = Principal.fromActor(this); subaccount = accountWithInvestment(user) };
+            to = accountWithInvestment(user);
             fee = null;
             memo = null;
             from_subaccount = ?Common.principalToSubaccount(user);
             created_at_time = null;
             amount;
         })) {
-            case (#Err e) { return #Err e };
+            case (#Err e) { return ()/*#Err e*/ }; // FIXME@P1: return value
             case (#Ok _) {};
         };
 
-        await finishBuyWithICP(); // TODO@P3: Use `await*`.
+        await finishBuyWithICP(wallet); // TODO@P3: Use `await*`. // FIXME@P1: `ignore`
+        (); // FIXME@P1
     };
 
-    transient let principalMap = Map.Make<Principal>();
+    transient let principalMap = Map.Make<Principal>(Principal.compare);
 
     /// The ICPACK token has been delivered to user.
-    stable let tokenToDeliver = principalMap.empty<Nat>(); // FIXME@P1: Limit the storage.
+    stable var tokenToDeliver = principalMap.empty<Nat>(); // FIXME@P1: Limit the storage.
 
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
-    public shared({caller = user}) func finishBuyWithICP() : async ICRC1.TransferResult {
+    public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
         let minted = switch (principalMap.get(tokenToDeliver, user)) {
           case (?minted) {
             minted;
@@ -422,7 +427,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             let investmentAccount = accountWithInvestment(user);
             let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
             if (icpBalance <= Common.icp_transfer_fee) {
-                return #Err(#GenericError{ error_code = 0; message = "no ICP" });
+                return (); // FIXME@P1
+                // return #Err(#GenericError{ error_code = 0; message = "no ICP" });
             };
             let invest = icpBalance - Common.icp_transfer_fee;
 
@@ -434,7 +440,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
             let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
             if (newMintedF > limitF) {
-                return #Err(#GenericError{ error_code = 1; message = "investment overflow" });
+                return; // #Err(#GenericError{ error_code = 1; message = "investment overflow" }); // FIXME: return value
             };
             let mintedF = newMintedF - prevMintedF;
             let mintedInt = Int.abs(Float.toInt(mintedF));
@@ -445,18 +451,19 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             minted;
           };
         };
-        await icrc1_transfer({
-          memo = null;
-          amount = invest;
-          fee = null;
-          from_subaccount = ?investmentAccount.subaccount;
-          to = recipientAccount;
-          created_at_time = null;
-        });
+        // await icrc1_transfer({ // FIXME@P1: Uncomment.
+        //   memo = null;
+        //   amount = invest;
+        //   fee = null;
+        //   from_subaccount = ?investmentAccount.subaccount;
+        //   to = recipientAccount;
+        //   created_at_time = null;
+        // });
+        // FIXME@P1: Need to ensure that indebt() is called exactly once.
 
         // We don't use `await mint()` also because it's async and breaks reliability.
-        switch (await* icrc1().mint_tokens(caller, {
-          to = Common.userAccount(user);
+        let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
+          to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
           amount = minted;
           memo = null;
           created_at_time = null;
@@ -467,5 +474,6 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           case(#err(#awaited(err))) D.trap(err);
         };
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+        (); // FIXME@P1
     };
 }

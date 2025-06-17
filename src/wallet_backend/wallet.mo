@@ -9,7 +9,6 @@ import ICRC1 "mo:icrc1-types";
 import ICPLedger "canister:nns-ledger";
 import ICPACK "canister:pst";
 import Int "mo:base/Int";
-import Debt "../lib/Debt";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 
 persistent actor class Wallet({
@@ -187,7 +186,7 @@ persistent actor class Wallet({
     //     not owner.isAnonymous();
     // };
 
-    public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
+    public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
         onlyOwner(caller, "do_icrc1_transfer");
 
         ignore token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack

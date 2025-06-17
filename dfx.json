@@ -303,6 +303,7 @@
     "wallet_backend": {
       "args": "--enhanced-orthogonal-persistence",
       "main": "src/wallet_backend/wallet.mo",
+      "dependencies": ["pst", "nns-ledger"],
       "metadata": [
         {
           "name": "candid:service"

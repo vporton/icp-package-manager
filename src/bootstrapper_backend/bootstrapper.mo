@@ -27,7 +27,6 @@ import TrieMap "mo:base/TrieMap";
 import Order "mo:base/Order";
 import Map "mo:base/OrderedMap";
 import env "mo:env";
-import Debt "../lib/Debt";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import BootstrapperData "canister:bootstrapper_data";
@@ -369,6 +368,7 @@ actor class Bootstrapper() = this {
     };
 
     // TODO@P3: Should be in th frontend.
+    // TODO@P3: duplicate code
     public composite query({caller}) func userAccountText(): async Text {
         let owner = Principal.fromActor(this);
         let subaccount = ?(AccountID.principalToSubaccount(caller));
@@ -386,7 +386,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #cycles});
+        ignore BootstrapperData.indebt({amount = revenue; token = #cycles});
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -413,7 +413,7 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        ignore BootstrapperData.indebt({caller = revenueRecipient; amount = revenue; token = #icp});
+        ignore BootstrapperData.indebt({amount = revenue; token = #icp});
 
         let res = await ICPLedger.icrc1_transfer({
             to = {

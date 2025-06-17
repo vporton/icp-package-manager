@@ -1,17 +1,20 @@
 import Blob "mo:base/Blob";
 import Principal "mo:base/Principal";
+import Array "mo:base/Array";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Nat64 "mo:base/Nat64";
 import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
 import Map "mo:base/OrderedMap";
+import Nat8 "mo:base/Nat8";
 import ICRC1Types "mo:icrc1-types";
+import Sha256 "mo:sha2/Sha256";
+import Account "../lib/Account";
 import PST "canister:pst";
 import ledger "canister:nns-ledger";
-import Debt "../lib/Debt";
 
-persistent actor class BootstrapperData(initialOwner: Principal) {
+persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public type PubKey = Blob;
 
     stable var owner = initialOwner;
@@ -102,14 +105,15 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
 
     public type Token = { #icp; #cycles };
 
-    stable var debtsICP: Debt.Debts = 0;
-    stable var debtsCycles: Debt.Debts = 0;
+    // TODO@P1: Use a map from token principal, instead?
+    stable var debtsICP: Nat = 0;
+    stable var debtsCycles: Nat = 0;
 
-    public shared func indebt({caller: Principal; amount: Nat; token: Token}): () {
+    /// I don't make this function reliable, because it is usually about small amounts of money.
+    public shared func indebt({amount: Nat; token: Token}): () {
         switch token {
-            // FIXME@P1: The variables `debtsICP` and `debtsCycles` are not changed!
-            case (#icp) { Debt.indebt({var debts = debtsICP; amount}); };
-            case (#cycles) { Debt.indebt({var debts = debtsCycles; amount}); };
+            case (#icp) { debtsICP += amount; };
+            case (#cycles) { debtsCycles += amount; };
         };
     };
 
@@ -158,6 +162,22 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
         };
     };
 
+    // TODO@P2: needed?
+    /// A temporary account for divideds before it is finally withdrawn.
+    private func accountWithInvestment(user: Principal): Account.Account {
+      // TODO: duplicate code
+      let random: Blob = "\c2\78\8d\f0\0e\52\bb\5b\0b\b8\e6\98\ae\b3\87\d2\aa\54\91\ee\61\36\c9\86\85\df\78\09\cd\98\90\50"; // unique 256 bit
+      let principalArray = Blob.toArray(random);
+      let randomArray = Blob.toArray(random);
+    //   let principalArray = Blob.toArray(binPrincipal);
+      let joined = Array.tabulate(
+        32 + Array.size(principalArray),
+        func (i: Nat): Nat8 = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
+      );
+      let subaccount = Sha256.fromBlob(#sha256, Blob.fromArray(joined));
+      { owner = Principal.fromActor(this); subaccount = ?subaccount };
+    };
+
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawICPDividends() : async Nat {
@@ -166,7 +186,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
             return 0;
         };
         lastDividendsPerTokenICP := principalMap.put(lastDividendsPerTokenICP, caller, dividendPerTokenICP);
-        ignore indebt({caller; amount; token = #icp});
+        ignore indebt({amount; token = #icp}); // FIXME@P1: seems superfluous
         amount;
     };
 
@@ -176,7 +196,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) {
             return 0;
         };
         lastDividendsPerTokenCycles := principalMap.put(lastDividendsPerTokenCycles, caller, dividendPerTokenCycles);
-        ignore indebt({caller; amount; token = #cycles});
+        ignore indebt({amount; token = #cycles}); // FIXME@P1: seems superfluous
         amount;
     };
 }
