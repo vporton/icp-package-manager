@@ -114,11 +114,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     /// Return the ICRC1 token canister for the provided token tag.
-    private func icrc1Token(token: Token) : ICRC1Types.ICRC1 {
-        switch token {
-            case (#icp) { ledger };
-            case (#cycles) { CyclesLedger };
-        };
+    private func icrc1Token(token: Token) : ICRC1Types.Service {
+        actor(Principal.toText(tokenPrincipal(token)));
     };
 
     /// Helper to convert `Token` to an array index.
@@ -130,7 +127,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     // TODO@P1: Use a map from token principal, instead?
-    stable var debts = [0, 0];
+    stable let debts = [var 0, 0];
 
     /// I don't make this function reliable, because it is usually about small amounts of money.
     public shared func indebt({amount: Nat; token: Token}): () {
@@ -144,9 +141,9 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// a share of previously declared dividends.  `dividendPerToken*` store the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
-    stable var dividendPerToken = [0, 0];
+    stable let dividendPerToken = [var 0, 0];
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
-    stable var lastDividendsPerToken = [principalMap.empty<Nat>(), principalMap.empty<Nat>()];
+    stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
