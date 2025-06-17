@@ -172,7 +172,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     // TODO@P2: needed?
     /// A temporary account for divideds before it is finally withdrawn.
-    private func accountWithInvestment(user: Principal): Account.Account {
+    private func accountWithDividends(user: Principal): Account.Account {
       // TODO: duplicate code
       let random: Blob = "\c2\78\8d\f0\0e\52\bb\5b\0b\b8\e6\98\ae\b3\87\d2\aa\54\91\ee\61\36\c9\86\85\df\78\09\cd\98\90\50"; // unique 256 bit
       let principalArray = Blob.toArray(random);
