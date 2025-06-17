@@ -227,7 +227,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
-    public shared({caller}) func withdrawDividends(token: Token) : async Nat {
+    public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
         let ongoing = principalMap.get(withdrawalInProgress[i], caller);
         if (ongoing == ?true) {
@@ -235,14 +235,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         } else {
             let moved = await startWithdrawDividends(caller, token);
             if (moved == 0) { return 0; };
-        ignore icrc1Token(token).icrc1_transfer({
-            memo = null;
-            amount = moved;
-            fee = null;
-            from_subaccount = accountWithDividends(caller).subaccount; // TODO@P3: inefficient
-            to = Common.userAccount(caller);
-            created_at_time = null;
-        });
+            ignore icrc1Token(token).icrc1_transfer({ // FIXME@P1: `ignore`?
+                memo = null;
+                amount = moved;
+                fee = null;
+                from_subaccount = accountWithDividends(caller).subaccount; // TODO@P3: inefficient
+                to;
+                created_at_time = null;
+            });
             return await finishWithdrawDividends(token);
         };
     };
