@@ -195,13 +195,13 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let result = try {
             let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
             let amount = _dividendsOwing(user, balance, token);
-            if (amount == 0) {
+            if (amount < Common.icp_transfer_fee) {
                 withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
                 return 0;
             };
             let res = await icrc1Token(token).icrc1_transfer({
                 memo = null;
-                amount;
+                amount = amount - Common.icp_transfer_fee;
                 fee = null;
                 from_subaccount = null;
                 to = accountWithDividends(user);
@@ -212,6 +212,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
             amount;
         } catch (err) {
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
@@ -257,7 +258,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         } else {
             let moved = await startWithdrawDividends(caller, token);
             if (moved == 0) { return 0; };
-            return await finishWithdrawDividends(token, to);
+            return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
         };
     };
 }
