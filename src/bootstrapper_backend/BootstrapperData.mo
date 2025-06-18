@@ -9,6 +9,7 @@ import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
 import Map "mo:base/OrderedMap";
 import Nat8 "mo:base/Nat8";
+import Error "mo:base/Error";
 import ICRC1Types "mo:icrc1-types";
 import Sha256 "mo:sha2/Sha256";
 import Account "../lib/Account";
@@ -214,7 +215,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             amount;
         } catch (err) {
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
-            Debug.trap("withdraw dividends failed: " # debug_show(err));
+            Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
         };
         result;
@@ -223,8 +224,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
     public shared({caller}) func finishWithdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
-        let amount = icrc1Token(token).icrc1_balance_of(acc);
         let acc = accountWithDividends(caller);
+        let amount = await icrc1Token(token).icrc1_balance_of(acc);
         let result = try {
             let res = await icrc1Token(token).icrc1_transfer({
                 memo = null;
@@ -240,7 +241,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
             amount;
         } catch (err) {
-            Debug.trap("transfer failed: " # debug_show(err));
+            Debug.trap("transfer failed: " # Error.message(err));
             0;
         };
         result;
