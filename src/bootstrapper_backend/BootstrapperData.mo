@@ -194,27 +194,34 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, ());
-        let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
-        let amount = _dividendsOwing(user, balance, token);
-        if (amount == 0) {
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
-            return 0;
-        };
-        let res = await icrc1Token(token).icrc1_transfer({
-            memo = null;
+        let result = try {
+            let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
+            let amount = _dividendsOwing(user, balance, token);
+            if (amount == 0) {
+                withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+                return 0;
+            };
+            let res = await icrc1Token(token).icrc1_transfer({
+                memo = null;
+                amount;
+                fee = null;
+                from_subaccount = null;
+                to = accountWithDividends(user);
+                created_at_time = null;
+            });
+            let #Ok _ = res else {
+                withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+                Debug.trap("transfer failed: " # debug_show(res));
+            };
+            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
+            dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
             amount;
-            fee = null;
-            from_subaccount = null;
-            to = accountWithDividends(user);
-            created_at_time = null;
-        });
-        let #Ok _ = res else {
+        } catch (err) {
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
-            Debug.trap("transfer failed: " # debug_show(res));
+            Debug.trap("withdraw dividends failed: " # debug_show(err));
+            0;
         };
-        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
-        dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
-        amount;
+        result;
     };
 
     /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
@@ -226,20 +233,26 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             return 0;
         };
         let acc = accountWithDividends(caller);
-        let res = await icrc1Token(token).icrc1_transfer({
-            memo = null;
+        let result = try {
+            let res = await icrc1Token(token).icrc1_transfer({
+                memo = null;
+                amount;
+                fee = null;
+                from_subaccount = acc.subaccount;
+                to;
+                created_at_time = null;
+            });
+            let #Ok _ = res else {
+                Debug.trap("transfer failed: " # debug_show(res));
+            };
+            dividendsToDeliver[i] := principalMap.delete(dividendsToDeliver[i], caller);
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
             amount;
-            fee = null;
-            from_subaccount = acc.subaccount;
-            to;
-            created_at_time = null;
-        });
-        let #Ok _ = res else {
-            Debug.trap("transfer failed: " # debug_show(res));
+        } catch (err) {
+            Debug.trap("transfer failed: " # debug_show(err));
+            0;
         };
-        dividendsToDeliver[i] := principalMap.delete(dividendsToDeliver[i], caller);
-        withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
-        amount;
+        result;
     };
 
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
