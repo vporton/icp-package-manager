@@ -190,13 +190,15 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
     private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
-        let amount = _dividendsOwing(user, await PST.icrc1_balance_of({owner = user; subaccount = null}), token);
-        if (amount == 0) { return 0; };
         let i = tokenIndex(token);
-        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
-        dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
         withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, true);
-        ignore icrc1Token(token).icrc1_transfer({
+        let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
+        let amount = _dividendsOwing(user, balance, token);
+        if (amount == 0) {
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+            return 0;
+        };
+        let res = await icrc1Token(token).icrc1_transfer({
             memo = null;
             amount;
             fee = null;
@@ -204,22 +206,35 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             to = accountWithDividends(user);
             created_at_time = null;
         });
+        let #Ok _ = res else {
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
+        lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
+        dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
         amount;
     };
 
-    /// Finish the withdrawal by sending dividends from the temporary account to the user.
-    public shared({caller}) func finishWithdrawDividends(token: Token) : async Nat {
+    /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
+    public shared({caller}) func finishWithdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
-        let ?amount = principalMap.get(dividendsToDeliver[i], caller) else { return 0; };
+        let ?amount = principalMap.get(dividendsToDeliver[i], caller) else {
+            // Another call may still be moving the dividends; keep the flag so
+            // it can complete without starting again.
+            return 0;
+        };
         let acc = accountWithDividends(caller);
-        ignore icrc1Token(token).icrc1_transfer({
+        let res = await icrc1Token(token).icrc1_transfer({
             memo = null;
             amount;
             fee = null;
             from_subaccount = acc.subaccount;
-            to = { owner = caller; subaccount = null };
+            to;
             created_at_time = null;
         });
+        let #Ok _ = res else {
+            Debug.trap("transfer failed: " # debug_show(res));
+        };
         dividendsToDeliver[i] := principalMap.delete(dividendsToDeliver[i], caller);
         withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
         amount;
@@ -231,19 +246,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let i = tokenIndex(token);
         let ongoing = principalMap.get(withdrawalInProgress[i], caller);
         if (ongoing == ?true) {
-            return await finishWithdrawDividends(token);
+            return await finishWithdrawDividends(token, to);
         } else {
             let moved = await startWithdrawDividends(caller, token);
             if (moved == 0) { return 0; };
-            ignore icrc1Token(token).icrc1_transfer({ // FIXME@P1: `ignore`?
-                memo = null;
-                amount = moved;
-                fee = null;
-                from_subaccount = accountWithDividends(caller).subaccount; // TODO@P3: inefficient
-                to;
-                created_at_time = null;
-            });
-            return await finishWithdrawDividends(token);
+            return await finishWithdrawDividends(token, to);
         };
     };
 }
