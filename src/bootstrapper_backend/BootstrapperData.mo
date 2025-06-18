@@ -146,9 +146,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable let dividendPerToken = [var 0, 0];
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
     stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
-    /// Dividends that have been moved to a temporary account but not yet
-    /// delivered to the user.
-    stable var dividendsToDeliver = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
     stable var withdrawalInProgress = [var principalMap.empty<()>(), principalMap.empty<()>()];
 
@@ -214,7 +211,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
-            dividendsToDeliver[i] := principalMap.put(dividendsToDeliver[i], user, amount);
             amount;
         } catch (err) {
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
@@ -227,16 +223,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
     public shared({caller}) func finishWithdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
-        let ?amount = principalMap.get(dividendsToDeliver[i], caller) else {
-            // Another call may still be moving the dividends; keep the flag so
-            // it can complete without starting again.
-            return 0;
-        };
+        let amount = icrc1Token(token).icrc1_balance_of(acc);
         let acc = accountWithDividends(caller);
         let result = try {
             let res = await icrc1Token(token).icrc1_transfer({
                 memo = null;
-                amount;
+                amount = amount - Common.icp_transfer_fee;
                 fee = null;
                 from_subaccount = acc.subaccount;
                 to;
@@ -245,7 +237,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             let #Ok _ = res else {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
-            dividendsToDeliver[i] := principalMap.delete(dividendsToDeliver[i], caller);
             withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
             amount;
         } catch (err) {
