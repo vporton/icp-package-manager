@@ -1,3 +1,4 @@
+import Option "mo:base/Option";
 import Blob "mo:base/Blob";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
