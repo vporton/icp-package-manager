@@ -149,7 +149,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// delivered to the user.
     stable var dividendsToDeliver = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
-    stable var withdrawalInProgress = [var principalMap.empty<Bool>(), principalMap.empty<Bool>()];
+    stable var withdrawalInProgress = [var principalMap.empty<()>(), principalMap.empty<()>()];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
@@ -192,7 +192,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
     private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
-        withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, true);
+        withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, ());
         let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
         let amount = _dividendsOwing(user, balance, token);
         if (amount == 0) {
@@ -208,7 +208,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             created_at_time = null;
         });
         let #Ok _ = res else {
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], ());
             Debug.trap("transfer failed: " # debug_show(res));
         };
         lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
@@ -246,7 +246,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
         let ongoing = principalMap.get(withdrawalInProgress[i], caller);
-        if (ongoing == ?true) {
+        if (Option.isSome(ongoing)) {
             return await finishWithdrawDividends(token, to);
         } else {
             let moved = await startWithdrawDividends(caller, token);
