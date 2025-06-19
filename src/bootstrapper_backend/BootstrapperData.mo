@@ -201,7 +201,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
                 return 0;
             };
-            if (await icrc1.icrc1_balance_of(accountWithDividends(user)) != 0) { // FIXME@P1: Also account on it nonzero but below the fee.
+            if ((await icrc1.icrc1_balance_of(accountWithDividends(user))) != 0) { // FIXME@P1: Also account on it nonzero but below the fee.
                 return 0; // FIXME@P1
             };
             let res = await icrc1.icrc1_transfer({ // -> tmp dividends account
