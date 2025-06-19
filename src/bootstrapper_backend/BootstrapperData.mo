@@ -149,7 +149,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
     stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
-    stable var withdrawalInProgress = [var principalMap.empty<()>(), principalMap.empty<()>()];
+    stable var lockDividendsAccount = [var principalMap.empty<()>(), principalMap.empty<()>()];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
@@ -193,12 +193,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
-        withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, ());
+        lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, ());
         let result = try {
             let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
             let amount = _dividendsOwing(user, pstBalance, token);
             if (amount < Common.icp_transfer_fee) {
-                withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
             if ((await icrc1.icrc1_balance_of(accountWithDividends(user))) != 0) { // FIXME@P1: Also account on it nonzero but below the fee.
@@ -213,7 +213,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 created_at_time = null;
             });
             let #Ok _ = res else {
-                withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
@@ -222,7 +222,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
         } finally {
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
         };
         result;
     };
@@ -244,7 +244,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             let #Ok _ = res else {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], caller);
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
             amount;
         } catch (err) {
             Debug.trap("transfer failed: " # Error.message(err));
@@ -258,7 +258,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
 
-        let ongoing = principalMap.get(withdrawalInProgress[i], caller);
+        let ongoing = principalMap.get(lockDividendsAccount[i], caller);
         if (Option.isSome(ongoing)) {
             return await finishWithdrawDividends(token, to);
         } else {
