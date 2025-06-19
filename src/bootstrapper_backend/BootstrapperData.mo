@@ -190,7 +190,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
-    private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
+    private func putDividendsOnTmpAccount(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
         lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, ());
@@ -262,7 +262,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         if (Option.isSome(ongoing)) {
             return await finishWithdrawDividends(token, to);
         } else {
-            let moved = await startWithdrawDividends(caller, token);
+            let moved = await putDividendsOnTmpAccount(caller, token);
             if (moved == 0) { return 0; };
             return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
         };
