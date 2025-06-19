@@ -21,7 +21,6 @@ import ICPLedger "canister:nns-ledger";
 import Account "../lib/Account";
 import Common "../common";
 import env "mo:env";
-import Wallet "wallet";
 
 shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc1 : ?ICRC1.InitArgs;

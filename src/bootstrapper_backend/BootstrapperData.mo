@@ -18,6 +18,7 @@ import PST "canister:pst";
 import ledger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
 
+// TODO@P1: Add icrc3 and icrc4 code.
 persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public type PubKey = Blob;
 
@@ -191,15 +192,19 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
     private func startWithdrawDividends(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
+        let icrc1 = icrc1Token(token);
         withdrawalInProgress[i] := principalMap.put(withdrawalInProgress[i], user, ());
         let result = try {
-            let balance = await PST.icrc1_balance_of({owner = user; subaccount = null});
-            let amount = _dividendsOwing(user, balance, token);
+            let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
+            let amount = _dividendsOwing(user, pstBalance, token);
             if (amount < Common.icp_transfer_fee) {
                 withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
                 return 0;
             };
-            let res = await icrc1Token(token).icrc1_transfer({
+            if (await icrc1.icrc1_balance_of(accountWithDividends(user)) != 0) { // FIXME@P1: Also account on it nonzero but below the fee.
+                return 0; // FIXME@P1
+            };
+            let res = await icrc1.icrc1_transfer({ // -> tmp dividends account
                 memo = null;
                 amount = amount - Common.icp_transfer_fee;
                 fee = null;
@@ -252,6 +257,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
+
         let ongoing = principalMap.get(withdrawalInProgress[i], caller);
         if (Option.isSome(ongoing)) {
             return await finishWithdrawDividends(token, to);

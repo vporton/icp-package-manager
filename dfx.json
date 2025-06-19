@@ -42,7 +42,7 @@
     },
     "bootstrapper_data": {
       "args": "--enhanced-orthogonal-persistence",
-      "dependencies": [],
+      "dependencies": ["pst"],
       "main": "src/bootstrapper_backend/BootstrapperData.mo",
       "metadata": [
         {
