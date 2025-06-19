@@ -217,12 +217,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
             amount;
         } catch (err) {
-            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
             Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
+        } finally {
+            withdrawalInProgress[i] := principalMap.delete(withdrawalInProgress[i], user);
         };
         result;
     };
