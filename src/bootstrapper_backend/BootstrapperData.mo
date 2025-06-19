@@ -149,7 +149,9 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
     stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
-    stable var lockDividendsAccount = [var principalMap.empty<()>(), principalMap.empty<()>()];
+    stable var lockDividendsAccount = [
+        var principalMap.empty<{lastDividendsPerToken: Nat}>(), principalMap.empty<{lastDividendsPerToken: Nat}>()
+    ];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
@@ -167,6 +169,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
     };
 
+    // FIXME@P1: It isn't called.
     func recalculateShareholdersDebt(amount: Nat, token: Token) : async () {
         let totalSupply = await PST.icrc1_total_supply();
         let i = tokenIndex(token);
@@ -193,10 +196,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     private func putDividendsOnTmpAccount(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
-        lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, ());
         let result = try {
             let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
             let amount = _dividendsOwing(user, pstBalance, token);
+            lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {lastDividendsPerToken = amount});
             if (amount < Common.icp_transfer_fee) {
                 lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
