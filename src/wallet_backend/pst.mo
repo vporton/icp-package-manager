@@ -434,7 +434,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             lockInvestAccount := principalMap.put(lockInvestAccount, user, lock);
         };
 
-        switch(await ICPLedger.icrc1_transfer({
+        if (not await ledgerTransferICP({
             to = accountWithInvestment(user);
             fee = null;
             memo = null;
@@ -442,12 +442,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             created_at_time = ?lock.createdAtTime;
             amount;
         })) {
-            case (#Ok _) {};
-            case (#Err(#Duplicate _)) {};
-            case (#Err e) {
-                lockInvestAccount := principalMap.put(lockInvestAccount, user, {lock with transferring = false; createdAtTime = 0 : Nat64});
-                return (); // FIXME@P1
-            };
+            lockInvestAccount := principalMap.put(lockInvestAccount, user, {lock with transferring = false; createdAtTime = 0 : Nat64});
+            return (); // FIXME@P1
         };
 
         lockInvestAccount := principalMap.delete(lockInvestAccount, user);
@@ -538,6 +534,37 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         removed;
     };
 
+    private func ledgerMint(toAccount : ICRC1.Account, amount : Nat, ts : Nat64) : async Bool {
+        let res = switch (await* icrc1().mint_tokens(owner, {
+            to = toAccount;
+            amount;
+            memo = null;
+            created_at_time = ?ts;
+        })) {
+            case(#trappable(val)) val;
+            case(#awaited(val)) val;
+            case(#err(_)) return false;
+        };
+        switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
+    };
+
+    private func ledgerTransferPST(user : Principal, args : ICRC1.TransferArgs) : async Bool {
+        let res = switch(await* icrc1().transfer_tokens(user, args, false, null)) {
+            case(#trappable(val)) val;
+            case(#awaited(val)) val;
+            case(#err(_)) return false;
+        };
+        switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
+    };
+
+    private func ledgerTransferICP(args : ICPLedger.TransferArgs) : async Bool {
+        switch(await ICPLedger.icrc1_transfer(args)) {
+            case (#Ok _) true;
+            case (#Err(#Duplicate _)) true;
+            case (#Err _) false;
+        };
+    };
+
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
@@ -584,37 +611,12 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // Mint PST before performing any transfers if not done yet.
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
-            // We don't use `await mint()` also because it's async and breaks reliability.
-            let mintRes = switch (await* icrc1().mint_tokens(owner, {
-              to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
-              amount = lock.minted;
-              memo = null;
-              created_at_time = ?lock.createdAtTime;
-            })) {
-              case(#trappable(val)) val;
-              case(#awaited(val)) val;
-              case(#err(#trappable(err))) {
-                release();
-                return (); // FIXME@P1
-              };
-              case(#err(#awaited(err))) {
-                release();
-                return (); // FIXME@P1
-              };
-            };
-            switch(mintRes) {
-              case (#Ok _) {
+            if (await ledgerMint({owner = wallet; subaccount = ?(Common.principalToSubaccount(user))}, lock.minted, lock.createdAtTime)) {
                 lock := { lock with mintedDone = true };
                 tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
-              };
-              case (#Err(#Duplicate _)) {
-                lock := { lock with mintedDone = true };
-                tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
-              };
-              case (#Err _) {
+            } else {
                 release();
                 return (); // FIXME@P1
-              };
             };
         };
 
@@ -624,32 +626,16 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           subaccount = ?(Common.principalToSubaccount(user));
         };
         if (icrc1().balance_of(pstAccount) > 0) {
-          let transferRes = switch(await* icrc1().transfer_tokens(user, {
+          if (not await ledgerTransferPST(user, {
             memo = null;
             amount = lock.minted;
             fee = null;
             from_subaccount = pstAccount.subaccount;
             to = {owner = recipientAccount; subaccount = null};
             created_at_time = null;
-          }, false, null)) {
-            case(#trappable(val)) val;
-            case(#awaited(val)) val;
-            case(#err(#trappable(err))) {
-              release();
-              return (); // FIXME@P1
-            };
-            case(#err(#awaited(err))) {
-              release();
-              return (); // FIXME@P1
-            };
-          };
-          switch(transferRes) {
-            case (#Ok _) {};
-            case (#Err(#Duplicate _)) {};
-            case (#Err e) {
-              release();
-              return ();
-            };
+          })) {
+            release();
+            return ();
           };
           if (icrc1().balance_of(pstAccount) > 0) {
             release();
@@ -660,7 +646,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // Transfer invested ICP to the revenue recipient.
         let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
         if (icpBalance > Common.icp_transfer_fee) {
-          switch(await ICPLedger.icrc1_transfer({
+          if (not await ledgerTransferICP({
               to = { owner = revenueRecipient; subaccount = null };
               fee = null;
               memo = null;
@@ -668,12 +654,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
               created_at_time = ?lock.createdAtTime;
               amount = lock.invest;
           })) {
-              case (#Ok _) {};
-              case (#Err(#Duplicate _)) {};
-              case (#Err e) {
-                  release();
-                  return ();
-              };
+              release();
+              return ();
           };
           let icpAfter = await ICPLedger.icrc1_balance_of(investmentAccount);
           if (icpAfter > Common.icp_transfer_fee) {
