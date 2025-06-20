@@ -645,6 +645,10 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         totalInvested += lock.invest;
         totalMinted += lock.minted;
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+        // Remove any investment lock since the invested ICP was drained
+        // from the user's dedicated account. This prevents retries from
+        // attempting `icrc1_transfer` again with stale timestamps.
+        lockInvestAccount := principalMap.delete(lockInvestAccount, user);
         release();
         (); // FIXME@P1
     };
