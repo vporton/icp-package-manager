@@ -3,10 +3,12 @@ import D "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 
 import Blob "mo:base/Blob";
+import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Float "mo:base/Float";
+import Nat64 "mo:base/Nat64";
 
 import CertifiedData "mo:base/CertifiedData";
 import Array "mo:base/Array";
@@ -519,7 +521,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             to = { owner = revenueRecipient; subaccount = null };
             fee = null;
             memo = null;
-            from_subaccount = ?investmentAccount.subaccount;
+            from_subaccount = investmentAccount.subaccount;
             created_at_time = ?lock.createdAtTime;
             amount = lock.invest;
         })) {
@@ -536,7 +538,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           memo = null;
           amount = lock.invest;
           fee = null;
-          from_subaccount = ?investmentAccount.subaccount;
+          from_subaccount = investmentAccount.subaccount;
           to = recipientAccount;
           created_at_time = null;
         })) {
