@@ -145,8 +145,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// a share of previously declared dividends.  `dividendPerToken*` store the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
+    /// Accumulated dividend:
     stable let dividendPerToken = [var 0, 0];
-    // TODO: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
+    // TODO@P1: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
+    /// Snapshot of (all, not per user) dividends at the last payment point for a particular user:
     stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
     stable var lockDividendsAccount = [
@@ -193,16 +195,20 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
+    ///
+    /// We may need to call this several times, because transfer may fail (e.g. due to network congestion).
     private func putDividendsOnTmpAccount(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
-        let result = try {
+        try {
             let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
             let amount = switch (principalMap.get(lockDividendsAccount[i], user)) {
                 case (?{lastDividendsPerToken}) lastDividendsPerToken;
                 case null {
                     let amount = _dividendsOwing(user, pstBalance, token);
-                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {lastDividendsPerToken = amount});
+                    lockDividendsAccount[i] := principalMap.put(
+                        lockDividendsAccount[i], user, {lastDividendsPerToken = lastDividendsPerToken[i] + amount}
+                    );
                     amount;
                 };
             };
@@ -211,7 +217,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             };
             let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
             if (existing >= Common.icp_transfer_fee) {
-                return 0;
+                // If `icrc1_transfer` below fails, we come to this point in a repeated call and refuse to transfer again.
+                return existing;
             };
             let res = await icrc1.icrc1_transfer({ // -> tmp dividends account
                 memo = null;
@@ -224,7 +231,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             let #Ok _ = res else {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
-            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
+            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, lockDividendsAccount[i].lastDividendsPerToken);
             amount;
         } catch (err) {
             Debug.trap("withdraw dividends failed: " # Error.message(err));
@@ -232,19 +239,19 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         } finally {
             lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
         };
-        result;
     };
 
     /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
     public shared({caller}) func finishWithdrawDividends(token: Token, to: Account.Account) : async Nat {
+        // We don't need locking in this function, because we can't withdraw (from the tmp account) more than its balance.
         let i = tokenIndex(token);
         let acc = accountWithDividends(caller);
         let amount = await icrc1Token(token).icrc1_balance_of(acc);
         if (amount <= Common.icp_transfer_fee) {
-            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
+            // lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
             return 0;
         };
-        let result = try {
+        try {
             let res = await icrc1Token(token).icrc1_transfer({
                 memo = null;
                 amount = amount - Common.icp_transfer_fee;
@@ -256,29 +263,18 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             let #Ok _ = res else {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
-            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
             amount;
         } catch (err) {
             Debug.trap("transfer failed: " # Error.message(err));
             0;
         };
-        result;
     };
 
     /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
-        let i = tokenIndex(token);
-
-        let acc = accountWithDividends(caller);
-        let tmp = await icrc1Token(token).icrc1_balance_of(acc);
-        let ongoing = principalMap.get(lockDividendsAccount[i], caller);
-        if (Option.isSome(ongoing) or tmp != 0) {
-            return await finishWithdrawDividends(token, to);
-        } else {
-            let moved = await putDividendsOnTmpAccount(caller, token);
-            if (moved == 0) { return 0; };
-            return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
-        };
+        let moved = await putDividendsOnTmpAccount(caller, token);
+        if (moved == 0) { return 0; };
+        return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
     };
 }
