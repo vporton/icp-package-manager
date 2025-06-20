@@ -153,10 +153,44 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Indicates whether a withdrawal operation is in progress for a user.
     /// A lock entry for dividends withdrawal. `transferring` marks that a
     /// transfer to the temporary dividends account is in progress.
+    /// A lock entry used to control concurrent dividends withdrawals.
+    public type DividendsLock = {
+        owedAmount: Nat;
+        dividendsCheckpoint: Nat;
+        transferring: Bool;
+        createdAtTime: Nat64;
+    };
+
+    private let emptyDividendsLock : DividendsLock = {
+        owedAmount = 0;
+        dividendsCheckpoint = 0;
+        transferring = false;
+        createdAtTime = 0;
+    };
+
     stable var lockDividendsAccount = [
-        var principalMap.empty<{owedAmount: Nat; dividendsCheckpoint: Nat; transferring: Bool; createdAtTime: Nat64}>(),
-        principalMap.empty<{owedAmount: Nat; dividendsCheckpoint: Nat; transferring: Bool; createdAtTime: Nat64}>()
+        var principalMap.empty<DividendsLock>(),
+        principalMap.empty<DividendsLock>()
     ];
+
+    /// Return the lock entry for a user or trap if it doesn't exist.
+    private func dividendsLock(i: Nat, user: Principal) : DividendsLock {
+        switch (principalMap.get(lockDividendsAccount[i], user)) {
+            case (?l) l;
+            case null Debug.trap("dividends lock missing");
+        }
+    };
+
+    /// Ensure that a lock entry exists and return it.
+    private func ensureDividendsLock(i: Nat, user: Principal) : DividendsLock {
+        switch (principalMap.get(lockDividendsAccount[i], user)) {
+            case (?l) l;
+            case null {
+                lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, emptyDividendsLock);
+                emptyDividendsLock
+            }
+        }
+    };
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
@@ -198,16 +232,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
         try {
-            // Create a lock entry if none exists so that concurrent calls don't
-            // compute the dividend twice.
-            var lock = switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?l) l;
-                case null {
-                    let entry = {owedAmount = 0; dividendsCheckpoint = 0; transferring = false; createdAtTime = 0};
-                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, entry);
-                    entry
-                };
-            };
+            // Create a lock entry if none exists so that concurrent calls don't compute the dividend twice.
+            var lock = ensureDividendsLock(i, user);
             if (lock.owedAmount == 0) {
                 let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
                 let amount = _dividendsOwing(user, pstBalance, token);
@@ -215,10 +241,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, lock);
             };
-            var current = switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?c) c;
-                case null Debug.trap("dividends lock missing");
-            };
+            var current = dividendsLock(i, user);
             let amount = current.owedAmount;
 
             if (amount < Common.icp_transfer_fee) {
@@ -228,10 +251,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
             let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
 
-            current := switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?c) c;
-                case null Debug.trap("dividends lock missing");
-            };
+            current := dividendsLock(i, user);
 
             if (existing >= Common.icp_transfer_fee) {
                 dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
@@ -256,7 +276,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 case (#Ok _) {}
                 case (#Err(#Duplicate _)) {}
                 case (#Err e) {
-                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false});
+                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false; createdAtTime = 0});
                     Debug.trap("transfer failed: " # debug_show(res));
                 }
             };
