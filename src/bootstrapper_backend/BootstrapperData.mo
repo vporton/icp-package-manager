@@ -165,7 +165,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         owedAmount = 0;
         dividendsCheckpoint = 0;
         transferring = false;
-        createdAtTime = 0;
+        createdAtTime = 0 : Nat64;
     };
 
     stable var lockDividendsAccount = [
@@ -238,7 +238,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
                 let amount = _dividendsOwing(user, pstBalance, token);
                 let dividendsCheckpoint = dividendPerToken[i];
-                lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0};
+                lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0 : Nat64};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, lock);
             };
             var current = dividendsLock(i, user);
@@ -265,7 +265,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 case (#Ok _) {};
                 case (#Err(#Duplicate _)) {};
                 case (#Err e) {
-                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false; createdAtTime = 0});
+                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false; createdAtTime = 0 : Nat64});
                     Debug.trap("transfer failed: " # debug_show(res));
                 };
             };
