@@ -577,14 +577,26 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           subaccount = ?(Common.principalToSubaccount(user));
         };
         if (icrc1().balance_of(pstAccount) > 0) {
-          switch(await icrc1_transfer({
+          let transferRes = switch(await* icrc1().transfer_tokens(user, {
             memo = null;
             amount = lock.minted;
             fee = null;
             from_subaccount = pstAccount.subaccount;
             to = {owner = recipientAccount; subaccount = null};
             created_at_time = null;
-          })) {
+          }, false, null)) {
+            case(#trappable(val)) val;
+            case(#awaited(val)) val;
+            case(#err(#trappable(err))) {
+              release();
+              return (); // FIXME@P1
+            };
+            case(#err(#awaited(err))) {
+              release();
+              return (); // FIXME@P1
+            };
+          };
+          switch(transferRes) {
             case (#Ok _) {};
             case (#Err(#Duplicate _)) {};
             case (#Err e) {
