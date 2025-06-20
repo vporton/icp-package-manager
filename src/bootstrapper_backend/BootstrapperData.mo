@@ -147,17 +147,17 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
     /// Accumulated dividend:
     stable let dividendPerToken = [var 0, 0];
-    // TODO@P1: Set a heavy transfer fee of the PST to ensure that `lastDividendsPerToken*` doesn't take much memory.
+    // TODO@P1: Set a heavy transfer fee of the PST to ensure that `dividendsCheckpointPerToken*` doesn't take much memory.
     /// Snapshot of (all, not per user) dividends at the last payment point for a particular user:
-    stable var lastDividendsPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
+    stable var dividendsCheckpointPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
     stable var lockDividendsAccount = [
-        var principalMap.empty<{lastDividendsPerToken: Nat}>(), principalMap.empty<{lastDividendsPerToken: Nat}>()
+        var principalMap.empty<{dividendsCheckpoint: Nat}>(), principalMap.empty<{dividendsCheckpoint: Nat}>()
     ];
 
     private func _dividendsOwing(_account: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
-        let lastMap = lastDividendsPerToken[i];
+        let lastMap = dividendsCheckpointPerToken[i];
         let last = switch (principalMap.get(lastMap, _account)) {
             case (?value) { value };
             case (null) { 0 };
@@ -203,24 +203,26 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         try {
             let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
             let amount = switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?{lastDividendsPerToken}) lastDividendsPerToken;
+                case (?{dividendsCheckpoint}) dividendsCheckpoint;
                 case null {
                     let amount = _dividendsOwing(user, pstBalance, token);
-                    let dividendsCheckpoint = switch (principalMap.get(lastDividendsPerToken[i], user)) { 
+                    let dividendsCheckpoint = switch (principalMap.get(dividendsCheckpointPerToken[i], user)) { 
                         case (?old) old + amount;
                         case null amount;
                     };
                     lockDividendsAccount[i] := principalMap.put(
-                        lockDividendsAccount[i], user, {lastDividendsPerToken = dividendsCheckpoint}
+                        lockDividendsAccount[i], user, {dividendsCheckpoint}
                     );
                     amount;
                 };
             };
             if (amount < Common.icp_transfer_fee) {
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
             let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
             if (existing >= Common.icp_transfer_fee) {
+                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 // If `icrc1_transfer` below fails, we come to this point in a repeated call and refuse to transfer again.
                 return existing;
             };
@@ -236,16 +238,15 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             let dividendsCheckpoint2 = switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?point) point.lastDividendsPerToken;
+                case (?point) point.dividendsCheckpoint;
                 case null 0; // TODO@P3: Do we need this branch of `switch`?
             };
-            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendsCheckpoint2);
+            dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, dividendsCheckpoint2);
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
             amount;
         } catch (err) {
             Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
-        } finally {
-            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
         };
     };
 
