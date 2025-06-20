@@ -186,14 +186,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     private func accountWithDividends(user: Principal): Account.Account {
       // TODO: duplicate code
       let random: Blob = "\c2\78\8d\f0\0e\52\bb\5b\0b\b8\e6\98\ae\b3\87\d2\aa\54\91\ee\61\36\c9\86\85\df\78\09\cd\98\90\50"; // unique 256 bit
-      let principalBlob = Principal.toBlob(user);
-      let principalArray = Blob.toArray(principalBlob);
-      let randomArray = Blob.toArray(random);
-      let joined = Array.tabulate(
-        32 + Array.size(principalArray),
-        func (i: Nat): Nat8 = if (i < 32) { randomArray[i] } else { principalArray[i-32] }
-      );
-      let subaccount = Sha256.fromBlob(#sha256, Blob.fromArray(joined));
+      let joined = Blob.fromArray(Array.append<Nat8>(Blob.toArray(random), Blob.toArray(Principal.toBlob(user))));
+      let subaccount = Sha256.fromBlob(#sha256, joined);
       { owner = Principal.fromActor(this); subaccount = ?subaccount };
     };
 
@@ -214,14 +208,8 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                     entry
                 };
             };
-
-            let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
-
-            lock := switch (principalMap.get(lockDividendsAccount[i], user)) {
-                case (?l) l;
-                case null Debug.trap("dividends lock vanished");
-            };
             if (lock.owedAmount == 0) {
+                let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
                 let amount = _dividendsOwing(user, pstBalance, token);
                 let dividendsCheckpoint = dividendPerToken[i];
                 lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0};
@@ -251,55 +239,30 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 return existing;
             };
 
-            if (current.transferring) {
-                let res = await icrc1.icrc1_transfer({
-                    memo = null;
-                    amount = amount - Common.icp_transfer_fee;
-                    fee = null;
-                    from_subaccount = null;
-                    to = accountWithDividends(user);
-                    created_at_time = ?current.createdAtTime;
-                });
-                switch (res) {
-                    case (#Ok _) {}
-                    case (#Err(#Duplicate _)) {}
-                    case (#Err e) {
-                        lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false});
-                        Debug.trap("transfer failed: " # debug_show(res));
-                    }
-                };
-                dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
-                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
-                return amount;
-            };
-
             if (not current.transferring) {
                 let ts = if (current.createdAtTime == 0) { Nat64.fromNat(Int.abs(Time.now())) } else { current.createdAtTime };
                 current := {current with transferring = true; createdAtTime = ts};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, current);
-                let res = await icrc1.icrc1_transfer({ // -> tmp dividends account
-                    memo = null;
-                    amount = amount - Common.icp_transfer_fee;
-                    fee = null;
-                    from_subaccount = null;
-                    to = accountWithDividends(user);
-                    created_at_time = ?ts;
-                });
-                switch (res) {
-                    case (#Ok _) {}
-                    case (#Err(#Duplicate _)) {}
-                    case (#Err e) {
-                        lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false});
-                        Debug.trap("transfer failed: " # debug_show(res));
-                    }
-                };
-                dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
-                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
-                return amount;
             };
-
-            // Should not reach here
-            0;
+            let res = await icrc1.icrc1_transfer({
+                memo = null;
+                amount = amount - Common.icp_transfer_fee;
+                fee = null;
+                from_subaccount = null;
+                to = accountWithDividends(user);
+                created_at_time = ?current.createdAtTime;
+            });
+            switch (res) {
+                case (#Ok _) {}
+                case (#Err(#Duplicate _)) {}
+                case (#Err e) {
+                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false});
+                    Debug.trap("transfer failed: " # debug_show(res));
+                }
+            };
+            dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
+            return amount;
         } catch (err) {
             Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
@@ -311,13 +274,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         // We don't need locking in this function, because we can't withdraw (from the tmp account) more than its balance.
         let i = tokenIndex(token);
         let acc = accountWithDividends(caller);
-        let amount = await icrc1Token(token).icrc1_balance_of(acc);
+        let tokenSvc = icrc1Token(token);
+        let amount = await tokenSvc.icrc1_balance_of(acc);
         if (amount <= Common.icp_transfer_fee) {
             // lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
             return 0;
         };
         try {
-            let res = await icrc1Token(token).icrc1_transfer({
+            let res = await tokenSvc.icrc1_transfer({
                 memo = null;
                 amount = amount - Common.icp_transfer_fee;
                 fee = null;
