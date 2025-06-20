@@ -460,6 +460,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
     public type MintLock = {
         minted: Nat;
+        invest: Nat;
         createdAtTime: Nat64;
     };
 
@@ -505,17 +506,15 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             let mintedF = newMintedF - prevMintedF;
             let mintedInt = Int.abs(Float.toInt(mintedF));
             let minted : Nat = Int.abs(mintedInt);
-            totalInvested += invest;
-            totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
             let ts = Nat64.fromNat(Int.abs(Time.now()));
-            let nl : MintLock = { minted; createdAtTime = ts };
+            let nl : MintLock = { minted; invest; createdAtTime = ts };
             tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
             nl;
           };
         };
         // await icrc1_transfer({ // FIXME@P1: Uncomment.
         //   memo = null;
-        //   amount = invest;
+        //   amount = lock.invest;
         //   fee = null;
         //   from_subaccount = ?investmentAccount.subaccount;
         //   to = recipientAccount;
@@ -541,6 +540,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             return (); // FIXME@P1
           };
         };
+        totalInvested += lock.invest;
+        totalMinted += lock.minted;
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
         release();
         (); // FIXME@P1
