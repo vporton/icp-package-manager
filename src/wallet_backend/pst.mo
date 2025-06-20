@@ -460,6 +460,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
     public type MintLock = {
         minted: Nat;
+        invest: Nat;
         createdAtTime: Nat64;
     };
 
@@ -493,22 +494,28 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             let mintedF = newMintedF - prevMintedF;
             let mintedInt = Int.abs(Float.toInt(mintedF));
             let minted : Nat = Int.abs(mintedInt);
-            totalInvested += invest;
-            totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
             let ts = Nat64.fromNat(Int.abs(Time.now()));
-            let nl : MintLock = { minted; createdAtTime = ts };
+            let nl : MintLock = { minted; invest; createdAtTime = ts };
             tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
             nl;
           };
         };
-        // await icrc1_transfer({ // FIXME@P1: Uncomment.
-        //   memo = null;
-        //   amount = invest;
-        //   fee = null;
-        //   from_subaccount = ?investmentAccount.subaccount;
-        //   to = recipientAccount;
-        //   created_at_time = null;
-        // });
+
+        // Transfer invested ICP to the revenue recipient.
+        let investmentAccount = accountWithInvestment(user);
+        switch(await ICPLedger.icrc1_transfer({
+            to = { owner = revenueRecipient; subaccount = null };
+            fee = null;
+            memo = null;
+            from_subaccount = ?investmentAccount.subaccount;
+            created_at_time = ?lock.createdAtTime;
+            amount = lock.invest;
+        })) {
+            case (#Ok _) {};
+            case (#Err(#Duplicate _)) {};
+            case (#Err e) { return (); };
+        };
+
         // FIXME@P1: Need to ensure that indebt() is called exactly once.
 
         // We don't use `await mint()` also because it's async and breaks reliability.
@@ -524,6 +531,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           case(#err(#awaited(err))) D.trap(err);
         };
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+        totalInvested += lock.invest;
+        totalMinted += lock.minted;
         (); // FIXME@P1
     };
 }
