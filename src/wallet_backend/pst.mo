@@ -374,6 +374,24 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// Total ICPACK tokens minted via investments.
     stable var totalMinted : Nat = 0;
 
+    private let limitTokens : Nat = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
+
+    /// Return how many PST tokens `invest` ICP will mint when `prevMinted`
+    /// tokens have been minted already. Returns `null` if the investment would
+    /// exceed the hard cap.
+    private func mintedForInvestment(prevMinted : Nat, invest : Nat) : ?Nat {
+        let limitF = Float.fromInt(limitTokens);
+        let prevMintedF = Float.fromInt(prevMinted);
+        let investF = Float.fromInt(invest);
+        let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
+        if (newMintedF > limitF) {
+            return null;
+        };
+        let mintedF = newMintedF - prevMintedF;
+        let mintedInt = Int.abs(Float.toInt(mintedF));
+        ?Int.abs(mintedInt);
+    };
+
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// A temporary account to put investment to before it is finally withdrawn.
@@ -564,24 +582,18 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             };
             let invest = icpBalance - Common.icp_transfer_fee;
 
-            let limitTokens = 3_333_332_000_000; // ~33,333.32 ICPACK in e8s
-
-            let limitF = Float.fromInt(limitTokens);
-            let prevMintedF = Float.fromInt(totalMinted);
-            let investF = Float.fromInt(invest);
-
-            let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
-            if (newMintedF > limitF) {
-                release();
-                return; // #Err(#GenericError{ error_code = 1; message = "investment overflow" }); // FIXME: return value
+            switch (mintedForInvestment(totalMinted, invest)) {
+                case (?minted) {
+                    let ts = Nat64.fromNat(Int.abs(Time.now()));
+                    let nl : MintLock = { minted; invest; createdAtTime = ts; mintedDone = false };
+                    tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
+                    nl;
+                };
+                case null {
+                    release();
+                    return (); // investment overflow
+                };
             };
-            let mintedF = newMintedF - prevMintedF;
-            let mintedInt = Int.abs(Float.toInt(mintedF));
-            let minted : Nat = Int.abs(mintedInt);
-            let ts = Nat64.fromNat(Int.abs(Time.now()));
-            let nl : MintLock = { minted; invest; createdAtTime = ts; mintedDone = false };
-            tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
-            nl;
           };
         };
 
