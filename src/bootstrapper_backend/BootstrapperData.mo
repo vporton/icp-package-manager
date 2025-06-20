@@ -206,8 +206,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 case (?{lastDividendsPerToken}) lastDividendsPerToken;
                 case null {
                     let amount = _dividendsOwing(user, pstBalance, token);
+                    let dividendsCheckpoint = switch (principalMap.get(lastDividendsPerToken[i], user)) { 
+                        case (?old) old + amount;
+                        case null amount;
+                    };
                     lockDividendsAccount[i] := principalMap.put(
-                        lockDividendsAccount[i], user, {lastDividendsPerToken = lastDividendsPerToken[i] + amount}
+                        lockDividendsAccount[i], user, {lastDividendsPerToken = dividendsCheckpoint}
                     );
                     amount;
                 };
@@ -231,7 +235,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             let #Ok _ = res else {
                 Debug.trap("transfer failed: " # debug_show(res));
             };
-            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, lockDividendsAccount[i].lastDividendsPerToken);
+            let dividendsCheckpoint2 = switch (principalMap.get(lockDividendsAccount[i], user)) {
+                case (?point) point.lastDividendsPerToken;
+                case null 0; // TODO@P3: Do we need this branch of `switch`?
+            };
+            lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendsCheckpoint2);
             amount;
         } catch (err) {
             Debug.trap("withdraw dividends failed: " # Error.message(err));
