@@ -462,10 +462,17 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
     };
 
+    public type MintStage = {
+        #Init;
+        #IcpTransferred;
+        #PstTransferred;
+    };
+
     public type MintLock = {
         minted: Nat;
         invest: Nat;
         createdAtTime: Nat64;
+        stage: MintStage;
     };
 
     /// The ICPACK token has been delivered to user.
@@ -484,7 +491,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         func release() {
             finishBuyLock := principalMap.delete(finishBuyLock, user);
         };
-        let lock = switch (principalMap.get(tokenToDeliver, user)) {
+        var lock = switch (principalMap.get(tokenToDeliver, user)) {
           case (?l) l;
           case null {
             let investmentAccount = accountWithInvestment(user);
@@ -511,7 +518,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             let mintedInt = Int.abs(Float.toInt(mintedF));
             let minted : Nat = Int.abs(mintedInt);
             let ts = Nat64.fromNat(Int.abs(Time.now()));
-            let nl : MintLock = { minted; invest; createdAtTime = ts };
+            let nl : MintLock = { minted; invest; createdAtTime = ts; stage = #Init };
             tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
             nl;
           };
@@ -519,60 +526,70 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
         // Transfer invested ICP to the revenue recipient.
         let investmentAccount = accountWithInvestment(user);
-        switch(await ICPLedger.icrc1_transfer({
-            to = { owner = revenueRecipient; subaccount = null };
-            fee = null;
-            memo = null;
-            from_subaccount = investmentAccount.subaccount;
-            created_at_time = ?lock.createdAtTime;
-            amount = lock.invest;
-        })) {
-            case (#Ok _) {};
-            case (#Err(#Duplicate _)) {};
-            case (#Err e) {
-                release();
-                return (); 
-            };
+        if (lock.stage == #Init) {
+          switch(await ICPLedger.icrc1_transfer({
+              to = { owner = revenueRecipient; subaccount = null };
+              fee = null;
+              memo = null;
+              from_subaccount = investmentAccount.subaccount;
+              created_at_time = ?lock.createdAtTime;
+              amount = lock.invest;
+          })) {
+              case (#Ok _) {};
+              case (#Err(#Duplicate _)) {};
+              case (#Err e) {
+                  release();
+                  return ();
+              };
+          };
+          lock := { lock with stage = #IcpTransferred };
+          tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
         };
 
         // Transfer minted PST to the recipient account.
-        switch(await icrc1_transfer({
-          memo = null;
-          amount = lock.invest;
-          fee = null;
-          from_subaccount = investmentAccount.subaccount;
-          to = {owner = recipientAccount; subaccount = null};
-          created_at_time = null;
-        })) {
-          case (#Ok _) {};
-          case (#Err(#Duplicate _)) {};
-          case (#Err e) {
-            release();
-            return (); 
+        if (lock.stage == #IcpTransferred) {
+          switch(await icrc1_transfer({
+            memo = null;
+            amount = lock.invest;
+            fee = null;
+            from_subaccount = investmentAccount.subaccount;
+            to = {owner = recipientAccount; subaccount = null};
+            created_at_time = null;
+          })) {
+            case (#Ok _) {};
+            case (#Err(#Duplicate _)) {};
+            case (#Err e) {
+              release();
+              return ();
+            };
           };
+          lock := { lock with stage = #PstTransferred };
+          tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
         };
 
         // We don't use `await mint()` also because it's async and breaks reliability.
-        let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
-          to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
-          amount = lock.minted;
-          memo = null;
-          created_at_time = ?lock.createdAtTime;
-        })) {
-          case(#trappable(val)) val;
-          case(#awaited(val)) val;
-          case(#err(#trappable(err))) {
-            release();
-            return (); // FIXME@P1
+        if (lock.stage == #PstTransferred) {
+          let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
+            to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
+            amount = lock.minted;
+            memo = null;
+            created_at_time = ?lock.createdAtTime;
+          })) {
+            case(#trappable(val)) val;
+            case(#awaited(val)) val;
+            case(#err(#trappable(err))) {
+              release();
+              return (); // FIXME@P1
+            };
+            case(#err(#awaited(err))) {
+              release();
+              return (); // FIXME@P1
+            };
           };
-          case(#err(#awaited(err))) {
-            release();
-            return (); // FIXME@P1
-          };
+          totalInvested += lock.invest;
+          totalMinted += lock.minted;
+          tokenToDeliver := principalMap.delete(tokenToDeliver, user);
         };
-        totalInvested += lock.invest;
-        totalMinted += lock.minted;
-        tokenToDeliver := principalMap.delete(tokenToDeliver, user);
         release();
         (); // FIXME@P1
     };
