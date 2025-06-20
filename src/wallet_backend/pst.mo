@@ -235,7 +235,15 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
   public shared ({ caller }) func mint(args : ICRC1.Mint) : async ICRC1.TransferResult {
       if(caller != owner){ D.trap("Unauthorized")};
 
-      switch( await* icrc1().mint_tokens(caller, args)){
+      let nowTs = Nat64.fromNat(Int.abs(Time.now()));
+      let mintArgs : ICRC1.Mint = {
+        args with created_at_time = switch(args.created_at_time){
+          case(null) ?nowTs;
+          case(?t) ?t;
+        }
+      };
+
+      switch( await* icrc1().mint_tokens(caller, mintArgs)){
         case(#trappable(val)) val;
         case(#awaited(val)) val;
         case(#err(#trappable(err))) D.trap(err);
