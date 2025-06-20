@@ -467,15 +467,26 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// The ICPACK token has been delivered to user.
     stable var tokenToDeliver = principalMap.empty<MintLock>(); // FIXME@P1: Limit the storage.
 
+    /// Users currently executing `finishBuyWithICP`.
+    stable var finishBuyLock = principalMap.empty<Bool>();
+
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
+        if (principalMap.get(finishBuyLock, user) != null) {
+            return (); // already running
+        };
+        finishBuyLock := principalMap.put(finishBuyLock, user, true);
+        func release() {
+            finishBuyLock := principalMap.delete(finishBuyLock, user);
+        };
         let lock = switch (principalMap.get(tokenToDeliver, user)) {
           case (?l) l;
           case null {
             let investmentAccount = accountWithInvestment(user);
             let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
             if (icpBalance <= Common.icp_transfer_fee) {
+                release();
                 return (); // FIXME@P1
                 // return #Err(#GenericError{ error_code = 0; message = "no ICP" });
             };
@@ -489,6 +500,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
             let newMintedF = limitF - (limitF - prevMintedF) * Float.exp(-4.0 * investF / (3.0 * limitF));
             if (newMintedF > limitF) {
+                release();
                 return; // #Err(#GenericError{ error_code = 1; message = "investment overflow" }); // FIXME: return value
             };
             let mintedF = newMintedF - prevMintedF;
@@ -516,7 +528,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             case (#Err e) { return (); };
         };
 
-        // FIXME@P1: Need to ensure that indebt() is called exactly once.
+        await icrc1_transfer({
+          memo = null;
+          amount = lock.invest;
+          fee = null;
+          from_subaccount = ?investmentAccount.subaccount;
+          to = recipientAccount;
+          created_at_time = null;
+        });
 
         // We don't use `await mint()` also because it's async and breaks reliability.
         let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
@@ -527,12 +546,21 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         })) {
           case(#trappable(val)) val;
           case(#awaited(val)) val;
-          case(#err(#trappable(err))) D.trap(err);
-          case(#err(#awaited(err))) D.trap(err);
+          case(#err(#trappable(err))) {
+            release();
+            return (); // FIXME@P1
+          };
+          case(#err(#awaited(err))) {
+            release();
+            return (); // FIXME@P1
+          };
         };
+        totalInvested += lock.invest;
+        totalMinted += lock.minted;
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
         totalInvested += lock.invest;
         totalMinted += lock.minted;
+        release();
         (); // FIXME@P1
     };
 }
