@@ -223,10 +223,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             };
             if (lock.owedAmount == 0) {
                 let amount = _dividendsOwing(user, pstBalance, token);
-                let dividendsCheckpoint = switch (principalMap.get(dividendsCheckpointPerToken[i], user)) {
-                    case (?old) old + amount;
-                    case null amount;
-                };
+                let dividendsCheckpoint = dividendPerToken[i];
                 lock := {owedAmount = amount; dividendsCheckpoint; transferring = false};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, lock);
             };
