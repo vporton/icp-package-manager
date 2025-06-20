@@ -248,17 +248,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
-
-            let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
-
-            current := dividendsLock(i, user);
-
-            if (existing >= Common.icp_transfer_fee) {
-                dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
-                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
-                return existing;
-            };
-
             if (not current.transferring) {
                 let ts = if (current.createdAtTime == 0) { Nat64.fromNat(Int.abs(Time.now())) } else { current.createdAtTime };
                 current := {current with transferring = true; createdAtTime = ts};
