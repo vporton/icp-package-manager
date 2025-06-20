@@ -589,7 +589,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
             // We don't use `await mint()` also because it's async and breaks reliability.
-            let _ = switch (await* icrc1().mint_tokens(owner, {
+            let mintRes = switch (await* icrc1().mint_tokens(owner, {
               to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
               amount = lock.minted;
               memo = null;
@@ -606,8 +606,20 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
                 return (); // FIXME@P1
               };
             };
-            lock := { lock with mintedDone = true };
-            tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
+            switch(mintRes) {
+              case (#Ok _) {
+                lock := { lock with mintedDone = true };
+                tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
+              };
+              case (#Err(#Duplicate _)) {
+                lock := { lock with mintedDone = true };
+                tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
+              };
+              case (#Err _) {
+                release();
+                return (); // FIXME@P1
+              };
+            };
         };
 
         // Transfer minted PST to the recipient account.
