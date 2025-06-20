@@ -572,37 +572,55 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
 
         // Transfer minted PST to the recipient account.
-        switch(await icrc1_transfer({
-          memo = null;
-          amount = lock.minted;
-          fee = null;
-          from_subaccount = ?(Common.principalToSubaccount(user));
-          to = {owner = recipientAccount; subaccount = null};
-          created_at_time = null;
-        })) {
-          case (#Ok _) {};
-          case (#Err(#Duplicate _)) {};
-          case (#Err e) {
+        let pstAccount = {
+          owner = wallet;
+          subaccount = ?(Common.principalToSubaccount(user));
+        };
+        if (icrc1().balance_of(pstAccount) > 0) {
+          switch(await icrc1_transfer({
+            memo = null;
+            amount = lock.minted;
+            fee = null;
+            from_subaccount = pstAccount.subaccount;
+            to = {owner = recipientAccount; subaccount = null};
+            created_at_time = null;
+          })) {
+            case (#Ok _) {};
+            case (#Err(#Duplicate _)) {};
+            case (#Err e) {
+              release();
+              return ();
+            };
+          };
+          if (icrc1().balance_of(pstAccount) > 0) {
             release();
             return ();
           };
         };
 
         // Transfer invested ICP to the revenue recipient.
-        switch(await ICPLedger.icrc1_transfer({
-            to = { owner = revenueRecipient; subaccount = null };
-            fee = null;
-            memo = null;
-            from_subaccount = investmentAccount.subaccount;
-            created_at_time = ?lock.createdAtTime;
-            amount = lock.invest;
-        })) {
-            case (#Ok _) {};
-            case (#Err(#Duplicate _)) {};
-            case (#Err e) {
-                release();
-                return ();
-            };
+        let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
+        if (icpBalance > Common.icp_transfer_fee) {
+          switch(await ICPLedger.icrc1_transfer({
+              to = { owner = revenueRecipient; subaccount = null };
+              fee = null;
+              memo = null;
+              from_subaccount = investmentAccount.subaccount;
+              created_at_time = ?lock.createdAtTime;
+              amount = lock.invest;
+          })) {
+              case (#Ok _) {};
+              case (#Err(#Duplicate _)) {};
+              case (#Err e) {
+                  release();
+                  return ();
+              };
+          };
+          let icpAfter = await ICPLedger.icrc1_balance_of(investmentAccount);
+          if (icpAfter > Common.icp_transfer_fee) {
+              release();
+              return ();
+          };
         };
         totalInvested += lock.invest;
         totalMinted += lock.minted;
