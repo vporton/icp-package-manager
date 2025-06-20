@@ -33,6 +33,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc2 : ?ICRC2.InitArgs;
   };
 
+  let recipientAccount = Principal.fromText(env.recipientAccount);
+
   private func default_icrc1(owner : Principal) : ICRC1.InitArgs {
     {
       name = ?"Test Token";
@@ -539,7 +541,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           amount = lock.invest;
           fee = null;
           from_subaccount = investmentAccount.subaccount;
-          to = recipientAccount;
+          to = {owner = recipientAccount; subaccount = null};
           created_at_time = null;
         })) {
           case (#Ok _) {};
