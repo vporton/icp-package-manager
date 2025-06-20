@@ -241,18 +241,17 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 return 0;
             };
 
-            var existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
+            let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
 
-            if (existing < Common.icp_transfer_fee and current.transferring) {
-                // Previous transfer failed; allow retry.
-                current := {current with transferring = false};
-                lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, current);
-            };
-
-            if (existing >= Common.icp_transfer_fee) {
-                dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
-                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
-                return existing;
+            if (current.transferring) {
+                if (existing >= Common.icp_transfer_fee) {
+                    dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
+                    lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
+                    return existing;
+                } else {
+                    // Another call is transferring, wait until it finishes.
+                    return 0;
+                };
             };
 
             if (not current.transferring) {
