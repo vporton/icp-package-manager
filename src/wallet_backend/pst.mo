@@ -290,6 +290,12 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     return icrc2().update_ledger_info(requests);
   };
 
+  public shared ({ caller }) func admin_clear_stale_finish_buy_locks() : async Nat {
+    if(caller != owner){ D.trap("Unauthorized")};
+    let now = Nat64.fromNat(Int.abs(Time.now()));
+    return cleanupFinishBuyLocks(now);
+  };
+
   /* /// Uncomment this code to establish have icrc1 notify you when a transaction has occured.
   private func transfer_listener(trx: ICRC1.Transaction, trxid: Nat) : () {
 
@@ -471,16 +477,37 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// The ICPACK token has been delivered to user.
     stable var tokenToDeliver = principalMap.empty<MintLock>(); // FIXME@P1: Limit the storage.
 
-    /// Users currently executing `finishBuyWithICP`.
-    stable var finishBuyLock = principalMap.empty<Bool>();
+    /// Users currently executing `finishBuyWithICP` with the timestamp when the
+    /// lock was acquired.
+    stable var finishBuyLock = principalMap.empty<Nat64>();
+    private let finishBuyLockTimeout : Nat64 = 30 * 60 * 1_000_000_000; // 30 min
+
+    private func cleanupFinishBuyLocks(now : Nat64) : Nat {
+        var removed : Nat = 0;
+        var i = finishBuyLock.entries();
+        loop {
+            switch(i.next()) {
+                case(null) break;
+                case(?(u, ts)) {
+                    if (ts + finishBuyLockTimeout < now) {
+                        finishBuyLock := principalMap.delete(finishBuyLock, u);
+                        removed += 1;
+                    };
+                };
+            };
+        };
+        removed;
+    };
 
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
+        let now = Nat64.fromNat(Int.abs(Time.now()));
+        ignore cleanupFinishBuyLocks(now);
         if (principalMap.get(finishBuyLock, user) != null) {
             return (); // already running
         };
-        finishBuyLock := principalMap.put(finishBuyLock, user, true);
+        finishBuyLock := principalMap.put(finishBuyLock, user, now);
         func release() {
             finishBuyLock := principalMap.delete(finishBuyLock, user);
         };
