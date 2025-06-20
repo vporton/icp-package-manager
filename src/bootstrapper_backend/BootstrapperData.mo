@@ -262,12 +262,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 created_at_time = ?current.createdAtTime;
             });
             switch (res) {
-                case (#Ok _) {}
-                case (#Err(#Duplicate _)) {}
+                case (#Ok _) {};
+                case (#Err(#Duplicate _)) {};
                 case (#Err e) {
                     lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {current with transferring = false; createdAtTime = 0});
                     Debug.trap("transfer failed: " # debug_show(res));
-                }
+                };
             };
             dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
             lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
