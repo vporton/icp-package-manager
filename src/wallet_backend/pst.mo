@@ -512,15 +512,30 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             nl;
           };
         };
-        // await icrc1_transfer({ // FIXME@P1: Uncomment.
-        //   memo = null;
-        //   amount = lock.invest;
-        //   fee = null;
-        //   from_subaccount = ?investmentAccount.subaccount;
-        //   to = recipientAccount;
-        //   created_at_time = null;
-        // });
-        // FIXME@P1: Need to ensure that indebt() is called exactly once.
+
+        // Transfer invested ICP to the revenue recipient.
+        let investmentAccount = accountWithInvestment(user);
+        switch(await ICPLedger.icrc1_transfer({
+            to = { owner = revenueRecipient; subaccount = null };
+            fee = null;
+            memo = null;
+            from_subaccount = ?investmentAccount.subaccount;
+            created_at_time = ?lock.createdAtTime;
+            amount = lock.invest;
+        })) {
+            case (#Ok _) {};
+            case (#Err(#Duplicate _)) {};
+            case (#Err e) { return (); };
+        };
+
+        await icrc1_transfer({
+          memo = null;
+          amount = lock.invest;
+          fee = null;
+          from_subaccount = ?investmentAccount.subaccount;
+          to = recipientAccount;
+          created_at_time = null;
+        });
 
         // We don't use `await mint()` also because it's async and breaks reliability.
         let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
@@ -543,6 +558,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         totalInvested += lock.invest;
         totalMinted += lock.minted;
         tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+        totalInvested += lock.invest;
+        totalMinted += lock.minted;
         release();
         (); // FIXME@P1
     };
