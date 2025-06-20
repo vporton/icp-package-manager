@@ -216,7 +216,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 created_at_time = null;
             });
             let #Ok _ = res else {
-                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 Debug.trap("transfer failed: " # debug_show(res));
             };
             lastDividendsPerToken[i] := principalMap.put(lastDividendsPerToken[i], user, dividendPerToken[i]);
