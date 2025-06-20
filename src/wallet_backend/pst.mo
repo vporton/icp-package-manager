@@ -434,14 +434,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             lockInvestAccount := principalMap.put(lockInvestAccount, user, lock);
         };
 
-        if (not await ledgerTransferICP({
+        if (not (await ledgerTransferICP({
             to = accountWithInvestment(user);
             fee = null;
             memo = null;
             from_subaccount = ?Common.principalToSubaccount(user);
             created_at_time = ?lock.createdAtTime;
             amount;
-        })) {
+        }))) {
             lockInvestAccount := principalMap.put(lockInvestAccount, user, {lock with transferring = false; createdAtTime = 0 : Nat64});
             return (); // FIXME@P1
         };
@@ -503,9 +503,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     private func cleanupTokenToDeliver(now : Nat64) : Nat {
         var removed : Nat = 0;
         var i = tokenToDeliver.entries();
-        loop {
+        label x loop {
             switch(i.next()) {
-                case(null) break;
+                case(null) break x;
                 case(?(u, lock)) {
                     if (lock.createdAtTime + tokenToDeliverTimeout < now) {
                         tokenToDeliver := principalMap.delete(tokenToDeliver, u);
@@ -520,9 +520,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     private func cleanupFinishBuyLocks(now : Nat64) : Nat {
         var removed : Nat = 0;
         var i = finishBuyLock.entries();
-        loop {
+        label x loop {
             switch(i.next()) {
-                case(null) break;
+                case(null) break x;
                 case(?(u, ts)) {
                     if (ts + finishBuyLockTimeout < now) {
                         finishBuyLock := principalMap.delete(finishBuyLock, u);
@@ -626,14 +626,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
           subaccount = ?(Common.principalToSubaccount(user));
         };
         if (icrc1().balance_of(pstAccount) > 0) {
-          if (not await ledgerTransferPST(user, {
+          if (not (await ledgerTransferPST(user, {
             memo = null;
             amount = lock.minted;
             fee = null;
             from_subaccount = pstAccount.subaccount;
             to = {owner = recipientAccount; subaccount = null};
             created_at_time = null;
-          })) {
+          }))) {
             release();
             return ();
           };
@@ -646,14 +646,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // Transfer invested ICP to the revenue recipient.
         let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
         if (icpBalance > Common.icp_transfer_fee) {
-          if (not await ledgerTransferICP({
+          if (not (await ledgerTransferICP({
               to = { owner = revenueRecipient; subaccount = null };
               fee = null;
               memo = null;
               from_subaccount = investmentAccount.subaccount;
               created_at_time = ?lock.createdAtTime;
               amount = lock.invest;
-          })) {
+          }))) {
               release();
               return ();
           };
