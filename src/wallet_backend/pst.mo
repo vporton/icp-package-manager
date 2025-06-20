@@ -230,17 +230,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
       icrc1().supported_standards();
   };
 
-  private func awaitOrTrap<T>(op : async* { #trappable : T; #awaited : T; #err : { #trappable : Text; #awaited : Text } }) : async T {
-    switch (await* op) {
+
+  public shared ({ caller }) func icrc1_transfer(args : ICRC1.TransferArgs) : async ICRC1.TransferResult {
+    switch (await* icrc1().transfer_tokens(caller, args, false, null)) {
       case (#trappable(val)) val;
       case (#awaited(val)) val;
       case (#err(#trappable(err))) Debug.trap(err);
       case (#err(#awaited(err))) Debug.trap(err);
     };
-  };
-
-  public shared ({ caller }) func icrc1_transfer(args : ICRC1.TransferArgs) : async ICRC1.TransferResult {
-    await awaitOrTrap(icrc1().transfer_tokens(caller, args, false, null));
   };
 
   public shared ({ caller }) func mint(args : ICRC1.Mint) : async ICRC1.TransferResult {
@@ -254,11 +251,21 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         }
       };
 
-    await awaitOrTrap(icrc1().mint_tokens(caller, mintArgs));
+    switch (await* icrc1().mint_tokens(caller, mintArgs)) {
+      case (#trappable(val)) val;
+      case (#awaited(val)) val;
+      case (#err(#trappable(err))) Debug.trap(err);
+      case (#err(#awaited(err))) Debug.trap(err);
+    };
   };
 
   public shared ({ caller }) func burn(args : ICRC1.BurnArgs) : async ICRC1.TransferResult {
-    await awaitOrTrap(icrc1().burn_tokens(caller, args, false));
+    switch (await* icrc1().burn_tokens(caller, args, false)) {
+      case (#trappable(val)) val;
+      case (#awaited(val)) val;
+      case (#err(#trappable(err))) Debug.trap(err);
+      case (#err(#awaited(err))) Debug.trap(err);
+    };
   };
 
    public query ({ caller }) func icrc2_allowance(args: ICRC2.AllowanceArgs) : async ICRC2.Allowance {
@@ -266,11 +273,21 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     };
 
   public shared ({ caller }) func icrc2_approve(args : ICRC2.ApproveArgs) : async ICRC2.ApproveResponse {
-    await awaitOrTrap(icrc2().approve_transfers(caller, args, false, null));
+    switch (await* icrc2().approve_transfers(caller, args, false, null)) {
+      case (#trappable(val)) val;
+      case (#awaited(val)) val;
+      case (#err(#trappable(err))) Debug.trap(err);
+      case (#err(#awaited(err))) Debug.trap(err);
+    };
   };
 
   public shared ({ caller }) func icrc2_transfer_from(args : ICRC2.TransferFromArgs) : async ICRC2.TransferFromResponse {
-    await awaitOrTrap(icrc2().transfer_tokens_from(caller, args, null));
+    switch (await* icrc2().transfer_tokens_from(caller, args, null)) {
+      case (#trappable(val)) val;
+      case (#awaited(val)) val;
+      case (#err(#trappable(err))) Debug.trap(err);
+      case (#err(#awaited(err))) Debug.trap(err);
+    };
   };
 
   public shared ({ caller }) func admin_update_owner(new_owner : Principal) : async Bool {
