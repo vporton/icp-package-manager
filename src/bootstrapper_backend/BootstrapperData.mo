@@ -198,8 +198,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let icrc1 = icrc1Token(token);
         let result = try {
             let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
-            let amount = _dividendsOwing(user, pstBalance, token);
-            lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {lastDividendsPerToken = amount});
+            let amount = switch (principalMap.get(lockDividendsAccount[i], user)) {
+                case (?{lastDividendsPerToken}) lastDividendsPerToken;
+                case null {
+                    let amount = _dividendsOwing(user, pstBalance, token);
+                    lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, {lastDividendsPerToken = amount});
+                    amount;
+                };
+            };
             if (amount < Common.icp_transfer_fee) {
                 return 0;
             };
