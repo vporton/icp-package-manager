@@ -204,8 +204,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
-            if ((await icrc1.icrc1_balance_of(accountWithDividends(user))) != 0) { // FIXME@P1: Also account on it nonzero but below the fee.
-                return 0; // FIXME@P1
+            let existing = await icrc1.icrc1_balance_of(accountWithDividends(user));
+            if (existing >= Common.icp_transfer_fee) {
+                lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
+                return 0;
             };
             let res = await icrc1.icrc1_transfer({ // -> tmp dividends account
                 memo = null;
@@ -234,6 +236,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let i = tokenIndex(token);
         let acc = accountWithDividends(caller);
         let amount = await icrc1Token(token).icrc1_balance_of(acc);
+        if (amount <= Common.icp_transfer_fee) {
+            lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], caller);
+            return 0;
+        };
         let result = try {
             let res = await icrc1Token(token).icrc1_transfer({
                 memo = null;
@@ -260,8 +266,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let i = tokenIndex(token);
 
+        let acc = accountWithDividends(caller);
+        let tmp = await icrc1Token(token).icrc1_balance_of(acc);
         let ongoing = principalMap.get(lockDividendsAccount[i], caller);
-        if (Option.isSome(ongoing)) {
+        if (Option.isSome(ongoing) or tmp != 0) {
             return await finishWithdrawDividends(token, to);
         } else {
             let moved = await putDividendsOnTmpAccount(caller, token);
