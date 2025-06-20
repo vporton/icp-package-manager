@@ -468,8 +468,20 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         createdAtTime: Nat64;
     };
 
-    /// The ICPACK token has been delivered to user.
-    stable var tokenToDeliver = principalMap.empty<MintLock>(); // FIXME@P1: Limit the storage.
+    /// Pending token deliveries for each user.
+    private let MINT_LOCK_EXPIRATION = 7 * 24 * 60 * 60 * 1_000_000_000; // one week in ns
+    private let MAX_TOKEN_TO_DELIVER = 1000;
+    stable var tokenToDeliver = principalMap.empty<MintLock>();
+
+    private func cleanupTokenToDeliver(now : Int) {
+        label iter for (entry in tokenToDeliver.vals()) {
+            let user = entry.0;
+            let lock = entry.1;
+            if (now - Int.abs(lock.createdAtTime) > MINT_LOCK_EXPIRATION) {
+                tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+            };
+        };
+    };
 
     /// Users currently executing `finishBuyWithICP`.
     stable var finishBuyLock = principalMap.empty<Bool>();
@@ -479,6 +491,11 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
         if (principalMap.get(finishBuyLock, user) != null) {
             return (); // already running
+        };
+        let now = Time.now();
+        cleanupTokenToDeliver(now);
+        if (principalMap.get(tokenToDeliver, user) == null and tokenToDeliver.size() >= MAX_TOKEN_TO_DELIVER) {
+            return (); // too many pending mints
         };
         finishBuyLock := principalMap.put(finishBuyLock, user, true);
         func release() {
