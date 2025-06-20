@@ -33,7 +33,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc2 : ?ICRC2.InitArgs;
   };
 
-  let recipientAccount = Principal.fromText(env.recipientAccount);
+  let recipientAccount = Principal.fromText(env.revenueRecipient);
 
   private func default_icrc1(owner : Principal) : ICRC1.InitArgs {
     {
