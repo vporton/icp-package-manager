@@ -304,6 +304,12 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     return cleanupFinishBuyLocks(now);
   };
 
+  public shared ({ caller }) func admin_clear_stale_token_to_deliver() : async Nat {
+    if(caller != owner){ D.trap("Unauthorized")};
+    let now = Nat64.fromNat(Int.abs(Time.now()));
+    return cleanupTokenToDeliver(now);
+  };
+
   /* /// Uncomment this code to establish have icrc1 notify you when a transaction has occured.
   private func transfer_listener(trx: ICRC1.Transaction, trxid: Nat) : () {
 
@@ -494,6 +500,24 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// lock was acquired.
     stable var finishBuyLock = principalMap.empty<Nat64>();
     private let finishBuyLockTimeout : Nat64 = 30 * 60 * 1_000_000_000; // 30 min
+    private let tokenToDeliverTimeout : Nat64 = 24 * 60 * 60 * 1_000_000_000; // 1 day
+
+    private func cleanupTokenToDeliver(now : Nat64) : Nat {
+        var removed : Nat = 0;
+        var i = tokenToDeliver.entries();
+        loop {
+            switch(i.next()) {
+                case(null) break;
+                case(?(u, lock)) {
+                    if (lock.createdAtTime + tokenToDeliverTimeout < now) {
+                        tokenToDeliver := principalMap.delete(tokenToDeliver, u);
+                        removed += 1;
+                    };
+                };
+            };
+        };
+        removed;
+    };
 
     private func cleanupFinishBuyLocks(now : Nat64) : Nat {
         var removed : Nat = 0;
@@ -520,6 +544,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
         let now = Nat64.fromNat(Int.abs(Time.now()));
         ignore cleanupFinishBuyLocks(now);
+        ignore cleanupTokenToDeliver(now);
         if (principalMap.get(finishBuyLock, user) != null) {
             return (); // already running
         };
