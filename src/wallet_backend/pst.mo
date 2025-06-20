@@ -394,17 +394,34 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// curve that approaches `L` tokens as the required investment tends to
     /// infinity.
     public shared({caller = user}) func buyWithICP(wallet: Principal, amount: Nat) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
+        await finishBuyWithICP(wallet); // settle possible previous attempt
+
+        if (amount == 0) { return (); };
+
+        var lock = ensureInvestmentLock(user);
+        if (not lock.transferring) {
+            let ts = if (lock.createdAtTime == 0) { Nat64.fromNat(Int.abs(Time.now())) } else { lock.createdAtTime };
+            lock := {transferring = true; createdAtTime = ts};
+            lockInvestAccount := principalMap.put(lockInvestAccount, user, lock);
+        };
+
         switch(await ICPLedger.icrc1_transfer({
             to = accountWithInvestment(user);
             fee = null;
             memo = null;
             from_subaccount = ?Common.principalToSubaccount(user);
-            created_at_time = null;
+            created_at_time = ?lock.createdAtTime;
             amount;
         })) {
-            case (#Err e) { return ()/*#Err e*/ }; // FIXME@P1: return value
             case (#Ok _) {};
+            case (#Err(#Duplicate _)) {};
+            case (#Err e) {
+                lockInvestAccount := principalMap.put(lockInvestAccount, user, {lock with transferring = false; createdAtTime = 0 : Nat64});
+                return (); // FIXME@P1
+            };
         };
+
+        lockInvestAccount := principalMap.delete(lockInvestAccount, user);
 
         await finishBuyWithICP(wallet); // TODO@P3: Use `await*`. // FIXME@P1: `ignore`
         (); // FIXME@P1
@@ -412,16 +429,48 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
     transient let principalMap = Map.Make<Principal>(Principal.compare);
 
+    public type InvestLock = {
+        transferring: Bool;
+        createdAtTime: Nat64;
+    };
+
+    private let emptyInvestLock : InvestLock = {transferring = false; createdAtTime = 0 : Nat64};
+
+    /// Ongoing ICP transfer to the investment account.
+    stable var lockInvestAccount = principalMap.empty<InvestLock>();
+
+    /// Return the lock entry for a user or trap if it doesn't exist.
+    private func investmentLock(user: Principal) : InvestLock {
+        switch (principalMap.get(lockInvestAccount, user)) {
+            case (?l) l;
+            case null Debug.trap("investment lock missing");
+        };
+    };
+
+    /// Ensure that a lock entry exists and return it.
+    private func ensureInvestmentLock(user: Principal) : InvestLock {
+        switch (principalMap.get(lockInvestAccount, user)) {
+            case (?l) l;
+            case null {
+                lockInvestAccount := principalMap.put(lockInvestAccount, user, emptyInvestLock);
+                emptyInvestLock
+            };
+        };
+    };
+
+    public type MintLock = {
+        minted: Nat;
+        createdAtTime: Nat64;
+    };
+
     /// The ICPACK token has been delivered to user.
-    stable var tokenToDeliver = principalMap.empty<Nat>(); // FIXME@P1: Limit the storage.
+    stable var tokenToDeliver = principalMap.empty<MintLock>(); // FIXME@P1: Limit the storage.
 
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
-        let minted = switch (principalMap.get(tokenToDeliver, user)) {
-          case (?minted) {
-            minted;
-          };
+        let lock = switch (principalMap.get(tokenToDeliver, user)) {
+          case (?l) l;
           case null {
             let investmentAccount = accountWithInvestment(user);
             let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
@@ -446,8 +495,10 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             let minted : Nat = Int.abs(mintedInt);
             totalInvested += invest;
             totalMinted += Int.abs(Float.toInt(newMintedF - prevMintedF));
-            tokenToDeliver := principalMap.put(tokenToDeliver, user, minted);
-            minted;
+            let ts = Nat64.fromNat(Int.abs(Time.now()));
+            let nl : MintLock = { minted; createdAtTime = ts };
+            tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
+            nl;
           };
         };
         // await icrc1_transfer({ // FIXME@P1: Uncomment.
@@ -463,9 +514,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // We don't use `await mint()` also because it's async and breaks reliability.
         let _ = switch (await* icrc1().mint_tokens(user, { // TODO@P1: return value
           to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
-          amount = minted;
+          amount = lock.minted;
           memo = null;
-          created_at_time = null;
+          created_at_time = ?lock.createdAtTime;
         })) {
           case(#trappable(val)) val;
           case(#awaited(val)) val;
