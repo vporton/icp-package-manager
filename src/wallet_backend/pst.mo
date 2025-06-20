@@ -412,6 +412,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// curve that approaches `L` tokens as the required investment tends to
     /// infinity.
     public shared({caller = user}) func buyWithICP(wallet: Principal, amount: Nat) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
+        if (wallet != user) {
+            Debug.trap("wallet must equal caller");
+        };
         await finishBuyWithICP(wallet); // settle possible previous attempt
 
         if (amount == 0) { return (); };
@@ -512,6 +515,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     // TODO@P1: Reach reliability.
     // FIXME: Needs some rewrite.
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
+        if (wallet != user) {
+            Debug.trap("wallet must equal caller");
+        };
         let now = Nat64.fromNat(Int.abs(Time.now()));
         ignore cleanupFinishBuyLocks(now);
         if (principalMap.get(finishBuyLock, user) != null) {
