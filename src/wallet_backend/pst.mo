@@ -550,7 +550,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
             // We don't use `await mint()` also because it's async and breaks reliability.
-            let _ = switch (await* icrc1().mint_tokens(user, {
+            let _ = switch (await* icrc1().mint_tokens(owner, {
               to = {owner = wallet; subaccount = ?(Common.principalToSubaccount(user))};
               amount = lock.minted;
               memo = null;
