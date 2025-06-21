@@ -28,6 +28,7 @@ ChartJS.register(
 );
 
 const DECIMALS = 8;
+// Tokens minted at deployment are excluded from minted ICPACK tokens
 const INITIAL_SUPPLY = 33334 * 4 * Math.pow(10, DECIMALS);
 const LIMIT_TOKENS = 33333.32;
 const TOTAL_SUPPLY = 33334 * 5;
@@ -128,8 +129,10 @@ export default function Invest() {
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       pst.icrc1_total_supply().then((s: bigint) => {
         if (cancelled) return;
-        const minted = Number(s.toString()) - INITIAL_SUPPLY;
-        const mintedICP = minted / Math.pow(10, DECIMALS);
+        const totalSupplyE8s = Number(s.toString());
+        // Exclude initially minted tokens and avoid negative values
+        const mintedE8s = Math.max(0, totalSupplyE8s - INITIAL_SUPPLY);
+        const mintedICP = mintedE8s / Math.pow(10, DECIMALS);
         setTotalMinted(mintedICP);
       }).catch(console.error);
     })();
