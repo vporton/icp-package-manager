@@ -439,26 +439,6 @@ src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_
 
 .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/common.mo
 
-src/wallet_backend/wallet.mo: src/lib/Account.mo
-
-src/wallet_backend/wallet.mo: 
-
-src/wallet_backend/wallet.mo: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-
-src/bootstrapper_backend/BootstrapperData.mo: src/lib/Account.mo
-
-src/bootstrapper_backend/BootstrapperData.mo: src/common.mo
-
-src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-
-src/bootstrapper_backend/BootstrapperData.mo: 
-
-src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
-
-src/wallet_backend/wallet.mo: src/bootstrapper_backend/BootstrapperData.mo
-
-.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/wallet_backend/wallet.mo
-
 .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
 
 .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: 
@@ -564,6 +544,16 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: 
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+
+src/bootstrapper_backend/BootstrapperData.mo: src/lib/Account.mo
+
+src/bootstrapper_backend/BootstrapperData.mo: src/common.mo
+
+src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
+
+src/bootstrapper_backend/BootstrapperData.mo: 
+
+src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/bootstrapper_backend/BootstrapperData.mo
 
