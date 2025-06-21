@@ -451,11 +451,10 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
         if (amount == 0) { return (); };
 
-        var lock = ensureInvestmentLock(user);
-        if (not lock.transferring) {
-            let ts = if (lock.createdAtTime == 0) { Nat64.fromNat(Int.abs(Time.now())) } else { lock.createdAtTime };
-            lock := {transferring = true; createdAtTime = ts};
-            lockInvestAccount := principalMap.put(lockInvestAccount, user, lock);
+        var ts : Nat64 = ensureInvestmentLock(user);
+        if (ts == 0) {
+            ts := Nat64.fromNat(Int.abs(Time.now()));
+            lockInvestAccount := principalMap.put(lockInvestAccount, user, ts);
         };
 
         if (not (await ledgerTransferICP({
@@ -463,10 +462,10 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             fee = null;
             memo = null;
             from_subaccount = ?Common.principalToSubaccount(user);
-            created_at_time = ?lock.createdAtTime;
+            created_at_time = ?ts;
             amount;
         }))) {
-            lockInvestAccount := principalMap.put(lockInvestAccount, user, {lock with transferring = false; createdAtTime = 0 : Nat64});
+            lockInvestAccount := principalMap.delete(lockInvestAccount, user);
             return (); // FIXME@P1
         };
 
@@ -478,12 +477,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
 
     transient let principalMap = Map.Make<Principal>(Principal.compare);
 
-    public type InvestLock = {
-        transferring: Bool;
-        createdAtTime: Nat64;
-    };
+    public type InvestLock = Nat64; // timestamp of the transfer attempt
 
-    private let emptyInvestLock : InvestLock = {transferring = false; createdAtTime = 0 : Nat64};
+    private let emptyInvestLock : InvestLock = 0 : Nat64;
 
     /// Ongoing ICP transfer to the investment account.
     stable var lockInvestAccount = principalMap.empty<InvestLock>();
@@ -491,7 +487,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// Return the lock entry for a user or trap if it doesn't exist.
     private func investmentLock(user: Principal) : InvestLock {
         switch (principalMap.get(lockInvestAccount, user)) {
-            case (?l) l;
+            case (?ts) ts;
             case null Debug.trap("investment lock missing");
         };
     };
@@ -499,7 +495,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     /// Ensure that a lock entry exists and return it.
     private func ensureInvestmentLock(user: Principal) : InvestLock {
         switch (principalMap.get(lockInvestAccount, user)) {
-            case (?l) l;
+            case (?ts) ts;
             case null {
                 lockInvestAccount := principalMap.put(lockInvestAccount, user, emptyInvestLock);
                 emptyInvestLock
