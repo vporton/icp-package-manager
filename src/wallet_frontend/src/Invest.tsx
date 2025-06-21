@@ -98,6 +98,8 @@ export default function Invest() {
   const [withdrawing, setWithdrawing] = useState(false);
   const [owedDividends, setOwedDividends] = useState<number | null>(null);
   const [owedCycles, setOwedCycles] = useState<number | null>(null);
+  const [finishingBuy, setFinishingBuy] = useState(false);
+  const [finishingWithdraw, setFinishingWithdraw] = useState(false);
 
   const chartData = {
     datasets: [
@@ -180,12 +182,13 @@ export default function Invest() {
   }, [amountICP, totalMinted]);
 
   const handleBuy = async () => {
-    if (!agent || !ok) return;
+    if (!agent || !ok || !glob.walletBackendPrincipal) return;
     setLoading(true);
     try {
       const { createActor } = await import('../../declarations/pst');
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
-      const res = await pst.buyWithICP();
+      const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
+      const res = await pst.buyWithICP(glob.walletBackendPrincipal, investE8s);
       if (res && 'Err' in res) {
         const err = (res as any).Err;
         const msg = err.GenericError?.message ?? JSON.stringify(err);
@@ -204,7 +207,7 @@ export default function Invest() {
   };
 
   const handleWithdrawICP = async () => {
-    if (!agent || !ok) return;
+    if (!agent || !ok || !glob.walletBackend || !principal) return;
     setWithdrawing(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -212,7 +215,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      await (dataActor as any).withdrawDividends({ icp: null });
+      const to = await glob.walletBackend.getUserWallet(principal);
+      await (dataActor as any).withdrawDividends({ icp: null }, to);
     } catch (err) {
       console.error(err);
     } finally {
@@ -223,7 +227,7 @@ export default function Invest() {
   };
 
   const handleWithdrawCycles = async () => {
-    if (!agent || !ok) return;
+    if (!agent || !ok || !glob.walletBackend || !principal) return;
     setWithdrawing(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -231,13 +235,72 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      await (dataActor as any).withdrawDividends({ cycles: null });
+      const to = await glob.walletBackend.getUserWallet(principal);
+      await (dataActor as any).withdrawDividends({ cycles: null }, to);
     } catch (err) {
       console.error(err);
     } finally {
       setWithdrawing(false);
       loadBalance();
       loadOwedDividends();
+    }
+  };
+
+  const handleFinishBuy = async () => {
+    if (!agent || !ok || !glob.walletBackendPrincipal) return;
+    setFinishingBuy(true);
+    try {
+      const { createActor } = await import('../../declarations/pst');
+      const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
+      if (!glob.walletBackendPrincipal) throw new Error('wallet missing');
+      await pst.finishBuyWithICP(glob.walletBackendPrincipal);
+      loadBalance();
+      loadOwedDividends();
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.toString() || 'Failed to finish investment');
+    } finally {
+      setFinishingBuy(false);
+    }
+  };
+
+  const handleFinishWithdrawICP = async () => {
+    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    setFinishingWithdraw(true);
+    try {
+      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const dataActor = createActor(
+        Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
+        { agent }
+      );
+      const to = await glob.walletBackend.getUserWallet(principal);
+      await (dataActor as any).finishWithdrawDividends({ icp: null }, to);
+      loadBalance();
+      loadOwedDividends();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFinishingWithdraw(false);
+    }
+  };
+
+  const handleFinishWithdrawCycles = async () => {
+    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    setFinishingWithdraw(true);
+    try {
+      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const dataActor = createActor(
+        Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
+        { agent }
+      );
+      const to = await glob.walletBackend.getUserWallet(principal);
+      await (dataActor as any).finishWithdrawDividends({ cycles: null }, to);
+      loadBalance();
+      loadOwedDividends();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFinishingWithdraw(false);
     }
   };
 
@@ -262,11 +325,20 @@ export default function Invest() {
       <Button onClick={handleBuy} disabled={!ok || loading || !amountICP} className="me-2">
         {loading ? 'Buying...' : 'Buy'}
       </Button>
+      <Button onClick={handleFinishBuy} disabled={!ok || finishingBuy} className="me-2" variant="secondary">
+        {finishingBuy ? 'Retrying...' : 'Retry Buy'}
+      </Button>
       <Button onClick={handleWithdrawICP} disabled={!ok || withdrawing} className="me-2">
         {withdrawing ? 'Withdrawing...' : 'Withdraw ICP Dividends'}
       </Button>
+      <Button onClick={handleFinishWithdrawICP} disabled={!ok || finishingWithdraw} className="me-2" variant="secondary">
+        {finishingWithdraw ? 'Retrying...' : 'Retry ICP Withdraw'}
+      </Button>
       <Button onClick={handleWithdrawCycles} disabled={!ok || withdrawing} className="me-2">
         {withdrawing ? 'Withdrawing...' : 'Withdraw Cycles Dividends'}
+      </Button>
+      <Button onClick={handleFinishWithdrawCycles} disabled={!ok || finishingWithdraw} className="me-2" variant="secondary">
+        {finishingWithdraw ? 'Retrying...' : 'Retry Cycles Withdraw'}
       </Button>
       <span>
         Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP,
