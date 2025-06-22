@@ -16,7 +16,7 @@ import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { ErrorContext } from '../../lib/ErrorContext';
 import { GlobalContext } from './state';
-import { principalToSubaccount } from './accountUtils';
+import { principalToSubaccount, investmentAccount } from './accountUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -186,21 +186,24 @@ export default function Invest() {
   }, [amountICP, totalMinted]);
 
   const handleBuy = async () => {
-    if (!agent || !ok || !glob.walletBackendPrincipal) return;
+    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
     setLoading(true);
     try {
       const { createActor } = await import('../../declarations/pst');
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
-      const res = await pst.buyWithICP(glob.walletBackendPrincipal, investE8s);
-      // TODO: Nonsense in `undefined` type:
-      // if ('Err' in res) {
-      //   const err = (res as any).Err;
-      //   const msg = err.GenericError?.message ?? JSON.stringify(err);
-      //   setError(msg);
-      // } else {
-      //   setAmountICP('');
-      // }
+
+      const to = investmentAccount(Principal.fromText(process.env.CANISTER_ID_PST!), principal);
+      await glob.walletBackend.do_icrc1_transfer(Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!), {
+        from_subaccount: [principalToSubaccount(principal)],
+        to,
+        amount: investE8s,
+        fee: [],
+        memo: [],
+        created_at_time: [],
+      });
+
+      await pst.finishBuyWithICP(glob.walletBackendPrincipal);
       loadBalance();
       loadOwedDividends();
     } catch (err: any) {
