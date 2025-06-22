@@ -15,6 +15,7 @@ async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
     }
 }
 
+// TODO@P3: duplicate code
 async function sha256(v: Uint8Array): Promise<Uint8Array> {
     const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
     if (typeof window !== 'undefined') {

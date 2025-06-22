@@ -193,7 +193,7 @@ export default function Invest() {
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
 
-      const to = investmentAccount(Principal.fromText(process.env.CANISTER_ID_PST!), principal);
+      const to = await investmentAccount(Principal.fromText(process.env.CANISTER_ID_PST!), principal);
       await glob.walletBackend.do_icrc1_transfer(Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!), {
         from_subaccount: [principalToSubaccount(principal)],
         to,
