@@ -147,8 +147,8 @@ export default function Invest() {
     const { createActor } = await import('../../declarations/pst');
     const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
     try {
-      const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
-      const bal = await pst.icrc1_balance_of(account as any);
+      const account = { owner: glob.walletBackendPrincipal, subaccount: [principalToSubaccount(principal)] as [Uint8Array] };
+      const bal = await pst.icrc1_balance_of(account);
       setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
     } catch (e) {
       console.error(e);

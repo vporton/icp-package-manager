@@ -35,14 +35,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const glob = useContext(GlobalContext);
     const { setError } = useContext(ErrorContext)!;
     const { agent, defaultAgent, principal } = useAuth();
-    const pstPrincipal = useMemo(() => {
-        try {
-            const pst = createPstActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
-            return Principal.fromActor(pst);
-        } catch {
-            return Principal.fromText(process.env.CANISTER_ID_PST!);
-        }
-    }, [defaultAgent]);
     const [tokens, setTokens] = useState<UIToken[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
@@ -174,7 +166,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
             const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
-            setUserWallet(account as any);
+            setUserWallet({owner: account.owner, subaccount: [account.subaccount]});
             setUserWalletText(encodeIcrcAccount(account));
         }
     }, [glob.walletBackendPrincipal, principal]);
@@ -209,7 +201,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                             <td>{token.symbol}</td>
                             <td>
                                 {token.name}
-                                {props.onInvest && token.canisterId && token.canisterId.toText() === pstPrincipal.toText() && (
+                                {props.onInvest && token.canisterId && token.canisterId.toText() === process.env.CANISTER_ID_PST! && (
                                     <>
                                         {" "}<Button
                                             variant="secondary"
