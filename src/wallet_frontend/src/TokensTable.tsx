@@ -7,13 +7,14 @@ import { createActor as createTokenActor } from '../../declarations/nns-ledger';
 import { createActor as createPstActor } from '../../declarations/pst';
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
-import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
+import { decodeIcrcAccount, encodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
 import { GlobalContext } from './state';
 import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
 import { Actor } from '@dfinity/agent';
+import { principalToSubaccount } from './accountUtils';
 
 interface UIToken {
     symbol: string;
@@ -171,11 +172,12 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [userWallet, setUserWallet] = useState<Account | undefined>();
     const [userWalletText, setUserWalletText] = useState<string | undefined>();
     useEffect(() => {
-        if (glob.walletBackend !== undefined && principal !== undefined) {
-            glob.walletBackend.getUserWallet(principal).then(f => setUserWallet(f));
-            glob.walletBackend.getUserWalletText(principal).then(f => setUserWalletText(f));
+        if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
+            const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+            setUserWallet(account as any);
+            setUserWalletText(encodeIcrcAccount(account));
         }
-    }, [glob.walletBackend, principal]);
+    }, [glob.walletBackendPrincipal, principal]);
     useEffect(() => {
         if (tokens === undefined || userWallet === undefined) {
             return;
