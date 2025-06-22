@@ -16,6 +16,7 @@ import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { ErrorContext } from '../../lib/ErrorContext';
 import { GlobalContext } from './state';
+import { principalToSubaccount } from './accountUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -142,12 +143,12 @@ export default function Invest() {
   }, [agent]);
 
   const loadBalance = async () => {
-    if (!glob.walletBackend || !principal || !defaultAgent) return;
+    if (!glob.walletBackendPrincipal || !principal || !defaultAgent) return;
     const { createActor } = await import('../../declarations/pst');
     const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
     try {
-      const account = await glob.walletBackend.getUserWallet(principal);
-      const bal = await pst.icrc1_balance_of(account);
+      const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      const bal = await pst.icrc1_balance_of(account as any);
       setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
     } catch (e) {
       console.error(e);
@@ -212,7 +213,7 @@ export default function Invest() {
   };
 
   const handleWithdrawICP = async () => {
-    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
     setWithdrawing(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -220,8 +221,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      const to = await glob.walletBackend.getUserWallet(principal);
-      await (dataActor as any).withdrawDividends({ icp: null }, to);
+      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      await (dataActor as any).withdrawDividends({ icp: null }, to as any);
     } catch (err) {
       console.error(err);
     } finally {
@@ -232,7 +233,7 @@ export default function Invest() {
   };
 
   const handleWithdrawCycles = async () => {
-    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
     setWithdrawing(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -240,8 +241,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      const to = await glob.walletBackend.getUserWallet(principal);
-      await (dataActor as any).withdrawDividends({ cycles: null }, to);
+      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      await (dataActor as any).withdrawDividends({ cycles: null }, to as any);
     } catch (err) {
       console.error(err);
     } finally {
@@ -270,7 +271,7 @@ export default function Invest() {
   };
 
   const handleFinishWithdrawICP = async () => {
-    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
     setFinishingWithdraw(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -278,8 +279,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      const to = await glob.walletBackend.getUserWallet(principal);
-      await (dataActor as any).finishWithdrawDividends({ icp: null }, to);
+      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      await (dataActor as any).finishWithdrawDividends({ icp: null }, to as any);
       loadBalance();
       loadOwedDividends();
     } catch (err) {
@@ -290,7 +291,7 @@ export default function Invest() {
   };
 
   const handleFinishWithdrawCycles = async () => {
-    if (!agent || !ok || !glob.walletBackend || !principal) return;
+    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
     setFinishingWithdraw(true);
     try {
       const { createActor } = await import('../../declarations/bootstrapper_data');
@@ -298,8 +299,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent }
       );
-      const to = await glob.walletBackend.getUserWallet(principal);
-      await (dataActor as any).finishWithdrawDividends({ cycles: null }, to);
+      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      await (dataActor as any).finishWithdrawDividends({ cycles: null }, to as any);
       loadBalance();
       loadOwedDividends();
     } catch (err) {
