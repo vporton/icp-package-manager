@@ -3,10 +3,13 @@ import { encodeIcrcAccount } from '@dfinity/ledger-icrc';
 
 export function principalToSubaccount(principal: Principal): Uint8Array {
   const bytes = principal.toUint8Array();
-  const sub = new Uint8Array(32);
-  // copy the principal bytes directly, padding the rest with zeros
-  for (let i = 0; i < 32; i++) {
-    sub[i] = i < bytes.length ? bytes[i] : 0;
+  const sub = new Uint8Array(bytes.length + 1);
+  sub[0] = bytes.length;
+  sub.set(bytes, 1);
+  if (sub.length < 32) {
+    const padded = new Uint8Array(32);
+    padded.set(sub);
+    return padded;
   }
   return sub;
 }
