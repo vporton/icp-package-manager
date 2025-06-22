@@ -193,15 +193,14 @@ export default function Invest() {
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
       const res = await pst.buyWithICP(glob.walletBackendPrincipal, investE8s);
-      if (!res) {
-        setError('Failed to buy tokens');
-      } else if ('Err' in res) {
-        const err = (res as any).Err;
-        const msg = err.GenericError?.message ?? JSON.stringify(err);
-        setError(msg);
-      } else {
-        setAmountICP('');
-      }
+      // TODO: Nonsense in `undefined` type:
+      // if ('Err' in res) {
+      //   const err = (res as any).Err;
+      //   const msg = err.GenericError?.message ?? JSON.stringify(err);
+      //   setError(msg);
+      // } else {
+      //   setAmountICP('');
+      // }
       loadBalance();
       loadOwedDividends();
     } catch (err: any) {
