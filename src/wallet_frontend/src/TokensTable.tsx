@@ -12,6 +12,7 @@ import { GlobalContext } from './state';
 import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import Accordion from 'react-bootstrap/Accordion';
 import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
 import { Actor } from '@dfinity/agent';
 import { principalToSubaccount } from './accountUtils';
@@ -53,6 +54,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [sendTo, setSendTo] = useState('');
     const [archiveCanisterId, setArchiveCanisterId] = useState('');
     const [copied, setCopied] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
     const [newToken, setNewToken] = useState<UIToken>({
         symbol: '',
         name: '',
@@ -171,6 +173,9 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [balances, setBalances] = useState(new Map<Principal, number>());
     const [userWallet, setUserWallet] = useState<Account | undefined>();
     const [userWalletText, setUserWalletText] = useState<string | undefined>();
+    const dfxCommand = userWalletText === undefined
+        ? ''
+        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} --to-subaccount ${userWalletText.replace(/^[^.]*\./, '')} --memo 1 --amount`;
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
             const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
@@ -312,13 +317,35 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                 <Modal.Body>
                     <p>Send {selectedToken?.symbol} to this address:</p>
                     <OverlayTrigger placement="right" overlay={renderTooltip}>
-                        <code 
-                            style={{cursor: 'pointer'}} 
+                        <code
+                            style={{cursor: 'pointer'}}
                             onClick={() => copyToClipboard(userWalletText!)}
                         >
                             {userWalletText}
                         </code>
                     </OverlayTrigger>
+                    {dfxCommand && (
+                        <Accordion defaultActiveKey={undefined} className="mt-3">
+                            <Accordion.Item eventKey="advanced">
+                                <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>
+                                    {showAdvanced ? 'Hide advanced' : 'Show advanced'}
+                                </Accordion.Header>
+                                <Accordion.Body>
+                                    <p>
+                                        You can use DFX command:{' '}
+                                        <OverlayTrigger placement="right" overlay={renderTooltip}>
+                                            <code
+                                                style={{cursor: 'pointer'}}
+                                                onClick={() => copyToClipboard(dfxCommand)}
+                                            >
+                                                {dfxCommand} <em>AMOUNT</em>
+                                            </code>
+                                        </OverlayTrigger>
+                                    </p>
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        </Accordion>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReceiveModal(false)}>
