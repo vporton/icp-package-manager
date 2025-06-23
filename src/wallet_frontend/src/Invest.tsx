@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { Line } from 'react-chartjs-2'
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import type { ChartOptions, ChartDataset } from 'chart.js';
 import { useAuth } from '../../lib/use-auth-client';
 import { Principal } from '@dfinity/principal';
 import { ErrorContext } from '../../lib/ErrorContext';
@@ -41,7 +42,7 @@ const GRAPH_DATA = Array.from({ length: STEPS + 1 }, (_, i) => {
   return { x: icp, y: minted };
 });
 
-const baseDataset = {
+const baseDataset: ChartDataset<'line', { x: number; y: number }[]> = {
   label: 'ICPACK vs ICP',
   data: GRAPH_DATA,
   borderColor: 'rgb(75, 192, 192)',
@@ -53,7 +54,7 @@ const baseDataset = {
   pointRadius: 0,
 };
 
-const chartOptions = {
+const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   plugins: {
     legend: { display: false },
