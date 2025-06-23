@@ -1,7 +1,7 @@
-import { useState, useEffect, useContext } from 'react';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import { Line } from 'react-chartjs-2';
+import { useState, useEffect, useContext } from "react";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,13 +11,13 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import type { ChartOptions, ChartDataset } from 'chart.js';
-import { useAuth } from '../../lib/use-auth-client';
-import { Principal } from '@dfinity/principal';
-import { ErrorContext } from '../../lib/ErrorContext';
-import { GlobalContext } from './state';
-import { principalToSubaccount, investmentAccount } from './accountUtils';
+} from "chart.js";
+import type { ChartOptions, ChartDataset } from "chart.js";
+import { useAuth } from "../../lib/use-auth-client";
+import { Principal } from "@dfinity/principal";
+import { ErrorContext } from "../../lib/ErrorContext";
+import { GlobalContext } from "./state";
+import { principalToSubaccount, investmentAccount } from "./accountUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -37,39 +37,39 @@ const TOTAL_SUPPLY = 33334 * 5;
 
 const STEPS = 100;
 const GRAPH_DATA = Array.from({ length: STEPS + 1 }, (_, i) => {
-  const minted = LIMIT_TOKENS * 0.99 * i / STEPS;
+  const minted = (LIMIT_TOKENS * 0.99 * i) / STEPS;
   const icp = investedFromMinted(minted);
   return { x: icp, y: minted };
 });
 
-const baseDataset: ChartDataset<'line', { x: number; y: number }[]> = {
-  label: 'ICPACK vs ICP',
+const baseDataset: ChartDataset<"line", { x: number; y: number }[]> = {
+  label: "ICPACK vs ICP",
   data: GRAPH_DATA,
-  borderColor: 'rgb(75, 192, 192)',
+  borderColor: "rgb(75, 192, 192)",
   borderWidth: 5,
-  backgroundColor: 'rgba(75, 192, 192, 0.4)',
+  backgroundColor: "rgba(75, 192, 192, 0.4)",
   showLine: true,
   fill: false,
   tension: 0.1,
   pointRadius: 0,
 };
 
-const chartOptions: ChartOptions<'line'> = {
+const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   plugins: {
     legend: { display: false },
   },
   scales: {
-    x: { type: 'linear', title: { display: true, text: 'ICP' } },
-    y: { title: { display: true, text: 'ICPACK' } },
+    x: { type: "linear", title: { display: true, text: "ICP" } },
+    y: { title: { display: true, text: "ICPACK" } },
     yPercent: {
-      type: 'linear',
-      position: 'right',
-      title: { display: true, text: '% of max ICPACK' },
+      type: "linear",
+      position: "right",
+      title: { display: true, text: "% of max ICPACK" },
       grid: { drawOnChartArea: false },
       ticks: {
         callback: (value: string | number) =>
-          `${(Number(value) / TOTAL_SUPPLY * 100).toFixed(1)}%`,
+          `${((Number(value) / TOTAL_SUPPLY) * 100).toFixed(1)}%`,
       },
       min: 0,
       max: LIMIT_TOKENS,
@@ -85,7 +85,7 @@ function investedFromMinted(mintedTokensICP: number): number {
 
 function mintedForInvestment(prevMinted: number, invest: number): number {
   const l = LIMIT_TOKENS;
-  const newMinted = l - (l - prevMinted) * Math.exp(-4 * invest / (3 * l));
+  const newMinted = l - (l - prevMinted) * Math.exp((-4 * invest) / (3 * l));
   return newMinted - prevMinted;
 }
 
@@ -93,7 +93,7 @@ export default function Invest() {
   const { setError } = useContext(ErrorContext)!;
   const { agent, ok, defaultAgent, principal } = useAuth();
   const glob = useContext(GlobalContext);
-  const [amountICP, setAmountICP] = useState('');
+  const [amountICP, setAmountICP] = useState("");
   const [expected, setExpected] = useState<number | null>(null);
   const [totalMinted, setTotalMinted] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,22 +103,30 @@ export default function Invest() {
   const [owedCycles, setOwedCycles] = useState<number | null>(null);
   const [finishingBuy, setFinishingBuy] = useState(false);
   const [finishingWithdraw, setFinishingWithdraw] = useState(false);
+  const [needRetryBuy, setNeedRetryBuy] = useState(false);
+  const [needRetryWithdrawICP, setNeedRetryWithdrawICP] = useState(false);
+  const [needRetryWithdrawCycles, setNeedRetryWithdrawCycles] = useState(false);
 
   const chartData = {
     datasets: [
       baseDataset,
       ...(totalMinted !== null
-        ? [{ // TODO@P3: I don't see this point on the image.
-            label: 'Current',
-            data: [{
-              x: investedFromMinted(totalMinted),
-              y: totalMinted,
-            }],
-            borderColor: 'rgb(255, 99, 132)',
-            backgroundColor: 'rgb(255, 99, 132)',
-            showLine: false,
-            pointRadius: 5,
-          }]
+        ? [
+            {
+              // TODO@P3: I don't see this point on the image.
+              label: "Current",
+              data: [
+                {
+                  x: investedFromMinted(totalMinted),
+                  y: totalMinted,
+                },
+              ],
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgb(255, 99, 132)",
+              showLine: false,
+              pointRadius: 5,
+            },
+          ]
         : []),
     ],
   };
@@ -127,16 +135,22 @@ export default function Invest() {
     if (!agent) return;
     let cancelled = false;
     (async () => {
-      const { createActor } = await import('../../declarations/pst');
-      const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
-      pst.icrc1_total_supply().then((s: bigint) => {
-        if (cancelled) return;
-        const totalSupplyE8s = Number(s.toString());
-        // Exclude initially minted tokens and avoid negative values
-        const mintedE8s = Math.max(0, totalSupplyE8s - INITIAL_SUPPLY);
-        const mintedICP = mintedE8s / Math.pow(10, DECIMALS);
-        setTotalMinted(mintedICP);
-      }).catch(console.error);
+      const { createActor } = await import("../../declarations/pst");
+      const pst = createActor(
+        Principal.fromText(process.env.CANISTER_ID_PST!),
+        { agent },
+      );
+      pst
+        .icrc1_total_supply()
+        .then((s: bigint) => {
+          if (cancelled) return;
+          const totalSupplyE8s = Number(s.toString());
+          // Exclude initially minted tokens and avoid negative values
+          const mintedE8s = Math.max(0, totalSupplyE8s - INITIAL_SUPPLY);
+          const mintedICP = mintedE8s / Math.pow(10, DECIMALS);
+          setTotalMinted(mintedICP);
+        })
+        .catch(console.error);
     })();
     return () => {
       cancelled = true;
@@ -145,10 +159,15 @@ export default function Invest() {
 
   const loadBalance = async () => {
     if (!glob.walletBackendPrincipal || !principal || !defaultAgent) return;
-    const { createActor } = await import('../../declarations/pst');
-    const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent: defaultAgent });
+    const { createActor } = await import("../../declarations/pst");
+    const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), {
+      agent: defaultAgent,
+    });
     try {
-      const account = { owner: glob.walletBackendPrincipal, subaccount: [principalToSubaccount(principal)] as [Uint8Array] };
+      const account = {
+        owner: glob.walletBackendPrincipal,
+        subaccount: [principalToSubaccount(principal)] as [Uint8Array],
+      };
       const bal = await pst.icrc1_balance_of(account);
       setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
     } catch (e) {
@@ -159,10 +178,12 @@ export default function Invest() {
   const loadOwedDividends = async () => {
     if (!agent || !ok) return;
     try {
-      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const { createActor } = await import(
+        "../../declarations/bootstrapper_data"
+      );
       const dataActor = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
-        { agent }
+        { agent },
       );
       const owed = await (dataActor as any).dividendsOwing({ icp: null });
       const owedC = await (dataActor as any).dividendsOwing({ cycles: null });
@@ -179,19 +200,35 @@ export default function Invest() {
   }, [glob.walletBackend, principal, defaultAgent]);
 
   useEffect(() => {
-    if (totalMinted === null) { setExpected(null); return; }
+    if (totalMinted === null) {
+      setExpected(null);
+      return;
+    }
     const val = parseFloat(amountICP);
-    if (isNaN(val) || val <= 0) { setExpected(null); return; }
+    if (isNaN(val) || val <= 0) {
+      setExpected(null);
+      return;
+    }
     const res = mintedForInvestment(totalMinted, val);
     setExpected(res);
   }, [amountICP, totalMinted]);
 
   const handleBuy = async () => {
-    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
+    if (
+      !agent ||
+      !ok ||
+      !glob.walletBackend ||
+      !glob.walletBackendPrincipal ||
+      !principal
+    )
+      return;
     setLoading(true);
     try {
-      const { createActor } = await import('../../declarations/pst');
-      const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
+      const { createActor } = await import("../../declarations/pst");
+      const pst = createActor(
+        Principal.fromText(process.env.CANISTER_ID_PST!),
+        { agent },
+      );
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
 
       const to = await investmentAccount(
@@ -201,8 +238,8 @@ export default function Invest() {
       const walletInfo = await glob.walletBackend.getUserWallet(principal);
       const from_subaccount =
         walletInfo.subaccount.length === 0
-          ? [] as []
-          : [principalToSubaccount(principal)] as [Uint8Array];
+          ? ([] as [])
+          : ([principalToSubaccount(principal)] as [Uint8Array]);
       await glob.walletBackend.do_secure_icrc1_transfer(
         Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
         {
@@ -220,25 +257,39 @@ export default function Invest() {
       loadOwedDividends();
     } catch (err: any) {
       console.error(err);
-      setError(err?.toString() || 'Failed to buy tokens');
+      setError(err?.toString() || "Failed to buy tokens");
+      setNeedRetryBuy(true);
     } finally {
       setLoading(false);
     }
   };
 
   const handleWithdrawICP = async () => {
-    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
+    if (
+      !agent ||
+      !ok ||
+      !glob.walletBackend ||
+      !glob.walletBackendPrincipal ||
+      !principal
+    )
+      return;
     setWithdrawing(true);
     try {
-      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const { createActor } = await import(
+        "../../declarations/bootstrapper_data"
+      );
       const dataActor = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
-        { agent }
+        { agent },
       );
-      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      const to = {
+        owner: glob.walletBackendPrincipal,
+        subaccount: principalToSubaccount(principal),
+      };
       await (dataActor as any).withdrawDividends({ icp: null }, to as any);
     } catch (err) {
       console.error(err);
+      setNeedRetryWithdrawICP(true);
     } finally {
       setWithdrawing(false);
       loadBalance();
@@ -247,18 +298,31 @@ export default function Invest() {
   };
 
   const handleWithdrawCycles = async () => {
-    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
+    if (
+      !agent ||
+      !ok ||
+      !glob.walletBackend ||
+      !glob.walletBackendPrincipal ||
+      !principal
+    )
+      return;
     setWithdrawing(true);
     try {
-      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const { createActor } = await import(
+        "../../declarations/bootstrapper_data"
+      );
       const dataActor = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
-        { agent }
+        { agent },
       );
-      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+      const to = {
+        owner: glob.walletBackendPrincipal,
+        subaccount: principalToSubaccount(principal),
+      };
       await (dataActor as any).withdrawDividends({ cycles: null }, to as any);
     } catch (err) {
       console.error(err);
+      setNeedRetryWithdrawCycles(true);
     } finally {
       setWithdrawing(false);
       loadBalance();
@@ -270,55 +334,94 @@ export default function Invest() {
     if (!agent || !ok || !glob.walletBackendPrincipal) return;
     setFinishingBuy(true);
     try {
-      const { createActor } = await import('../../declarations/pst');
-      const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
-      if (!glob.walletBackendPrincipal) throw new Error('wallet missing');
+      const { createActor } = await import("../../declarations/pst");
+      const pst = createActor(
+        Principal.fromText(process.env.CANISTER_ID_PST!),
+        { agent },
+      );
+      if (!glob.walletBackendPrincipal) throw new Error("wallet missing");
       await pst.finishBuyWithICP(glob.walletBackendPrincipal);
       loadBalance();
       loadOwedDividends();
+      setNeedRetryBuy(false);
     } catch (err: any) {
       console.error(err);
-      setError(err?.toString() || 'Failed to finish investment');
+      setError(err?.toString() || "Failed to finish investment");
+      setNeedRetryBuy(true);
     } finally {
       setFinishingBuy(false);
     }
   };
 
   const handleFinishWithdrawICP = async () => {
-    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
+    if (
+      !agent ||
+      !ok ||
+      !glob.walletBackend ||
+      !glob.walletBackendPrincipal ||
+      !principal
+    )
+      return;
     setFinishingWithdraw(true);
     try {
-      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const { createActor } = await import(
+        "../../declarations/bootstrapper_data"
+      );
       const dataActor = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
-        { agent }
+        { agent },
       );
-      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
-      await (dataActor as any).finishWithdrawDividends({ icp: null }, to as any);
+      const to = {
+        owner: glob.walletBackendPrincipal,
+        subaccount: principalToSubaccount(principal),
+      };
+      await (dataActor as any).finishWithdrawDividends(
+        { icp: null },
+        to as any,
+      );
       loadBalance();
       loadOwedDividends();
+      setNeedRetryWithdrawICP(false);
     } catch (err) {
       console.error(err);
+      setNeedRetryWithdrawICP(true);
     } finally {
       setFinishingWithdraw(false);
     }
   };
 
   const handleFinishWithdrawCycles = async () => {
-    if (!agent || !ok || !glob.walletBackend || !glob.walletBackendPrincipal || !principal) return;
+    if (
+      !agent ||
+      !ok ||
+      !glob.walletBackend ||
+      !glob.walletBackendPrincipal ||
+      !principal
+    )
+      return;
     setFinishingWithdraw(true);
     try {
-      const { createActor } = await import('../../declarations/bootstrapper_data');
+      const { createActor } = await import(
+        "../../declarations/bootstrapper_data"
+      );
       const dataActor = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
-        { agent }
+        { agent },
       );
-      const to = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
-      await (dataActor as any).finishWithdrawDividends({ cycles: null }, to as any);
+      const to = {
+        owner: glob.walletBackendPrincipal,
+        subaccount: principalToSubaccount(principal),
+      };
+      await (dataActor as any).finishWithdrawDividends(
+        { cycles: null },
+        to as any,
+      );
       loadBalance();
       loadOwedDividends();
+      setNeedRetryWithdrawCycles(false);
     } catch (err) {
       console.error(err);
+      setNeedRetryWithdrawCycles(true);
     } finally {
       setFinishingWithdraw(false);
     }
@@ -333,43 +436,80 @@ export default function Invest() {
           min="0"
           step="any"
           value={amountICP}
-          onChange={e => setAmountICP(e.target.value)}
+          onChange={(e) => setAmountICP(e.target.value)}
         />
       </Form.Group>
       <div className="mb-3">
-        Estimated bought by you ICPACK: {expected !== null ? `${expected.toFixed(4)} (${(expected / TOTAL_SUPPLY * 100).toFixed(4)}%)` : 'N/A'}
+        Estimated bought by you ICPACK:{" "}
+        {expected !== null
+          ? `${expected.toFixed(4)} (${((expected / TOTAL_SUPPLY) * 100).toFixed(4)}%)`
+          : "N/A"}
       </div>
       <div className="mb-3">
-        Your ICPACK balance: {icpackBalance !== null ? icpackBalance.toFixed(4) : 'N/A'}
+        Your ICPACK balance:{" "}
+        {icpackBalance !== null ? icpackBalance.toFixed(4) : "N/A"}
       </div>
-      <Button onClick={handleBuy} disabled={!ok || loading || !amountICP} className="me-2">
-        {loading ? 'Buying...' : 'Buy'}
+      <Button
+        onClick={handleBuy}
+        disabled={!ok || loading || !amountICP}
+        className="me-2"
+      >
+        {loading ? "Buying..." : "Buy"}
       </Button>
-      <Button onClick={handleFinishBuy} disabled={!ok || finishingBuy} className="me-2" variant="secondary">
-        {finishingBuy ? 'Retrying...' : 'Retry Buy'}
+      {needRetryBuy && (
+        <Button
+          onClick={handleFinishBuy}
+          disabled={!ok || finishingBuy}
+          className="me-2"
+          variant="secondary"
+        >
+          {finishingBuy ? "Retrying..." : "Retry Buy"}
+        </Button>
+      )}
+      <Button
+        onClick={handleWithdrawICP}
+        disabled={!ok || withdrawing}
+        className="me-2"
+      >
+        {withdrawing ? "Withdrawing..." : "Withdraw ICP Dividends"}
       </Button>
-      <Button onClick={handleWithdrawICP} disabled={!ok || withdrawing} className="me-2">
-        {withdrawing ? 'Withdrawing...' : 'Withdraw ICP Dividends'}
+      {needRetryWithdrawICP && (
+        <Button
+          onClick={handleFinishWithdrawICP}
+          disabled={!ok || finishingWithdraw}
+          className="me-2"
+          variant="secondary"
+        >
+          {finishingWithdraw ? "Retrying..." : "Retry ICP Withdraw"}
+        </Button>
+      )}
+      <Button
+        onClick={handleWithdrawCycles}
+        disabled={!ok || withdrawing}
+        className="me-2"
+      >
+        {withdrawing ? "Withdrawing..." : "Withdraw Cycles Dividends"}
       </Button>
-      <Button onClick={handleFinishWithdrawICP} disabled={!ok || finishingWithdraw} className="me-2" variant="secondary">
-        {finishingWithdraw ? 'Retrying...' : 'Retry ICP Withdraw'}
-      </Button>
-      <Button onClick={handleWithdrawCycles} disabled={!ok || withdrawing} className="me-2">
-        {withdrawing ? 'Withdrawing...' : 'Withdraw Cycles Dividends'}
-      </Button>
-      <Button onClick={handleFinishWithdrawCycles} disabled={!ok || finishingWithdraw} className="me-2" variant="secondary">
-        {finishingWithdraw ? 'Retrying...' : 'Retry Cycles Withdraw'}
-      </Button>
+      {needRetryWithdrawCycles && (
+        <Button
+          onClick={handleFinishWithdrawCycles}
+          disabled={!ok || finishingWithdraw}
+          className="me-2"
+          variant="secondary"
+        >
+          {finishingWithdraw ? "Retrying..." : "Retry Cycles Withdraw"}
+        </Button>
+      )}
       <span>
-        Owed: {owedDividends !== null ? owedDividends.toFixed(4) : 'N/A'} ICP,
-        {" "}
-        {owedCycles !== null ? owedCycles.toString() : 'N/A'} Cycles
+        Owed: {owedDividends !== null ? owedDividends.toFixed(4) : "N/A"} ICP,{" "}
+        {owedCycles !== null ? owedCycles.toString() : "N/A"} Cycles
       </span>
       <div className="my-4">
         <Line data={chartData} options={chartOptions} />
       </div>
       <p>
-        You are welcome to invest into this software (not just into the wallet but into the entire IC Pack ecosystem).
+        You are welcome to invest into this software (not just into the wallet
+        but into the entire IC Pack ecosystem).
       </p>
       <p className="mt-3">
         We don't warrant any return of investment. Invest on your own risk.
@@ -377,9 +517,9 @@ export default function Invest() {
       <p>
         Hereby our company All World Files Corp warrants that we won't mint more
         than 20% of the profit sharing token (PST) and that all our profits on
-        the blockchain will be routed through this PST proportionally to holdings.
-        This way we preserve validity of your investment, not to be diluted by
-        minting too much PST.
+        the blockchain will be routed through this PST proportionally to
+        holdings. This way we preserve validity of your investment, not to be
+        diluted by minting too much PST.
       </p>
       <p>
         The investment may be more profitable if you buy the token early,
