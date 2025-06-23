@@ -186,6 +186,12 @@ persistent actor class Wallet({
     //     not owner.isAnonymous();
     // };
 
+    public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs) : async ICRC1.TransferResult {
+        // Perform the transfer. The calling code must not rely on any continuation
+        // after the await as it may never execute if the call doesn't start.
+        await token.icrc1_transfer(args);
+    };
+
     public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
         onlyOwner(caller, "do_icrc1_transfer");
 

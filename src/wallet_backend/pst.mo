@@ -454,17 +454,18 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             lockInvestAccount := principalMap.put(lockInvestAccount, user, ts);
         };
 
-        if (not (await ledgerTransferICP({
+        let walletActor : actor {
+            do_secure_icrc1_transfer : shared (ICRC1.Service, ICRC1.TransferArgs) -> async ICRC1.TransferResult;
+        } = actor(Principal.toText(wallet));
+
+        ignore await walletActor.do_secure_icrc1_transfer(ICPLedger, {
             to = accountWithInvestment(user);
             fee = null;
             memo = null;
             from_subaccount = ?Common.principalToSubaccount(user);
             created_at_time = ?ts;
             amount;
-        }))) {
-            lockInvestAccount := principalMap.delete(lockInvestAccount, user);
-            return (); // FIXME@P1
-        };
+        });
 
         lockInvestAccount := principalMap.delete(lockInvestAccount, user);
 
