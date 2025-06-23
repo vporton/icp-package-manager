@@ -194,7 +194,7 @@ export default function Invest() {
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
 
       const to = await investmentAccount(Principal.fromText(process.env.CANISTER_ID_PST!), principal);
-      await glob.walletBackend.do_async_icrc1_transfer(Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!), {
+      await glob.walletBackend.do_secure_icrc1_transfer(Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!), {
         from_subaccount: [principalToSubaccount(principal)],
         to,
         amount: investE8s,

@@ -187,8 +187,8 @@ persistent actor class Wallet({
     //     not owner.isAnonymous();
     // };
 
-    public shared({caller}) func do_async_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
-        onlyOwner(caller, "do_async_icrc1_transfer");
+    public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
+        onlyOwner(caller, "do_icrc1_transfer");
 
         ignore token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack
     };
