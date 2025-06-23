@@ -158,6 +158,7 @@ persistent actor class Wallet({
         };
     };
 
+    // TODO@P3: duplicate code
     public query func getUserWallet(user: Principal): async {owner: Principal; subaccount: ?Blob} {
         // onlyOwner(caller, "getUserWallet");
 

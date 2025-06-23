@@ -19,6 +19,7 @@ import ICRC1 "mo:icrc1-mo/ICRC1";
 import ICRC2 "mo:icrc2-mo/ICRC2";
 import Sha256 "mo:sha2/Sha256";
 import Map "mo:base/OrderedMap";
+import AccountID "mo:account-identifier";
 
 import ICPLedger "canister:nns-ledger";
 import Account "../lib/Account";
@@ -461,7 +462,11 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             to = accountWithInvestment(user);
             fee = null;
             memo = null;
-            from_subaccount = ?Common.principalToSubaccount(user);
+            from_subaccount = if (Principal.isAnonymous(owner)) {
+                ?(AccountID.principalToSubaccount(user));
+            } else {
+                null;
+            };
             created_at_time = ?ts;
             amount;
         });
@@ -582,6 +587,17 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
     };
 
+    // TODO@P3: duplicate code
+    private func getUserWallet(user: Principal): {owner: Principal; subaccount: ?Blob} {
+        let canister = Principal.fromActor(this);
+        {owner = canister; subaccount =
+            if (Principal.isAnonymous(owner)) {
+                ?(AccountID.principalToSubaccount(user));
+            } else {
+                null;
+            }
+        };
+    };
     // TODO@P1: Reach reliability.
     // FIXME@P1: If a hacker runs it with a different wallet than `buyWithICP`?
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
@@ -626,7 +642,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
             // FIXME@P1: wrong account for personal wallet:
-            if (await ledgerMint({owner = wallet; subaccount = ?(Common.principalToSubaccount(user))}, lock.minted, lock.createdAtTime)) {
+            if (await ledgerMint(getUserWallet(user), lock.minted, lock.createdAtTime)) {
                 lock := { lock with mintedDone = true };
                 tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
             } else {

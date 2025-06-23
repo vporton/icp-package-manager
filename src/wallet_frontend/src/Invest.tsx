@@ -201,8 +201,8 @@ export default function Invest() {
       const walletInfo = await glob.walletBackend.getUserWallet(principal);
       const from_subaccount =
         walletInfo.subaccount.length === 0
-          ? []
-          : [principalToSubaccount(principal)];
+          ? [] as []
+          : [principalToSubaccount(principal)] as [Uint8Array];
       await glob.walletBackend.do_secure_icrc1_transfer(
         Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
         {
