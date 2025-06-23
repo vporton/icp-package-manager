@@ -625,7 +625,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // Mint PST before performing any transfers if not done yet.
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
-          // FIXME@P1: wrong account for personal wallet:
+            // FIXME@P1: wrong account for personal wallet:
             if (await ledgerMint({owner = wallet; subaccount = ?(Common.principalToSubaccount(user))}, lock.minted, lock.createdAtTime)) {
                 lock := { lock with mintedDone = true };
                 tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
