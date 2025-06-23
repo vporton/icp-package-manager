@@ -7,9 +7,9 @@ import { AuthProvider } from 'ic-use-internet-identity';
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>>
-        <App2/>
-      </AuthProvider>>
+      <AuthProvider>
+        <App2 />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
@@ -26,14 +26,16 @@ function App2() {
         <Container>
           <p><AuthButton/></p>
           <Routes> {/* TODO@P3: Refactor into sub-components. */}
-            <Route path="/" element={
-              <>
-                <h2>Install</h2>
-                <p>Copy the repository ID:{" "}
-                {process.env.CANISTER_ID_REPOSITORY}
-                </p>
-              </>}/>
-            </Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <h2>Install</h2>
+                  <p>Copy the repository ID: {process.env.CANISTER_ID_REPOSITORY}</p>
+                </>
+              }
+            />
+          </Routes>
         </Container>
       </div>
     </main>
