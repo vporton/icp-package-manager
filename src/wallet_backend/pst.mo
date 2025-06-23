@@ -455,7 +455,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
 
         let walletActor : actor {
-            do_secure_icrc1_transfer : shared (ICRC1.Service, ICRC1.TransferArgs) -> async ICRC1.TransferResult;
+            do_secure_icrc1_transfer : shared (actor {}, ICRC1.TransferArgs) -> async ICRC1.TransferResult;
         } = actor(Principal.toText(wallet));
 
         ignore await walletActor.do_secure_icrc1_transfer(ICPLedger, {
