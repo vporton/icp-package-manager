@@ -4,13 +4,17 @@ import { encodeIcrcAccount } from '@dfinity/ledger-icrc';
 
 // TODO@P3: duplicate code
 async function sha256(v: Uint8Array): Promise<Uint8Array> {
-  const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
   if (typeof window !== 'undefined') {
-      return new Uint8Array(await crypto.subtle.digest('SHA-256', v));
+    // In browsers prefer the WebCrypto API. Avoid importing the Node
+    // `crypto` polyfill which pulls in heavy dependencies and may rely on
+    // `process.version` being defined.
+    return new Uint8Array(await crypto.subtle.digest('SHA-256', v));
   } else {
-      const hash = mycrypto.createHash('sha256');
-      hash.update(v);
-      return new Uint8Array(hash.digest());
+    // Node.js environment
+    const { createHash } = await import('crypto');
+    const hash = createHash('sha256');
+    hash.update(v);
+    return new Uint8Array(hash.digest());
   }
 }
 
