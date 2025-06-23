@@ -96,7 +96,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         
         try {
             const to = decodeIcrcAccount(sendTo);
-            const res = await glob.walletBackend!.do_icrc1_transfer(selectedToken?.canisterId, {
+            const res = await glob.walletBackend!.do_async_icrc1_transfer(selectedToken?.canisterId, {
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
                 amount: BigInt(sendAmount),
