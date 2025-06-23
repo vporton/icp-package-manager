@@ -34,7 +34,6 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc2 : ?ICRC2.InitArgs;
   };
 
-  let recipientAccount = Principal.fromText(env.revenueRecipient);
 
   private func default_icrc1(owner : Principal) : ICRC1.InitArgs {
     {
@@ -635,28 +634,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             };
         };
 
-        // Transfer minted PST to the recipient account.
-        let pstAccount = {
-          owner = wallet;
-          subaccount = ?(Common.principalToSubaccount(user));
-        };
-        if (icrc1().balance_of(pstAccount) > 0) {
-          if (not (await ledgerTransferPST(user, {
-            memo = null;
-            amount = lock.minted;
-            fee = null;
-            from_subaccount = pstAccount.subaccount;
-            to = {owner = recipientAccount; subaccount = null};
-            created_at_time = null;
-          }))) {
-            release();
-            return ();
-          };
-          if (icrc1().balance_of(pstAccount) > 0) {
-            release();
-            return ();
-          };
-        };
+        // Minted PST stay on the wallet subaccount. No further transfer needed.
 
         // Transfer invested ICP to the revenue recipient.
         let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
