@@ -1,5 +1,5 @@
 import { Principal } from "@dfinity/principal";
-import React, { createContext, useMemo, useState } from "react";
+import React, { createContext, useEffect, useMemo, useState } from "react";
 import { Wallet } from "../../declarations/wallet_backend/wallet_backend.did";
 import { createActor as createWallet } from '../../declarations/wallet_backend';
 import { useAuth } from "../../lib/use-auth-client";
@@ -7,11 +7,13 @@ import { useAuth } from "../../lib/use-auth-client";
 export type GlobalContextType = {
   walletBackendPrincipal: Principal | undefined,
   walletBackend: Wallet | undefined,
+  walletIsAnonymous: boolean | undefined,
 };
 
 export const GlobalContext = createContext<GlobalContextType>({
   walletBackendPrincipal: undefined,
   walletBackend: undefined,
+  walletIsAnonymous: undefined,
 });
 
 /**
@@ -25,12 +27,18 @@ export function GlobalContextProvider(props: { children: any }) {
 
   const canisterId = params.get('canisterId');
   const {agent, ok} = useAuth();
-  const wallet = useMemo(() =>
+  const wallet: Wallet | undefined = useMemo(() =>
     backend !== undefined && ok ? createWallet(backend, {agent}) : undefined,
     [agent]);
+  const [walletIsAnonymous, setWalletIsAnonymous] = useState<boolean | undefined>();
+  useEffect(() => {
+    if (wallet !== undefined) {
+      wallet.isAnonymous().then(f => setWalletIsAnonymous(f));
+    }
+  }, [wallet]);
 
   return (
-    <GlobalContext.Provider value={{walletBackendPrincipal: backend, walletBackend: wallet}}>
+    <GlobalContext.Provider value={{walletBackendPrincipal: backend, walletBackend: wallet, walletIsAnonymous}}>
       {props.children}
     </GlobalContext.Provider>
   );

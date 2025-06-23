@@ -158,6 +158,10 @@ persistent actor class Wallet({
         };
     };
 
+    public query func isAnonymous(): async Bool {
+        Principal.isAnonymous(owner);
+    };
+
     // TODO@P3: duplicate code
     public query func getUserWallet(user: Principal): async {owner: Principal; subaccount: ?Blob} {
         // onlyOwner(caller, "getUserWallet");
