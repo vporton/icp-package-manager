@@ -194,15 +194,26 @@ export default function Invest() {
       const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), { agent });
       const investE8s = BigInt(Math.round(parseFloat(amountICP) * 1e8));
 
-      const to = await investmentAccount(Principal.fromText(process.env.CANISTER_ID_PST!), principal);
-      await glob.walletBackend.do_secure_icrc1_transfer(Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!), {
-        from_subaccount: [principalToSubaccount(principal)],
-        to,
-        amount: investE8s,
-        fee: [],
-        memo: [],
-        created_at_time: [],
-      });
+      const to = await investmentAccount(
+        Principal.fromText(process.env.CANISTER_ID_PST!),
+        principal,
+      );
+      const walletInfo = await glob.walletBackend.getUserWallet(principal);
+      const from_subaccount =
+        walletInfo.subaccount.length === 0
+          ? []
+          : [principalToSubaccount(principal)];
+      await glob.walletBackend.do_secure_icrc1_transfer(
+        Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
+        {
+          from_subaccount,
+          to,
+          amount: investE8s,
+          fee: [],
+          memo: [],
+          created_at_time: [],
+        },
+      );
 
       await pst.finishBuyWithICP(glob.walletBackendPrincipal);
       loadBalance();
