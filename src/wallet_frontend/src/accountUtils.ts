@@ -45,5 +45,5 @@ export async function investmentAccount(pst: Principal, user: Principal) {
   joined.set(random);
   joined.set(principalBytes, random.length);
   const sub = await sha256(joined); // createHash('sha256').update(joined).digest();
-  return { owner: pst, subaccount: [sub] };
+  return { owner: pst, subaccount: [sub] as [Uint8Array] };
 }
