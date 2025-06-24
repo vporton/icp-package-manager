@@ -19,6 +19,7 @@ import ICRC1 "mo:icrc1-mo/ICRC1";
 import ICRC2 "mo:icrc2-mo/ICRC2";
 import Sha256 "mo:sha2/Sha256";
 import Map "mo:base/OrderedMap";
+import Error "mo:base/Error";
 import AccountID "mo:account-identifier";
 
 import ICPLedger "canister:nns-ledger";
@@ -29,7 +30,7 @@ import env "mo:env";
 shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc1 : ?ICRC1.InitArgs;
     icrc2 : ?ICRC2.InitArgs;
-}) = this{
+}) = this {
   type InitArgs = {
     icrc1 : ?ICRC1.InitArgs;
     icrc2 : ?ICRC2.InitArgs;
@@ -43,7 +44,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
       logo = ?"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InJlZCIvPjwvc3ZnPg==";
       decimals = 8;
       fee = ?#Fixed(10000);
-      minting_account = ?{ owner = owner; subaccount = null };
+      minting_account = ?{ owner = Principal.fromActor(this); subaccount = null };
       max_supply = null;
       min_burn_amount = ?10000;
       max_memo = ?64;
@@ -557,15 +558,19 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     };
 
     private func ledgerMint(toAccount : ICRC1.Account, amount : Nat, ts : Nat64) : async Bool {
-        let res = switch (await* icrc1().mint_tokens(owner, {
+        let res0 = await* icrc1().mint_tokens(owner, {
             to = toAccount;
             amount;
             memo = null;
             created_at_time = ?ts;
-        })) {
+        });
+        Debug.print(" : " # debug_show(res0)); // TODO@P3: Instead, return error as trap for frontend to display it.
+        let res = switch (res0) {
             case(#trappable(val)) val;
             case(#awaited(val)) val;
-            case(#err(_)) return false;
+            case(#err(e)) {
+                return false;
+            }
         };
         switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
     };
@@ -635,6 +640,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             } = actor(Principal.toText(wallet));
             let userWallet = await walletActor.getUserWallet(user);
             if (await ledgerMint(userWallet, lock.minted, lock.createdAtTime)) {
+                let balance = await icrc1_balance_of(userWallet); // FIXME@P2: Remove.
                 lock := { lock with mintedDone = true };
                 tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
             } else {
