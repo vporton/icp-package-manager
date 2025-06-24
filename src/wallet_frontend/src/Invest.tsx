@@ -91,7 +91,7 @@ function mintedForInvestment(prevMinted: number, invest: number): number {
 
 export default function Invest() {
   const { setError } = useContext(ErrorContext)!;
-  const { agent, ok, defaultAgent, principal } = useAuth();
+  const { agent, ok, principal } = useAuth();
   const glob = useContext(GlobalContext);
   const [amountICP, setAmountICP] = useState("");
   const [expected, setExpected] = useState<number | null>(null);
@@ -158,13 +158,13 @@ export default function Invest() {
   }, [agent]);
 
   const loadBalance = async () => {
-    if (!glob.walletBackendPrincipal || !principal || !defaultAgent) return;
+    if (!glob.walletBackendPrincipal || !principal || !agent) return;
     const { createActor } = await import("../../declarations/pst");
     const pst = createActor(Principal.fromText(process.env.CANISTER_ID_PST!), {
-      agent: defaultAgent,
+      agent,
     });
     try {
-      const account = await userAccount(glob.walletBackendPrincipal, principal);
+      const account = await userAccount(glob.walletBackendPrincipal, principal, agent);
       const bal = await pst.icrc1_balance_of({
         owner: account.owner,
         subaccount: account.subaccount,
@@ -197,7 +197,7 @@ export default function Invest() {
   useEffect(() => {
     loadBalance();
     loadOwedDividends();
-  }, [glob.walletBackend, principal, defaultAgent]);
+  }, [glob.walletBackend, principal, agent]);
 
   useEffect(() => {
     if (totalMinted === null) {
@@ -235,7 +235,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_PST!),
         principal,
       );
-      const account = await userAccount(glob.walletBackendPrincipal, principal);
+      const account = await userAccount(glob.walletBackendPrincipal, principal, agent);
       await glob.walletBackend.do_secure_icrc1_transfer(
         Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
         {
@@ -249,8 +249,8 @@ export default function Invest() {
       );
 
       await pst.finishBuyWithICP(glob.walletBackendPrincipal);
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
     } catch (err: any) {
       console.error(err);
       setError(err?.toString() || "Failed to buy tokens");
@@ -278,15 +278,15 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = await userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal, agent);
       await (dataActor as any).withdrawDividends({ icp: null }, to);
     } catch (err) {
       console.error(err);
       setNeedRetryWithdrawICP(true);
     } finally {
       setWithdrawing(false);
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
     }
   };
 
@@ -308,15 +308,15 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = await userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal, agent);
       await (dataActor as any).withdrawDividends({ cycles: null }, to);
     } catch (err) {
       console.error(err);
       setNeedRetryWithdrawCycles(true);
     } finally {
       setWithdrawing(false);
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
     }
   };
 
@@ -331,8 +331,8 @@ export default function Invest() {
       );
       if (!glob.walletBackendPrincipal) throw new Error("wallet missing");
       await pst.finishBuyWithICP(glob.walletBackendPrincipal);
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
       setNeedRetryBuy(false);
     } catch (err: any) {
       console.error(err);
@@ -361,13 +361,13 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = await userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal, agent);
       await (dataActor as any).finishWithdrawDividends(
         { icp: null },
         to,
       );
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
       setNeedRetryWithdrawICP(false);
     } catch (err) {
       console.error(err);
@@ -395,13 +395,13 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = await userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal, agent);
       await (dataActor as any).finishWithdrawDividends(
         { cycles: null },
         to,
       );
-      loadBalance();
-      loadOwedDividends();
+      await loadBalance();
+      await loadOwedDividends();
       setNeedRetryWithdrawCycles(false);
     } catch (err) {
       console.error(err);

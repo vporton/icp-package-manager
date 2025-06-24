@@ -32,15 +32,15 @@ export function principalToSubaccount(principal: Principal): Uint8Array {
   return sub;
 }
 
-export async function userAccount(wallet: Principal, user: Principal) {
+export async function userAccount(wallet: Principal, user: Principal, agent?: any) {
   // return { owner: wallet, subaccount: principalToSubaccount(user) }; // `subaccount` should be `undefined`, if the wallet is personal.
-  const walletActor: Wallet = createWalletActor(wallet);
+  const walletActor: Wallet = createWalletActor(wallet, agent ? { agent } : {});
   return await walletActor.getUserWallet(user);
 }
 
-export async function userAccountText(wallet: Principal, user: Principal): Promise<string> {
+export async function userAccountText(wallet: Principal, user: Principal, agent?: any): Promise<string> {
   // return encodeIcrcAccount(await userAccount(wallet, user));
-  const walletActor: Wallet = createWalletActor(wallet);
+  const walletActor: Wallet = createWalletActor(wallet, agent ? { agent } : {});
   return await walletActor.getUserWalletText(user);
 }
 
