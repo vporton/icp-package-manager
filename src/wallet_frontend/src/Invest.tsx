@@ -17,7 +17,7 @@ import { useAuth } from "../../lib/use-auth-client";
 import { Principal } from "@dfinity/principal";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
-import { principalToSubaccount, investmentAccount, userAccountText } from "./accountUtils";
+import { userAccount, investmentAccount, userAccountText } from "./accountUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -164,11 +164,11 @@ export default function Invest() {
       agent: defaultAgent,
     });
     try {
-      const account = {
-        owner: glob.walletBackendPrincipal,
-        subaccount: [principalToSubaccount(principal)] as [Uint8Array],
-      };
-      const bal = await pst.icrc1_balance_of(account);
+      const account = userAccount(glob.walletBackendPrincipal, principal);
+      const bal = await pst.icrc1_balance_of({
+        owner: account.owner,
+        subaccount: [account.subaccount] as [Uint8Array],
+      });
       setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
     } catch (e) {
       console.error(e);
@@ -239,7 +239,7 @@ export default function Invest() {
       const from_subaccount =
         walletInfo.subaccount.length === 0
           ? ([] as [])
-          : ([principalToSubaccount(principal)] as [Uint8Array]);
+          : ([userAccount(glob.walletBackendPrincipal, principal).subaccount] as [Uint8Array]);
       await glob.walletBackend.do_secure_icrc1_transfer(
         Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
         {
