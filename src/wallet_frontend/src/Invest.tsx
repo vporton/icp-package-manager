@@ -17,7 +17,7 @@ import { useAuth } from "../../lib/use-auth-client";
 import { Principal } from "@dfinity/principal";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
-import { principalToSubaccount, investmentAccount } from "./accountUtils";
+import { principalToSubaccount, investmentAccount, userAccountText } from "./accountUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -282,10 +282,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = {
-        owner: glob.walletBackendPrincipal,
-        subaccount: principalToSubaccount(principal),
-      };
+      const to = userAccountText(glob.walletBackendPrincipal, principal);
       await (dataActor as any).withdrawDividends({ icp: null }, to as any);
     } catch (err) {
       console.error(err);
@@ -315,10 +312,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = {
-        owner: glob.walletBackendPrincipal,
-        subaccount: principalToSubaccount(principal),
-      };
+      const to = userAccountText(glob.walletBackendPrincipal, principal);
       await (dataActor as any).withdrawDividends({ cycles: null }, to as any);
     } catch (err) {
       console.error(err);
@@ -371,10 +365,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = {
-        owner: glob.walletBackendPrincipal,
-        subaccount: principalToSubaccount(principal),
-      };
+      const to = userAccountText(glob.walletBackendPrincipal, principal);
       await (dataActor as any).finishWithdrawDividends(
         { icp: null },
         to as any,
@@ -408,10 +399,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = {
-        owner: glob.walletBackendPrincipal,
-        subaccount: principalToSubaccount(principal),
-      };
+      const to = userAccountText(glob.walletBackendPrincipal, principal);
       await (dataActor as any).finishWithdrawDividends(
         { cycles: null },
         to as any,
