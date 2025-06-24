@@ -587,17 +587,6 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         };
     };
 
-    // TODO@P3: duplicate code
-    private func getUserWallet(user: Principal): {owner: Principal; subaccount: ?Blob} {
-        let canister = Principal.fromActor(this);
-        {owner = canister; subaccount =
-            if (Principal.isAnonymous(owner)) {
-                ?(AccountID.principalToSubaccount(user));
-            } else {
-                null;
-            }
-        };
-    };
     // TODO@P1: Reach reliability.
     // FIXME@P1: If a hacker runs it with a different wallet than `buyWithICP`?
     public shared({caller = user}) func finishBuyWithICP(wallet: Principal) : async ()/*ICRC1.TransferResult*/ { // TODO@P1: What should be the return type?
@@ -641,8 +630,11 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         // Mint PST before performing any transfers if not done yet.
         let investmentAccount = accountWithInvestment(user);
         if (not lock.mintedDone) {
-            // FIXME@P1: wrong account for personal wallet:
-            if (await ledgerMint(getUserWallet(user), lock.minted, lock.createdAtTime)) {
+            let walletActor : actor {
+                getUserWallet : query (Principal) -> async ICRC1.Account;
+            } = actor(Principal.toText(wallet));
+            let userWallet = await walletActor.getUserWallet(user);
+            if (await ledgerMint(userWallet, lock.minted, lock.createdAtTime)) {
                 lock := { lock with mintedDone = true };
                 tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
             } else {
