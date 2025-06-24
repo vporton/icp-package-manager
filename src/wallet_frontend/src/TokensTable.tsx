@@ -7,7 +7,7 @@ import { createActor as createTokenActor } from '../../declarations/nns-ledger';
 import { createActor as createPstActor } from '../../declarations/pst';
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
-import { decodeIcrcAccount, encodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
+import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
 import { GlobalContext } from './state';
 import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -15,7 +15,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
 import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
 import { Actor } from '@dfinity/agent';
-import { principalToSubaccount } from './accountUtils';
+import { principalToSubaccount, userAccount, userAccountText } from './accountUtils';
 
 interface UIToken {
     symbol: string;
@@ -170,9 +170,9 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} --to-subaccount ${userWalletText.replace(/^[^.]*\./, '')} --memo 1 --amount`;
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
-            const account = { owner: glob.walletBackendPrincipal, subaccount: principalToSubaccount(principal) };
+            const account = userAccount(glob.walletBackendPrincipal, principal);
             setUserWallet({owner: account.owner, subaccount: [account.subaccount]});
-            setUserWalletText(encodeIcrcAccount(account));
+            setUserWalletText(userAccountText(glob.walletBackendPrincipal, principal));
         }
     }, [glob.walletBackendPrincipal, principal]);
     useEffect(() => {
