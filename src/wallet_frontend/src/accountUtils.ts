@@ -1,6 +1,7 @@
 import { Principal } from '@dfinity/principal';
 import { encodeIcrcAccount } from '@dfinity/ledger-icrc';
-// import { createHash } from 'crypto';
+import { createActor as createWalletActor } from '../../declarations/wallet_backend'; // TODO: hack
+import { Wallet } from '../../declarations/wallet_backend/wallet_backend.did';
 
 // TODO@P3: duplicate code
 async function sha256(v: Uint8Array): Promise<Uint8Array> {
@@ -31,12 +32,16 @@ export function principalToSubaccount(principal: Principal): Uint8Array {
   return sub;
 }
 
-export function userAccount(wallet: Principal, user: Principal) {
-  return { owner: wallet, subaccount: principalToSubaccount(user) };
+export async function userAccount(wallet: Principal, user: Principal) {
+  // return { owner: wallet, subaccount: principalToSubaccount(user) }; // `subaccount` should be `undefined`, if the wallet is personal.
+  const walletActor: Wallet = createWalletActor(wallet);
+  return await walletActor.getUserWallet(user);
 }
 
-export function userAccountText(wallet: Principal, user: Principal): string {
-  return encodeIcrcAccount(userAccount(wallet, user));
+export async function userAccountText(wallet: Principal, user: Principal): Promise<string> {
+  // return encodeIcrcAccount(await userAccount(wallet, user));
+  const walletActor: Wallet = createWalletActor(wallet);
+  return await walletActor.getUserWalletText(user);
 }
 
 export async function investmentAccount(pst: Principal, user: Principal) {

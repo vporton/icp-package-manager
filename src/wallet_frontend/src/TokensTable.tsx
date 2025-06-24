@@ -15,7 +15,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
 import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
 import { Actor } from '@dfinity/agent';
-import { principalToSubaccount, userAccount, userAccountText } from './accountUtils';
+import { userAccount, userAccountText } from './accountUtils';
 
 interface UIToken {
     symbol: string;
@@ -170,9 +170,10 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} --to-subaccount ${userWalletText.replace(/^[^.]*\./, '')} --memo 1 --amount`;
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
-            const account = userAccount(glob.walletBackendPrincipal, principal);
-            setUserWallet({owner: account.owner, subaccount: [account.subaccount]});
-            setUserWalletText(userAccountText(glob.walletBackendPrincipal, principal));
+            userAccount(glob.walletBackendPrincipal, principal).then(account => {
+                setUserWallet(account);
+                userAccountText(glob.walletBackendPrincipal!, principal).then(setUserWalletText);
+            });
         }
     }, [glob.walletBackendPrincipal, principal]);
     useEffect(() => {

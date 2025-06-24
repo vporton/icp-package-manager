@@ -17,7 +17,7 @@ import { useAuth } from "../../lib/use-auth-client";
 import { Principal } from "@dfinity/principal";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
-import { principalToSubaccount, investmentAccount, userAccount } from "./accountUtils";
+import { investmentAccount, userAccount } from "./accountUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -164,10 +164,10 @@ export default function Invest() {
       agent: defaultAgent,
     });
     try {
-      const account = userAccount(glob.walletBackendPrincipal, principal);
+      const account = await userAccount(glob.walletBackendPrincipal, principal);
       const bal = await pst.icrc1_balance_of({
         owner: account.owner,
-        subaccount: [account.subaccount] as [Uint8Array],
+        subaccount: account.subaccount,
       });
       setIcpackBalance(Number(bal.toString()) / Math.pow(10, DECIMALS));
     } catch (e) {
@@ -235,12 +235,11 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_PST!),
         principal,
       );
-      const account = userAccount(glob.walletBackendPrincipal, principal);
-      const from_subaccount = [account.subaccount] as [Uint8Array];
+      const account = await userAccount(glob.walletBackendPrincipal, principal);
       await glob.walletBackend.do_secure_icrc1_transfer(
         Principal.fromText(process.env.CANISTER_ID_NNS_LEDGER!),
         {
-          from_subaccount,
+          from_subaccount: account.subaccount,
           to,
           amount: investE8s,
           fee: [],
@@ -279,7 +278,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal);
       await (dataActor as any).withdrawDividends({ icp: null }, to);
     } catch (err) {
       console.error(err);
@@ -309,7 +308,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal);
       await (dataActor as any).withdrawDividends({ cycles: null }, to);
     } catch (err) {
       console.error(err);
@@ -362,7 +361,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal);
       await (dataActor as any).finishWithdrawDividends(
         { icp: null },
         to,
@@ -396,7 +395,7 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const to = userAccount(glob.walletBackendPrincipal, principal);
+      const to = await userAccount(glob.walletBackendPrincipal, principal);
       await (dataActor as any).finishWithdrawDividends(
         { cycles: null },
         to,
