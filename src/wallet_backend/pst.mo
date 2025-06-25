@@ -681,4 +681,8 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             ()
         }
     };
+
+    public query func getTotalMinted(): async Nat {
+        totalMinted;
+    };
 }

@@ -107,6 +107,10 @@ export default function Invest() {
   const [needRetryWithdrawICP, setNeedRetryWithdrawICP] = useState(false);
   const [needRetryWithdrawCycles, setNeedRetryWithdrawCycles] = useState(false);
 
+  // console.log({
+  //   x: investedFromMinted(totalMinted),
+  //   y: totalMinted,
+  // });
   const chartData = {
     datasets: [
       baseDataset,
@@ -133,7 +137,6 @@ export default function Invest() {
 
   useEffect(() => {
     if (!agent) return;
-    let cancelled = false;
     (async () => {
       const { createActor } = await import("../../declarations/pst");
       const pst = createActor(
@@ -141,20 +144,12 @@ export default function Invest() {
         { agent },
       );
       pst
-        .icrc1_total_supply()
+        .getTotalMinted()
         .then((s: bigint) => {
-          if (cancelled) return;
-          const totalSupplyE8s = Number(s.toString());
-          // Exclude initially minted tokens and avoid negative values
-          const mintedE8s = Math.max(0, totalSupplyE8s - INITIAL_SUPPLY);
-          const mintedICP = mintedE8s / Math.pow(10, DECIMALS);
-          setTotalMinted(mintedICP);
+          setTotalMinted(Number(s.toString()) / Math.pow(10, DECIMALS));
         })
         .catch(console.error);
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [agent]);
 
   const loadBalance = async () => {
