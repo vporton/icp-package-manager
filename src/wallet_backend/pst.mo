@@ -558,13 +558,13 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
     };
 
     private func ledgerMint(toAccount : ICRC1.Account, amount : Nat, ts : Nat64) : async Bool {
-        let res0 = await* icrc1().mint_tokens(owner, {
+        let res0 = await* icrc1().mint_tokens(Principal.fromActor(this), {
             to = toAccount;
             amount;
             memo = null;
             created_at_time = ?ts;
         });
-        Debug.print(" : " # debug_show(res0)); // TODO@P3: Instead, return error as trap for frontend to display it.
+        Debug.print("ledgerMint: " # debug_show(res0)); // TODO@P3: Instead, return error as trap for frontend to display it.
         let res = switch (res0) {
             case(#trappable(val)) val;
             case(#awaited(val)) val;
