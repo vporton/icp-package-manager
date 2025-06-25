@@ -19,6 +19,8 @@ import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
 import { investmentAccount, userAccount } from "./accountUtils";
 
+// FIXME@P1: How the main owner to withdraw his dividends? Only through the wallet?
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -114,23 +116,24 @@ export default function Invest() {
   const chartData = {
     datasets: [
       baseDataset,
-      ...(totalMinted !== null
-        ? [
-            {
-              label: "Current",
-              data: [
-                {
-                  x: investedFromMinted(totalMinted),
-                  y: totalMinted,
-                },
-              ],
-              borderColor: "rgb(255, 99, 132)",
-              backgroundColor: "rgb(255, 99, 132)",
-              showLine: false,
-              pointRadius: 5,
-            },
-          ]
-        : []),
+      // TODO@P3: Add the current point:
+      // ...(totalMinted !== null
+      //   ? [
+      //       {
+      //         label: "Current",
+      //         data: [
+      //           {
+      //             x: investedFromMinted(totalMinted),
+      //             y: totalMinted,
+      //           },
+      //         ],
+      //         borderColor: "rgb(255, 99, 132)",
+      //         backgroundColor: "rgb(255, 99, 132)",
+      //         showLine: false,
+      //         pointRadius: 5,
+      //       },
+      //     ]
+      //   : []),
     ],
   };
 
