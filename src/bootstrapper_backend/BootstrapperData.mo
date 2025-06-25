@@ -134,9 +134,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable let debts = [var 0, 0];
 
     /// I don't make this function reliable, because it is usually about small amounts of money.
-    public shared func indebt({amount: Nat; token: Token}): () {
+    public shared func indebt({amount: Nat; token: Token}) {
         let i = tokenIndex(token);
         debts[i] += amount;
+        await recalculateShareholdersDebt(amount, token);
     };
 
     /// Dividends and Withdrawals ///
@@ -208,9 +209,9 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
     };
 
-    // FIXME@P1: It isn't called.
     func recalculateShareholdersDebt(amount: Nat, token: Token) : async () {
         let totalSupply = await PST.icrc1_total_supply();
+        if (totalSupply == 0) { return; };
         let i = tokenIndex(token);
         dividendPerToken[i] += amount * DIVIDEND_SCALE / totalSupply;
     };
