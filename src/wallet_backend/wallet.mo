@@ -195,7 +195,7 @@ persistent actor class Wallet({
     public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
         onlyOwner(caller, "do_icrc1_transfer");
 
-        ignore token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack
+        ignore token.icrc1_transfer(args); // `ignore` to avoid non-returning-function DoS attack
     };
 
     public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
@@ -204,6 +204,6 @@ persistent actor class Wallet({
             Debug.trap("only tree tokens considered secure");
         };
 
-        await token.icrc1_transfer(args); // `ignore` to avoid on-returning-function DoS attack
+        await token.icrc1_transfer(args); // `ignore` to avoid non-returning-function DoS attack
     };
 };
