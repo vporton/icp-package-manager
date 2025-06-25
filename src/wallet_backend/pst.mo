@@ -564,7 +564,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             memo = null;
             created_at_time = ?ts;
         });
-        Debug.print("ledgerMint: " # debug_show(res0)); // TODO@P3: Instead, return error as trap for frontend to display it.
+        // TODO@P3: Return error as trap for frontend to display it.
         let res = switch (res0) {
             case(#trappable(val)) val;
             case(#awaited(val)) val;
