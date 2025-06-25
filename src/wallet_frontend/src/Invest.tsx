@@ -18,6 +18,7 @@ import { Principal } from "@dfinity/principal";
 import { ErrorContext } from "../../lib/ErrorContext";
 import { GlobalContext } from "./state";
 import { investmentAccount, userAccount } from "./accountUtils";
+import { BootstrapperData } from "../../declarations/bootstrapper_data/bootstrapper_data.did";
 
 // FIXME@P1: How the main owner to withdraw his dividends? Only through the wallet?
 
@@ -178,12 +179,12 @@ export default function Invest() {
       const { createActor } = await import(
         "../../declarations/bootstrapper_data"
       );
-      const dataActor = createActor(
+      const dataActor: BootstrapperData = createActor(
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const owed = await (dataActor as any).dividendsOwing({ icp: null });
-      const owedC = await (dataActor as any).dividendsOwing({ cycles: null });
+      const owed = await dataActor.dividendsOwing({ icp: null });
+      const owedC = await dataActor.dividendsOwing({ cycles: null });
       setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
       setOwedCycles(Number(owedC.toString()));
     } catch (e) {
