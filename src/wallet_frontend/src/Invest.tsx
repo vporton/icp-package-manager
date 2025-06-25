@@ -117,7 +117,6 @@ export default function Invest() {
       ...(totalMinted !== null
         ? [
             {
-              // TODO@P3: I don't see this point on the image.
               label: "Current",
               data: [
                 {
