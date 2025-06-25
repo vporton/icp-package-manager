@@ -131,12 +131,13 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     // TODO@P1: Use a map from token principal, instead?
-    stable let debts = [var 0, 0];
+    // stable let debts = [var 0, 0];
 
+    // FIXME@P1: This function does not decrease displayed amount of token, etc.
     /// I don't make this function reliable, because it is usually about small amounts of money.
     public shared func indebt({amount: Nat; token: Token}) {
         let i = tokenIndex(token);
-        debts[i] += amount;
+        // debts[i] += amount;
         await recalculateShareholdersDebt(amount, token);
     };
 
