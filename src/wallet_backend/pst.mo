@@ -598,87 +598,87 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         let now = Nat64.fromNat(Int.abs(Time.now()));
         ignore cleanupFinishBuyLocks(now);
         ignore cleanupTokenToDeliver(now);
+
+        let investmentAccount = accountWithInvestment(user);
+        let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
+
+        if (principalMap.get(tokenToDeliver, user) == null and icpBalance <= Common.icp_transfer_fee) {
+            return (); // nothing to finalize
+        };
+
         if (principalMap.get(finishBuyLock, user) != null) {
             return (); // already running
         };
         finishBuyLock := principalMap.put(finishBuyLock, user, now);
-        func release() {
-            finishBuyLock := principalMap.delete(finishBuyLock, user);
-        };
-        var lock = switch (principalMap.get(tokenToDeliver, user)) {
-          case (?l) l;
-          case null {
-            let investmentAccount = accountWithInvestment(user);
-            let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
-            if (icpBalance <= Common.icp_transfer_fee) {
-                release();
-                return (); // FIXME@P1
-                // return #Err(#GenericError{ error_code = 0; message = "no ICP" });
-            };
-            let invest = Nat.sub(icpBalance, Common.icp_transfer_fee);
+        func release() { finishBuyLock := principalMap.delete(finishBuyLock, user) };
 
-            switch (mintedForInvestment(totalMinted, invest)) {
-                case (?minted) {
-                    let ts = Nat64.fromNat(Int.abs(Time.now()));
-                    let nl : MintLock = { minted; invest; createdAtTime = ts; mintedDone = false };
-                    tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
-                    nl;
-                };
-                case null {
+        try {
+            var lock = switch (principalMap.get(tokenToDeliver, user)) {
+              case (?l) l;
+              case null {
+                let invest = icpBalance - Common.icp_transfer_fee;
+                switch (mintedForInvestment(totalMinted, invest)) {
+                    case (?minted) {
+                        let nl : MintLock = { minted; invest; createdAtTime = now; mintedDone = false };
+                        tokenToDeliver := principalMap.put(tokenToDeliver, user, nl);
+                        nl
+                    };
+                    case null {
+                        release();
+                        return (); // investment overflow
+                    };
+                }
+              };
+            };
+
+            if (not lock.mintedDone) {
+                let walletActor : actor { getUserWallet : query (Principal) -> async ICRC1.Account } = actor(Principal.toText(wallet));
+                let userWallet = await walletActor.getUserWallet(user);
+                if (await ledgerMint(userWallet, lock.minted, lock.createdAtTime)) {
+                    let balance = await icrc1_balance_of(userWallet); // FIXME@P2: Remove.
+                    lock := { lock with mintedDone = true };
+                    tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
+                } else {
                     release();
-                    return (); // investment overflow
+                    return (); // FIXME@P1
                 };
             };
-          };
-        };
 
-        // Mint PST before performing any transfers if not done yet.
-        let investmentAccount = accountWithInvestment(user);
-        if (not lock.mintedDone) {
-            let walletActor : actor {
-                getUserWallet : query (Principal) -> async ICRC1.Account;
-            } = actor(Principal.toText(wallet));
-            let userWallet = await walletActor.getUserWallet(user);
-            if (await ledgerMint(userWallet, lock.minted, lock.createdAtTime)) {
-                let balance = await icrc1_balance_of(userWallet); // FIXME@P2: Remove.
-                lock := { lock with mintedDone = true };
-                tokenToDeliver := principalMap.put(tokenToDeliver, user, lock);
-            } else {
-                release();
-                return (); // FIXME@P1
+            // Minted PST stay on the wallet subaccount. No further transfer needed.
+
+            let currentBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
+            if (currentBalance > Common.icp_transfer_fee) {
+                if (not (await ledgerTransferICP({
+                    to = { owner = revenueRecipient; subaccount = null };
+                    fee = null;
+                    memo = null;
+                    from_subaccount = investmentAccount.subaccount;
+                    created_at_time = ?lock.createdAtTime;
+                    amount = lock.invest;
+                }))) {
+                    release();
+                    return ();
+                };
+                let icpAfter = await ICPLedger.icrc1_balance_of(investmentAccount);
+                if (icpAfter > Common.icp_transfer_fee) {
+                    release();
+                    return ();
+                };
             };
-        };
 
-        // Minted PST stay on the wallet subaccount. No further transfer needed.
-
-        // Transfer invested ICP to the revenue recipient.
-        let icpBalance = await ICPLedger.icrc1_balance_of(investmentAccount);
-        if (icpBalance > Common.icp_transfer_fee) {
-          if (not (await ledgerTransferICP({
-              to = { owner = revenueRecipient; subaccount = null };
-              fee = null;
-              memo = null;
-              from_subaccount = investmentAccount.subaccount;
-              created_at_time = ?lock.createdAtTime;
-              amount = lock.invest;
-          }))) {
-              release();
-              return ();
-          };
-          let icpAfter = await ICPLedger.icrc1_balance_of(investmentAccount);
-          if (icpAfter > Common.icp_transfer_fee) {
-              release();
-              return ();
-          };
-        };
-        totalInvested += lock.invest;
-        totalMinted += lock.minted;
-        tokenToDeliver := principalMap.delete(tokenToDeliver, user);
-        // Remove any investment lock since the invested ICP was drained
-        // from the user's dedicated account. This prevents retries from
-        // attempting `icrc1_transfer` again with stale timestamps.
-        lockInvestAccount := principalMap.delete(lockInvestAccount, user);
-        release();
-        (); // FIXME@P1
+            totalInvested += lock.invest;
+            totalMinted += lock.minted;
+            tokenToDeliver := principalMap.delete(tokenToDeliver, user);
+            // Remove any investment lock since the invested ICP was drained
+            // from the user's dedicated account. This prevents retries from
+            // attempting `icrc1_transfer` again with stale timestamps.
+            lockInvestAccount := principalMap.delete(lockInvestAccount, user);
+            release();
+            ()
+        } catch (err) {
+            release();
+            Debug.trap("finish buy failed: " # Error.message(err));
+            ()
+        }
     };
 }
