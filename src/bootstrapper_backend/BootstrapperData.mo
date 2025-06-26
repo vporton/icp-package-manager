@@ -291,7 +291,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             };
             let res = await icrc1.icrc1_transfer({
                 memo = null;
-                amount = amount - Common.icp_transfer_fee;
+                amount = amount - Common.icp_transfer_fee; // FIXME@P1: This amount is correct not for every token.
                 fee = null;
                 from_subaccount = null;
                 to = accountWithDividends(user);
