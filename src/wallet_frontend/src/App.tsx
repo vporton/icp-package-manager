@@ -65,7 +65,7 @@ function App2() {
                         <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                         {!ok && <>{" "}Login to add a token.</>}
                     </p>
-                    {ok && <TokensTable key={tokensKey} onInvest={() => setActiveTab('invest')}/>}
+                    {ok && <TokensTable key={tokensKey} />}
                 </Tab>
                 <Tab eventKey="settings" title="Settings">
                     <Settings/>

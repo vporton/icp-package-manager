@@ -28,9 +28,7 @@ export interface TokensTableRef {
     setShowAddModal: (show: boolean) => void;
 }
 
-interface TokensTableProps {
-    onInvest?: () => void;
-}
+interface TokensTableProps {}
 
 const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) => {
     const glob = useContext(GlobalContext);
@@ -207,18 +205,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                             <td>{token.symbol}</td>
                             <td>
                                 {token.name}
-                                {props.onInvest && token.canisterId && token.canisterId.toText() === process.env.CANISTER_ID_PST! && (
-                                    <>
-                                        {" "}<Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="me-2"
-                                            onClick={() => props.onInvest && props.onInvest()}
-                                        >
-                                            Invest
-                                        </Button>
-                                    </>
-                                )}
                             </td>
                             <td>{balances.get(token.canisterId!)}</td>
                             <td>
