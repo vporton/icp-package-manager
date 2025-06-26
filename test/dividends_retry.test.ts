@@ -108,4 +108,12 @@ describe('dividends with retry', () => {
     expect((ds as any).lock.get('carol')).to.equal(undefined);
     expect((ds as any).tmp.get('carol')).to.equal(undefined);
   });
+
+  it('no dividends for tokens minted after declaration', () => {
+    const ds = new DividendSystemWithRetry();
+    ds.mint('alice', 10n);
+    ds.addDividends(100n);
+    ds.mint('bob', 10n);
+    expect(ds.withdrawDividends('bob')).to.equal(0n);
+  });
 });
