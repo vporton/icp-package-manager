@@ -96,7 +96,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     public shared func indebt({amount: Nat; token: Token}) {
-        // no-op after PST removal
+        // FIXME@P1
     };
 
     public shared func getAccountWithDividends1(user: Principal): async Account.Account {
