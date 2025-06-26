@@ -1,6 +1,6 @@
 Remaining things TODO:
 
-- TODO@P2 Unjustified growth of `simpleIndirect` and  `mainIdirect` by passing `1_000_000_000_000` cycles to it when upgrade.
+- TODO@P2 Unjustified growth of `simpleIndirect` and  `mainIndirect` by passing `1_000_000_000_000` cycles to it when upgrade.
           Need to reduce installation costs in general.
 
 - TODO@P3 Make the "reload" button rotating, while reloading.
