@@ -26,7 +26,7 @@ import ICPLedger "canister:nns-ledger";
 import Account "../lib/Account";
 import Common "../common";
 import env "mo:env";
-import BootstrapperData "canister:bootstrapper_data";
+// import BootstrapperData "canister:bootstrapper_data";
 
 shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc1 : ?ICRC1.InitArgs;
@@ -259,7 +259,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
       case (#err(#trappable(err))) Debug.trap(err);
       case (#err(#awaited(err))) Debug.trap(err);
     };
-    ignore BootstrapperData.registerMint(mintArgs.to.owner);
+    // ignore BootstrapperData.registerMint(mintArgs.to.owner);
     res
   };
 
@@ -576,7 +576,7 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
             }
         };
         let success = switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
-        if (success) { ignore BootstrapperData.registerMint(toAccount.owner); };
+        // if (success) { ignore BootstrapperData.registerMint(toAccount.owner); };
         success;
     };
 
