@@ -225,6 +225,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             case (?value) { value };
             case (null) { 0 };
         };
+        Debug.print("EE last=" # debug_show(last) # " dividend[i]=" # debug_show(dividend[i]) # " balance=" # debug_show(balance));
         let perTokenDelta = Int.abs((dividend[i]: Int) - last);
         balance * perTokenDelta / DIVIDEND_SCALE;
     };

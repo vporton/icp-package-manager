@@ -439,6 +439,8 @@ src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_
 
 .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/common.mo
 
+.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did
+
 .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
 
 .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: 
@@ -540,6 +542,8 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: src/common.mo
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/lib/Account.mo
+
+.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: 
 
