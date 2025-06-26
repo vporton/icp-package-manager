@@ -227,7 +227,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     /// A temporary account for dividends before it is finally withdrawn.
     private func accountWithDividends(user: Principal): Account.Account {
-      let subaccount = user;
+      let subaccount = accountHash(user);
       { owner = Principal.fromActor(this); subaccount = ?subaccount };
     };
 
