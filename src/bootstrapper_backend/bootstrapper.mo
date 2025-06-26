@@ -387,7 +387,18 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
-        ignore BootstrapperData.indebt({amount = revenue; token = #cycles});
+        let res2 = await cycles_ledger.icrc1_transfer({
+            to = await BootstrapperData.getAccountWithDividends(user);
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.cycles_transfer_fee;
+        });
+        let #Ok tx = res2 else {
+            Debug.trap("transfer failed: " # debug_show(res2));
+        };
+        ignore BootstrapperData.indebt({amount = revenue - Common.cycles_transfer_fee; token = #cycles});
 
         let res = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -430,6 +441,18 @@ actor class Bootstrapper() = this {
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
+        let res2 = await ICPLedger.icrc1_transfer({
+            to = await BootstrapperData.getAccountWithDividends(user);
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.icp_transfer_fee;
+        });
+        let #Ok tx = res2 else {
+            Debug.trap("transfer failed: " # debug_show(res2));
+        };
+        ignore BootstrapperData.indebt({amount = revenue - Common.cycles_transfer_fee; token = #cycles});
         let res2 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);

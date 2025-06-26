@@ -300,6 +300,17 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
+        let res2 = await CyclesLedger.icrc1_transfer({
+            to = await BootstrapperData.getAccountWithDividends(user);
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.cycles_transfer_fee;
+        });
+        let #Ok tx = res2 else {
+            Debug.trap("transfer failed: " # debug_show(res2));
+        };
         ignore BootstrapperData.indebt({amount = revenue; token = #cycles});
 
         let res = await CyclesLedger.withdraw({
@@ -320,7 +331,18 @@ shared({caller = initialOwner}) actor class Battery({
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        ignore BootstrapperData.indebt({amount = revenue; token = #icp});
+        let res2 = await ICPLedger.icrc1_transfer({
+            to = await BootstrapperData.getAccountWithDividends(user);
+            fee = null;
+            memo = null;
+            from_subaccount = ?(Common.principalToSubaccount(user));
+            created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
+            amount = revenue - Common.icp_transfer_fee;
+        });
+        let #Ok tx2 = res2 else {
+            Debug.trap("transfer failed: " # debug_show(res2));
+        };
+        ignore BootstrapperData.indebt({amount = revenue - Common.icp_transfer_fee; token = #icp});
 
         let res = await ICPLedger.icrc1_transfer({
             to = {

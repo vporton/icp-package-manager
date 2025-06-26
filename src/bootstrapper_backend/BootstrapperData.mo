@@ -227,6 +227,16 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
       { owner = Principal.fromActor(this); subaccount = ?subaccount };
     };
 
+    // TODO@P3: Can we simplify this function?
+    public shared func getAccountWithDividends(user: Principal): async {owner: Principal; subaccount: ?[Nat8]} {
+        let account = accountWithDividends(user);
+        let subaccount = switch (account.subaccount) {
+            case (?subaccount) ?Blob.toArray(subaccount);
+            case null null;
+        };
+        {owner = account.owner; subaccount};
+    };
+
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
     ///
     /// We may need to call this several times, because transfer may fail (e.g. due to network congestion).
