@@ -185,6 +185,7 @@ export default function Invest() {
       );
       const owed = await dataActor.dividendsOwing({ icp: null });
       const owedC = await dataActor.dividendsOwing({ cycles: null });
+      // console.log("QQ", owed.toString(), owedC.toString());
       setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
       setOwedCycles(Number(owedC.toString()));
     } catch (e) {
