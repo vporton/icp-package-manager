@@ -183,8 +183,8 @@ export default function Invest() {
         Principal.fromText(process.env.CANISTER_ID_BOOTSTRAPPER_DATA!),
         { agent },
       );
-      const owed = await dataActor.dividendsOwing({ icp: null });
-      const owedC = await dataActor.dividendsOwing({ cycles: null });
+      const owed = await dataActor.dividendsOwing({ icp: null }, principal!);
+      const owedC = await dataActor.dividendsOwing({ cycles: null }, principal!);
       // console.log("QQ", owed.toString(), owedC.toString());
       setOwedDividends(Number(owed.toString()) / Math.pow(10, DECIMALS));
       setOwedCycles(Number(owedC.toString()));
