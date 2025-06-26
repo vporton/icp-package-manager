@@ -1,6 +1,7 @@
 Remaining things TODO:
 
-- TODO@P2 Need to reduce installation costs.
+- TODO@P2 Unjustified growth of `mainIndirect` by passing `1_000_000_000_000`(?) cycles to it when upgrade.
+          Need to reduce installation costs.
 
 - TODO@P3 Make the "reload" button rotating, while reloading.
 
