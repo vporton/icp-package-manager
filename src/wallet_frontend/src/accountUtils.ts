@@ -44,15 +44,3 @@ export async function userAccountText(wallet: Principal, user: Principal, agent?
   return await walletActor.getUserWalletText(user);
 }
 
-export async function investmentAccount(pst: Principal, user: Principal) {
-  const random = Buffer.from(
-    'e9ad41820ff501db087a111f978ed69b16db557025d6e3cea07604cba63cefc5',
-    'hex',
-  );
-  const principalBytes = user.toUint8Array();
-  const joined = new Uint8Array(random.length + principalBytes.length);
-  joined.set(random);
-  joined.set(principalBytes, random.length);
-  const sub = await sha256(joined); // createHash('sha256').update(joined).digest();
-  return { owner: pst, subaccount: [sub] as [Uint8Array] };
-}

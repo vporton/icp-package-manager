@@ -8,7 +8,6 @@ import AccountID "mo:account-identifier";
 import ICRC1 "mo:icrc1-types";
 import CyclesLedger "canister:cycles_ledger";
 import ICPLedger "canister:nns-ledger";
-import ICPACK "canister:pst";
 import Int "mo:base/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 
@@ -47,12 +46,6 @@ persistent actor class Wallet({
                 name = "Internet Computer";
                 canisterId = Principal.fromActor(ICPLedger);
                 archiveCanisterId = null; // FIXME@P2
-            },
-            {
-                symbol = "ICPACK";
-                name = "IC Pack Profit Share";
-                canisterId = Principal.fromActor(ICPACK);
-                archiveCanisterId = null; // TODO@P3
             },
         ]
     };
@@ -201,7 +194,7 @@ persistent actor class Wallet({
 
     public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
         onlyOwner(caller, "do_secure_icrc1_transfer");
-        if (token != ICPLedger and token != CyclesLedger and token != ICPACK) {
+        if (token != ICPLedger and token != CyclesLedger) {
             Debug.trap("only tree tokens considered secure");
         };
 

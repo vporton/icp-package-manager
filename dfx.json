@@ -42,7 +42,6 @@
     },
     "bootstrapper_data": {
       "args": "--enhanced-orthogonal-persistence",
-      "dependencies": ["pst"],
       "main": "src/bootstrapper_backend/BootstrapperData.mo",
       "metadata": [
         {
@@ -121,17 +120,6 @@
         "nns-cycles-minting"
       ],
       "main": "src/package_manager_backend/main_indirect.mo",
-      "metadata": [
-        {
-          "name": "candid:service"
-        }
-      ],
-      "type": "motoko"
-    },
-    "pst": {
-      "args": "--enhanced-orthogonal-persistence",
-      "dependencies": [],
-      "main": "src/wallet_backend/pst.mo",
       "metadata": [
         {
           "name": "candid:service"
@@ -303,7 +291,7 @@
     "wallet_backend": {
       "args": "--enhanced-orthogonal-persistence",
       "main": "src/wallet_backend/wallet.mo",
-      "dependencies": ["pst", "nns-ledger"],
+      "dependencies": ["nns-ledger"],
       "metadata": [
         {
           "name": "candid:service"
