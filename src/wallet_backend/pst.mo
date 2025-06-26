@@ -26,6 +26,7 @@ import ICPLedger "canister:nns-ledger";
 import Account "../lib/Account";
 import Common "../common";
 import env "mo:env";
+import BootstrapperData "canister:bootstrapper_data";
 
 shared ({ caller = _owner }) actor class Token  (args : ?{
     icrc1 : ?ICRC1.InitArgs;
@@ -252,12 +253,14 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
         }
       };
 
-    switch (await* icrc1().mint_tokens(caller, mintArgs)) {
+    let res = switch (await* icrc1().mint_tokens(caller, mintArgs)) {
       case (#trappable(val)) val;
       case (#awaited(val)) val;
       case (#err(#trappable(err))) Debug.trap(err);
       case (#err(#awaited(err))) Debug.trap(err);
     };
+    ignore BootstrapperData.registerMint(mintArgs.to.owner);
+    res
   };
 
   public shared ({ caller }) func burn(args : ICRC1.BurnArgs) : async ICRC1.TransferResult {
@@ -572,7 +575,9 @@ shared ({ caller = _owner }) actor class Token  (args : ?{
                 return false;
             }
         };
-        switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
+        let success = switch(res) { case (#Ok _) true; case (#Err(#Duplicate _)) true; case (#Err _) false };
+        if (success) { ignore BootstrapperData.registerMint(toAccount.owner); };
+        success;
     };
 
     private func ledgerTransferPST(user : Principal, args : ICRC1.TransferArgs) : async Bool {

@@ -341,4 +341,13 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         if (moved == 0) { return 0; };
         return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
     };
+
+    /// Record the current dividend snapshot for a newly minted PST holder.
+    public shared({caller}) func registerMint(user: Principal) {
+        if (caller != Principal.fromActor(PST)) {
+            Debug.trap("registerMint: unauthorized");
+        };
+        dividendsCheckpointPerToken[0] := principalMap.put(dividendsCheckpointPerToken[0], user, dividendPerToken[0]);
+        dividendsCheckpointPerToken[1] := principalMap.put(dividendsCheckpointPerToken[1], user, dividendPerToken[1]);
+    };
 }
