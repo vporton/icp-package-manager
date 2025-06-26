@@ -358,11 +358,11 @@ shared({caller = initialOwner}) actor class Battery({
         let #Ok tx = res else {
             Debug.trap("transfer failed: " # debug_show(res));
         };
-        let res2 = await CMC.notify_top_up({
+        let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
-        let #Ok cyclesAmount = res2 else {
+        let #Ok cyclesAmount = res3 else {
             Debug.trap("notify_top_up failed: " # debug_show(res2));
         };
 
