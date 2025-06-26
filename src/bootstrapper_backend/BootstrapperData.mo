@@ -142,6 +142,22 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     /// Dividends and Withdrawals ///
+    ///
+    /// Dividends algorithm summary:
+    /// - `dividendPerToken` accumulates per-token profit increments via
+    ///   `recalculateShareholdersDebt` and is scaled by `DIVIDEND_SCALE`.
+    /// - `dividendsCheckpointPerToken` stores each user's snapshot of the
+    ///   accumulator at their last withdrawal or mint.
+    /// - `dividendsOwing` multiplies a holder's PST balance by the delta
+    ///   between the current accumulator and their snapshot to compute the
+    ///   owed amount.
+    /// - `putDividendsOnTmpAccount` transfers that amount to a per-user
+    ///   temporary account under a lock to avoid duplicate transfers.
+    /// - `finishWithdrawDividends` moves funds from the temporary account to
+    ///   the desired user account.
+    /// - `withdrawDividends` orchestrates the two steps, while `registerMint`
+    ///   records snapshots for new holders so they don't receive past
+    ///   dividends.
 
     /// Dividends are accounted per token to avoid newly minted PST receiving
     /// a share of previously declared dividends.  `dividendPerToken*` store the
