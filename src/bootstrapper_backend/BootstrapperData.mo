@@ -207,7 +207,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     // TODO@P3: Two duplicate functions.
     public composite query({caller}) func dividendsOwing(token: Token, user: Principal) : async Nat {
-        _dividendsOwing(account, await PST.icrc1_balance_of(account), token);
+        _dividendsOwing(account, await PST.icrc1_balance_of({owner = user; subaccount = null}), token);
     };
 
     func recalculateShareholdersDebt(amount: Nat, token: Token) : async* () {
@@ -221,13 +221,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     private func accountHash(user: Principal): Blob {
       // TODO: duplicate code
       let random: Blob = "\c2\78\8d\f0\0e\52\bb\5b\0b\b8\e6\98\ae\b3\87\d2\aa\54\91\ee\61\36\c9\86\85\df\78\09\cd\98\90\50"; // unique 256 bit
-      var joined = Array.append<Nat8>(Blob.toArray(random), Blob.toArray(Principal.toBlob(account.owner)));
-      switch (account.subaccount) {
-        case (?subaccount) {
-            joined := Array.append<Nat8>(joined, Blob.toArray(subaccount));
-        };
-        case null {};
-      };
+      let joined = Array.append<Nat8>(Blob.toArray(random), Blob.toArray(Principal.toBlob(user)));
       Sha256.fromBlob(#sha256, Blob.fromArray(joined));
     };
 
