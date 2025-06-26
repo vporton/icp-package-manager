@@ -207,7 +207,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     // TODO@P3: Two duplicate functions.
     public composite query({caller}) func dividendsOwing(token: Token, user: Principal) : async Nat {
-        _dividendsOwing(account, await PST.icrc1_balance_of({owner = user; subaccount = null}), token);
+        _dividendsOwing(user, await PST.icrc1_balance_of({owner = user; subaccount = null}), token);
     };
 
     func recalculateShareholdersDebt(amount: Nat, token: Token) : async* () {
@@ -233,12 +233,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     // TODO@P3: Can we simplify this function?
     public shared func getAccountWithDividends1(user: Principal): async Account.Account {
-        accountWithDividends(account);
+        accountWithDividends(user);
     };
 
     // TODO@P3: Can we simplify this function?
     public shared func getAccountWithDividends2(user: Principal): async {owner: Principal; subaccount: ?[Nat8]} {
-        let account = accountWithDividends(account);
+        let account = accountWithDividends(user);
         let subaccount = switch (account.subaccount) {
             case (?subaccount) ?Blob.toArray(subaccount);
             case null null;
@@ -249,20 +249,20 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Move owed dividends to a temporary account and mark the withdrawal as started.
     ///
     /// We may need to call this several times, because transfer may fail (e.g. due to network congestion).
-    private func putDividendsOnTmpAccount(token: Token, user: Principal, account: Account.Account) : async Nat {
+    private func putDividendsOnTmpAccount(user: Principal, token: Token) : async Nat {
         let i = tokenIndex(token);
         let icrc1 = icrc1Token(token);
         try {
             // Create a lock entry if none exists so that concurrent calls don't compute the dividend twice.
             var lock = ensureDividendsLock(i, user);
             if (lock.owedAmount == 0) {
-                let pstBalance = await PST.icrc1_balance_of(account);
+                let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
                 let amount = _dividendsOwing(user, pstBalance, token);
                 let dividendsCheckpoint = dividendPerToken[i];
                 lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0 : Nat64};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, lock);
             };
-            var current = dividendsLock(i, account);
+            var current = dividendsLock(i, user);
             let amount = current.owedAmount;
 
             if (amount < Common.icp_transfer_fee) {
@@ -279,7 +279,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                 amount = amount - Common.icp_transfer_fee;
                 fee = null;
                 from_subaccount = null;
-                to = accountWithDividends(account);
+                to = accountWithDividends(user);
                 created_at_time = ?current.createdAtTime;
             });
             switch (res) {
