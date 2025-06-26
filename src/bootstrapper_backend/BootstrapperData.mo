@@ -305,14 +305,11 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         };
     };
 
-    // FIXME@P1: Allow transfers only dividends of `caller`.
     /// Finish the withdrawal by sending dividends from the temporary account to the provided account.
     public shared({caller}) func finishWithdrawDividends(token: Token, to: Account.Account) : async Nat {
         // We don't need locking in this function, because we can't withdraw (from the tmp account) more than its balance.
         let i = tokenIndex(token);
-        // FIXME@P1: How to determine `userAccount`? He use may have several wallets.
-        //           Moreover, it may be a third-party wallet with another encoding.
-        let acc = accountWithDividends(to);
+        let acc = accountWithDividends(caller);
         let tokenSvc = icrc1Token(token);
         let amount = await tokenSvc.icrc1_balance_of(acc);
         if (amount <= Common.icp_transfer_fee) {
