@@ -146,7 +146,6 @@ actor class Bootstrapper() = this {
             case (?amount) amount;
             case null 0;
         };
-        Debug.print("amountToMove: " # Nat.toText(amountToMove) # " / user: " # debug_show(user)); // FIXME: Remove.
 
         if (amountToMove < ((Common.minimalFunding - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
@@ -157,7 +156,6 @@ actor class Bootstrapper() = this {
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
         let {installedModules} = await /*(with cycles = amountToMove)*/ doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
-        Debug.print("REFUNDED: " # debug_show(Cycles.refunded())); // FIXME: Remove.
 
         let ?battery = Iter.filter(installedModules.vals(), func (x: (Text, Principal)): Bool = x.0 == "battery").next() else {
             Debug.trap("error getting battery");
