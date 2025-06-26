@@ -215,7 +215,6 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         if (totalSupply == 0) { return; };
         let i = tokenIndex(token);
         dividendPerToken[i] += amount * DIVIDEND_SCALE / totalSupply;
-        Debug.print("dividendPerToken: " # debug_show(dividendPerToken[i])); // FIXME: Remove.
     };
 
     private func accountHash(user: Principal): Blob {
