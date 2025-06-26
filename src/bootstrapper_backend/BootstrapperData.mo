@@ -144,9 +144,9 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     /// Dividends and Withdrawals ///
     ///
     /// Dividends algorithm summary:
-    /// - `dividendPerToken` accumulates per-token profit increments via
+    /// - `dividend` accumulates per-token profit increments via
     ///   `recalculateShareholdersDebt` and is scaled by `DIVIDEND_SCALE`.
-    /// - `dividendsCheckpointPerToken` stores each user's snapshot of the
+    /// - `dividendsCheckpoint` stores each user's snapshot of the
     ///   accumulator at their last withdrawal or mint.
     /// - `dividendsOwing` multiplies a holder's PST balance by the delta
     ///   between the current accumulator and their snapshot to compute the
@@ -160,14 +160,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     ///   dividends.
 
     /// Dividends are accounted per token to avoid newly minted PST receiving
-    /// a share of previously declared dividends.  `dividendPerToken*` store the
+    /// a share of previously declared dividends.  `dividend*` store the
     /// cumulative dividend amount scaled by `DIVIDEND_SCALE`.
     let DIVIDEND_SCALE : Nat = 1_000_000_000;
     /// Accumulated dividend:
-    stable let dividendPerToken = [var 0, 0];
-    // TODO@P1: Set a heavy transfer fee of the PST to ensure that `dividendsCheckpointPerToken*` doesn't take much memory.
+    stable let dividend = [var 0, 0];
+    // TODO@P1: Set a heavy transfer fee of the PST to ensure that `dividendsCheckpoint*` doesn't take much memory.
     /// Snapshot of (all, not per user) dividends at the last payment point for a particular user:
-    stable var dividendsCheckpointPerToken = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
+    stable var dividendsCheckpoint = [var principalMap.empty<Nat>(), principalMap.empty<Nat>()];
     /// Indicates whether a withdrawal operation is in progress for a user.
     /// A lock entry for dividends withdrawal. `transferring` marks that a
     /// transfer to the temporary dividends account is in progress.
@@ -212,12 +212,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     private func _dividendsOwing(user: Principal, balance: Nat, token: Token): Nat {
         let i = tokenIndex(token);
-        let lastMap = dividendsCheckpointPerToken[i];
+        let lastMap = dividendsCheckpoint[i];
         let last = switch (principalMap.get(lastMap, user)) {
             case (?value) { value };
             case (null) { 0 };
         };
-        let perTokenDelta = Int.abs((dividendPerToken[i]: Int) - last);
+        let perTokenDelta = Int.abs((dividend[i]: Int) - last);
         balance * perTokenDelta / DIVIDEND_SCALE;
     };
 
@@ -230,7 +230,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let totalSupply = await PST.icrc1_total_supply();
         if (totalSupply == 0) { return; };
         let i = tokenIndex(token);
-        dividendPerToken[i] += amount * DIVIDEND_SCALE / totalSupply;
+        dividend[i] += amount * DIVIDEND_SCALE / totalSupply;
     };
 
     private func accountHash(user: Principal): Blob {
@@ -273,7 +273,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             if (lock.owedAmount == 0) {
                 let pstBalance = await PST.icrc1_balance_of({owner = user; subaccount = null});
                 let amount = _dividendsOwing(user, pstBalance, token);
-                let dividendsCheckpoint = dividendPerToken[i];
+                let dividendsCheckpoint = dividend[i];
                 lock := {owedAmount = amount; dividendsCheckpoint; transferring = false; createdAtTime = 0 : Nat64};
                 lockDividendsAccount[i] := principalMap.put(lockDividendsAccount[i], user, lock);
             };
@@ -305,7 +305,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
                     Debug.trap("transfer failed: " # debug_show(res));
                 };
             };
-            dividendsCheckpointPerToken[i] := principalMap.put(dividendsCheckpointPerToken[i], user, current.dividendsCheckpoint);
+            dividendsCheckpoint[i] := principalMap.put(dividendsCheckpoint[i], user, current.dividendsCheckpoint);
             lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
             return amount;
         } catch (err) {
@@ -350,7 +350,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         };
     };
 
-    /// Withdraw owed dividends and record the snapshot of `dividendPerToken*`
+    /// Withdraw owed dividends and record the snapshot of `dividend*`
     /// for the caller so that newly minted tokens do not get past dividends.
     public shared({caller}) func withdrawDividends(token: Token, to: Account.Account) : async Nat {
         let moved = await putDividendsOnTmpAccount(caller, token);
@@ -364,7 +364,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     //     if (caller != Principal.fromActor(PST)) {
     //         Debug.trap("registerMint: unauthorized");
     //     };
-    //     dividendsCheckpointPerToken[0] := principalMap.put(dividendsCheckpointPerToken[0], user, dividendPerToken[0]);
-    //     dividendsCheckpointPerToken[1] := principalMap.put(dividendsCheckpointPerToken[1], user, dividendPerToken[1]);
+    //     dividendsCheckpoint[0] := principalMap.put(dividendsCheckpoint[0], user, dividend[0]);
+    //     dividendsCheckpoint[1] := principalMap.put(dividendsCheckpoint[1], user, dividend[1]);
     // };
 }
