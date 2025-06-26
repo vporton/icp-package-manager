@@ -228,7 +228,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     // TODO@P3: Can we simplify this function?
-    public shared func getAccountWithDividends(user: Principal): async {owner: Principal; subaccount: ?[Nat8]} {
+    public shared func getAccountWithDividends1(user: Principal): async Account.Account {
+        accountWithDividends(user);
+    };
+
+    // TODO@P3: Can we simplify this function?
+    public shared func getAccountWithDividends2(user: Principal): async {owner: Principal; subaccount: ?[Nat8]} {
         let account = accountWithDividends(user);
         let subaccount = switch (account.subaccount) {
             case (?subaccount) ?Blob.toArray(subaccount);

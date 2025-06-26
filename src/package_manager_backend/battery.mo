@@ -301,10 +301,10 @@ shared({caller = initialOwner}) actor class Battery({
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
         let res2 = await CyclesLedger.icrc1_transfer({
-            to = await BootstrapperData.getAccountWithDividends(user);
+            to = await BootstrapperData.getAccountWithDividends2(user);
             fee = null;
             memo = null;
-            from_subaccount = ?(Common.principalToSubaccount(user));
+            from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = revenue - Common.cycles_transfer_fee;
         });
@@ -332,7 +332,7 @@ shared({caller = initialOwner}) actor class Battery({
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
         let res2 = await ICPLedger.icrc1_transfer({
-            to = await BootstrapperData.getAccountWithDividends(user);
+            to = await BootstrapperData.getAccountWithDividends1(user);
             fee = null;
             memo = null;
             from_subaccount = ?(Common.principalToSubaccount(user));
