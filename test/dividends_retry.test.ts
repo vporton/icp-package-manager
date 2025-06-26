@@ -42,7 +42,7 @@ class DividendSystemWithRetry {
       lockEntry = { owedAmount: amount, dividendsCheckpoint: checkpoint };
       this.lock.set(a, lockEntry);
     }
-    if (amount < DividendSystemWithRetry.FEE) {
+    if (amount <= DividendSystemWithRetry.FEE) {
       this.lock.delete(a);
       return 0n;
     }
@@ -82,9 +82,9 @@ describe('dividends with retry', () => {
     ds.addDividends(100n);
     const owed = ds.putDividendsOnTmpAccount('alice', true);
     const expectedTmp = owed - DividendSystemWithRetry.FEE;
-    expect(ds.finishWithdrawDividends('alice')).to.equal(0n);
+    expect(ds.finishWithdrawDividends('alice')).to.equal(expectedTmp - DividendSystemWithRetry.FEE);
     const retry = ds.putDividendsOnTmpAccount('alice');
-    expect(retry).to.equal(expectedTmp);
+    expect(retry).to.equal(owed);
     const withdrawn = ds.finishWithdrawDividends('alice');
     expect(withdrawn).to.equal(expectedTmp - DividendSystemWithRetry.FEE);
   });
@@ -97,5 +97,15 @@ describe('dividends with retry', () => {
     const second = ds.withdrawDividends('bob');
     expect(second).to.equal(0n);
     expect(first).to.equal(100n - 2n * DividendSystemWithRetry.FEE);
+  });
+
+  it('skips transfer when owed equals fee', () => {
+    const ds = new DividendSystemWithRetry();
+    ds.mint('carol', 10n);
+    ds.addDividends(DividendSystemWithRetry.FEE); // owed amount equals fee
+    const moved = ds.putDividendsOnTmpAccount('carol');
+    expect(moved).to.equal(0n);
+    expect((ds as any).lock.get('carol')).to.equal(undefined);
+    expect((ds as any).tmp.get('carol')).to.equal(undefined);
   });
 });
