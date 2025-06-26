@@ -406,7 +406,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             wasm_module;
                             mode = mode2;
                             canister_id;
-                        }, 1_000_000_000_000);
+                        }, 1059 * wasm_module.size());
                         Debug.print("P6"); // FIXME: Remove.
                     }
                     catch (e) {
@@ -436,7 +436,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                                 wasm_module;
                                 mode = mode3;
                                 canister_id;
-                            }, 1_000_000_000_000);
+                            }, 1059 * wasm_module.size());
                             Debug.print("P10"); // FIXME: Remove.
                         } else {
                             Debug.print("P11: " # Error.message(e)); // FIXME: Remove.
