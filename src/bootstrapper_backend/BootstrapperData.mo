@@ -294,6 +294,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
             return amount;
         } catch (err) {
+            let cur = dividendsLock(i, user);
+            lockDividendsAccount[i] := principalMap.put(
+                lockDividendsAccount[i],
+                user,
+                {cur with transferring = false; createdAtTime = 0 : Nat64},
+            );
             Debug.trap("withdraw dividends failed: " # Error.message(err));
             0;
         };
