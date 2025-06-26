@@ -263,7 +263,6 @@ export default function Invest() {
     if (
       !agent ||
       !ok ||
-      !glob.walletBackend ||
       !glob.walletBackendPrincipal ||
       !principal
     )
@@ -293,7 +292,6 @@ export default function Invest() {
     if (
       !agent ||
       !ok ||
-      !glob.walletBackend ||
       !glob.walletBackendPrincipal ||
       !principal
     )
@@ -346,7 +344,6 @@ export default function Invest() {
     if (
       !agent ||
       !ok ||
-      !glob.walletBackend ||
       !glob.walletBackendPrincipal ||
       !principal
     )
@@ -380,7 +377,6 @@ export default function Invest() {
     if (
       !agent ||
       !ok ||
-      !glob.walletBackend ||
       !glob.walletBackendPrincipal ||
       !principal
     )
