@@ -62,8 +62,8 @@ module {
         // TODO@P3: Do withdrawing cycles for all package's modules in one call.
         // TODO@P3: Awaiting the call is important to install the battery before installing other canisters.
         //          However, in parallel it would be faster.
-        // TODO@P3: How many cycles?
-        await (with cycles = 100_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        // https://github.com/vporton/measure-install_code
+        await (with cycles = 1059 * wasm_module.size()) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({ // duplicate with frontend-base `icpack` update
                 packageManager;
                 mainIndirect;

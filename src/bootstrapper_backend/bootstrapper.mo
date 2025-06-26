@@ -102,10 +102,11 @@ actor class Bootstrapper() = this {
             Debug.trap("module not found");
         };
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
-        // TODO@P3: How many cycles?
-        await (with cycles = 100_000_000_000) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
+        let wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
+        // https://github.com/vporton/measure-install_code
+        await (with cycles = 1059 * wasm_module.size()) ic.install_code({ // See also https://forum.dfinity.org/t/is-calling-install-code-with-untrusted-code-safe/35553
             arg = to_candid({});
-            wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
+            wasm_module;
             mode = #install;
             canister_id = frontend;
             sender_canister_version = null; // TODO@P3

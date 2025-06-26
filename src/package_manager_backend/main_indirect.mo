@@ -390,8 +390,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     // TODO@P3: How many cycles to add?
                     Debug.print("P4"); // FIXME: Remove.
                     try {
-                        Debug.print("P5"); // FIXME: Remove.
-                        await (with cycles = 1_000_000_000_000) simple.install_code({
+                        // https://github.com/vporton/measure-install_code
+                        await (with cycles = 1059 * wasm_module.size()) simple.install_code({
                             sender_canister_version = null; // TODO@P3: Set appropriate value.
                             arg = to_candid({
                                 packageManager;
@@ -421,8 +421,8 @@ shared({caller = initialCaller}) actor class MainIndirect({
                             } else {
                                 #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
                             };
-                            Debug.print("P9"); // FIXME: Remove.
-                            await (with cycles = 1_000_000_000_000) simple.install_code({
+                            // https://github.com/vporton/measure-install_code
+                            await (with cycles = 1059 * wasm_module.size()) simple.install_code({
                                 sender_canister_version = null; // TODO@P3: Set appropriate value.
                                 arg = to_candid({
                                     packageManager;
