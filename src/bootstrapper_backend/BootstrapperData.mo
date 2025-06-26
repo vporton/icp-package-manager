@@ -130,6 +130,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         };
     };
 
+    /// Return the transfer fee for a token.
+    private func tokenTransferFee(token: Token) : Nat {
+        switch token {
+            case (#icp) { Common.icp_transfer_fee };
+            case (#cycles) { Common.cycles_transfer_fee };
+        };
+    };
+
     // TODO@P1: Use a map from token principal, instead?
     // stable let debts = [var 0, 0];
 
@@ -280,7 +288,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             var current = dividendsLock(i, user);
             let amount = current.owedAmount;
 
-            if (amount <= Common.icp_transfer_fee) {
+            if (amount <= tokenTransferFee(token)) {
                 lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
@@ -291,7 +299,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             };
             let res = await icrc1.icrc1_transfer({
                 memo = null;
-                amount = amount - Common.icp_transfer_fee; // FIXME@P1: This amount is correct not for every token.
+                amount = amount - tokenTransferFee(token);
                 fee = null;
                 from_subaccount = null;
                 to = accountWithDividends(user);
@@ -327,14 +335,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         let acc = accountWithDividends(caller);
         let tokenSvc = icrc1Token(token);
         let amount = await tokenSvc.icrc1_balance_of(acc);
-        if (amount <= Common.icp_transfer_fee) {
+        if (amount <= tokenTransferFee(token)) {
             // lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], accountHash(caller));
             return 0;
         };
         try {
             let res = await tokenSvc.icrc1_transfer({
                 memo = null;
-                amount = amount - Common.icp_transfer_fee;
+                amount = amount - tokenTransferFee(token);
                 fee = null;
                 from_subaccount = acc.subaccount;
                 to;
