@@ -265,7 +265,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             var current = dividendsLock(i, user);
             let amount = current.owedAmount;
 
-            if (amount < Common.icp_transfer_fee) {
+            if (amount <= Common.icp_transfer_fee) {
                 lockDividendsAccount[i] := principalMap.delete(lockDividendsAccount[i], user);
                 return 0;
             };
