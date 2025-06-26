@@ -358,13 +358,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         return await finishWithdrawDividends(token, to); // TODO: Use `await*`.
     };
 
-    // FIXME@P1: needed?
     /// Record the current dividend snapshot for a newly minted PST holder.
-    // public shared({caller}) func registerMint(user: Principal) {
-    //     if (caller != Principal.fromActor(PST)) {
-    //         Debug.trap("registerMint: unauthorized");
-    //     };
-    //     dividendsCheckpoint[0] := principalMap.put(dividendsCheckpoint[0], user, dividend[0]);
-    //     dividendsCheckpoint[1] := principalMap.put(dividendsCheckpoint[1], user, dividend[1]);
-    // };
+    public shared({caller}) func registerMint(user: Principal) {
+        if (caller != Principal.fromActor(PST)) {
+            Debug.trap("registerMint: unauthorized");
+        };
+        dividendsCheckpoint[0] := principalMap.put(dividendsCheckpoint[0], user, dividend[0]);
+        dividendsCheckpoint[1] := principalMap.put(dividendsCheckpoint[1], user, dividend[1]);
+    };
 }
