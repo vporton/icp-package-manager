@@ -138,7 +138,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public shared func indebt({amount: Nat; token: Token}) {
         let i = tokenIndex(token);
         // debts[i] += amount;
-        await recalculateShareholdersDebt(amount, token);
+        await* recalculateShareholdersDebt(amount, token);
     };
 
     /// Dividends and Withdrawals ///
@@ -210,11 +210,12 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         _dividendsOwing(caller, await PST.icrc1_balance_of({owner = caller; subaccount = null}), token);
     };
 
-    func recalculateShareholdersDebt(amount: Nat, token: Token) : async () {
+    func recalculateShareholdersDebt(amount: Nat, token: Token) : async* () {
         let totalSupply = await PST.icrc1_total_supply();
         if (totalSupply == 0) { return; };
         let i = tokenIndex(token);
         dividendPerToken[i] += amount * DIVIDEND_SCALE / totalSupply;
+        Debug.print("dividendPerToken: " # debug_show(dividendPerToken[i]));
     };
 
     // TODO@P2: needed?
