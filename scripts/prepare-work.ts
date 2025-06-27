@@ -37,6 +37,8 @@ async function main() {
     const pmBatteryBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/battery/battery.wasm`));
     const pmExampleFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_frontend/example_frontend.wasm.gz`));
     const pmExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_backend/example_backend.wasm`));
+    const walletFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/wallet_frontend/wallet_frontend.wasm.gz`));
+    const walletBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/wallet_backend/wallet_backend.wasm`));
 
     const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
@@ -124,6 +126,22 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
+    const walletFrontend = await repositoryIndex.uploadModule({
+        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_WALLET_FRONTEND!), wasm: walletFrontendBlob}},
+        installByDefault: true,
+        forceReinstall: false,
+        canisterVersion: [],
+        callbacks: [],
+    });
+    const walletBackend = await repositoryIndex.uploadModule({
+        code: {Wasm: walletBackendBlob},
+        installByDefault: true,
+        forceReinstall: false,
+        canisterVersion: [],
+        callbacks: [
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
+    });
 
     console.log("Creating packages...");
     const pmReal: SharedRealPackageInfo = {
@@ -186,6 +204,35 @@ async function main() {
         versionsMap: [["stable", "0.0.1"]],
     };
     await repositoryIndex.setFullPackageInfo("example", pmEFFullInfo);
+
+    const walletReal: SharedRealPackageInfo = {
+        modules: [
+            ['frontend', walletFrontend],
+            ['backend', walletBackend],
+        ],
+        dependencies: [],
+        suggests: [],
+        recommends: [],
+        functions: [],
+        permissions: [],
+        checkInitializedCallback: [{moduleName: 'frontend', how: {urlPath: '/index.html'}}], // FIXME@P3
+        frontendModule: ['frontend'],
+    };
+    const walletInfo: SharedPackageInfo = {
+        base: {
+            name: "wallet",
+            version: "0.0.1",
+            shortDescription: "Wallet for IC Pack",
+            longDescription: "Wallet for IC Pack, used among other for in-app payments",
+            guid: Uint8Array.from([206,  18, 101,   7, 174, 170, 142, 240,  90, 165, 231, 131, 186, 119, 122,  57]),
+        },
+        specific: {real: walletReal},
+    };
+    const walletFullInfo: SharedFullPackageInfo = {
+        packages: [["0.0.1", walletInfo]],
+        versionsMap: [["stable", "0.0.1"]],
+    };
+    await repositoryIndex.setFullPackageInfo("wallet", walletFullInfo);
 
     console.log("Cleaning unused WASMs...");
     await repositoryIndex.cleanUnusedWasms();

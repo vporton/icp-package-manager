@@ -16,7 +16,7 @@ export default function Settings() {
         if (!agent || !principal || !glob.walletBackend) return;
 
         const limits = await glob.walletBackend.getLimitAmounts();
-        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10);
+        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10); // FIXME@P3: duplicate code
         setAmountAddInput(limits.amountAddInput[0] ?? 30);
     };
 
@@ -63,7 +63,7 @@ export default function Settings() {
                         isInvalid={amountAddCheckbox !== undefined && amountAddCheckbox < 0}
                     />
                     <Form.Text className="text-muted">
-                        Default amount to add when using quick add checkbox
+                        amount in XDR
                     </Form.Text>
                 </Form.Group>
 
@@ -78,7 +78,7 @@ export default function Settings() {
                         isInvalid={amountAddInput !== undefined && amountAddInput < 0}
                     />
                     <Form.Text className="text-muted">
-                        Default amount to show in manual input field
+                        amount in XDR
                     </Form.Text>
                 </Form.Group>
 

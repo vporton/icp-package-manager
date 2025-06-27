@@ -40,8 +40,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
     const [selectedToken, setSelectedToken] = useState<UIToken | null>(null);
-    const [sendAmount, setSendAmount] = useState('');
-    const [sendTo, setSendTo] = useState('');
     const [archiveCanisterId, setArchiveCanisterId] = useState('');
     const [copied, setCopied] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -87,31 +85,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         
         setShowAddModal(false);
         loadTokens();
-    };
-
-    const handleSend = async () => {
-        if (!selectedToken?.canisterId || !sendAmount || !sendTo) return;
-        
-        try {
-            const to = decodeIcrcAccount(sendTo);
-            const res = await glob.walletBackend!.do_secure_icrc1_transfer(selectedToken?.canisterId, {
-                from_subaccount: [],
-                to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
-                amount: BigInt(sendAmount),
-                fee: [],
-                memo: [],
-                created_at_time: [],
-            });
-            setShowSendModal(false);
-            setSendAmount('');
-            setSendTo('');
-            setSelectedToken(null);
-            if ((res as any).Err) {
-                throw "error sending token"; // TODO@P3: better error message (based on `Err`)
-            }
-        } catch (error: any) {
-            setError(error?.toString() || 'Failed to send tokens');
-        }
     };
 
     const handleRemoveToken = async () => {
@@ -188,6 +161,18 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         }
     }, [tokens, defaultAgent, userWallet]);
 
+    const [xr, setXr] = useState<number | undefined>();
+    async function initSendModal(token: any) { // TODO@P3: `any`
+        setSelectedToken(token);
+        if (!await glob.walletBackend!.isAnonymous()) {
+            const rate = await glob.walletBackend!.get_exchange_rate(token.symbol);
+            if ((rate as any).Ok !== undefined) {
+                setXr((rate as any).Ok);
+            }
+        }
+        setShowSendModal(true);
+    }
+
     return (
         <>
             <table className="table">
@@ -212,10 +197,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                                     variant="primary" 
                                     size="sm" 
                                     className="me-2"
-                                    onClick={() => {
-                                        setSelectedToken(token);
-                                        setShowSendModal(true);
-                                    }}
+                                    onClick={async () => await initSendModal(token)}
                                 >
                                     Send
                                 </Button>
@@ -246,48 +228,8 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                 </tbody>
             </table>
 
-            {/* Send Modal */}
-            <Modal show={showSendModal} onHide={() => setShowSendModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Send {selectedToken?.symbol}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Amount</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={sendAmount}
-                                onChange={(e) => setSendAmount(e.target.value)}
-                                placeholder="Enter amount"
-                                min="0"
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>To Address</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={sendTo}
-                                onChange={(e) => setSendTo(e.target.value)}
-                                placeholder="Enter recipient address"
-                            />
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSendModal(false)}>
-                        Cancel
-                    </Button>
-                    <Button 
-                        variant="primary" 
-                        onClick={handleSend}
-                        disabled={!sendAmount || !sendTo}
-                    >
-                        Send
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
+            <SendModal showSendModal={showSendModal} setShowSendModal={setShowSendModal} selectedToken={selectedToken} xr={xr}/>
+ 
             {/* Receive Modal */}
             <Modal show={showReceiveModal} onHide={() => setShowReceiveModal(false)}>
                 <Modal.Header closeButton>
@@ -375,5 +317,117 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         </>
     );
 });
+
+// TODO@P3: `any`
+function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: boolean) => void, selectedToken: any, xr: number | undefined}) {
+    const glob = useContext(GlobalContext);
+    const {agent, principal} = useAuth();
+    const { setError } = useContext(ErrorContext)!;
+    const [sendAmount, setSendAmount] = useState('');
+    const [sendTo, setSendTo] = useState('');
+
+    const [showCheckboxConfirmation, setShowCheckboxConfirmation] = useState(true)
+    const [showInputConfirmation, setShowInputConfirmation] = useState(true);
+    const [checkboxConfirmation, setCheckboxConfirmation] = useState(true)
+    const [inputConfirmation, setInputConfirmation] = useState(true);
+
+    const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
+    const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
+
+    const loadSettings = async () => {
+        if (!agent || !principal || !glob.walletBackend) return;
+
+        const limits = await glob.walletBackend.getLimitAmounts();
+        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10); // FIXME@P3: duplicate code
+        setAmountAddInput(limits.amountAddInput[0] ?? 30);
+    };
+
+    useEffect(() => {
+        if (!props.xr) return;
+        // FIXME@P2: Conversion to number may fail?
+        setShowCheckboxConfirmation(amountAddCheckbox === undefined || Number(sendAmount) * props.xr < amountAddCheckbox);
+        setShowInputConfirmation(amountAddInput === undefined || Number(sendAmount) * props.xr < amountAddInput);
+    }, [props.xr]); // FIXME@P2: Update `xr` from time to time.
+
+    const handleSend = async () => {
+        if (!props.selectedToken?.canisterId || !sendAmount || !sendTo) return;
+        
+        try {
+            const to = decodeIcrcAccount(sendTo);
+            const res = await glob.walletBackend!.do_secure_icrc1_transfer(props.selectedToken?.canisterId, {
+                from_subaccount: [],
+                to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
+                amount: BigInt(sendAmount),
+                fee: [],
+                memo: [],
+                created_at_time: [],
+            });
+            props.setShowSendModal(false);
+            setSendAmount('');
+            setSendTo('');
+            // setSelectedToken(null);
+            if ((res as any).Err) {
+                throw "error sending token"; // TODO@P3: better error message (based on `Err`)
+            }
+        } catch (error: any) {
+            setError(error?.toString() || 'Failed to send tokens');
+        }
+    };
+
+    return <Modal show={props.showSendModal} onHide={() => props.setShowSendModal(false)}>
+        <Modal.Header closeButton>
+            <Modal.Title>Send {props.selectedToken?.symbol}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            <Form>
+                <Form.Group className="mb-3">
+                    <Form.Label>Amount</Form.Label>
+                    <Form.Control
+                        type="number"
+                        value={sendAmount}
+                        onChange={(e) => setSendAmount(e.target.value)}
+                        placeholder="Enter amount"
+                        min="0"
+                    />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                    <Form.Label>To Address</Form.Label>
+                    <Form.Control
+                        type="text"
+                        value={sendTo}
+                        onChange={(e) => setSendTo(e.target.value)}
+                        placeholder="Enter recipient address"
+                    />
+                </Form.Group>
+                {showCheckboxConfirmation && <Form.Group className="mb-3">
+                    <Form.Check
+                        label="Confirm Payment"
+                        onChange={(e) => setCheckboxConfirmation(e.target.checked)}
+                    />
+                </Form.Group>}
+                {showInputConfirmation && <Form.Group className="mb-3">
+                    <Form.Label>Enter "pay":</Form.Label>
+                    <Form.Control
+                        type="text"
+                        defaultValue={''}
+                        onInput={(e) => setInputConfirmation((e.target as HTMLInputElement).value === "pay")}
+                    />
+                </Form.Group>}
+            </Form>
+        </Modal.Body>
+        <Modal.Footer>
+            <Button variant="secondary" onClick={() => props.setShowSendModal(false)}>
+                Cancel
+            </Button>
+            <Button 
+                variant="primary" 
+                onClick={handleSend}
+                disabled={!sendAmount || !sendTo || (showCheckboxConfirmation && !checkboxConfirmation) || (showInputConfirmation && !inputConfirmation)}
+            >
+                Send
+            </Button>
+        </Modal.Footer>
+    </Modal>
+}
 
 export default TokensTable;

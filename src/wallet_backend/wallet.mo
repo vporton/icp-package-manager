@@ -3,11 +3,15 @@ import Debug "mo:base/Debug";
 import Map "mo:base/OrderedMap";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
+import Float "mo:base/Float";
+import Int64 "mo:base/Int64";
+import Nat32 "mo:base/Nat32";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICRC1 "mo:icrc1-types";
 import CyclesLedger "canister:cycles_ledger";
 import ICPLedger "canister:nns-ledger";
+import XR "canister:exchange-rate";
 import Int "mo:base/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 
@@ -199,5 +203,22 @@ persistent actor class Wallet({
         };
 
         await token.icrc1_transfer(args); // `ignore` to avoid non-returning-function DoS attack
+    };
+
+    public shared({caller}) func get_exchange_rate(symbol: Text): async {#Ok: Float; #Err} {
+        if (Principal.isAnonymous(owner) or caller != owner) { // work only for personal wallet
+            Debug.trap("get_exchange_rate: no owner set");
+        };
+        let res = await (with cycles = 1_000_000_000) XR.get_exchange_rate({
+            base_asset = { symbol = "ICP"; class_ = #Cryptocurrency };
+            quote_asset = { symbol = "XDR"; class_ = #FiatCurrency };
+            timestamp = null;
+        });
+        switch (res) {
+            case (#Ok rate) {
+                #Ok (Float.fromInt64(Int64.fromNat64(rate.rate)) / Float.fromInt(10**Nat32.toNat(rate.metadata.decimals)));
+            };
+            case (#Err _) #Err;
+        };
     };
 };

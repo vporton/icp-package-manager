@@ -849,7 +849,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 packageManager = backend;
                 mainIndirect = main_indirect;
                 simpleIndirect = simple_indirect;
-                preinstalledCanisterId = coreModules.get(name);
+                preinstalledCanisterId = if (pkg.bootstrapping) { coreModules.get(name) } else { null };
                 user;
                 wasmModule = Common.shareModule(m); // TODO@P3: We unshared, then shared it, huh?
                 afterInstallCallback = pkg.afterInstallCallback;
