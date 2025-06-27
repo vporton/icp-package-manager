@@ -1,6 +1,6 @@
 # ICP Package Manager
 
-This is a preliminary release.
+This is a preliminary release. Use `stable` Git branch to run it.
 
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
