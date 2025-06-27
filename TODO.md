@@ -1,5 +1,7 @@
 Remaining things TODO:
 
+- TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
+
 - TODO@P2 Unjustified growth of `mainIndirect` by passing `1_000_000_000_000`(?) cycles to it when upgrade.
           Need to reduce installation costs.
 
