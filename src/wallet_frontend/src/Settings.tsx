@@ -3,7 +3,6 @@ import Alert from 'react-bootstrap/Alert';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { useAuth } from '../../lib/use-auth-client';
-import { createActor } from '../../declarations/wallet_backend';
 import { GlobalContext } from './state';
 
 export default function Settings() {
@@ -54,7 +53,7 @@ export default function Settings() {
             <Alert variant='danger'>These settings are not yet honored in the current version.</Alert>
             <Form>
                 <Form.Group className="mb-3">
-                    <Form.Label>Default Amount for Quick Add (Checkbox)</Form.Label>
+                    <Form.Label>Payment amount that requires checkbox confirmation</Form.Label>
                     <Form.Control
                         type="number"
                         onInput={(e) => doSetAmountAddCheckbox(e.target as HTMLInputElement)}
@@ -69,7 +68,7 @@ export default function Settings() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                    <Form.Label>Default Amount for Manual Input</Form.Label>
+                    <Form.Label>Payment amount that requires input confirmation</Form.Label>
                     <Form.Control
                         type="number"
                         onInput={(e) => doSetAmountAddInput(e.target as HTMLInputElement)}
