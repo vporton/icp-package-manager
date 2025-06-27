@@ -145,6 +145,9 @@ build@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_fronte
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: 
 	dfx canister create --network $(NETWORK) package_manager_frontend
 	dfx build --no-deps --network $(NETWORK) package_manager_frontend
+
+.PHONY: build@repository
+.PRECIOUS: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
 build@repository: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
 
 .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did: src/repository_backend/Repository.mo
@@ -347,6 +350,7 @@ generate@package_manager_frontend: src/declarations/package_manager_frontend/pac
 src/declarations/package_manager_frontend/package_manager_frontend.did.js src/declarations/package_manager_frontend/index.js src/declarations/package_manager_frontend/package_manager_frontend.did.d.ts src/declarations/package_manager_frontend/index.d.ts src/declarations/package_manager_frontend/package_manager_frontend.did: .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz
 	dfx generate --no-compile --network $(NETWORK) package_manager_frontend
 
+.PHONY: generate@repository
 .PRECIOUS: src/declarations/repository/repository.did.js src/declarations/repository/index.js src/declarations/repository/repository.did.d.ts src/declarations/repository/index.d.ts src/declarations/repository/repository.did
 generate@repository: src/declarations/repository/repository.did.js src/declarations/repository/index.js src/declarations/repository/repository.did.d.ts src/declarations/repository/index.d.ts src/declarations/repository/repository.did
 
@@ -411,22 +415,6 @@ src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
 
 .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: src/lib/Account.mo
-
-.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: src/common.mo
-
-.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: 
-
-.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/lib/Account.mo
-
-.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: src/common.mo
-
-.dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did: .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did
-
-.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-
-.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: 
-
-.dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.wasm .dfx/$(NETWORK)/canisters/bootstrapper_data/bootstrapper_data.did
 
@@ -528,17 +516,7 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: 
 
-.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-
 src/bootstrapper_backend/BootstrapperData.mo: src/lib/Account.mo
-
-src/bootstrapper_backend/BootstrapperData.mo: src/common.mo
-
-src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-
-src/bootstrapper_backend/BootstrapperData.mo: 
-
-src/bootstrapper_backend/BootstrapperData.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/bootstrapper_backend/BootstrapperData.mo
 
@@ -578,7 +556,7 @@ deploy-self@bootstrapper_data: .dfx/$(NETWORK)/canisters/bootstrapper_data/boots
 
 
 .PHONY: deploy@bootstrapper_data
-deploy@bootstrapper_data: deploy@pst deploy-self@bootstrapper_data
+deploy@bootstrapper_data: deploy-self@bootstrapper_data
 
 .PHONY: deploy-self@bootstrapper_frontend
 deploy-self@bootstrapper_frontend: .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz
@@ -706,15 +684,6 @@ deploy-self@package_manager_frontend: .dfx/$(NETWORK)/canisters/package_manager_
 .PHONY: deploy@package_manager_frontend
 deploy@package_manager_frontend: deploy@package_manager deploy@internet_identity deploy@bootstrapper deploy@battery deploy-self@package_manager_frontend
 
-.PHONY: deploy-self@pst
-deploy-self@pst: .dfx/$(NETWORK)/canisters/pst/pst.wasm .dfx/$(NETWORK)/canisters/pst/pst.did
-	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.pst) pst
-
-
-
-.PHONY: deploy@pst
-deploy@pst: deploy-self@pst
-
 .PHONY: deploy-self@repository
 deploy-self@repository: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
 	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.repository) repository
@@ -776,7 +745,7 @@ deploy-self@wallet_backend: .dfx/$(NETWORK)/canisters/wallet_backend/wallet_back
 
 
 .PHONY: deploy@wallet_backend
-deploy@wallet_backend: deploy@pst deploy@nns-ledger deploy-self@wallet_backend
+deploy@wallet_backend: deploy@nns-ledger deploy-self@wallet_backend
 
 .PHONY: deploy-self@wallet_frontend
 deploy-self@wallet_frontend: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
