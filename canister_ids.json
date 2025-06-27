@@ -34,5 +34,11 @@
   },
   "simple_indirect": {
     "ic": "ccut6-6aaaa-aaaad-aampa-cai"
+  },
+  "wallet_backend": {
+    "ic": "ptl4d-myaaa-aaaad-aav7q-cai"
+  },
+  "wallet_frontend": {
+    "ic": "yjh7k-xqaaa-aaaad-aawaa-cai"
   }
 }
