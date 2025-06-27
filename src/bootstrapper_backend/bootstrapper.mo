@@ -386,7 +386,7 @@ actor class Bootstrapper() = this {
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(balance) * env.revenueShare));
         let res2 = await CyclesLedger.icrc1_transfer({
-            to = await BootstrapperData.getAccountWithDividends2(user);
+            to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
@@ -396,7 +396,6 @@ actor class Bootstrapper() = this {
         let #Ok tx = res2 else {
             Debug.trap("transfer failed: " # debug_show(res2));
         };
-        ignore BootstrapperData.indebt({amount = revenue - Common.cycles_transfer_fee; token = #cycles});
 
         let res3 = await CyclesLedger.withdraw({
             amount = balance - revenue - Common.cycles_transfer_fee;
@@ -423,7 +422,6 @@ actor class Bootstrapper() = this {
 
         // Deduct revenue:
         let revenue = Int.abs(Float.toInt(Float.fromInt(icpBalance) * env.revenueShare));
-        ignore BootstrapperData.indebt({amount = revenue; token = #icp});
 
         let res = await ICPLedger.icrc1_transfer({
             to = {
@@ -440,7 +438,7 @@ actor class Bootstrapper() = this {
             Debug.trap("transfer failed: " # debug_show(res));
         };
         let res2 = await ICPLedger.icrc1_transfer({
-            to = await BootstrapperData.getAccountWithDividends1(user);
+            to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
             from_subaccount = ?(Common.principalToSubaccount(user));
@@ -450,7 +448,6 @@ actor class Bootstrapper() = this {
         let #Ok tx2 = res2 else {
             Debug.trap("transfer failed: " # debug_show(res2));
         };
-        ignore BootstrapperData.indebt({amount = revenue - Common.cycles_transfer_fee; token = #cycles});
         let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);

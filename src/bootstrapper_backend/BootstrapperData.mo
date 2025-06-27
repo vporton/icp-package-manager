@@ -94,16 +94,4 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
         frontendTweakers := RBTree.RBTree<PubKey, FrontendTweaker>(Blob.compare);
         frontendTweakerTimes := RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     };
-
-    public shared func indebt({amount: Nat; token: Token}) {
-        // FIXME@P1
-    };
-
-    public shared func getAccountWithDividends1(user: Principal): async Account.Account {
-        { owner = Principal.fromActor(this); subaccount = null };
-    };
-
-    public shared func getAccountWithDividends2(user: Principal): async {owner: Principal; subaccount: ?[Nat8]} {
-        { owner = Principal.fromActor(this); subaccount = null };
-    };
 }
