@@ -1,6 +1,7 @@
 Remaining things TODO
 
 - FIXME@P2 Replace the insecure algorithm by [this](https://forum.dfinity.org/t/initialize-canister-only-by-a-given-user/51757/2?u=qwertytrewq).
+  - https://mops.one/ecdsa (secp256k1 curve)
 
 - TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
 
