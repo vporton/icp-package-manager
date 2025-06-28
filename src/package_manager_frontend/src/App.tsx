@@ -68,10 +68,11 @@ async function getPublicKeyFromPrivateKey(privateKey: CryptoKey) {
 
     // Create a JWK for the public key using modulus (n) and exponent (e)
     const jwkPublic = {
-      kty: jwkPrivate.kty, // Key type (RSA)
-      n: jwkPrivate.n,    // Modulus
-      e: jwkPrivate.e,    // Public exponent
-      alg: jwkPrivate.alg // Algorithm (e.g., RSA-OAEP, RS256)
+      kty: jwkPrivate.kty, // Key type (EC)
+      crv: jwkPrivate.crv, // Curve (e.g., P-256)
+      x: jwkPrivate.x,     // X coordinate
+      y: jwkPrivate.y,     // Y coordinate
+      alg: jwkPrivate.alg, // Algorithm (e.g., ES256)
     };
 
     // Import the public key back into the Web Crypto API
@@ -79,7 +80,8 @@ async function getPublicKeyFromPrivateKey(privateKey: CryptoKey) {
       "jwk",
       jwkPublic,
       {
-        name: privateKey.algorithm.name, // e.g., "RSA-OAEP" or "RSASSA-PKCS1-v1_5"
+        name: "ECDSA",
+        namedCurve: jwkPrivate.crv, // e.g., "P-256"
         hash: { name: "SHA-256" }, // e.g., { name: "SHA-256" }
       },
       true, // Extractable
@@ -126,12 +128,13 @@ function GlobalUI() {
           : [];
         const modulesJSON = searchParams.get('modules')!;
         const privKeyUsable = await window.crypto.subtle.importKey(
-          "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, false, ["sign", "verify"]
+          "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, true, ["sign"]
         );
         const pubKeyUsable = await getPublicKeyFromPrivateKey(privKeyUsable);
         const signature = await window.crypto.subtle.sign(
           {
-            name: "P-256",
+            name: 'ECDSA',
+            // namedCurve: "P-256",
             saltLength: 32,
             hash: "SHA-256",
           },

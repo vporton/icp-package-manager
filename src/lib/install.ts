@@ -31,7 +31,7 @@ export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     try { // TODO@P3: Duplicate code(?)
         const pair = await window.crypto.subtle.generateKey(
-            {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, true, ['sign', 'verify']
+            {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, true, ['sign']
         );
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});

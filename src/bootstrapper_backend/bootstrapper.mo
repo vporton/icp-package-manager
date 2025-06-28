@@ -31,6 +31,7 @@ import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ECDSA "mo:ecdsa";
 import PublicKey "mo:ecdsa/PublicKey";
+import Signature "mo:ecdsa/Signature";
 import BootstrapperData "canister:bootstrapper_data";
 import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
@@ -182,10 +183,13 @@ actor class Bootstrapper() = this {
         let initialBalance = Cycles.balance();
 
         let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
-        let #Ok publicKey = PublicKey.fromBytes(Blob.toArray(frontendTweakPubKey).vals(), #spki) else {
-            Debug.trap("no pubkey passed");
+        let publicKey = switch (PublicKey.fromBytes(Blob.toArray(frontendTweakPubKey).vals(), #spki)) {
+            case (#Ok publicKey) publicKey;
+            case (#Err e) {
+                Debug.trap("pubkey error: " # Error.message(e));
+            };
         };
-        let #Ok signature2 = PublicKey.fromBytes(Blob.toArray(signature).vals(), #raw {curve = ECDSA.Curve(#secp256k1)}) else {
+        let #Ok signature2 = Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#secp256k1), #raw) else { // FIXME: Not PK
             Debug.trap("no signature passed");
         };
         if(not publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), signature2)) {
