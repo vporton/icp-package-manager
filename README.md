@@ -22,6 +22,17 @@ If you didn't run it yet, run `dfx extension install nns`.
 
 To build a particular canister and its dependencies, issue `make build@CANISTER`; to deploy a canister and its dependencies, `make deploy@CANISTER`; to deploy without dependencies, `make deploy-self@CANISTER`. To generate interface, `make generate@CANISTER`.
 
+You can run the included crypto wallet (a draft project, for now use it just for testing) with commands:
+```sh
+make deploy@wallet_backend generate@wallet_backend
+(cd src/wallet_frontend/ && npx vite build)
+```
+
+Installing the wallet as a package is not yet supported, because I have certain troubles with cryptography,
+that will be used to confirm that nobody can steal your user wallet.
+
+### General instructions
+
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
 To learn more before you start working with ICP Package Manager, see the following documentation available online:
