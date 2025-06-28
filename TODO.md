@@ -1,5 +1,8 @@
 Remaining things TODO
 
+- TODO@P2 Generate key pair for installed frontends. The private key can be directly delivered to the frontend in URL
+          or instead(?) we can use tECDSA.
+
 - TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
 
 - TODO@P2 Unjustified growth of `mainIndirect` by passing `1_000_000_000_000`(?) cycles to it when upgrade.
