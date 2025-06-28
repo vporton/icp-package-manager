@@ -29,18 +29,16 @@ async function sha256(v: Uint8Array): Promise<Uint8Array> {
 
 export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
-    try { // TODO@P3: Duplicate code
-        let pkg = await repoIndex.getPackage('icpack', "stable");
-        const pkgReal = (pkg!.specific as any).real as SharedRealPackageInfo;
+    try { // TODO@P3: Duplicate code(?)
+        const pair = await window.crypto.subtle.generateKey(
+            {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, true, ['sign', 'verify']
+        );
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-        const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
-        const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
-        // const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
         const {installedModules, spentCycles} = await bootstrapper.bootstrapFrontend({
-            frontendTweakPubKey,
+            frontendTweakPubKey: new Uint8Array(await window.crypto.subtle.exportKey("spki", pair.publicKey)),
         });
-        return {installedModules, frontendTweakPrivKey, spentCycles};
+        return {installedModules, frontendTweakPrivKey: pair.privateKey, spentCycles};
     }
     catch(e) {
       console.log(e);

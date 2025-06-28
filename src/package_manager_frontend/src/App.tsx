@@ -61,6 +61,38 @@ function App() {
   );
 }
 
+async function getPublicKeyFromPrivateKey(privateKey: CryptoKey) {
+  try {
+    // Export the private key in JWK format
+    const jwkPrivate = await crypto.subtle.exportKey("jwk", privateKey);
+
+    // Create a JWK for the public key using modulus (n) and exponent (e)
+    const jwkPublic = {
+      kty: jwkPrivate.kty, // Key type (RSA)
+      n: jwkPrivate.n,    // Modulus
+      e: jwkPrivate.e,    // Public exponent
+      alg: jwkPrivate.alg // Algorithm (e.g., RSA-OAEP, RS256)
+    };
+
+    // Import the public key back into the Web Crypto API
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      jwkPublic,
+      {
+        name: privateKey.algorithm.name, // e.g., "RSA-OAEP" or "RSASSA-PKCS1-v1_5"
+        hash: { name: "SHA-256" }, // e.g., { name: "SHA-256" }
+      },
+      true, // Extractable
+      ["verify"] // Key usages (e.g., for signing/verifying)
+    );
+
+    return publicKey;
+  } catch (error) {
+    console.error("Error deriving public key:", error);
+    throw error;
+  }
+}
+
 function GlobalUI() {
   const glob = useContext(GlobalContext);
   const spentStr: string | null = (new URLSearchParams(location.href)).get('spent');
@@ -93,10 +125,24 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         const modulesJSON = searchParams.get('modules')!;
+        const privKeyUsable = await window.crypto.subtle.importKey(
+          "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, false, ["sign", "verify"]
+        );
+        const pubKeyUsable = await getPublicKeyFromPrivateKey(privKeyUsable);
+        const signature = await window.crypto.subtle.sign(
+          {
+            name: "P-256",
+            saltLength: 32,
+            hash: "SHA-256",
+          },
+          privKeyUsable,
+          principal!.toUint8Array(),
+        );
         const {spentCycles: spentBackendStr} = await bootstrapperMainIndirect.bootstrapBackend({
-          frontendTweakPrivKey: glob.frontendTweakPrivKey!,
+          frontendTweakPubKey: new Uint8Array(await window.crypto.subtle.exportKey("spki", pubKeyUsable)),
           installedModules,
           user: principal!,
+          signature: new Uint8Array(signature),
         });
         const installedModulesMap = new Map(installedModules);
         const backendPrincipal = installedModulesMap.get('backend')!;

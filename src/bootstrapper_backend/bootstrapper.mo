@@ -29,6 +29,8 @@ import Map "mo:base/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
+import ECDSA "mo:ecdsa";
+import PublicKey "mo:ecdsa/PublicKey";
 import BootstrapperData "canister:bootstrapper_data";
 import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
@@ -172,15 +174,23 @@ actor class Bootstrapper() = this {
     /// We don't allow to substitute user-chosen modules for the package manager itself,
     /// because it would be a security risk of draining cycles.
     public shared func bootstrapBackend({
-        frontendTweakPrivKey: PrivKey; // TODO@P3: Rename.
+        frontendTweakPubKey: PubKey; // TODO@P3: Rename.
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabilities, used only to add as a controller.
+        signature: Blob;
     }): async {spentCycles: Int} {
         let initialBalance = Cycles.balance();
 
-        let pubKey = Sha256.fromBlob(#sha256, frontendTweakPrivKey);
-
-        let tweaker = await Data.getFrontendTweaker(pubKey);
+        let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
+        let #Ok publicKey = PublicKey.fromBytes(Blob.toArray(frontendTweakPubKey).vals(), #spki) else {
+            Debug.trap("no pubkey passed");
+        };
+        let #Ok signature2 = PublicKey.fromBytes(Blob.toArray(signature).vals(), #raw {curve = ECDSA.Curve(#secp256k1)}) else {
+            Debug.trap("no signature passed");
+        };
+        if(not publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), signature2)) {
+            Debug.trap("account validation failed");
+        };
 
         // let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) { // wrong user
         //     case (?amount) amount;
@@ -193,7 +203,7 @@ actor class Bootstrapper() = this {
         // We can't `try` on this, because if it fails, we don't know the battery.
         // TODO@P3: `try` to return money back to user account.
         let {battery} = await doBootstrapBackend({
-            pubKey;
+            pubKey = frontendTweakPubKey;
             installedModules;
             user;
             amountToMove;

@@ -61,7 +61,9 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
           ? `http://${installedModulesMap.get("frontend")}.localhost:8080`
           : `https://${installedModulesMap.get("frontend")}.icp0.io`;
         // gives the right to set frontend owner and controller to backend:
-        const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(frontendTweakPrivKey);
+        const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(
+          new Uint8Array(await window.crypto.subtle.exportKey("pkcs8", frontendTweakPrivKey))
+        );
         const packages2 = additionalPackages;
         if (addExample) {
           packages2.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
