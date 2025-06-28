@@ -96,7 +96,7 @@ shared({caller = initialOwner}) actor class Battery({
         };
     };
 
-    let revenueRecipient = Principal.fromText(env.revenueRecipient); // TODO@P1: Remove this.
+    let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     private type OurPMType = actor {
         // getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;

@@ -1,8 +1,5 @@
 Remaining things TODO
 
-- FIXME@P2 Replace the insecure algorithm by [this](https://forum.dfinity.org/t/initialize-canister-only-by-a-given-user/51757/2?u=qwertytrewq).
-  - https://mops.one/ecdsa (secp256k1 curve)
-
 - TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
 
 - TODO@P2 Unjustified growth of `mainIndirect` by passing `1_000_000_000_000`(?) cycles to it when upgrade.
@@ -155,8 +152,6 @@ Remaining things TODO
 
 - TODO@P3 Wallet: Use settings.
 
-- TODO@P2 Wallet: Investment.
-
 - TODO@P3 Wallet: View payments history.
 
 - TODO@P3 Wallet & other: QR codes for payments.
@@ -164,5 +159,3 @@ Remaining things TODO
 - TODO@P3 Wallet: Update Balances button.
 
 - FIXME@P3 Wallet: Remove tokens not by Symbol but by canister ID.
-
-- TODO@P2 Wallet: Introduce a reliable way to invest, without money loss due to network congestion, etc.

@@ -44,7 +44,7 @@ actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).
 
-    transient let revenueRecipient = Principal.fromText(env.revenueRecipient); // TODO@P1: Remove this.
+    transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// TODO@P3: Do we need this check?
     private func checkItself(caller: Principal) {

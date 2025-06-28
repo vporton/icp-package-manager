@@ -7,8 +7,6 @@ import Int "mo:base/Int";
 import Account "../lib/Account";
 
 persistent actor class BootstrapperData(initialOwner: Principal) = this {
-    // TODO@P1: Add icrc3 and icrc4 code.
-
     public type PubKey = Blob;
     public type FrontendTweaker = {
         frontend: Principal;
