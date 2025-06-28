@@ -36,7 +36,7 @@ export async function bootstrapFrontend(props: {agent: Agent}) {
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const frontendTweakPrivKey = await getRandomValues(new Uint8Array(32));
         const frontendTweakPubKey = await sha256(frontendTweakPrivKey);
-        const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
+        // const frontendModule = pkgReal.modules.find(m => m[0] === "frontend")!;
         const {installedModules, spentCycles} = await bootstrapper.bootstrapFrontend({
             frontendTweakPubKey,
         });
