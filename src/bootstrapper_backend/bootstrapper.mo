@@ -211,7 +211,7 @@ actor class Bootstrapper() = this {
             installedModules;
             user;
             amountToMove;
-            tweaker
+            tweaker;
         });
 
         let spentCycles = (initialBalance: Int) - Cycles.balance();
