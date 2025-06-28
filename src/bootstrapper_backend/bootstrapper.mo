@@ -184,15 +184,18 @@ actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
         let publicKey = switch (PublicKey.fromBytes(Blob.toArray(frontendTweakPubKey).vals(), #spki)) {
-            case (#Ok publicKey) publicKey;
-            case (#Err e) {
-                Debug.trap("pubkey error: " # Error.message(e));
+            case (#ok publicKey) publicKey;
+            case (#err e) {
+                Debug.trap("pubkey error: " # e);
             };
         };
-        let #Ok signature2 = Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#secp256k1), #raw) else { // FIXME: Not PK
-            Debug.trap("no signature passed");
+        let signature2 = switch (Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#secp256k1), #raw)) {
+            case (#ok sig) sig;
+            case (#err e) {
+                Debug.trap("signature error: " # e);
+            };
         };
-        if(not publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), signature2)) {
+        if (not publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), signature2)) {
             Debug.trap("account validation failed");
         };
 
