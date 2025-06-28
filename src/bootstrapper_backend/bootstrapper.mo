@@ -189,7 +189,7 @@ actor class Bootstrapper() = this {
                 Debug.trap("pubkey error: " # e);
             };
         };
-        let signature2 = switch (Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#secp256k1), #raw)) {
+        let signature2 = switch (Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#prime256v1), #raw)) {
             case (#ok sig) sig;
             case (#err e) {
                 Debug.trap("signature error: " # e);

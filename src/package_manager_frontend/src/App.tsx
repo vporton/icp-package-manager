@@ -128,7 +128,7 @@ function GlobalUI() {
           : [];
         const modulesJSON = searchParams.get('modules')!;
         const privKeyUsable = await window.crypto.subtle.importKey(
-          "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*secp256k1*/}, true, ["sign"]
+          "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*prime256v1*/}, true, ["sign"]
         );
         const pubKeyUsable = await getPublicKeyFromPrivateKey(privKeyUsable);
         const signature = await window.crypto.subtle.sign(
