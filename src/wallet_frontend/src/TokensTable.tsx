@@ -321,7 +321,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
 // TODO@P3: `any`
 function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: boolean) => void, selectedToken: any, xr: number | undefined}) {
     const glob = useContext(GlobalContext);
-    const {agent, principal} = useAuth();
+    const {agent,  defaultAgent, principal} = useAuth();
     const { setError } = useContext(ErrorContext)!;
     const [sendAmount, setSendAmount] = useState('');
     const [sendTo, setSendTo] = useState('');
@@ -354,10 +354,12 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         
         try {
             const to = decodeIcrcAccount(sendTo);
-            const res = await glob.walletBackend!.do_secure_icrc1_transfer(props.selectedToken?.canisterId, {
+            const token = createTokenActor(props.selectedToken?.canisterId, {agent: defaultAgent});
+            const decimals = await token.decimals();
+            /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
-                amount: BigInt(sendAmount),
+                amount: BigInt(Number(sendAmount) * 10**decimals.decimals), // TODO@P2: Does Number convert right?
                 fee: [],
                 memo: [],
                 created_at_time: [],
@@ -366,9 +368,11 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             setSendAmount('');
             setSendTo('');
             // setSelectedToken(null);
-            if ((res as any).Err) {
-                throw "error sending token"; // TODO@P3: better error message (based on `Err`)
-            }
+            // if ((res as any).Err) {
+            //     // console.log((res as any).Err);
+            //     throw 'Failed to send tokens';
+            // }
+            // TODO: Update amounts in token table here (after a pause, because of no-return function `do_icrc1_transfer`).
         } catch (error: any) {
             setError(error?.toString() || 'Failed to send tokens');
         }
