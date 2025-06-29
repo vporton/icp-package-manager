@@ -4,10 +4,11 @@ import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
+import UserAuth "../lib/UserAuth";
 import Account "../lib/Account";
 
 persistent actor class BootstrapperData(initialOwner: Principal) = this {
-    public type PubKey = Blob;
+    public type PubKey = UserAuth.PubKey;
     public type FrontendTweaker = {
         frontend: Principal;
         user: Principal;

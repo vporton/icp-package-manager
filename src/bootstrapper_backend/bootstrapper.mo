@@ -29,9 +29,7 @@ import Map "mo:base/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
-import ECDSA "mo:ecdsa";
-import PublicKey "mo:ecdsa/PublicKey";
-import Signature "mo:ecdsa/Signature";
+import UserAuth "../lib/UserAuth";
 import BootstrapperData "canister:bootstrapper_data";
 import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";
@@ -183,19 +181,7 @@ actor class Bootstrapper() = this {
         let initialBalance = Cycles.balance();
 
         let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
-        let publicKey = switch (PublicKey.fromBytes(Blob.toArray(frontendTweakPubKey).vals(), #spki)) {
-            case (#ok publicKey) publicKey;
-            case (#err e) {
-                Debug.trap("pubkey error: " # e);
-            };
-        };
-        let signature2 = switch (Signature.fromBytes(Blob.toArray(signature).vals(), ECDSA.Curve(#prime256v1), #raw)) {
-            case (#ok sig) sig;
-            case (#err e) {
-                Debug.trap("signature error: " # e);
-            };
-        };
-        if (not publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), signature2)) {
+        if (not UserAuth.verifySignature(frontendTweakPubKey, user, signature)) {
             Debug.trap("account validation failed");
         };
 
@@ -356,8 +342,6 @@ actor class Bootstrapper() = this {
         {battery};
     };
 
-    public type PubKey = Blob;
-    public type PrivKey = Blob;
 
     /// Internal. Updates controllers and owners of the frontend.
     ///
