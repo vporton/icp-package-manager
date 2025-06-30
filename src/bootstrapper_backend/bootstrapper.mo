@@ -51,6 +51,8 @@ actor class Bootstrapper() = this {
         };
     };
 
+    public type PubKey = Blob; // TODO@P3: duplicate code here
+
     public shared({caller}) func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
