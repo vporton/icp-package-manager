@@ -17,6 +17,15 @@ import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
 import { performModularUpgrade } from './lib/modularUpgrade';
 
+function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
+    const binaryString = String.fromCharCode(...uint8Array);
+    const base64String = btoa(binaryString);
+    return base64String
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
 /// `oldInstallation === undefined` means that the package is newly installed rather than upgraded.
 export default function ChooseVersion(props: {}) {
     const { packageName, repo, installationId: oldInstallation } = useParams();
@@ -89,7 +98,6 @@ function ChooseVersion2(props: {
             setBusy(true);
             setInstalling(true);
 
-            // TODO@P3: hack
             const {minInstallationId: id} = await glob.packageManager!.installPackages({
                 packages: [{
                     packageName: props.packageName!,
@@ -102,7 +110,14 @@ function ChooseVersion2(props: {
                 afterInstallCallback: [],
             });
             await waitTillInitialized(agent!, glob.backend!, id);
-            navigate(`/installed/show/${id}`);
+
+            const pair = await window.crypto.subtle.generateKey(
+                {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']
+            );
+            const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
+            await glob.packageManager!.setInstallationPubKey(BigInt(id), pubKey);
+            const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
+            navigate(`/installed/show/${id}?installationPrivKey=${privKeyEncoded}`);
         }
         catch (e) {
             const msg = (e as object).toString();

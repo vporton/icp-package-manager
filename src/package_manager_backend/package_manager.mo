@@ -47,7 +47,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package: Common.PackageInfo;
         packageRepoCanister: Principal;
         modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
-        minInstallationId: Nat; // hack 
+        minInstallationId: Nat; // hack
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };    
@@ -61,7 +61,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         package: Common.SharedPackageInfo;
         packageRepoCanister: Principal;
         modulesInstalledByDefault: [(Text, Principal)];
-        minInstallationId: Nat; // hack 
+        minInstallationId: Nat; // hack
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
@@ -297,6 +297,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO@P3: `var` or `let` here and in other places:
     var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
         HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
+
 
     stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
     // TODO@P3: `var` or `let` here and in other places:
@@ -844,6 +845,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 arg = to_candid({
                     // TODO@P3: Add more arguments.
                     userArg = pkg.arg;
+                    pubKey = null;
                 });
                 installationId = p0;
                 packageManager = backend;
@@ -914,6 +916,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                     user;
                     installationId;
                     userArg = pkg.arg;
+                    pubKey = null;
                 });
                 moduleName = name;
                 moduleNumber = pos;
@@ -1004,12 +1007,14 @@ shared({caller = initialCaller}) actor class PackageManager({
         let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
             Debug.trap("package installation has not been started");
         };
+        let pubKey : ?Blob = null;
         installedPackages.put(installationId, {
             id = installationId;
             var package = ourHalfInstalled.package;
             var packageRepoCanister = ourHalfInstalled.packageRepoCanister;
             var modulesInstalledByDefault = ourHalfInstalled.modulesInstalledByDefault; // no need for deep copy, because we delete `ourHalfInstalled` soon
             additionalModules = HashMap.HashMap(0, Text.equal, Text.hash);
+            var pubKey = null;
             var pinned = false;
         });
         let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
@@ -1134,6 +1139,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             func (elt: (Common.InstallationId, HalfInstalledPackageInfo)) = (elt.0, shareHalfInstalledPackageInfo(elt.1)),
         ));
 
+
         _halfUninstalledPackagesSave := Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), (Common.UninstallationId, SharedHalfUninstalledPackageInfo)>(
             halfUninstalledPackages.entries(),
             func (elt: (Common.InstallationId, HalfUninstalledPackageInfo)) = (elt.0, shareHalfUninstalledPackageInfo(elt.1)),
@@ -1195,6 +1201,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             Common.intHash,
         );
         _halfInstalledPackagesSave := []; // Free memory;
+
         halfUninstalledPackages := HashMap.fromIter<Common.UninstallationId, HalfUninstalledPackageInfo>(
             Iter.map<(Common.UninstallationId, SharedHalfUninstalledPackageInfo), (Common.UninstallationId, HalfUninstalledPackageInfo)>(
                 _halfUninstalledPackagesSave.vals(),
@@ -1287,6 +1294,26 @@ shared({caller = initialCaller}) actor class PackageManager({
                     (info.0, Common.installedPackageInfoShare(info.1))
             )
         );
+    };
+
+    /// Get public key associated with an installation.
+    public query({caller}) func getInstallationPubKey(id: Common.InstallationId): async ?Blob {
+        onlyOwner(caller, "getInstallationPubKey");
+
+        switch (installedPackages.get(id)) {
+            case (?info) info.pubKey;
+            case null null;
+        };
+    };
+
+    /// Update public key for an installation.
+    public shared({caller}) func setInstallationPubKey(id: Common.InstallationId, pubKey: Blob): async () {
+        onlyOwner(caller, "setInstallationPubKey");
+
+        let ?info = installedPackages.get(id) else {
+            Debug.trap("no such installation");
+        };
+        info.pubKey := ?pubKey;
     };
 
     /// Internal.

@@ -11,6 +11,15 @@ import Accordion from "react-bootstrap/Accordion";
 import Modal from "react-bootstrap/Modal";
 import { myUseNavigate } from "./MyNavigate";
 
+function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
+    const binaryString = String.fromCharCode(...uint8Array);
+    const base64String = btoa(binaryString);
+    return base64String
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
 export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
@@ -79,6 +88,14 @@ export default function InstalledPackage(props: {}) {
         }
     }
 
+    async function regenerateKey() {
+        const pair = await window.crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
+        const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
+        await glob.packageManager!.setInstallationPubKey(BigInt(installationId!), pubKey);
+        const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
+        navigate(`/installed/show/${installationId}?installationPrivKey=${privKeyEncoded}`);
+    }
+
     return (
         <>
             <h2>Installation</h2>
@@ -96,6 +113,7 @@ export default function InstalledPackage(props: {}) {
                         onClick={() => navigate(`/choose-upgrade/${pkg.packageRepoCanister}/${installationId}`)}
                     >Upgrade</Button>
                 </p>
+                <p><Button onClick={regenerateKey} disabled={!ok}>Generate configuration key</Button></p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>
                 <p><strong>Package name:</strong> {pkg.package.base.name}</p>

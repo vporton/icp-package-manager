@@ -14,11 +14,12 @@ import ICPLedger "canister:nns-ledger";
 import XR "canister:exchange-rate";
 import Int "mo:base/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
+import UserAuth "../lib/UserAuth";
 
 persistent actor class Wallet({
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
 }) = this {
-    let owner = user;
+    stable var owner = user;
 
     private func onlyOwner(caller: Principal, msg: Text) {
         if (not Principal.isAnonymous(owner) and caller != owner) {
@@ -52,6 +53,32 @@ persistent actor class Wallet({
                 archiveCanisterId = null; // FIXME@P2
             },
         ]
+    };
+
+    /// Change wallet owner after verifying caller's signature with the provided public key.
+    public shared({caller}) func setOwner(pubKey: UserAuth.PubKey, signature: Blob): async () {
+        if (not UserAuth.verifySignature(pubKey, caller, signature)) {
+            Debug.trap("invalid signature");
+        };
+        owner := caller;
+    };
+
+    /// Configure wallet data for the calling user after verifying the signature.
+    public shared({caller}) func configure(pubKey: UserAuth.PubKey, signature: Blob): async () {
+        if (not UserAuth.verifySignature(pubKey, caller, signature)) {
+            Debug.trap("invalid signature");
+        };
+        if (principalMap.get(userData, caller) == null) {
+            userData := principalMap.put<UserData>(
+                userData,
+                caller,
+                {
+                    var amountAddCheckbox = ?10.0;
+                    var amountAddInput = ?30.0;
+                    var tokens = defaultTokens();
+                }
+            );
+        };
     };
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
