@@ -5,23 +5,39 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useContext } from 'react';
 const Invest = lazy(() => import('./Invest'));
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { useState, useRef } from 'react';
-import { GlobalContextProvider } from './state';
+import { GlobalContext, GlobalContextProvider } from './state';
 import AddTokenDialog from './AddTokenDialog';
+import { signPrincipal, getPublicKeyFromPrivateKey } from '../../lib/signatures';
+
+function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
+    const base64String = urlSafeBase64
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(urlSafeBase64.length + (4 - urlSafeBase64.length % 4) % 4, '=');
+    const binaryString = atob(base64String);
+    const binaryArray = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        binaryArray[i] = binaryString.charCodeAt(i);
+    }
+    return binaryArray;
+}
 
 export default function App() {
+    const params = new URLSearchParams(window.location.search);
+    const installKey = params.get('installationPrivKey');
     return (
         <ErrorProvider>
             <ErrorBoundary>
                 <AuthProvider>
                     <GlobalContextProvider>
-                        <App2/>
+                        {installKey ? <FinishInstallation installationPrivKey={installKey}/> : <App2/>}
                     </GlobalContextProvider>
                 </AuthProvider>
             </ErrorBoundary>
@@ -82,6 +98,33 @@ function App2() {
                 onHide={() => setShowAddTokenDialog(false)}
                 onTokenAdded={handleTokenAdded}
             />
+        </Container>
+    );
+}
+
+function FinishInstallation(props: {installationPrivKey: string}) {
+    const {agent, principal, ok} = useAuth();
+    const glob = useContext(GlobalContext);
+
+    async function finish() {
+        if (!ok || agent === undefined || glob.walletBackend === undefined || principal === undefined) {
+            return;
+        }
+        const privBytes = urlSafeBase64ToUint8Array(props.installationPrivKey);
+        const privKey = await window.crypto.subtle.importKey('pkcs8', privBytes, {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
+        const pubKey = await getPublicKeyFromPrivateKey(privKey);
+        const pubKeyBytes = new Uint8Array(await window.crypto.subtle.exportKey('spki', pubKey));
+        const signature = new Uint8Array(await signPrincipal(privKey, principal));
+        await glob.walletBackend.setOwner(pubKeyBytes, signature);
+        await glob.walletBackend.configure(pubKeyBytes, signature);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('installationPrivKey');
+        open(url.toString(), '_self');
+    }
+
+    return (
+        <Container>
+            <p><Button onClick={finish}>Finish installation</Button></p>
         </Container>
     );
 }

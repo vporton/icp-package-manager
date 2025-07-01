@@ -288,6 +288,8 @@ module {
         var packageRepoCanister: Principal;
         var modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
         additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>;
+        /// Public key used to verify configuration requests for this installation.
+        var pubKey: ?Blob;
         var pinned: Bool;
     };
 
@@ -318,6 +320,7 @@ module {
         packageRepoCanister: Principal;
         modulesInstalledByDefault: [(Text, Principal)];
         additionalModules: [(Text, [Principal])];
+        pubKey: ?Blob;
         pinned: Bool;
     };
 
@@ -332,6 +335,7 @@ module {
                 func ((k, v): (Text, Buffer.Buffer<Principal>)): (Text, [Principal]) = (k, Buffer.toArray(v))
             )
         );
+        pubKey = info.pubKey;
         pinned = info.pinned;
     };
 
@@ -354,6 +358,7 @@ module {
             Text.equal,
             Text.hash,
         );
+        var pubKey = info.pubKey;
         var pinned = info.pinned;
     };
 
