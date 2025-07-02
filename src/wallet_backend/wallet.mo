@@ -6,6 +6,7 @@ import Text "mo:base/Text";
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
 import Nat32 "mo:base/Nat32";
+import Common "../common";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
 import ICRC1 "mo:icrc1-types";
@@ -17,7 +18,9 @@ import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 import UserAuth "../lib/UserAuth";
 
 persistent actor class Wallet({
+    installationId: Nat;
     user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
+    packageManager: Principal;
 }) = this {
     stable var owner = user;
 
@@ -57,7 +60,13 @@ persistent actor class Wallet({
 
     // FIXME@P1: Take stored pubKey instead of passing it here.
     /// Change wallet owner after verifying caller's signature with the provided public key.
-    public shared({caller}) func setOwner(pubKey: UserAuth.PubKey, signature: Blob): async () {
+    public shared({caller}) func setOwner(signature: Blob): async () {
+        let backendActor = actor(Principal.toText(packageManager)): actor {
+            getInstallationPubKey: query (id: Common.InstallationId) -> async ?Blob;
+        };
+        let ?pubKey = await backendActor.getInstallationPubKey(installationId) else {
+            Debug.trap("no public key");
+        };
         if (not UserAuth.verifySignature(pubKey, caller, signature)) {
             Debug.trap("invalid signature");
         };

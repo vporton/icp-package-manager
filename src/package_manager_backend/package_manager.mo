@@ -1298,8 +1298,6 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// Get public key associated with an installation.
     public query({caller}) func getInstallationPubKey(id: Common.InstallationId): async ?Blob {
-        onlyOwner(caller, "getInstallationPubKey");
-
         switch (installedPackages.get(id)) {
             case (?info) info.pubKey;
             case null null;
