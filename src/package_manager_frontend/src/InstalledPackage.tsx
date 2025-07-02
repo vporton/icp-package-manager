@@ -93,7 +93,15 @@ export default function InstalledPackage(props: {}) {
                 }
             });
         }
-    }, [glob.packageManager, glob.backend, pkg, ok, agent, installationPrivKey, walletIsAnonymous]);
+    }, [
+        glob.packageManager,
+        pkg,
+        ok,
+        agent,
+        installationPrivKey,
+        walletIsAnonymous,
+        searchParams,
+    ]);
 
     function uninstall() {
         setUninstallConfirmationMessage("");
