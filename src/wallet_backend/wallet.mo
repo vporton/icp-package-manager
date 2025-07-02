@@ -55,30 +55,13 @@ persistent actor class Wallet({
         ]
     };
 
+    // FIXME@P1: Take stored pubKey instead of passing it here.
     /// Change wallet owner after verifying caller's signature with the provided public key.
     public shared({caller}) func setOwner(pubKey: UserAuth.PubKey, signature: Blob): async () {
         if (not UserAuth.verifySignature(pubKey, caller, signature)) {
             Debug.trap("invalid signature");
         };
         owner := caller;
-    };
-
-    /// Configure wallet data for the calling user after verifying the signature.
-    public shared({caller}) func configure(pubKey: UserAuth.PubKey, signature: Blob): async () {
-        if (not UserAuth.verifySignature(pubKey, caller, signature)) {
-            Debug.trap("invalid signature");
-        };
-        if (principalMap.get(userData, caller) == null) {
-            userData := principalMap.put<UserData>(
-                userData,
-                caller,
-                {
-                    var amountAddCheckbox = ?10.0;
-                    var amountAddInput = ?30.0;
-                    var tokens = defaultTokens();
-                }
-            );
-        };
     };
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
@@ -232,7 +215,7 @@ persistent actor class Wallet({
 
     public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
         onlyOwner(caller, "do_secure_icrc1_transfer");
-        if (token != ICPLedger and token != CyclesLedger) {
+        if (Principal.fromActor(token) != Principal.fromActor(ICPLedger) and Principal.fromActor(token) != Principal.fromActor(CyclesLedger)) {
             Debug.trap("only tree tokens considered secure");
         };
 

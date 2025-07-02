@@ -116,7 +116,6 @@ function FinishInstallation(props: {installationPrivKey: string}) {
         const pubKeyBytes = new Uint8Array(await window.crypto.subtle.exportKey('spki', pubKey));
         const signature = new Uint8Array(await signPrincipal(privKey, principal));
         await glob.walletBackend.setOwner(pubKeyBytes, signature);
-        await glob.walletBackend.configure(pubKeyBytes, signature);
         const url = new URL(window.location.href);
         url.searchParams.delete('installationPrivKey');
         open(url.toString(), '_self');
