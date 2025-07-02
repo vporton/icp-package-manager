@@ -5,7 +5,6 @@ import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
 import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did.js';
-import { Actor } from "@dfinity/agent";
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
 import Modal from "react-bootstrap/Modal";
@@ -25,6 +24,7 @@ export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
     const [searchParams] = useSearchParams();
+    const [walletIsAnonymous, setWalletIsAnonymous] = useState<boolean | undefined>();
     const installationPrivKey = searchParams.get('installationPrivKey');
     const {agent, ok, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
@@ -50,6 +50,26 @@ export default function InstalledPackage(props: {}) {
             return;
         }
 
+        const modules = new Map(pkg.modulesInstalledByDefault);
+        const backendPrincipal = modules.get('backend');
+        if (backendPrincipal !== undefined) {
+            const wallet = createWalletActor(backendPrincipal, {agent});
+            wallet.isAnonymous().then(async anon => {
+                setWalletIsAnonymous(anon);
+                if (anon && installationPrivKey === null) {
+                    try {
+                        const pair = await window.crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
+                        const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
+                        await glob.packageManager!.setInstallationPubKey(BigInt(installationId!), pubKey);
+                        const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
+                        setInstallationPrivKey(privKeyEncoded);
+                    } catch (_) {
+                        /* ignore errors */
+                    }
+                }
+            }).catch(() => {});
+        }
+
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) {
             glob.packageManager!.getInstalledPackage(BigInt(0)).then(async pkg0 => {
@@ -66,22 +86,14 @@ export default function InstalledPackage(props: {}) {
                     for (let m of piReal0.modules) {
                         url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
                     }
-                    if (installationPrivKey !== null) {
-                        try {
-                            const backendPrincipal = await glob.packageManager!.getModulePrincipal(BigInt(installationId!), 'backend');
-                            const wallet = createWalletActor(backendPrincipal, {agent});
-                            if (await wallet.isAnonymous()) {
-                                url += `&installationPrivKey=${installationPrivKey}`;
-                            }
-                        } catch (_) {
-                            // Ignore errors
-                        }
+                    if (walletIsAnonymous && installationPrivKey !== null) {
+                        url += `&installationPrivKey=${installationPrivKey}`;
                     }
                     setFrontend(url);
                 }
             });
         }
-    }, [glob.packageManager, glob.backend, pkg, installationPrivKey]);
+    }, [glob.packageManager, glob.backend, pkg, ok, agent, installationPrivKey, walletIsAnonymous]);
 
     function uninstall() {
         setUninstallConfirmationMessage("");
