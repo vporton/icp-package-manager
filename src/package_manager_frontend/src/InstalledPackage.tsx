@@ -24,8 +24,8 @@ export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
     const [searchParams] = useSearchParams();
-    const [installationPrivKey, setInstallationPrivKey] = useState<string | null>(searchParams.get('installationPrivKey'));
     const [walletIsAnonymous, setWalletIsAnonymous] = useState<boolean | undefined>();
+    const installationPrivKey = searchParams.get('installationPrivKey');
     const {agent, ok, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
@@ -93,7 +93,7 @@ export default function InstalledPackage(props: {}) {
                 }
             });
         }
-    }, [glob.packageManager, pkg, ok, agent, installationPrivKey, walletIsAnonymous]);
+    }, [glob.packageManager, glob.backend, pkg, ok, agent, installationPrivKey, walletIsAnonymous]);
 
     function uninstall() {
         setUninstallConfirmationMessage("");
