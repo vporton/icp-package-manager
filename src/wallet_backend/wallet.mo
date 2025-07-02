@@ -216,7 +216,7 @@ persistent actor class Wallet({
     public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
         onlyOwner(caller, "do_secure_icrc1_transfer");
         if (Principal.fromActor(token) != Principal.fromActor(ICPLedger) and Principal.fromActor(token) != Principal.fromActor(CyclesLedger)) {
-            Debug.trap("only tree tokens considered secure");
+            Debug.trap("only three tokens considered secure");
         };
 
         await token.icrc1_transfer(
