@@ -10,6 +10,7 @@ import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
 import Modal from "react-bootstrap/Modal";
 import { myUseNavigate } from "./MyNavigate";
+import { createActor as createWalletActor } from '../../declarations/wallet_backend';
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
     const binaryString = String.fromCharCode(...uint8Array);
@@ -23,6 +24,8 @@ function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
 export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
+    const [searchParams] = useSearchParams();
+    const installationPrivKey = searchParams.get('installationPrivKey');
     const {agent, ok, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
@@ -48,12 +51,12 @@ export default function InstalledPackage(props: {}) {
         }
 
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
-        if (piReal.frontendModule[0] !== undefined) { // There is a frontend module.
-            glob.packageManager!.getInstalledPackage(BigInt(0)).then(pkg0 => {
+        if (piReal.frontendModule[0] !== undefined) {
+            glob.packageManager!.getInstalledPackage(BigInt(0)).then(async pkg0 => {
                 const piReal0: SharedRealPackageInfo = (pkg0.package.specific as any).real;
                 const modules0 = new Map(pkg0.modulesInstalledByDefault);
                 const modules = new Map(pkg.modulesInstalledByDefault);
-                const frontendStr = modules.get(piReal.frontendModule[0]!)?.toString(); // `?` because `pkg` may be not yet set
+                const frontendStr = modules.get(piReal.frontendModule[0]!)?.toString();
                 if (frontendStr !== undefined) {
                     let url = getIsLocal() ? `http://${frontendStr}.localhost:8080` : `https://${frontendStr}.icp0.io`;
                     url += `?_pm_inst=${installationId}`;
@@ -63,11 +66,22 @@ export default function InstalledPackage(props: {}) {
                     for (let m of piReal0.modules) {
                         url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
                     }
+                    if (installationPrivKey !== null) {
+                        try {
+                            const backendPrincipal = await glob.packageManager!.getModulePrincipal(BigInt(installationId!), 'backend');
+                            const wallet = createWalletActor(backendPrincipal, {agent});
+                            if (await wallet.isAnonymous()) {
+                                url += `&installationPrivKey=${installationPrivKey}`;
+                            }
+                        } catch (_) {
+                            // Ignore errors
+                        }
+                    }
                     setFrontend(url);
                 }
             });
         }
-    }, [glob.packageManager, glob.backend, pkg]);
+    }, [glob.packageManager, glob.backend, pkg, installationPrivKey]);
 
     function uninstall() {
         setUninstallConfirmationMessage("");
@@ -88,13 +102,6 @@ export default function InstalledPackage(props: {}) {
         }
     }
 
-    async function regenerateKey() {
-        const pair = await window.crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
-        const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
-        await glob.packageManager!.setInstallationPubKey(BigInt(installationId!), pubKey);
-        const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
-        navigate(`/installed/show/${installationId}?installationPrivKey=${privKeyEncoded}`);
-    }
 
     return (
         <>
@@ -113,7 +120,6 @@ export default function InstalledPackage(props: {}) {
                         onClick={() => navigate(`/choose-upgrade/${pkg.packageRepoCanister}/${installationId}`)}
                     >Upgrade</Button>
                 </p>
-                <p><Button onClick={regenerateKey} disabled={!ok}>Generate configuration key</Button></p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> : <a href={frontend}>here</a>}</p>
                 <p><strong>Installation ID:</strong> {installationId}</p>
                 <p><strong>Package name:</strong> {pkg.package.base.name}</p>
