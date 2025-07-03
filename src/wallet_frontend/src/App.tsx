@@ -5,7 +5,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
-import { lazy, Suspense, useContext } from 'react';
+import { lazy, Suspense, useContext, useEffect, useMemo } from 'react';
 const Invest = lazy(() => import('./Invest'));
 import { AuthProvider, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
@@ -48,6 +48,7 @@ export default function App() {
 }
 
 function App2() {
+    const glob = useContext(GlobalContext);
     const {ok} = useAuth();
     const params = new URLSearchParams(window.location.search);
     const installKey = params.get('installationPrivKey');
@@ -62,6 +63,11 @@ function App2() {
     const handleTokenAdded = () => {
         setTokensKey(prev => prev + 1); // Force TokensTable to reload
     };
+
+    const [isAnonymous, setIsAnonymous] = useState<boolean | undefined>();
+    useEffect(() => {
+        glob.walletBackend?.isAnonymous().then(setIsAnonymous);
+    }, [glob.walletBackend]);
 
     return (
         <Container>
@@ -79,7 +85,7 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            {installKey ? <FinishInstallation installationPrivKey={installKey}/> : 
+            {installKey && isAnonymous !== true ? <FinishInstallation installationPrivKey={installKey}/> : 
                 <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                     <Tab eventKey="tokens" title="Tokens">
                         <p>
