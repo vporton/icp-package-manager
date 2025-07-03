@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- FIXME@P1 While trying to upgrade `wallet`: `no such installed package`.
+
 - FIXME@P2 Remove private key from Frontend link upon setting it.
 
 - FIXME@P2 Wrong Receive IPC DFX command for a user-canister wallet.
