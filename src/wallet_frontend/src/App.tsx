@@ -17,10 +17,14 @@ import AddTokenDialog from './AddTokenDialog';
 import { signPrincipal, getPublicKeyFromPrivateKey } from '../../lib/signatures';
 
 function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
-    const base64String = urlSafeBase64
+    const cleaned = urlSafeBase64.trim();
+    if (!/^[0-9A-Za-z_-]+$/.test(cleaned)) {
+        throw new Error('Invalid Base64');
+    }
+    const base64String = cleaned
         .replace(/-/g, '+')
         .replace(/_/g, '/')
-        .padEnd(urlSafeBase64.length + (4 - urlSafeBase64.length % 4) % 4, '=');
+        .padEnd(cleaned.length + (4 - cleaned.length % 4) % 4, '=');
     const binaryString = atob(base64String);
     const binaryArray = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -110,7 +114,13 @@ function FinishInstallation(props: {installationPrivKey: string}) {
         if (!ok || agent === undefined || glob.walletBackend === undefined || principal === undefined) {
             return;
         }
-        const privBytes = urlSafeBase64ToUint8Array(props.installationPrivKey);
+        let privBytes: Uint8Array;
+        try {
+            privBytes = urlSafeBase64ToUint8Array(props.installationPrivKey);
+        } catch (_) {
+            alert('Invalid installation key.');
+            return;
+        }
         const privKey = await window.crypto.subtle.importKey('pkcs8', privBytes, {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
         // const pubKey = await getPublicKeyFromPrivateKey(privKey);
         // const pubKeyBytes = new Uint8Array(await window.crypto.subtle.exportKey('spki', pubKey));

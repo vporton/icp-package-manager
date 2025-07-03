@@ -89,7 +89,7 @@ export default function InstalledPackage(props: {}) {
                         url += `&_pm_pkg0.${m[0]}=${modules0.get(m[0])!.toString()}`;
                     }
                     if (walletIsAnonymous && installationPrivKey !== null) {
-                        url += `&installationPrivKey=${installationPrivKey}`;
+                        url += `&installationPrivKey=${encodeURIComponent(installationPrivKey)}`;
                     }
                     setFrontend(url);
                 }

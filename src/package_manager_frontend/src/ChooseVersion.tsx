@@ -117,7 +117,7 @@ function ChooseVersion2(props: {
             const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
             await glob.packageManager!.setInstallationPubKey(BigInt(id), pubKey);
             const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
-            navigate(`/installed/show/${id}?installationPrivKey=${privKeyEncoded}`);
+            navigate(`/installed/show/${id}?installationPrivKey=${encodeURIComponent(privKeyEncoded)}`);
         }
         catch (e) {
             const msg = (e as object).toString();
