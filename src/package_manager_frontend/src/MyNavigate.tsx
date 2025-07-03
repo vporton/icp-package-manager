@@ -24,7 +24,7 @@ export function amendPath(path: string): string {
         pieces.push(`_pm_pkg0.backend=${backend}`);
     }
     if (pieces.length > 0) {
-        return path + '?' + pieces.join('&');
+        return /\?/.test(path) ? path + '&' + pieces.join('&') : path + '?' + pieces.join('&');
     }
     return path;
 }

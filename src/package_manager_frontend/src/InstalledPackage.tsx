@@ -91,6 +91,8 @@ export default function InstalledPackage(props: {}) {
                     if (walletIsAnonymous && installationPrivKey !== null) {
                         url += `&installationPrivKey=${encodeURIComponent(installationPrivKey)}`;
                     }
+                    console.log("installationPrivKey", installationPrivKey); // FIXME: Remove.
+                    console.log("url", url); // FIXME: Remove.
                     setFrontend(url);
                 }
             });
