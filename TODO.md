@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
+
 - FIXME@P2 Remove private key from Frontend link upon setting it.
 
 - FIXME@P2 Wrong Receive IPC DFX command for a user-canister wallet.
