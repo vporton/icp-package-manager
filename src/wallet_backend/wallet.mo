@@ -19,10 +19,11 @@ import UserAuth "../lib/UserAuth";
 
 persistent actor class Wallet({
     installationId: Nat;
-    user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
+    // TODO@P2: Remove wrong value of user also from other packages and from initialization code.
+    // user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
     packageManager: Principal;
 }) = this {
-    stable var owner = user;
+    stable var owner = Principal.fromText("2vxsx-fae");
 
     private func onlyOwner(caller: Principal, msg: Text) {
         if (not Principal.isAnonymous(owner) and caller != owner) {

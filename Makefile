@@ -31,7 +31,7 @@ INIT_BLOB = blob "\44\49\44\4c\01\6c\00\01\00"
 .PHONY: deploy
 deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy@example_frontend \
 	generate@example_frontend generate@package_manager_frontend deploy-backend \
-	build@wallet_frontend generate@wallet_backend
+	generate@wallet_backend deploy-self@wallet_frontend
 
 .PHONY: deploy-backend
 deploy-backend: prepare build@battery build@main_indirect build@package_manager build@simple_indirect deploy@repository deploy@bookmark generate@battery \

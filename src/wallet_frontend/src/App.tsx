@@ -30,14 +30,12 @@ function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
 }
 
 export default function App() {
-    const params = new URLSearchParams(window.location.search);
-    const installKey = params.get('installationPrivKey');
     return (
         <ErrorProvider>
             <ErrorBoundary>
                 <AuthProvider>
                     <GlobalContextProvider>
-                        {installKey ? <FinishInstallation installationPrivKey={installKey}/> : <App2/>}
+                        <App2/>
                     </GlobalContextProvider>
                 </AuthProvider>
             </ErrorBoundary>
@@ -47,6 +45,8 @@ export default function App() {
 
 function App2() {
     const {ok} = useAuth();
+    const params = new URLSearchParams(window.location.search);
+    const installKey = params.get('installationPrivKey');
     const [activeTab, setActiveTab] = useState('tokens');
     const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
     const [tokensKey, setTokensKey] = useState(0); // Used to force TokensTable refresh
@@ -75,23 +75,25 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
-                <Tab eventKey="tokens" title="Tokens">
-                    <p>
-                        <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
-                        {!ok && <>{" "}Login to add a token.</>}
-                    </p>
-                    {ok && <TokensTable key={tokensKey} />}
-                </Tab>
-                <Tab eventKey="settings" title="Settings">
-                    <Settings/>
-                </Tab>
-                <Tab eventKey="invest" title="Invest">
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <Invest/>
-                    </Suspense>
-                </Tab>
-            </Tabs>
+            {installKey ? <FinishInstallation installationPrivKey={installKey}/> : 
+                <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
+                    <Tab eventKey="tokens" title="Tokens">
+                        <p>
+                            <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
+                            {!ok && <>{" "}Login to add a token.</>}
+                        </p>
+                        {ok && <TokensTable key={tokensKey} />}
+                    </Tab>
+                    <Tab eventKey="settings" title="Settings">
+                        <Settings/>
+                    </Tab>
+                    <Tab eventKey="invest" title="Invest">
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <Invest/>
+                        </Suspense>
+                    </Tab>
+                </Tabs>
+            }
 
             <AddTokenDialog 
                 show={showAddTokenDialog}
@@ -123,7 +125,7 @@ function FinishInstallation(props: {installationPrivKey: string}) {
 
     return (
         <Container>
-            <p><Button onClick={finish}>Finish installation</Button></p>
+            <p><Button onClick={finish} disabled={!ok}>Finish installation</Button></p>
         </Container>
     );
 }
