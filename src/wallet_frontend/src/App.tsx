@@ -130,8 +130,6 @@ function FinishInstallation(props: {installationPrivKey: string}) {
             return;
         }
         const privKey = await window.crypto.subtle.importKey('pkcs8', privBytes, {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
-        // const pubKey = await getPublicKeyFromPrivateKey(privKey);
-        // const pubKeyBytes = new Uint8Array(await window.crypto.subtle.exportKey('spki', pubKey));
         const signature = new Uint8Array(await signPrincipal(privKey, principal));
         await glob.walletBackend.setOwner(signature);
         const url = new URL(window.location.href);
