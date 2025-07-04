@@ -20,7 +20,7 @@ import { userAccount, userAccountText } from './accountUtils';
 interface UIToken {
     symbol: string;
     name: string;
-    canisterId: Principal | undefined;
+    canisterId: Principal | undefined; // TODO@P3: `undefined` is not a good idea.
     archiveCanisterId: Principal | undefined;
 }
 
@@ -91,7 +91,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         if (!selectedToken || !glob.walletBackend) return;
         
         try {
-            await glob.walletBackend.removeToken(selectedToken.symbol);
+            await glob.walletBackend.removeToken(selectedToken.canisterId!);
             setShowManageModal(false);
             setSelectedToken(null);
             loadTokens();

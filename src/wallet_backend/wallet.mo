@@ -141,15 +141,14 @@ persistent actor class Wallet({
         };
     };
 
-    // TODO@P1: Filter by principal, not symbol.
-    public shared({caller}) func removeToken(symbol: Text): async () {
+    public shared({caller}) func removeToken(canisterId: Principal): async () {
         onlyOwner(caller, "removeToken");
         
         let data = principalMap.get(userData, caller);
         switch (data) {
             case (?data) {
                 data.tokens := Array.filter(data.tokens, func(t: Token): Bool {
-                    t.symbol != symbol
+                    t.canisterId != canisterId
                 });
             };
             case null { /* Do nothing */ };
