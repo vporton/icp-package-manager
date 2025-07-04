@@ -2,4 +2,6 @@
 
 * Cryptography-protected setting wallet's owner.
 
+* Disallow adding the same token twice.
+
 * Bug fixes.

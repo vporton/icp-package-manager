@@ -120,13 +120,18 @@ persistent actor class Wallet({
         };
     };
 
-    // FIXME@P2: Disallow adding the same token twice.
+    // FIXME@P2: 
     public shared({caller}) func addToken(token: Token): async () {
         onlyOwner(caller, "addToken");
         
         let data = principalMap.get(userData, caller);
         switch (data) {
             case (?data) {
+                for (t in data.tokens.vals()) {
+                    if (t.canisterId == token.canisterId) {
+                        Debug.trap("token already exists");
+                    };
+                };
                 data.tokens := Array.append(data.tokens, [token]);
             };
             case null {
