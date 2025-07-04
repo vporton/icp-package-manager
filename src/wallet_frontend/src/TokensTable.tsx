@@ -345,9 +345,8 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
 
     useEffect(() => {
         if (!props.xr) return;
-        // FIXME@P2: Conversion to number may fail?
-        setShowCheckboxConfirmation(amountAddCheckbox === undefined || Number(sendAmount) * props.xr < amountAddCheckbox);
-        setShowInputConfirmation(amountAddInput === undefined || Number(sendAmount) * props.xr < amountAddInput);
+        setShowCheckboxConfirmation(amountAddCheckbox === undefined || (!isNaN(Number(sendAmount)) && Number(sendAmount) * props.xr < amountAddCheckbox));
+        setShowInputConfirmation(amountAddInput === undefined || (!isNaN(Number(sendAmount)) && Number(sendAmount) * props.xr < amountAddInput));
     }, [props.xr]); // FIXME@P2: Update `xr` from time to time.
 
     const handleSend = async () => {
