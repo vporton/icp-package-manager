@@ -54,7 +54,7 @@ persistent actor class Wallet({
                 symbol = "ICP";
                 name = "Internet Computer";
                 canisterId = Principal.fromActor(ICPLedger);
-                archiveCanisterId = null; // FIXME@P2
+                archiveCanisterId = null; // TODO@P3: There are two ICP ledger archive canisters. They have canister IDs qsgjb-riaaa-aaaaa-aaaga-cai and qjdve-lqaaa-aaaaa-aaaeq-cai.
             },
         ]
     };
