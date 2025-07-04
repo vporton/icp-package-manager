@@ -136,9 +136,10 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [balances, setBalances] = useState(new Map<Principal, number>());
     const [userWallet, setUserWallet] = useState<Account | undefined>();
     const [userWalletText, setUserWalletText] = useState<string | undefined>();
+    const subaccount = userWalletText === undefined || !/\./.test(userWalletText) ? undefined : userWalletText?.replace(/^[^.]*\./, '');
     const dfxCommand = userWalletText === undefined
         ? ''
-        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} --to-subaccount ${userWalletText.replace(/^[^.]*\./, '')} --memo 1 --amount`;
+        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 1 --amount`;
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
             userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
