@@ -2,10 +2,6 @@ Remaining things TODO
 
 - TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
 
-- FIXME@P2 Remove private key from Frontend link upon setting it.
-
-- FIXME@P2 Wrong Receive ICP DFX command for a user-canister wallet.
-
 - TODO@P2 Generate key pair for installed frontends. The private key can be directly delivered to the frontend in URL
           or instead(?) we can use tECDSA.
 
