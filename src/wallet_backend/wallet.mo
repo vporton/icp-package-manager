@@ -90,7 +90,8 @@ persistent actor class Wallet({
                 {amountAddCheckbox = data.amountAddCheckbox; amountAddInput = data.amountAddInput};
             };
             case (_) {
-                initialUserData(); // TODO@P3: inefficient
+                let initial = initialUserData(); // TODO@P3: inefficient
+                {amountAddCheckbox = initial.amountAddCheckbox; amountAddInput = initial.amountAddInput};
             };
         };
     };
