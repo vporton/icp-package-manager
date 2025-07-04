@@ -1448,7 +1448,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     // TODO@P3: Should be in the frontend.
-    public query({caller}) func userAccountText(): async Principal { // FIXME@P1: It returns a wrong value and wrong type!
+    public query({caller}) func userAccountText(): async Principal { // TODO@P3: wrong value for this wrong type
         battery;
     };
 
