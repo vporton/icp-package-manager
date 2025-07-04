@@ -126,7 +126,7 @@ function AddressPopup(props: {
               <OverlayTrigger placement="right" overlay={renderTooltip}>
                 {/* TODO: Do in backend. */}
                 <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
-                  {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${address.replace(/-[^-]+\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")} --memo 1 --amount`}
+                  {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${address.replace(/-[^-]+\..*/, "")} --to-subaccount ${address.replace(/^[^.]*\./, "")} --memo 0 --amount`}
                   {" "}<em>AMOUNT</em>
                 </code>
               </OverlayTrigger>

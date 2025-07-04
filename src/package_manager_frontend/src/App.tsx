@@ -305,7 +305,7 @@ function App2() {
                 You can use DFX command:{" "}
                 <OverlayTrigger placement="right" overlay={renderTooltip}>
                   <code style={{cursor: 'pointer'}} onClick={(e: React.MouseEvent) => {copyToClipboard(e)}}>
-                    {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --memo 1 --to-principal ${address.toText().replace(/-[^-]+\..*/, "")} --amount`}
+                    {`dfx ledger --network ${process.env.DFX_NETWORK} transfer --memo 0 --to-principal ${address.toText().replace(/-[^-]+\..*/, "")} --amount`}
                     {" "}<em>AMOUNT</em>
                   </code>
                 </OverlayTrigger>

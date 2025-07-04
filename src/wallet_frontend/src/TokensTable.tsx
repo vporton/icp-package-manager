@@ -139,7 +139,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const subaccount = userWalletText === undefined || !/\./.test(userWalletText) ? undefined : userWalletText?.replace(/^[^.]*\./, '');
     const dfxCommand = userWalletText === undefined
         ? ''
-        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 1 --amount`;
+        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 0 --amount`;
     useEffect(() => {
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
             userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
