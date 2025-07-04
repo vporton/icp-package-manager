@@ -120,7 +120,6 @@ persistent actor class Wallet({
         };
     };
 
-    // FIXME@P2: 
     public shared({caller}) func addToken(token: Token): async () {
         onlyOwner(caller, "addToken");
         
