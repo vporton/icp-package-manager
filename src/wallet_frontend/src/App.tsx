@@ -85,7 +85,7 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            {installKey && isAnonymous === true ? <FinishInstallation installationPrivKey={installKey}/> : 
+            {installKey ? <FinishInstallation installationPrivKey={installKey}/> : 
                 <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                     <Tab eventKey="tokens" title="Tokens">
                         <p>
