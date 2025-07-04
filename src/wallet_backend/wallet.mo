@@ -59,7 +59,6 @@ persistent actor class Wallet({
         ]
     };
 
-    // FIXME@P1: Take stored pubKey instead of passing it here.
     /// Change wallet owner after verifying caller's signature with the provided public key.
     public shared({caller}) func setOwner(signature: Blob): async () {
         let backendActor = actor(Principal.toText(packageManager)): actor {
