@@ -44,6 +44,14 @@ persistent actor class Wallet({
         var tokens: [Token];
     };
 
+    private func initialUserData(): UserData {
+        {
+            var amountAddCheckbox = ?10.0;
+            var amountAddInput = ?30.0;
+            var tokens = defaultTokens();
+        }
+    };
+
     transient var principalMap = Map.Make<Principal>(Principal.compare);
     stable var userData = principalMap.empty<UserData>();
 
@@ -82,7 +90,7 @@ persistent actor class Wallet({
                 {amountAddCheckbox = data.amountAddCheckbox; amountAddInput = data.amountAddInput};
             };
             case (_) {
-                {amountAddCheckbox = ?10.0; amountAddInput = ?30.0};
+                initialUserData(); // TODO@P3: inefficient
             };
         };
     };
@@ -97,14 +105,7 @@ persistent actor class Wallet({
                 data.amountAddInput := values.amountAddInput;
             };
             case null {
-                userData := principalMap.put<UserData>(
-                    userData,
-                    caller,
-                    {
-                        var amountAddCheckbox = ?10.0;
-                        var amountAddInput = ?30.0;
-                        var tokens = defaultTokens();
-                    });
+                userData := principalMap.put<UserData>(userData, caller, initialUserData());
             };
         };
     };
@@ -129,14 +130,7 @@ persistent actor class Wallet({
                 data.tokens := Array.append(data.tokens, [token]);
             };
             case null {
-                userData := principalMap.put<UserData>(
-                    userData,
-                    caller,
-                    {
-                        var amountAddCheckbox = ?10.0; // FIXME@P2: duplicate data
-                        var amountAddInput = ?30.0;
-                        var tokens = Array.append(defaultTokens(), [token]);
-                    });
+                userData := principalMap.put<UserData>(userData, caller, initialUserData());
             };
         };
     };
