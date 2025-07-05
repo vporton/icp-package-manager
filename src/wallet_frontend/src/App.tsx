@@ -7,7 +7,7 @@ import TokensTable from './TokensTable';
 import Settings from './Settings';
 import { lazy, Suspense, useContext, useEffect, useMemo } from 'react';
 const Invest = lazy(() => import('./Invest'));
-import { AuthProvider, useAuth } from '../../lib/use-auth-client';
+import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
@@ -69,6 +69,12 @@ function App2() {
         glob.walletBackend?.isAnonymous().then(setIsAnonymous);
     }, [glob.walletBackend]);
 
+    const searchParams = new URLSearchParams(window.location.search);
+    const pkg0FrontendId = searchParams.get('_pm_pkg0.frontend');
+    const pkg0BackendId = searchParams.get('_pm_pkg0.backend');
+    const installationId = searchParams.get('_pm_inst');
+    const packageManagerURL = getIsLocal() ? `http://${pkg0FrontendId}.localhost:8080` : `https://${pkg0FrontendId}.icp0.io`;
+
     return (
         <Container>
             <p style={{background: 'red', color: 'white', padding: '2px'}}>
@@ -86,6 +92,10 @@ function App2() {
                 </a>
             </p>
             {installKey ? <FinishInstallation installationPrivKey={installKey}/> : 
+                isAnonymous ?
+                <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
+                    Need set package owner
+                </a> :
                 <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                     <Tab eventKey="tokens" title="Tokens">
                         <p>
@@ -104,7 +114,6 @@ function App2() {
                     </Tab>
                 </Tabs>
             }
-
             <AddTokenDialog
                 show={showAddTokenDialog}
                 onHide={() => setShowAddTokenDialog(false)}
