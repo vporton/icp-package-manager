@@ -94,11 +94,11 @@ function GlobalUI() {
             .map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}))
           : [];
         const modulesJSON = searchParams.get('modules')!;
-        const privKeyUsable = await window.crypto.subtle.importKey(
+        const privKey = await window.crypto.subtle.importKey(
           "pkcs8", glob.frontendTweakPrivKey!, {name: 'ECDSA', namedCurve: 'P-256'/*prime256v1*/}, true, ["sign"]
         );
-        const pubKeyUsable = await getPublicKeyFromPrivateKey(privKeyUsable);
-        const signature = await signPrincipal(privKeyUsable, principal!);
+        const pubKeyUsable = await getPublicKeyFromPrivateKey(privKey);
+        const signature = await signPrincipal(privKey, principal!);
         const {spentCycles: spentBackendStr} = await bootstrapperMainIndirect.bootstrapBackend({
           frontendTweakPubKey: new Uint8Array(await window.crypto.subtle.exportKey("spki", pubKeyUsable)),
           installedModules,

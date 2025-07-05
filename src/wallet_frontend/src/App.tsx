@@ -129,10 +129,10 @@ function FinishInstallation(props: {installationPrivKey: string}) {
             alert('Invalid installation key.');
             return;
         }
-        const privKeyUsable = await window.crypto.subtle.importKey(
+        const privKey = await window.crypto.subtle.importKey(
             "pkcs8", privBytes, {name: 'ECDSA', namedCurve: 'P-256'/*prime256v1*/}, true, ["sign"]
         );
-        const signature = new Uint8Array(await signPrincipal(privKeyUsable, principal));
+        const signature = new Uint8Array(await signPrincipal(privKey, principal));
         await glob.walletBackend.setOwner(signature);
         const url = new URL(window.location.href);
         url.searchParams.delete('installationPrivKey');
