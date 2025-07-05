@@ -26,8 +26,10 @@ import { principalToSubAccount } from "../src/lib/misc";
 import { commandOutput } from "../src/lib/scripts";
 import { decodeFile } from "../scripts/lib/key";
 import { ICManagementCanister } from "@dfinity/ic-management";
+import { signPrincipal } from "../src/lib/signatures";
 
 global.fetch = node_fetch as any;
+const { subtle } = crypto ?? globalThis.crypto;
 
 dotenv_config({ path: '.env' });
 
@@ -106,9 +108,9 @@ declare global {
 describe('My Test Suite', () => {
     const icHost = "http://localhost:8080";
 
-    function newAgent(): Agent {
+    async function newAgent(): Promise<Agent> {
         const identity = Ed25519KeyIdentity.generate();
-        const agent = new HttpAgent({host: icHost, identity})
+        const agent = await HttpAgent.create({host: icHost, identity, shouldFetchRootKey: true})
         if (process.env.DFX_NETWORK === 'local') {
             agent.fetchRootKey();
         }
@@ -117,17 +119,14 @@ describe('My Test Suite', () => {
 
     let defaultAgent: Agent;
 
-    before("Init", () => {
-        defaultAgent = new HttpAgent({host: icHost});
-        if (process.env.DFX_NETWORK === 'local') {
-            defaultAgent.fetchRootKey();
-        }
+    before("Init", async () => {
+        defaultAgent = await HttpAgent.create({host: icHost, shouldFetchRootKey: true});
     });
 
     it('misc', async function () {
         this.timeout(600_000); // 10 min
 
-        const bootstrapperAgent = newAgent();
+        const bootstrapperAgent = await newAgent();
         const bootstrapperUser = await bootstrapperAgent.getPrincipal();
 
         canisterNames.set(bootstrapperUser.toText(), 'bootstrapperUser');
@@ -136,10 +135,7 @@ describe('My Test Suite', () => {
 
         const key = await commandOutput("dfx identity export Zon"); // secret key
         const identity = decodeFile(key);
-        const mainUserAgent = new HttpAgent({host: "http://localhost:8080", identity})
-        if (process.env.DFX_NETWORK === 'local') {
-            mainUserAgent.fetchRootKey();
-        }    
+        const mainUserAgent = await HttpAgent.create({host: "http://localhost:8080", identity, shouldFetchRootKey: true});
         const CyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent: mainUserAgent});
         const initialTransferResult = await CyclesLedger.icrc1_transfer({
             to: {
@@ -160,22 +156,24 @@ describe('My Test Suite', () => {
         await bootstrapper.topUpCycles();
 
         console.log("Bootstrapping frontend...");
-        const {installedModules, frontendTweakPrivKey} =
+        const {installedModules, frontendTweakPrivKey, frontendTweakPubKey} =
             await bootstrapFrontend({agent: bootstrapperAgent});
         const pmInst = new Map(installedModules);
         canisterNames.set(pmInst.get("frontend")!.toText(), 'frontendPrincipal');
 
-        const backendAgent = newAgent();
+        const backendAgent = await newAgent();
         const backendUser = await backendAgent.getPrincipal();
         canisterNames.set(backendUser.toText(), 'backendUser');
         const bootstrapper2: Bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: backendAgent});
 
         console.log("Bootstrapping backend...");
         const repo = Principal.fromText(process.env.CANISTER_ID_REPOSITORY!);
+        const signature = await signPrincipal(frontendTweakPrivKey, backendUser);
         await bootstrapper2.bootstrapBackend({
-            frontendTweakPrivKey,
+            frontendTweakPubKey: new Uint8Array(await subtle.exportKey('spki', frontendTweakPubKey)),
             installedModules,
             user: backendUser,
+            signature: new Uint8Array(signature),
         });
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);

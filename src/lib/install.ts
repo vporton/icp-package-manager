@@ -6,39 +6,35 @@ import { Actor, Agent } from '@dfinity/agent';
 import { createActor as createBootstrapperIndirectActor } from "../declarations/bootstrapper";
 import { createActor as createRepositoryIndexActor } from "../declarations/repository";
 
+const { subtle } = crypto ?? globalThis.crypto;
+
+// TODO@P3: Can we simplify this function?
 async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
-    const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
     if (typeof window !== 'undefined') {
         return crypto.getRandomValues(v);
     } else {
+        const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
         return mycrypto.webcrypto.getRandomValues(v);
     }
 }
 
 // TODO@P3: duplicate code
 async function sha256(v: Uint8Array): Promise<Uint8Array> {
-    const mycrypto = await import("crypto"); // TODO@P3: This forces to use `"module": "ES2020"`.
-    if (typeof window !== 'undefined') {
-        return new Uint8Array(await crypto.subtle.digest('SHA-256', v));
-    } else {
-        const hash = mycrypto.createHash('sha256');
-        hash.update(v);
-        return new Uint8Array(hash.digest());
-    }
+    return new Uint8Array(await subtle.digest('SHA-256', v));
 }
 
 export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     try { // TODO@P3: Duplicate code(?)
-        const pair = await window.crypto.subtle.generateKey(
+        const pair = await subtle.generateKey(
             {name: 'ECDSA', namedCurve: 'P-256'/*prime256v1*/}, true, ['sign']
         );
 
         const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {installedModules, spentCycles} = await bootstrapper.bootstrapFrontend({
-            frontendTweakPubKey: new Uint8Array(await window.crypto.subtle.exportKey("spki", pair.publicKey)),
+            frontendTweakPubKey: new Uint8Array(await subtle.exportKey("spki", pair.publicKey)),
         });
-        return {installedModules, frontendTweakPrivKey: pair.privateKey, spentCycles};
+        return {installedModules, frontendTweakPrivKey: pair.privateKey, frontendTweakPubKey: pair.publicKey, spentCycles};
     }
     catch(e) {
       console.log(e);
