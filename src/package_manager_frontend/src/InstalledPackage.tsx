@@ -24,9 +24,6 @@ export default function InstalledPackage(props: {}) {
     const navigate = myUseNavigate();
     const { installationId } = useParams();
     const [searchParams] = useSearchParams();
-    const [installationPrivKey, setInstallationPrivKey] = useState<string | null>(
-        searchParams.get('installationPrivKey'),
-    );
     const {agent, ok, principal} = useAuth();
     const [pkg, setPkg] = useState<SharedInstalledPackageInfo | undefined>();
     const [frontend, setFrontend] = useState<string | undefined>();
@@ -45,16 +42,12 @@ export default function InstalledPackage(props: {}) {
             setPinned(pkg.pinned);
         });
     }, [glob.packageManager]);
-    async function setKeyPair() {
-        try {
-            const pair = await window.crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
-            const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
-            await glob.packageManager!.setInstallationPubKey(BigInt(installationId!), pubKey);
-            const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
-            setInstallationPrivKey(privKeyEncoded);
-        } catch (_) {
-            /* ignore errors */
-        }
+    async function setKeyPair() { // TODO@P3: Rename.
+        const pair = await window.crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
+        const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
+        await glob.packageManager!.setInstallationPubKey(BigInt(installationId!), pubKey);
+        const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
+        return privKeyEncoded;
     }
     useEffect(() => {
         // TODO@P3: It seems to work but is a hack:
@@ -63,11 +56,6 @@ export default function InstalledPackage(props: {}) {
         }
 
         const modules = new Map(pkg.modulesInstalledByDefault);
-        const backendPrincipal = modules.get('backend');
-        if (backendPrincipal !== undefined) {
-            const wallet = createWalletActor(backendPrincipal, {agent});
-            setKeyPair().then(() => {});
-        }
 
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) {
@@ -94,12 +82,12 @@ export default function InstalledPackage(props: {}) {
         pkg,
         ok,
         agent,
-        installationPrivKey,
         searchParams,
     ]);
 
-    function openWithSignature() {
-        open(`${frontend}&installationPrivKey=${encodeURIComponent(installationPrivKey!)}`, '_self');
+    async function openWithSignature() {
+        const privKeyEncoded = await setKeyPair();
+        open(`${frontend}&installationPrivKey=${encodeURIComponent(privKeyEncoded)}`, '_self');
     }
     function uninstall() {
         setUninstallConfirmationMessage("");

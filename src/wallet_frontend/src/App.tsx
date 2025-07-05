@@ -14,7 +14,7 @@ import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { useState, useRef } from 'react';
 import { GlobalContext, GlobalContextProvider } from './state';
 import AddTokenDialog from './AddTokenDialog';
-import { signPrincipal, getPublicKeyFromPrivateKey } from '../../lib/signatures';
+import { signPrincipal } from '../../lib/signatures';
 
 function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
     const cleaned = urlSafeBase64.trim();
@@ -105,7 +105,7 @@ function App2() {
                 </Tabs>
             }
 
-            <AddTokenDialog 
+            <AddTokenDialog
                 show={showAddTokenDialog}
                 onHide={() => setShowAddTokenDialog(false)}
                 onTokenAdded={handleTokenAdded}
@@ -129,8 +129,10 @@ function FinishInstallation(props: {installationPrivKey: string}) {
             alert('Invalid installation key.');
             return;
         }
-        const privKey = await window.crypto.subtle.importKey('pkcs8', privBytes, {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']);
-        const signature = new Uint8Array(await signPrincipal(privKey, principal));
+        const privKeyUsable = await window.crypto.subtle.importKey(
+            "pkcs8", privBytes, {name: 'ECDSA', namedCurve: 'P-256'/*prime256v1*/}, true, ["sign"]
+        );
+        const signature = new Uint8Array(await signPrincipal(privKeyUsable, principal));
         await glob.walletBackend.setOwner(signature);
         const url = new URL(window.location.href);
         url.searchParams.delete('installationPrivKey');
