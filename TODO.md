@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P2 Should show "Need set package owner" also in the case if wallet user is not logged in.
+
 - TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
 
 - TODO@P2 Generate key pair for installed frontends. The private key can be directly delivered to the frontend in URL
