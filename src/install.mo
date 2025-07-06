@@ -214,14 +214,12 @@ module {
             user;
         });
 
-        // Remove `mainIndirect` as a controller, because it's costly to replace it in every canister after new version of `mainIndirect`..
-        // Note that packageManager calls it on getMainIndirect(), not by itself, so doesn't freeze.
         await ic.update_settings({
             canister_id;
             sender_canister_version = null;
             settings = {
                 compute_allocation = null;
-                controllers = ?[simpleIndirect, user];
+                controllers = ?[simpleIndirect, user, mainIndirect, battery];
                 freezing_threshold = null;
                 log_visibility = null;
                 memory_allocation = null;
