@@ -380,7 +380,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
-                amount: BigInt(Number(sendAmount) * 10**decimals.decimals), // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
+                amount: BigInt(Number(sendAmount) * 10**decimals!), // FIXME@P3: `!` // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
                 fee: [],
                 memo: [],
                 created_at_time: [],
