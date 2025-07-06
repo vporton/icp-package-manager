@@ -40,9 +40,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     Debug.trap("argument userArg is wrong");
     // };
 
-    // TODO@P2: It's too big.
-    private let CYCLES_PER_MODULE = 2_000_000_000_000; // 2T cycles per module
-
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
         packageRepoCanister: Principal;
@@ -1568,10 +1565,6 @@ shared({caller = initialCaller}) actor class PackageManager({
                 func (name: Text) = Option.isNull(modulesToDeleteSet.get(name)),
             )
         );
-
-        await batteryActor.withdrawCycles3(
-            CYCLES_PER_MODULE * halfUpgradedInfo.remainingModules,
-            Principal.fromActor(main_indirect_));
 
         {
             upgradeId;
