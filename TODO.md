@@ -1,5 +1,12 @@
 Remaining things TODO
 
+- FIXME@P2:
+```
+2025-07-06 14:52:29.386829007 UTC: [Canister hamwc-yx777-77774-qadfa-cai] topUpOneCanisterFinish: could not perform remote call
+2025-07-06 14:52:29.386829007 UTC: [Canister hamwc-yx777-77774-qadfa-cai] topUpOneCanisterFinish: could not perform remote call
+2025-07-06 14:52:29.386829007 UTC: [Canister hamwc-yx777-77774-qadfa-cai] topUpOneCanisterFinish: could not perform remote call
+```
+
 - TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
 
 - TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
