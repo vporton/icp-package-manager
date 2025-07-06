@@ -1,5 +1,18 @@
 Remaining things TODO
 
+- FIXME@P2:
+```
+2025-07-06 04:25:29.895207387 UTC: [Canister l4ljt-dh777-77774-qafxq-cai] topUpOneCanisterFinish: could not perform remote call
+2025-07-06 04:25:29.895207387 UTC: [Canister l4ljt-dh777-77774-qafxq-cai] topUpOneCanisterFinish: Only the controllers of the canister jbwh3-qp777-77774-qafya-cai can control it.
+Canister's controllers: lvicp-vp777-77774-qafwa-cai 4dvvd-watdl-3djcb-xdkts-ljq6b-h3fcv-3fxaz-22efg-6uqeo-albhb-nqe
+Sender's ID: l4ljt-dh777-77774-qafxq-cai
+Execute this call from a controller of the target canister or add the current caller as a controller. See documentation: https://internetcomputer.org/docs/current/references/execution-errors#invalid-controller
+2025-07-06 04:25:29.895207387 UTC: [Canister l4ljt-dh777-77774-qafxq-cai] topUpOneCanisterFinish: Only the controllers of the canister jgxbp-5x777-77774-qafyq-cai can control it.
+Canister's controllers: lvicp-vp777-77774-qafwa-cai 4dvvd-watdl-3djcb-xdkts-ljq6b-h3fcv-3fxaz-22efg-6uqeo-albhb-nqe
+Sender's ID: l4ljt-dh777-77774-qafxq-cai
+Execute this call from a controller of the target canister or add the current caller as a controller. See documentation: https://internetcomputer.org/docs/current/references/execution-errors#invalid-controller
+```
+
 - TODO@P2 Should show "Need set package owner" also in the case if wallet user is not logged in.
 
 - TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
