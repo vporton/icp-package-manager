@@ -160,8 +160,8 @@ shared({caller = initialOwner}) actor class Battery({
         {
             canisterInitialCycles = 1_500_000_000_000;
             defaultFulfillment = {
-                threshold = 3_000_000_000_000;
-                topupAmount = 2_000_000_000_000;
+                threshold = 800_000_000_000;
+                topupAmount = 500_000_000_000;
             };
             canisterMap = moduleLocationMap.empty<CanisterKind>();
             canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
