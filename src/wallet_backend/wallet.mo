@@ -5,7 +5,9 @@ import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
+import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";
+import Time "mo:base/Time";
 import Common "../common";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -235,20 +237,24 @@ persistent actor class Wallet({
         );
     };
 
-    public shared({caller}) func get_exchange_rate(symbol: Text): async {#Ok: Float; #Err} {
-        if (Principal.isAnonymous(owner) or caller != owner) { // work only for personal wallet
-            Debug.trap("get_exchange_rate: no owner set");
-        };
-        let res = await (with cycles = 1_000_000_000) XR.get_exchange_rate({
-            base_asset = { symbol = "ICP"; class_ = #Cryptocurrency };
-            quote_asset = { symbol = "XDR"; class_ = #FiatCurrency };
-            timestamp = null;
-        });
-        switch (res) {
-            case (#Ok rate) {
-                #Ok (Float.fromInt64(Int64.fromNat64(rate.rate)) / Float.fromInt(10**Nat32.toNat(rate.metadata.decimals)));
-            };
-            case (#Err _) #Err;
-        };
-    };
+    // public shared({caller}) func get_exchange_rate(symbol: Text): async {#Ok: Float; #Err} {
+    //     if (Principal.isAnonymous(owner) or caller != owner) { // work only for personal wallet
+    //         Debug.trap("get_exchange_rate: no owner set");
+    //     };
+    //     let res = await (with cycles = 1_000_000_000) XR.get_exchange_rate({
+    //         base_asset = { symbol = "USD"; class_ = #FiatCurrency };
+    //         quote_asset = { symbol = symbol; class_ = #Cryptocurrency };
+    //         // timestamp = ?Nat64.fromNat(Int.abs(Time.now() / 1_000_000_000 - 600));
+    //         timestamp = null;
+    //     });
+    //     switch (res) {
+    //         case (#Ok rate) {
+    //             #Ok (Float.fromInt64(Int64.fromNat64(rate.rate)) / Float.fromInt(10**Nat32.toNat(rate.metadata.decimals)));
+    //         };
+    //         case (#Err e) {
+    //             Debug.print(debug_show(e));
+    //             #Err;
+    //         };
+    //     };
+    // };
 };

@@ -1,0 +1,30 @@
+type Token = record { address : text; standard : text };
+
+type GetPoolArgs = record { fee : nat; token0 : Token; token1 : Token };
+
+type PoolData = record {
+  fee : nat;
+  key : text;
+  tickSpacing : int;
+  token0 : Token;
+  token1 : Token;
+  canisterId : principal;
+};
+
+type Error = variant {
+  CommonError;
+  InternalError : text;
+  UnsupportedToken : text;
+  InsufficientFunds;
+};
+
+type Result_2 = variant { ok : vec PoolData; err : Error };
+
+type Result_3 = variant { ok : PoolData; err : Error };
+
+type SwapFactory = service {
+  getPool : (GetPoolArgs) -> (Result_3) query;
+  getPools : () -> (Result_2) query;
+};
+
+service : SwapFactory

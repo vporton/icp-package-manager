@@ -75,8 +75,7 @@ function App2() {
     const installationId = searchParams.get('_pm_inst');
     const packageManagerURL = getIsLocal() ? `http://${pkg0FrontendId}.localhost:8080` : `https://${pkg0FrontendId}.icp0.io`;
 
-    return installKey ? <FinishInstallation installationPrivKey={installKey}/> :
-        <Container>
+    return <Container>
             <p style={{background: 'red', color: 'white', padding: '2px'}}>
                 This is a preliminary release. No warranty is given for the correctness of this software.{" "}
                 We are under no obligation to refund losses caused by possible errors in this software.
@@ -91,7 +90,8 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            {isAnonymous || !ok ?
+            { installKey && ok ? <FinishInstallation installationPrivKey={installKey}/> :
+                isAnonymous || !ok ?
                 <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
                     Set package owner
                 </a> :
@@ -148,7 +148,7 @@ function FinishInstallation(props: {installationPrivKey: string}) {
 
     return (
         <Container>
-            <p><Button onClick={finish} disabled={!ok}>Finish installation</Button></p>
+            <p><Button onClick={finish}>Finish installation</Button></p>
         </Container>
     );
 }

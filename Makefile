@@ -35,7 +35,7 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 
 .PHONY: deploy-backend
 deploy-backend: prepare build@battery build@main_indirect build@package_manager build@simple_indirect deploy@repository deploy@bookmark generate@battery \
-  deploy@internet_identity init
+  deploy@internet_identity generate@swap-factory init
 
 .PHONY: prepare
 prepare:
@@ -48,6 +48,7 @@ prepare:
 init:
 	-dfx canister call bookmark init "record { bootstrapper = principal \"`dfx canister id bootstrapper`\" }"
 	-dfx ledger fabricate-cycles --t 20000 --canister repository
+	-dfx ledger fabricate-cycles --t 20000 --canister exchange-rate
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
 

@@ -170,6 +170,12 @@ build@simple_indirect: .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect
 	dfx canister create --network $(NETWORK) simple_indirect
 	dfx build --no-deps --network $(NETWORK) simple_indirect
 
+.PHONY: build@swap-factory
+.PRECIOUS: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did
+build@swap-factory: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did
+
+.dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did: 
+
 .PHONY: build@upgrade_example_backend1_v1
 .PRECIOUS: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
 build@upgrade_example_backend1_v1: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
@@ -379,6 +385,13 @@ generate@simple_indirect: src/declarations/simple_indirect/simple_indirect.did.j
 src/declarations/simple_indirect/simple_indirect.did.js src/declarations/simple_indirect/index.js src/declarations/simple_indirect/simple_indirect.did.d.ts src/declarations/simple_indirect/index.d.ts src/declarations/simple_indirect/simple_indirect.did: .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did
 	dfx generate --no-compile --network $(NETWORK) simple_indirect
 
+.PHONY: generate@swap-factory
+.PRECIOUS: src/declarations/swap-factory/swap-factory.did.js src/declarations/swap-factory/index.js src/declarations/swap-factory/swap-factory.did.d.ts src/declarations/swap-factory/index.d.ts src/declarations/swap-factory/swap-factory.did
+generate@swap-factory: src/declarations/swap-factory/swap-factory.did.js src/declarations/swap-factory/index.js src/declarations/swap-factory/swap-factory.did.d.ts src/declarations/swap-factory/index.d.ts src/declarations/swap-factory/swap-factory.did
+
+src/declarations/swap-factory/swap-factory.did.js src/declarations/swap-factory/index.js src/declarations/swap-factory/swap-factory.did.d.ts src/declarations/swap-factory/index.d.ts src/declarations/swap-factory/swap-factory.did: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did
+	dfx generate --no-compile --network $(NETWORK) swap-factory
+
 .PHONY: generate@upgrade_example_backend1_v1
 .PRECIOUS: src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.js src/declarations/upgrade_example_backend1_v1/index.js src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.d.ts src/declarations/upgrade_example_backend1_v1/index.d.ts src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
 generate@upgrade_example_backend1_v1: src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.js src/declarations/upgrade_example_backend1_v1/index.js src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.d.ts src/declarations/upgrade_example_backend1_v1/index.d.ts src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
@@ -528,6 +541,8 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
 
 .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: src/common.mo
+
+.dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/common.mo
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/lib/Account.mo
 
@@ -735,6 +750,12 @@ deploy-self@simple_indirect: .dfx/$(NETWORK)/canisters/simple_indirect/simple_in
 
 .PHONY: deploy@simple_indirect
 deploy@simple_indirect: deploy-self@simple_indirect
+
+.PHONY: deploy-self@swap-factory
+deploy-self@swap-factory: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did
+
+.PHONY: deploy@swap-factory
+deploy@swap-factory: deploy-self@swap-factory
 
 .PHONY: deploy-self@upgrade_example_backend1_v1
 deploy-self@upgrade_example_backend1_v1: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did

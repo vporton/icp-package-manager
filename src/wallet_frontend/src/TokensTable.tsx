@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
-import { createActor as createPstActor } from '../../declarations/pst';
+import { createActor as createSwapFactory } from '../../declarations/swap-factory';
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
 import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
@@ -14,8 +14,9 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
 import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
-import { Actor } from '@dfinity/agent';
+import { Actor, HttpAgent } from '@dfinity/agent';
 import { userAccount, userAccountText } from './accountUtils';
+import { IDL } from '@dfinity/candid';
 
 interface UIToken {
     symbol: string;
@@ -162,15 +163,8 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         }
     }, [tokens, defaultAgent, userWallet]);
 
-    const [xr, setXr] = useState<number | undefined>();
     async function initSendModal(token: any) { // TODO@P3: `any`
         setSelectedToken(token);
-        if (!await glob.walletBackend!.isAnonymous()) {
-            const rate = await glob.walletBackend!.get_exchange_rate(token.symbol);
-            if ((rate as any).Ok !== undefined) {
-                setXr((rate as any).Ok);
-            }
-        }
         setShowSendModal(true);
     }
 
@@ -229,7 +223,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                 </tbody>
             </table>
 
-            <SendModal showSendModal={showSendModal} setShowSendModal={setShowSendModal} selectedToken={selectedToken} xr={xr}/>
+            <SendModal showSendModal={showSendModal} setShowSendModal={setShowSendModal} selectedToken={selectedToken}/>
  
             {/* Receive Modal */}
             <Modal show={showReceiveModal} onHide={() => setShowReceiveModal(false)}>
@@ -320,7 +314,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
 });
 
 // TODO@P3: `any`
-function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: boolean) => void, selectedToken: any, xr: number | undefined}) {
+function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: boolean) => void, selectedToken: any}) {
     const glob = useContext(GlobalContext);
     const {agent,  defaultAgent, principal} = useAuth();
     const { setError } = useContext(ErrorContext)!;
@@ -343,23 +337,50 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         setAmountAddInput(limits.amountAddInput[0] ?? 30);
     };
 
+    const [decimals, setDecimals] = useState<number | undefined>();
     useEffect(() => {
-        if (!props.xr) return;
-        setShowCheckboxConfirmation(amountAddCheckbox === undefined || (!isNaN(Number(sendAmount)) && Number(sendAmount) * props.xr < amountAddCheckbox));
-        setShowInputConfirmation(amountAddInput === undefined || (!isNaN(Number(sendAmount)) && Number(sendAmount) * props.xr < amountAddInput));
-    }, [props.xr]); // FIXME@P2: Update `xr` from time to time.
+        const token = createTokenActor(props.selectedToken?.canisterId, {agent: defaultAgent});
+        token.decimals().then(n => setDecimals(Number(n.toString)));
+    }, [props.selectedToken]);
+
+    // useEffect(() => {
+    //     glob.walletBackend!.isAnonymous().then(async f => {
+    //         if (!f) {
+    //             const mainnetAgent = await HttpAgent.create();
+    //             const swapFactory = await createSwapFactory("4mmnk-kiaaa-aaaag-qbllq-cai", {agent: mainnetAgent});
+    //             const pair = swapFactory.getPool({
+    //                 fee: 0n,
+    //                 token0: {address: "ryjl3-tyaaa-aaaaa-aaaba-cai", standard: "ICP"},
+    //                 token1: {address: props.selectedToken.canisterId, standard: "ICRC1"},
+    //             });
+    //             if ((pair as any).ok) {
+    //                 const icpSwap = await mainnetAgent.query((pair as any).ok.canisterId, {
+    //                     methodName: 'quote',
+    //                     arg: IDL.encode([IDL.Record({
+    //                         amountIn: IDL.Text,
+    //                         zeroForOne: IDL.Bool,
+    //                         amountOutMinimum: IDL.Text,
+    //                     })], [{
+    //                         amountIn: (Number(sendAmount) * 10**decimals.decimals).toString(),
+    //                         zeroForOne: false,
+    //                         amountOutMinimum: "0",
+    //                     }]),
+    //                 });
+    //                 icpSwap.status
+    //             }
+    //         }
+    //     })
+    // }, [glob.walletBackend]);
 
     const handleSend = async () => {
         if (!props.selectedToken?.canisterId || !sendAmount || !sendTo) return;
         
         try {
             const to = decodeIcrcAccount(sendTo);
-            const token = createTokenActor(props.selectedToken?.canisterId, {agent: defaultAgent});
-            const decimals = await token.decimals();
             /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
-                amount: BigInt(Number(sendAmount) * 10**decimals.decimals), // TODO@P2: Does Number convert right?
+                amount: BigInt(Number(sendAmount) * 10**decimals.decimals), // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
                 fee: [],
                 memo: [],
                 created_at_time: [],
