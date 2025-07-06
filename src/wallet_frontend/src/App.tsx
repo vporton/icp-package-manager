@@ -75,7 +75,7 @@ function App2() {
     const installationId = searchParams.get('_pm_inst');
     const packageManagerURL = getIsLocal() ? `http://${pkg0FrontendId}.localhost:8080` : `https://${pkg0FrontendId}.icp0.io`;
 
-    return (
+    return installKey ? <FinishInstallation installationPrivKey={installKey}/> :
         <Container>
             <p style={{background: 'red', color: 'white', padding: '2px'}}>
                 This is a preliminary release. No warranty is given for the correctness of this software.{" "}
@@ -91,10 +91,9 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            {installKey ? <FinishInstallation installationPrivKey={installKey}/> : 
-                isAnonymous ?
+            {isAnonymous || !ok ?
                 <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
-                    Need set package owner
+                    Set package owner
                 </a> :
                 <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                     <Tab eventKey="tokens" title="Tokens">
@@ -120,7 +119,6 @@ function App2() {
                 onTokenAdded={handleTokenAdded}
             />
         </Container>
-    );
 }
 
 function FinishInstallation(props: {installationPrivKey: string}) {
