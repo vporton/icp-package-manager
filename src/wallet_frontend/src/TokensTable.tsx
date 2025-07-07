@@ -60,7 +60,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         
         const backendTokens = await glob.walletBackend.getTokens();
         setTokens(backendTokens.map((t: Token) => {
-            console.log("A0", t);
             return {
                 symbol: t.symbol,
                 name: t.name,
@@ -77,7 +76,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const handleAddToken = async () => {
         if (!agent || !principal || !glob.walletBackend) return;
 
-        console.log("A1", newToken);
         // TODO@P3: also `archiveCanisterId`:
         await glob.walletBackend.addToken({
             symbol: newToken.symbol,
@@ -93,7 +91,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const handleRemoveToken = async () => {
         if (!selectedToken || !glob.walletBackend) return;
         
-        console.log("A2", selectedToken);
         try {
             await glob.walletBackend.removeToken(selectedToken.canisterId!);
             setShowManageModal(false);
@@ -157,11 +154,9 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
             return;
         }
         for (const token of tokens) {
-            console.log("A3", token);
             const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
             Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
                 .then(([balance, digits]) => {
-                    console.log("A4", token);
                     balances.set(token.canisterId!, Number(balance.toString()) / 10**digits); // TODO@P3: Here `!` is superfluous.
                     setBalances(new Map(balances)); // create new value.
                 });
@@ -366,7 +361,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
     useEffect(() => {
         if (props.selectedToken !== undefined) {
             const token = createTokenActor(props.selectedToken.canisterId, {agent: defaultAgent});
-            token.decimals().then(n => setDecimals(Number(n.toString)));
+            token.decimals().then(n => setDecimals(Number(n.toString())));
         }
     }, [props.selectedToken]);
 
@@ -410,6 +405,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         if (!props.selectedToken.canisterId || !sendAmount || !sendTo) return;
         
         try {
+            console.log(sendAmount, decimals);
             const to = decodeIcrcAccount(sendTo);
             /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
                 from_subaccount: [],
