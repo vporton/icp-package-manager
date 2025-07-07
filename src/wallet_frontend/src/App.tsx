@@ -48,7 +48,6 @@ export default function App() {
 }
 
 function App2() {
-    return <p>TEST</p>; // FIXME@P1
     const glob = useContext(GlobalContext);
     const {ok} = useAuth();
     const params = new URLSearchParams(window.location.search);
@@ -105,7 +104,7 @@ function App2() {
                             <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                             {!ok && <>{" "}Login to add a token.</>}
                         </p>
-                        {/*ok && <TokensTable key={tokensKey} />*/} {/* FIXME@P1: Uncomment. */}
+                        {ok && <TokensTable key={tokensKey} />}
                     </Tab>
                     <Tab eventKey="settings" title="Settings">
                         <Settings/>

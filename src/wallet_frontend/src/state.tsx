@@ -28,8 +28,8 @@ export function GlobalContextProvider(props: { children: any }) {
   const canisterId = params.get('canisterId');
   const {agent, ok} = useAuth();
   const wallet: Wallet | undefined = useMemo(() =>
-    backend !== undefined && ok ? createWallet(backend, {agent}) : undefined,
-    [agent]);
+    backend !== undefined && agent && ok ? createWallet(backend, {agent}) : undefined,
+    [agent, ok]);
   const [walletIsAnonymous, setWalletIsAnonymous] = useState<boolean | undefined>();
   useEffect(() => {
     if (wallet !== undefined) {

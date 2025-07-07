@@ -60,6 +60,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         
         const backendTokens = await glob.walletBackend.getTokens();
         setTokens(backendTokens.map((t: Token) => {
+            console.log("A0", t);
             return {
                 symbol: t.symbol,
                 name: t.name,
@@ -75,7 +76,8 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
 
     const handleAddToken = async () => {
         if (!agent || !principal || !glob.walletBackend) return;
-        
+
+        console.log("A1", newToken);
         // TODO@P3: also `archiveCanisterId`:
         await glob.walletBackend.addToken({
             symbol: newToken.symbol,
@@ -91,6 +93,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const handleRemoveToken = async () => {
         if (!selectedToken || !glob.walletBackend) return;
         
+        console.log("A2", selectedToken);
         try {
             await glob.walletBackend.removeToken(selectedToken.canisterId!);
             setShowManageModal(false);
@@ -154,9 +157,11 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
             return;
         }
         for (const token of tokens) {
+            console.log("A3", token);
             const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
             Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
                 .then(([balance, digits]) => {
+                    console.log("A4", token);
                     balances.set(token.canisterId!, Number(balance.toString()) / 10**digits); // TODO@P3: Here `!` is superfluous.
                     setBalances(new Map(balances)); // create new value.
                 });
@@ -351,8 +356,10 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
 
     const [decimals, setDecimals] = useState<number | undefined>();
     useEffect(() => {
-        const token = createTokenActor(props.selectedToken.canisterId, {agent: defaultAgent});
-        token.decimals().then(n => setDecimals(Number(n.toString)));
+        if (props.selectedToken !== undefined) {
+            const token = createTokenActor(props.selectedToken.canisterId, {agent: defaultAgent});
+            token.decimals().then(n => setDecimals(Number(n.toString)));
+        }
     }, [props.selectedToken]);
 
     useEffect(() => {
@@ -360,7 +367,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             return;
         }
         glob.walletBackend!.isAnonymous().then(async f => {
-            if (!f) {
+            if (!f || glob.walletBackend === undefined || props.selectedToken === undefined || sendAmount === undefined || decimals === undefined) {
                 const baseToken = "ryjl3-tyaaa-aaaaa-aaaba-cai";
                 let ourPrice;
                 if (props.selectedToken.canisterId.toString() === baseToken) {
