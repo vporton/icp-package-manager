@@ -50,7 +50,6 @@ export default function Settings() {
     return (
         <div className="settings-container">
             <h3>Transaction Settings</h3>
-            <Alert variant='danger'>These settings are not yet honored in the current version.</Alert>
             <Form>
                 <Form.Group className="mb-3">
                     <Form.Label>Payment amount that requires checkbox confirmation</Form.Label>
@@ -63,7 +62,7 @@ export default function Settings() {
                         isInvalid={amountAddCheckbox !== undefined && amountAddCheckbox < 0}
                     />
                     <Form.Text className="text-muted">
-                        amount in XDR
+                        amount in ICP
                     </Form.Text>
                 </Form.Group>
 
@@ -78,7 +77,7 @@ export default function Settings() {
                         isInvalid={amountAddInput !== undefined && amountAddInput < 0}
                     />
                     <Form.Text className="text-muted">
-                        amount in XDR
+                        amount in ICP
                     </Form.Text>
                 </Form.Group>
 

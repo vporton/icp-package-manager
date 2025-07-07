@@ -360,7 +360,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         }
         glob.walletBackend!.isAnonymous().then(async f => {
             if (!f || glob.walletBackend === undefined || props.selectedToken === undefined || sendAmount === undefined || decimals === undefined) {
-                const baseToken = "um5iw-rqaaa-aaaaq-qaaba-cai"; // Cycles Ledger
+                const baseToken = "ryjl3-tyaaa-aaaaa-aaaba-cai"; // Cycles Ledger
                 let ourPrice;
                 if (props.selectedToken.canisterId.toString() === baseToken) {
                     ourPrice = 1.0;
@@ -368,7 +368,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
                     const mainnetAgent = await HttpAgent.create({host: "https://ic0.app", shouldFetchRootKey: false});
                     const swapFactory = await createSwapFactory("4mmnk-kiaaa-aaaag-qbllq-cai", {agent: mainnetAgent});
                     const pair = await swapFactory.getPool({
-                        fee: 0n,
+                        fee: 3000n,
                         token0: {address: baseToken, standard: "ICRC1"},
                         token1: {address: props.selectedToken.canisterId.toText(), standard: "ICRC1"},
                     });
