@@ -13,9 +13,8 @@ import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
-import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
+import { Token } from '../../declarations/wallet_backend/wallet_backend.did';
 import { Actor } from '@dfinity/agent';
-import { userAccount, userAccountText } from './accountUtils';
 
 interface UIToken {
     symbol: string;
@@ -136,18 +135,18 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [balances, setBalances] = useState(new Map<Principal, number>());
     const [userWallet, setUserWallet] = useState<Account | undefined>();
     const [userWalletText, setUserWalletText] = useState<string | undefined>();
-    const subaccount = userWalletText === undefined || !/\./.test(userWalletText) ? undefined : userWalletText?.replace(/^[^.]*\./, '');
-    const dfxCommand = userWalletText === undefined
+    const dfxCommand = principal === undefined
         ? ''
-        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 0 --amount`;
+        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${principal.toText()} --memo 0 --amount`;
     useEffect(() => {
-        if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
-            userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
-                setUserWallet(account);
-                userAccountText(glob.walletBackendPrincipal!, principal, agent).then(setUserWalletText);
-            });
+        if (principal === undefined) {
+            setUserWallet(undefined);
+            setUserWalletText(undefined);
+        } else {
+            setUserWallet({ owner: principal, subaccount: [] });
+            setUserWalletText(principal.toText());
         }
-    }, [glob.walletBackendPrincipal, principal, agent]);
+    }, [principal]);
     useEffect(() => {
         if (tokens === undefined || userWallet === undefined) {
             return;
@@ -354,9 +353,9 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         
         try {
             const to = decodeIcrcAccount(sendTo);
-            const token = createTokenActor(props.selectedToken?.canisterId, {agent: defaultAgent});
+            const token = createTokenActor(props.selectedToken?.canisterId, {agent});
             const decimals = await token.decimals();
-            /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
+            await token.icrc1_transfer({
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
                 amount: BigInt(Number(sendAmount) * 10**decimals.decimals), // TODO@P2: Does Number convert right?
@@ -372,7 +371,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             //     // console.log((res as any).Err);
             //     throw 'Failed to send tokens';
             // }
-            // TODO: Update amounts in token table here (after a pause, because of no-return function `do_icrc1_transfer`).
+            // TODO: Update amounts in token table here.
         } catch (error: any) {
             setError(error?.toString() || 'Failed to send tokens');
         }
