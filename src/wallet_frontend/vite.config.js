@@ -15,6 +15,7 @@ process.env.II_URL =
 export default defineConfig({
   build: {
     emptyOutDir: true,
+    sourcemap: true,
   },
   optimizeDeps: {
     esbuildOptions: {

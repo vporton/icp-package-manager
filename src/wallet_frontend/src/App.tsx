@@ -48,6 +48,7 @@ export default function App() {
 }
 
 function App2() {
+    return <p>TEST</p>; // FIXME@P1
     const glob = useContext(GlobalContext);
     const {ok} = useAuth();
     const params = new URLSearchParams(window.location.search);
@@ -66,7 +67,9 @@ function App2() {
 
     const [isAnonymous, setIsAnonymous] = useState<boolean | undefined>();
     useEffect(() => {
-        glob.walletBackend?.isAnonymous().then(setIsAnonymous);
+        if (glob.walletBackend !== undefined) {
+            glob.walletBackend.isAnonymous().then(setIsAnonymous);
+        }
     }, [glob.walletBackend]);
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -90,7 +93,8 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            { installKey && ok ? <FinishInstallation installationPrivKey={installKey}/> :
+            {/* TODO@P3: Remove `!`. */}
+            { installKey && ok ? <FinishInstallation installationPrivKey={installKey!}/> :
                 isAnonymous || !ok ?
                 <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
                     Set package owner
@@ -101,7 +105,7 @@ function App2() {
                             <Button disabled={!ok} onClick={handleAddToken}>Add token</Button>
                             {!ok && <>{" "}Login to add a token.</>}
                         </p>
-                        {ok && <TokensTable key={tokensKey} />}
+                        {/*ok && <TokensTable key={tokensKey} />*/} {/* FIXME@P1: Uncomment. */}
                     </Tab>
                     <Tab eventKey="settings" title="Settings">
                         <Settings/>

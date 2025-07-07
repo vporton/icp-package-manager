@@ -142,7 +142,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         ? ''
         : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 0 --amount`;
     useEffect(() => {
-        if (glob.walletBackendPrincipal !== undefined && principal !== undefined) {
+        if (glob.walletBackendPrincipal !== undefined && principal !== undefined && agent !== undefined) {
             userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
                 setUserWallet(account);
                 userAccountText(glob.walletBackendPrincipal!, principal, agent).then(setUserWalletText);
@@ -153,7 +153,6 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         if (tokens === undefined || userWallet === undefined) {
             return;
         }
-        console.log("G", tokens);
         for (const token of tokens) {
             const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
             Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
@@ -323,8 +322,8 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
     const [sendAmount, setSendAmount] = useState('');
     const [sendTo, setSendTo] = useState('');
 
-    console.log("WW", props.selectedToken); // FIXME
-    return; // FIXME
+    // console.log("WW", props.selectedToken); // FIXME
+    // return; // FIXME
 
     // FIXME@P3: For a diapason of time, `limits` takes a wrong value.
     const [limits, setLimits] = useState<{amountAddCheckbox?: number, amountAddInput?: number}>({amountAddCheckbox: 10, amountAddInput: 30}); // FIXME@P3: duplicate code
