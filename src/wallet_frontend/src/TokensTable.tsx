@@ -141,21 +141,8 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         ? ''
         : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${principal.toText()} --memo 0 --amount`;
     useEffect(() => {
-<<<<<<< HEAD
-        if (glob.walletBackendPrincipal !== undefined && principal !== undefined && agent !== undefined) {
-            userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
-                setUserWallet(account);
-                userAccountText(glob.walletBackendPrincipal!, principal, agent).then(setUserWalletText);
-            });
-=======
-        if (principal === undefined) {
-            setUserWallet(undefined);
-            setUserWalletText(undefined);
-        } else {
-            setUserWallet({ owner: principal, subaccount: [] });
-            setUserWalletText(principal.toText());
->>>>>>> e35b2726037080fd9b53bf80c4560c9bfb23aca4
-        }
+        setUserWallet({ owner: principal!, subaccount: [] });
+        setUserWalletText(principal!.toText()); // TODO@P1: Remove this code.
     }, [principal]);
     useEffect(() => {
         if (tokens === undefined || userWallet === undefined) {
@@ -163,7 +150,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         }
         for (const token of tokens) {
             const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
-            Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
+            Promise.all([actor.icrc1_balance_of({owner: principal!, subaccount: []}), actor.icrc1_decimals()])
                 .then(([balance, digits]) => {
                     balances.set(token.canisterId!, Number(balance.toString()) / 10**digits); // TODO@P3: Here `!` is superfluous.
                     setBalances(new Map(balances)); // create new value.
@@ -413,14 +400,14 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         if (!props.selectedToken.canisterId || !sendAmount || !sendTo) return;
         
         try {
-            console.log(sendAmount, decimals);
             const to = decodeIcrcAccount(sendTo);
             const token = createTokenActor(props.selectedToken?.canisterId, {agent});
-            const decimals = await token.decimals();
+            const decimals = await token.icrc1_decimals();
+            console.log(`decimals=${decimals} sendAmount=${sendAmount} amount=${BigInt(Number(sendAmount) * 10**decimals)}`);
             await token.icrc1_transfer({
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
-                amount: BigInt(Number(sendAmount) * 10**decimals!), // FIXME@P3: `!` // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
+                amount: BigInt(Number(sendAmount) * 10**decimals), // FIXME@P3: `!` // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
                 fee: [],
                 memo: [],
                 created_at_time: [],
