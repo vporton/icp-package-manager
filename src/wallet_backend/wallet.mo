@@ -178,31 +178,6 @@ persistent actor class Wallet({
         Principal.isAnonymous(owner);
     };
 
-    // TODO@P3: duplicate code
-    public query func getUserWallet(user: Principal): async {owner: Principal; subaccount: ?Blob} {
-        // onlyOwner(caller, "getUserWallet");
-
-        let canister = Principal.fromActor(this);
-        {owner = canister; subaccount =
-            if (Principal.isAnonymous(owner)) {
-                ?(AccountID.principalToSubaccount(user));
-            } else {
-                null;
-            }
-        };
-    };
-
-    public query func getUserWalletText(user: Principal): async Text {
-        // onlyOwner(caller, "getUserWallet");
-
-        let canister = Principal.fromActor(this);
-        if (Principal.isAnonymous(owner)) {
-            let subaccount = ?(AccountID.principalToSubaccount(user));
-            Account.toText({owner = canister; subaccount});
-        } else {
-            Principal.toText(canister);
-        }
-    };
 
 
     // query func isPersonalWallet(): async Bool {

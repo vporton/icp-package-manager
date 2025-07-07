@@ -6,7 +6,7 @@ import { useAuth } from '../../lib/use-auth-client';
 import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
 import { createActor as createSwapFactory } from '../../declarations/swap-factory';
 import { createActor as createSwapPool } from '../../declarations/swap-pool';
-import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
+import { _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
 import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
 import { GlobalContext } from './state';
@@ -16,7 +16,6 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
 import { Token } from '../../declarations/wallet_backend/wallet_backend.did';
 import { HttpAgent } from '@dfinity/agent';
-import { userAccount, userAccountText } from './accountUtils';
 
 interface UIToken {
     symbol: string;
@@ -135,17 +134,12 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     );
 
     const [balances, setBalances] = useState(new Map<Principal, number>());
-    const [userWallet, setUserWallet] = useState<Account | undefined>();
-    const [userWalletText, setUserWalletText] = useState<string | undefined>();
     const dfxCommand = principal === undefined
         ? ''
         : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${principal.toText()} --memo 0 --amount`;
+    const userWalletText = principal?.toText();
     useEffect(() => {
-        setUserWallet({ owner: principal!, subaccount: [] });
-        setUserWalletText(principal!.toText()); // TODO@P1: Remove this code.
-    }, [principal]);
-    useEffect(() => {
-        if (tokens === undefined || userWallet === undefined) {
+        if (tokens === undefined || principal === undefined) {
             return;
         }
         for (const token of tokens) {
@@ -156,7 +150,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                     setBalances(new Map(balances)); // create new value.
                 });
         }
-    }, [tokens, defaultAgent, userWallet]);
+    }, [tokens, defaultAgent, principal]);
 
     async function initSendModal(token: any) { // TODO@P3: `any`
         setSelectedToken(token);
