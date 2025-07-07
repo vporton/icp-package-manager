@@ -398,8 +398,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             const to = decodeIcrcAccount(sendTo);
             const token = createTokenActor(props.selectedToken?.canisterId, {agent});
             const decimals = await token.icrc1_decimals();
-            console.log(`decimals=${decimals} sendAmount=${sendAmount} amount=${BigInt(Number(sendAmount) * 10**decimals)}`);
-            await token.icrc1_transfer({
+            const res = await token.icrc1_transfer({
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
                 amount: BigInt(Number(sendAmount) * 10**decimals), // FIXME@P3: `!` // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
@@ -411,11 +410,14 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             setSendAmount('');
             setSendTo('');
             // setSelectedToken(null);
-            // if ((res as any).Err) {
-            //     // console.log((res as any).Err);
-            //     throw 'Failed to send tokens';
-            // }
-            // TODO: Update amounts in token table here.
+            if ((res as any).Err) {
+                if ((res as any).Err.InsufficientFunds) {
+                    setError("insufficient funds");
+                } else {
+                    setError("cannot transfer");
+                }
+            }
+            // TODO@P3: Update amounts in token table here.
         } catch (error: any) {
             setError(error?.toString() || 'Failed to send tokens');
         }
