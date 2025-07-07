@@ -1,0 +1,20 @@
+type Error = variant {
+   CommonError;
+   InsufficientFunds;
+   InternalError: text;
+   UnsupportedToken: text;
+ };
+
+type Result = variant { ok : nat; err : Error };
+
+type SwapArgs = record {
+  amountIn : text;
+  zeroForOne : bool;
+  amountOutMinimum : text;
+};
+
+type SwapPool = service {
+    quote : (SwapArgs) -> (Result) query;
+}
+
+service : SwapPool

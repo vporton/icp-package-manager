@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form';
 import { useAuth } from '../../lib/use-auth-client';
 import { createActor as createTokenActor } from '../../declarations/nns-ledger'; // TODO: hack
 import { createActor as createSwapFactory } from '../../declarations/swap-factory';
+import { createActor as createSwapPool } from '../../declarations/swap-pool';
 import { Account, _SERVICE as NNSLedger } from '../../declarations/nns-ledger/nns-ledger.did'; // TODO: hack
 import { Principal } from '@dfinity/principal';
 import { decodeIcrcAccount, IcrcLedgerCanister } from "@dfinity/ledger-icrc";
@@ -13,10 +14,9 @@ import { ErrorContext } from '../../lib/ErrorContext';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Accordion from 'react-bootstrap/Accordion';
-import { Token, TransferError } from '../../declarations/wallet_backend/wallet_backend.did';
-import { Actor, HttpAgent } from '@dfinity/agent';
+import { Token } from '../../declarations/wallet_backend/wallet_backend.did';
+import { HttpAgent } from '@dfinity/agent';
 import { userAccount, userAccountText } from './accountUtils';
-import { IDL } from '@dfinity/candid';
 
 interface UIToken {
     symbol: string;
@@ -40,7 +40,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [showSendModal, setShowSendModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
-    const [selectedToken, setSelectedToken] = useState<UIToken | null>(null);
+    const [selectedToken, setSelectedToken] = useState<UIToken | undefined>(undefined);
     const [archiveCanisterId, setArchiveCanisterId] = useState('');
     const [copied, setCopied] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -94,7 +94,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         try {
             await glob.walletBackend.removeToken(selectedToken.canisterId!);
             setShowManageModal(false);
-            setSelectedToken(null);
+            setSelectedToken(undefined);
             loadTokens();
         } catch (error: any) {
             setError(error?.toString() || 'Failed to remove token');
@@ -110,7 +110,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
                 Principal.fromText(archiveCanisterId)
             );
             setShowManageModal(false);
-            setSelectedToken(null);
+            setSelectedToken(undefined);
             setArchiveCanisterId('');
             loadTokens();
         } catch (error: any) {
@@ -153,6 +153,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         if (tokens === undefined || userWallet === undefined) {
             return;
         }
+        console.log("G", tokens);
         for (const token of tokens) {
             const actor = createTokenActor(token.canisterId!, { agent: defaultAgent });
             Promise.all([actor.icrc1_balance_of(userWallet), actor.icrc1_decimals()])
@@ -316,64 +317,83 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
 // TODO@P3: `any`
 function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: boolean) => void, selectedToken: any}) {
     const glob = useContext(GlobalContext);
-    const {agent,  defaultAgent, principal} = useAuth();
+    const {agent, defaultAgent, principal} = useAuth();
     const { setError } = useContext(ErrorContext)!;
+    const [price, setPrice] = useState<number | undefined>();
     const [sendAmount, setSendAmount] = useState('');
     const [sendTo, setSendTo] = useState('');
 
-    const [showCheckboxConfirmation, setShowCheckboxConfirmation] = useState(true)
-    const [showInputConfirmation, setShowInputConfirmation] = useState(true);
+    console.log("WW", props.selectedToken); // FIXME
+    return; // FIXME
+
+    // FIXME@P3: For a diapason of time, `limits` takes a wrong value.
+    const [limits, setLimits] = useState<{amountAddCheckbox?: number, amountAddInput?: number}>({amountAddCheckbox: 10, amountAddInput: 30}); // FIXME@P3: duplicate code
+    useEffect(() => {
+        if (glob.walletBackend) {
+            glob.walletBackend.getLimitAmounts().then(v =>
+                setLimits({amountAddCheckbox: v.amountAddCheckbox[0], amountAddInput: v.amountAddInput[0]})
+            );
+        }
+    }, [glob.walletBackend]);
+    const amountInBase = useMemo(
+        () => price === undefined || sendAmount === undefined ? undefined : Number(sendAmount) * price,
+        [price, sendAmount],
+    );
+    const showCheckboxConfirmation = useMemo(() =>
+        limits.amountAddCheckbox === undefined || amountInBase === undefined ? false : amountInBase >= limits.amountAddCheckbox,
+        [limits, amountInBase]
+    );
+    const showInputConfirmation = useMemo(() =>
+        limits.amountAddInput === undefined || amountInBase === undefined ? false : amountInBase >= limits.amountAddInput,
+        [limits, amountInBase]
+    );
     const [checkboxConfirmation, setCheckboxConfirmation] = useState(true)
     const [inputConfirmation, setInputConfirmation] = useState(true);
 
-    const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
-    const [amountAddInput, setAmountAddInput] = useState<number | undefined>();
-
-    const loadSettings = async () => {
-        if (!agent || !principal || !glob.walletBackend) return;
-
-        const limits = await glob.walletBackend.getLimitAmounts();
-        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10); // FIXME@P3: duplicate code
-        setAmountAddInput(limits.amountAddInput[0] ?? 30);
-    };
-
     const [decimals, setDecimals] = useState<number | undefined>();
     useEffect(() => {
-        const token = createTokenActor(props.selectedToken?.canisterId, {agent: defaultAgent});
+        const token = createTokenActor(props.selectedToken.canisterId, {agent: defaultAgent});
         token.decimals().then(n => setDecimals(Number(n.toString)));
     }, [props.selectedToken]);
 
-    // useEffect(() => {
-    //     glob.walletBackend!.isAnonymous().then(async f => {
-    //         if (!f) {
-    //             const mainnetAgent = await HttpAgent.create();
-    //             const swapFactory = await createSwapFactory("4mmnk-kiaaa-aaaag-qbllq-cai", {agent: mainnetAgent});
-    //             const pair = swapFactory.getPool({
-    //                 fee: 0n,
-    //                 token0: {address: "ryjl3-tyaaa-aaaaa-aaaba-cai", standard: "ICP"},
-    //                 token1: {address: props.selectedToken.canisterId, standard: "ICRC1"},
-    //             });
-    //             if ((pair as any).ok) {
-    //                 const icpSwap = await mainnetAgent.query((pair as any).ok.canisterId, {
-    //                     methodName: 'quote',
-    //                     arg: IDL.encode([IDL.Record({
-    //                         amountIn: IDL.Text,
-    //                         zeroForOne: IDL.Bool,
-    //                         amountOutMinimum: IDL.Text,
-    //                     })], [{
-    //                         amountIn: (Number(sendAmount) * 10**decimals.decimals).toString(),
-    //                         zeroForOne: false,
-    //                         amountOutMinimum: "0",
-    //                     }]),
-    //                 });
-    //                 icpSwap.status
-    //             }
-    //         }
-    //     })
-    // }, [glob.walletBackend]);
+    useEffect(() => {
+        if (props.selectedToken === undefined) {
+            return;
+        }
+        glob.walletBackend!.isAnonymous().then(async f => {
+            if (!f) {
+                const baseToken = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+                let ourPrice;
+                if (props.selectedToken.canisterId.toString() === baseToken) {
+                    ourPrice = 1.0;
+                } else {
+                    const mainnetAgent = await HttpAgent.create();
+                    const swapFactory = await createSwapFactory("4mmnk-kiaaa-aaaag-qbllq-cai", {agent: mainnetAgent});
+                    const pair = await swapFactory.getPool({
+                        fee: 0n,
+                        token0: {address: baseToken, standard: "ICP"},
+                        token1: {address: props.selectedToken.canisterId, standard: "ICRC1"},
+                    });
+                    if ((pair as any).ok) {
+                        const swapPool = await createSwapPool((pair as any).ok.canisterId, {agent: mainnetAgent});
+                        const icpSwap = await swapPool.quote({
+                            amountIn: (Number(sendAmount) * 10**decimals!).toString(), // TODO@P3: `!`
+                            zeroForOne: false,
+                            amountOutMinimum: "0",
+                        });
+                        if ((icpSwap as any).ok) {
+                            ourPrice = (icpSwap as any).ok;
+                        }
+                    }
+                }
+                console.log("Our price:", ourPrice);
+                setPrice(ourPrice);
+            }
+        })
+    }, [glob.walletBackend, props.selectedToken, sendAmount, decimals]);
 
     const handleSend = async () => {
-        if (!props.selectedToken?.canisterId || !sendAmount || !sendTo) return;
+        if (!props.selectedToken.canisterId || !sendAmount || !sendTo) return;
         
         try {
             const to = decodeIcrcAccount(sendTo);

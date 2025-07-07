@@ -176,6 +176,12 @@ build@swap-factory: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .df
 
 .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did: 
 
+.PHONY: build@swap-pool
+.PRECIOUS: .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.wasm .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.did
+build@swap-pool: .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.wasm .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.did
+
+.dfx/$(NETWORK)/canisters/swap-pool/swap-pool.wasm .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.did: 
+
 .PHONY: build@upgrade_example_backend1_v1
 .PRECIOUS: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
 build@upgrade_example_backend1_v1: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
@@ -391,6 +397,13 @@ generate@swap-factory: src/declarations/swap-factory/swap-factory.did.js src/dec
 
 src/declarations/swap-factory/swap-factory.did.js src/declarations/swap-factory/index.js src/declarations/swap-factory/swap-factory.did.d.ts src/declarations/swap-factory/index.d.ts src/declarations/swap-factory/swap-factory.did: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wasm .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.did
 	dfx generate --no-compile --network $(NETWORK) swap-factory
+
+.PHONY: generate@swap-pool
+.PRECIOUS: src/declarations/swap-pool/swap-pool.did.js src/declarations/swap-pool/index.js src/declarations/swap-pool/swap-pool.did.d.ts src/declarations/swap-pool/index.d.ts src/declarations/swap-pool/swap-pool.did
+generate@swap-pool: src/declarations/swap-pool/swap-pool.did.js src/declarations/swap-pool/index.js src/declarations/swap-pool/swap-pool.did.d.ts src/declarations/swap-pool/index.d.ts src/declarations/swap-pool/swap-pool.did
+
+src/declarations/swap-pool/swap-pool.did.js src/declarations/swap-pool/index.js src/declarations/swap-pool/swap-pool.did.d.ts src/declarations/swap-pool/index.d.ts src/declarations/swap-pool/swap-pool.did: .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.wasm .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.did
+	dfx generate --no-compile --network $(NETWORK) swap-pool
 
 .PHONY: generate@upgrade_example_backend1_v1
 .PRECIOUS: src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.js src/declarations/upgrade_example_backend1_v1/index.js src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did.d.ts src/declarations/upgrade_example_backend1_v1/index.d.ts src/declarations/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did
@@ -756,6 +769,12 @@ deploy-self@swap-factory: .dfx/$(NETWORK)/canisters/swap-factory/swap-factory.wa
 
 .PHONY: deploy@swap-factory
 deploy@swap-factory: deploy-self@swap-factory
+
+.PHONY: deploy-self@swap-pool
+deploy-self@swap-pool: .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.wasm .dfx/$(NETWORK)/canisters/swap-pool/swap-pool.did
+
+.PHONY: deploy@swap-pool
+deploy@swap-pool: deploy-self@swap-pool
 
 .PHONY: deploy-self@upgrade_example_backend1_v1
 deploy-self@upgrade_example_backend1_v1: .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did

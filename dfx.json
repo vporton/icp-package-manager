@@ -149,6 +149,17 @@
       "type": "custom",
       "wasm": ""
     },
+    "swap-pool": {
+      "candid": "candid/swap-pool.did",
+      "type": "custom",
+      "remote": {
+        "id": {
+          "ic": "xmiu5-jqaaa-aaaag-qbz7q-cai",
+          "local": "xmiu5-jqaaa-aaaag-qbz7q-cai"
+        }
+      },
+    "wasm": ""
+    },
     "nns-cycles-minting": {
       "build": "",
       "candid": "candid/nns-cycles-minting.did",
