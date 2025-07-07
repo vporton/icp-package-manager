@@ -209,33 +209,6 @@ persistent actor class Wallet({
     //     not owner.isAnonymous();
     // };
 
-    public shared({caller}) func do_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async () {
-        onlyOwner(caller, "do_icrc1_transfer");
-
-        // `ignore` to avoid non-returning-function DoS attack
-        ignore token.icrc1_transfer(
-            if (Principal.isAnonymous(owner)) {
-                {args with from_subaccount = ?(AccountID.principalToSubaccount(caller))};
-            } else {
-                args;
-            },
-        ); // `ignore` to avoid non-returning-function DoS attack
-    };
-
-    public shared({caller}) func do_secure_icrc1_transfer(token: ICRC1.Service, args: ICRC1.TransferArgs): async ICRC1.TransferResult {
-        onlyOwner(caller, "do_secure_icrc1_transfer");
-        if (Principal.fromActor(token) != Principal.fromActor(ICPLedger) and Principal.fromActor(token) != Principal.fromActor(CyclesLedger)) {
-            Debug.trap("only certain tokens considered secure");
-        };
-
-        await token.icrc1_transfer(
-            if (Principal.isAnonymous(owner)) {
-                {args with from_subaccount = ?(AccountID.principalToSubaccount(caller))};
-            } else {
-                args;
-            },
-        );
-    };
 
     // public shared({caller}) func get_exchange_rate(symbol: Text): async {#Ok: Float; #Err} {
     //     if (Principal.isAnonymous(owner) or caller != owner) { // work only for personal wallet

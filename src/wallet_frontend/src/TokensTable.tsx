@@ -137,18 +137,26 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const [balances, setBalances] = useState(new Map<Principal, number>());
     const [userWallet, setUserWallet] = useState<Account | undefined>();
     const [userWalletText, setUserWalletText] = useState<string | undefined>();
-    const subaccount = userWalletText === undefined || !/\./.test(userWalletText) ? undefined : userWalletText?.replace(/^[^.]*\./, '');
-    const dfxCommand = userWalletText === undefined
+    const dfxCommand = principal === undefined
         ? ''
-        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${userWalletText.replace(/-[^-]+\..*/, '')} ${subaccount !== undefined ? `--to-subaccount ${subaccount}` : ''} --memo 0 --amount`;
+        : `dfx ledger --network ${process.env.DFX_NETWORK} transfer --to-principal ${principal.toText()} --memo 0 --amount`;
     useEffect(() => {
+<<<<<<< HEAD
         if (glob.walletBackendPrincipal !== undefined && principal !== undefined && agent !== undefined) {
             userAccount(glob.walletBackendPrincipal, principal, agent).then(account => {
                 setUserWallet(account);
                 userAccountText(glob.walletBackendPrincipal!, principal, agent).then(setUserWalletText);
             });
+=======
+        if (principal === undefined) {
+            setUserWallet(undefined);
+            setUserWalletText(undefined);
+        } else {
+            setUserWallet({ owner: principal, subaccount: [] });
+            setUserWalletText(principal.toText());
+>>>>>>> e35b2726037080fd9b53bf80c4560c9bfb23aca4
         }
-    }, [glob.walletBackendPrincipal, principal, agent]);
+    }, [principal]);
     useEffect(() => {
         if (tokens === undefined || userWallet === undefined) {
             return;
@@ -407,7 +415,9 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         try {
             console.log(sendAmount, decimals);
             const to = decodeIcrcAccount(sendTo);
-            /*const res = */await glob.walletBackend!.do_icrc1_transfer(props.selectedToken?.canisterId, {
+            const token = createTokenActor(props.selectedToken?.canisterId, {agent});
+            const decimals = await token.decimals();
+            await token.icrc1_transfer({
                 from_subaccount: [],
                 to: {owner: to.owner, subaccount: to.subaccount === undefined ? [] : [to.subaccount]},
                 amount: BigInt(Number(sendAmount) * 10**decimals!), // FIXME@P3: `!` // TODO@P2: Does Number convert right? // TODO@P3: duplicate code
@@ -423,7 +433,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
             //     // console.log((res as any).Err);
             //     throw 'Failed to send tokens';
             // }
-            // TODO: Update amounts in token table here (after a pause, because of no-return function `do_icrc1_transfer`).
+            // TODO: Update amounts in token table here.
         } catch (error: any) {
             setError(error?.toString() || 'Failed to send tokens');
         }
