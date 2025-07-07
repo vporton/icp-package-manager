@@ -361,7 +361,7 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
     useEffect(() => {
         if (props.selectedToken !== undefined) {
             const token = createTokenActor(props.selectedToken.canisterId, {agent: defaultAgent});
-            token.decimals().then(n => setDecimals(Number(n.toString())));
+            token.icrc1_decimals    ().then(n => setDecimals(Number(n.toString())));
         }
     }, [props.selectedToken]);
 
