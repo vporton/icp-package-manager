@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle, useContext, useMemo } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useContext, useMemo, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
@@ -351,8 +351,16 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
         limits.amountAddInput === undefined || amountInBase === undefined ? false : amountInBase >= limits.amountAddInput,
         [limits, amountInBase]
     );
-    const [checkboxConfirmation, setCheckboxConfirmation] = useState(true)
-    const [inputConfirmation, setInputConfirmation] = useState(true);
+    const [checkboxConfirmation, setCheckboxConfirmation] = useState(false)
+    const [inputConfirmation, setInputConfirmation] = useState(false);
+    const checkboxConfirmationRef = useRef<HTMLInputElement | null>(null);
+    const inputConfirmationRef = useRef<HTMLInputElement | null>(null);
+    function updateCheckboxConfirmation() {
+        setCheckboxConfirmation(checkboxConfirmationRef.current!.checked);
+    }
+    function updateInputConfirmation() {
+        setInputConfirmation(inputConfirmationRef.current!.value === "pay");
+    }
 
     const [decimals, setDecimals] = useState<number | undefined>();
     useEffect(() => {
@@ -453,7 +461,8 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
                 {showCheckboxConfirmation && <Form.Group className="mb-3">
                     <Form.Check
                         label="Confirm Payment"
-                        onChange={(e) => setCheckboxConfirmation(e.target.checked)}
+                        onChange={updateCheckboxConfirmation}
+                        ref={checkboxConfirmationRef}
                     />
                 </Form.Group>}
                 {showInputConfirmation && <Form.Group className="mb-3">
@@ -461,7 +470,8 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
                     <Form.Control
                         type="text"
                         defaultValue={''}
-                        onInput={(e) => setInputConfirmation((e.target as HTMLInputElement).value === "pay")}
+                        onInput={updateInputConfirmation}
+                        ref={inputConfirmationRef}
                     />
                 </Form.Group>}
             </Form>
