@@ -9,8 +9,6 @@ import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
 import { idlFactory as assetIdlFactory } from '../../../bootstrapper_frontend/src/misc/frontend.did';
 import type { _SERVICE as AssetService, Permission } from '../../../bootstrapper_frontend/src/misc/frontend.did';
-import { createActor as createInstallActor } from '../../../declarations/install';
-import type { _SERVICE as Install } from '../../../declarations/install/install.did';
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
     const total = chunks.reduce((acc, c) => acc + c.length, 0);
@@ -148,8 +146,6 @@ export async function performModularUpgrade({
     const mainIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'main_indirect')!;
     const battery = await package_manager.getModulePrincipal(props.oldInstallation, 'battery')!;
 
-    const installActor: Install = createInstallActor(glob.backend!, { agent });
-
     // Then upgrade or install modules
     for (const moduleName of upgradeResult.modulesToUpgradeOrInstall) {
         // Handle infrastructure modules directly via Management Canister
@@ -237,7 +233,7 @@ export async function performModularUpgrade({
                         throw e;
                     }
                 }
-                await installActor.copyAssetsIfAny({
+                await package_manager.copyAssetsIfAny({
                     wasmModule: moduleInfo,
                     canister_id: moduleCanisterId,
                     simpleIndirect,
@@ -261,7 +257,7 @@ export async function performModularUpgrade({
                     wasmModule: wasmModuleBytes,
                     arg: new Uint8Array(arg),
                 });
-                await installActor.copyAssetsIfAny({
+                await package_manager.copyAssetsIfAny({
                     wasmModule: moduleInfo,
                     canister_id: newCanisterId,
                     simpleIndirect,
@@ -283,4 +279,4 @@ export async function performModularUpgrade({
     await package_manager.completeModularUpgrade(upgradeResult.upgradeId, Array.from(modulesMap.entries()));
 
     navigate(`/installed/show/${props.oldInstallation.toString()}`);
-} 
+}
