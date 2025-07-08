@@ -36,6 +36,37 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
     const { setError } = useContext(ErrorContext)!;
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
+
+    const [searchParams, _] = useSearchParams();
+    const [addWalletPackage, setAddWalletPackage] = useState(true);
+    const [addExamplePackage, setAddExamplePackage] = useState(false);
+    const additionalPackagesStr = (searchParams as any).get('additionalPackages');
+    let additionalPackages: {
+      packageName: string;
+      version: string;
+      repo: Principal;
+      installCost: bigint;
+    }[] = additionalPackagesStr === null ? []
+      : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
+
+    if (addExamplePackage) {
+      additionalPackages = additionalPackages.filter(p => p.packageName !== 'example');
+      additionalPackages.push({
+        packageName: "example",
+        version: "0.0.1",
+        repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+        installCost: 2n * 10n**12n,
+      });
+    }
+    if (addWalletPackage) {
+      additionalPackages = additionalPackages.filter(p => p.packageName !== 'wallet');
+      additionalPackages.push({
+        packageName: "wallet",
+        version: "0.0.1",
+        repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+        installCost: 3n * 10n**12n,
+      });
+    }
     useEffect(() => {
       if (!props.ok || props.agent === undefined) {
         setBookmarks([]);
@@ -60,7 +91,8 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
       }
       const fullSum = 13n * 10n**12n + additionalSum;
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      if (await bootstrapper.userCycleBalance() < fullSum) {
+      console.log("WW", await bootstrapper.userCycleBalance(), fullSum);
+      if ((await bootstrapper.userCycleBalance()) < fullSum) {
         setError(`Need to deploy ${Number(fullSum) / 10**12}T cycles`);
         return;
       }
@@ -79,24 +111,6 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(
           new Uint8Array(await window.crypto.subtle.exportKey("pkcs8", frontendTweakPrivKey))
         );
-        if (addExamplePackage) {
-          additionalPackages = additionalPackages.filter(p => p.packageName !== 'example');
-          additionalPackages.push({
-            packageName: "example",
-            version: "0.0.1",
-            repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-            installCost: 2n * 10n**12n,
-          });
-        }
-        if (addWalletPackage) {
-          additionalPackages = additionalPackages.filter(p => p.packageName !== 'wallet');
-          additionalPackages.push({
-            packageName: "wallet",
-            version: "0.0.1",
-            repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
-            installCost: 3n * 10n**12n,
-          });
-        }
         const packages3 = additionalPackages.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
         open(
           `${url}?` +
@@ -128,22 +142,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
       }
     }
 
-    // TODO@P3: Move below variables to the top.
-    const [searchParams, _] = useSearchParams();
-    const [addWalletPackage, setAddWalletPackage] = useState(true);
-    const [addExamplePackage, setAddExamplePackage] = useState(false);
-    const additionalPackagesStr = (searchParams as any).get('additionalPackages');
-    let additionalPackages: {
-      packageName: string;
-      version: string;
-      repo: Principal;
-      installCost: bigint;
-    }[] = additionalPackagesStr === null ? []
-      : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
-    // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
-    const modulesJSON = (searchParams as any).get('modules');
-
-    const b = bookmarks[0]; // TODO@P3: Allow to install not for the first package manager.
+    const b = bookmarks.length ? bookmarks[bookmarks.length - 1] : undefined; // TODO@P3: Allow to install not for the first package manager.
 
     // TODO@P3: Give user freedom to change whether bootstrap or install.
     return (
@@ -158,13 +157,14 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
             })}
           </ul>
         }
-        {additionalPackages.map(p => {
+        {b && additionalPackages.map(p => {
           const frontend = getIsLocal() ? `http://${b.frontend}.localhost:8080` : `https://${b.frontend}.icp0.io`;
           return (
             <p>
               <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
                 Install package <code>{p.packageName}</code>
-              </Link>
+              </Link>{" "}
+              in already installed package manager.
             </p>
           );
         })}
