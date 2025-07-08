@@ -112,9 +112,7 @@ export default function InstalledPackage(props: {}) {
     const usedCycles = searchParams.get('usedCycles');
 
     return (
-        // FIXME@P1: Remove `XXX` below.
         <>
-        XXX
             {usedCycles && <Alert variant="info">Installation used {Number(usedCycles) / 10**12}T cycles.</Alert>}
             <h2>Installation</h2>
             {pkg === undefined ? <p>No such installed package.</p> : <>
