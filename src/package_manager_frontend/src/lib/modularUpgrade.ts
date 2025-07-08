@@ -237,7 +237,7 @@ export async function performModularUpgrade({
                         throw e;
                     }
                 }
-                await installActor.copyAssetsIfAny({
+                await package_manager.copyAssetsIfAny({
                     wasmModule: moduleInfo,
                     canister_id: moduleCanisterId,
                     simpleIndirect,
@@ -261,7 +261,7 @@ export async function performModularUpgrade({
                     wasmModule: wasmModuleBytes,
                     arg: new Uint8Array(arg),
                 });
-                await installActor.copyAssetsIfAny({
+                await package_manager.copyAssetsIfAny({
                     wasmModule: moduleInfo,
                     canister_id: newCanisterId,
                     simpleIndirect,
@@ -283,4 +283,4 @@ export async function performModularUpgrade({
     await package_manager.completeModularUpgrade(upgradeResult.upgradeId, Array.from(modulesMap.entries()));
 
     navigate(`/installed/show/${props.oldInstallation.toString()}`);
-} 
+}
