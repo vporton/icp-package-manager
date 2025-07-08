@@ -5,6 +5,7 @@ import { useContext } from 'react';
 import { useAuth } from "../../lib/use-auth-client.js";
 import Button from "react-bootstrap/Button";
 import { Principal } from "@dfinity/principal";
+import { ICManagementCanister } from '@dfinity/ic-management';
 import { _SERVICE as Repository } from '../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/repository';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
@@ -100,7 +101,11 @@ function ChooseVersion2(props: {
             setInstalling(true);
 
             const batteryPrincipal = await glob.packageManager!.getModulePrincipal(0n, 'battery');
-            const balance = () => cycles_ledger.icrc1_balance_of({owner: batteryPrincipal, subaccount: []});
+            const balance = async () => {
+                const managementCanister = ICManagementCanister.create({ agent: agent! });
+                const res = await managementCanister.canisterStatus(batteryPrincipal);
+                return res.cycles;
+            }
             const cyclesAmount = await balance();
 
             const {minInstallationId: id} = await glob.packageManager!.installPackages({
@@ -116,7 +121,7 @@ function ChooseVersion2(props: {
             });
             await waitTillInitialized(agent!, glob.backend!, id);
 
-            const usedCycles = (await balance()) - cyclesAmount;
+            const usedCycles = cyclesAmount - await balance();
 
             const pair = await window.crypto.subtle.generateKey(
                 {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']
