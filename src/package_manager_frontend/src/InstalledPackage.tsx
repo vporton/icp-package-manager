@@ -10,6 +10,7 @@ import Accordion from "react-bootstrap/Accordion";
 import Modal from "react-bootstrap/Modal";
 import { myUseNavigate } from "./MyNavigate";
 import { createActor as createWalletActor } from '../../declarations/wallet_backend';
+import Alert from "react-bootstrap/Alert";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
     const binaryString = String.fromCharCode(...uint8Array);
@@ -55,7 +56,7 @@ export default function InstalledPackage(props: {}) {
             return;
         }
 
-        const modules = new Map(pkg.modulesInstalledByDefault);
+        // const modules = new Map(pkg.modulesInstalledByDefault);
 
         const piReal: SharedRealPackageInfo = (pkg.package.specific as any).real;
         if (piReal.frontendModule[0] !== undefined) {
@@ -108,9 +109,12 @@ export default function InstalledPackage(props: {}) {
         }
     }
 
+    const usedCycles = searchParams.get('usedCycles');
 
     return (
         <>
+        XXX
+            {usedCycles && <Alert variant="info">Installation used {Number(usedCycles) / 10**12}T cycles.</Alert>}
             <h2>Installation</h2>
             {pkg === undefined ? <p>No such installed package.</p> : <>
                 <p>

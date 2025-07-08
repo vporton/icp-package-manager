@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Actor } from "@dfinity/agent";
 import { useContext } from 'react';
 import { useAuth } from "../../lib/use-auth-client.js";
@@ -8,6 +8,7 @@ import { Principal } from "@dfinity/principal";
 import { _SERVICE as Repository } from '../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/repository';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
+import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { waitTillInitialized } from "../../lib/install";
@@ -98,6 +99,10 @@ function ChooseVersion2(props: {
             setBusy(true);
             setInstalling(true);
 
+            const batteryPrincipal = await glob.packageManager!.getModulePrincipal(0n, 'battery');
+            const balance = () => cycles_ledger.icrc1_balance_of({owner: batteryPrincipal, subaccount: []});
+            const cyclesAmount = await balance();
+
             const {minInstallationId: id} = await glob.packageManager!.installPackages({
                 packages: [{
                     packageName: props.packageName!,
@@ -111,13 +116,15 @@ function ChooseVersion2(props: {
             });
             await waitTillInitialized(agent!, glob.backend!, id);
 
+            const usedCycles = (await balance()) - cyclesAmount;
+
             const pair = await window.crypto.subtle.generateKey(
                 {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign']
             );
             const pubKey = new Uint8Array(await window.crypto.subtle.exportKey('spki', pair.publicKey));
             await glob.packageManager!.setInstallationPubKey(BigInt(id), pubKey);
             const privKeyEncoded = uint8ArrayToUrlSafeBase64(new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', pair.privateKey)));
-            navigate(`/installed/show/${id}?installationPrivKey=${encodeURIComponent(privKeyEncoded)}`);
+            navigate(`/installed/show/${id}?installationPrivKey=${encodeURIComponent(privKeyEncoded)}&usedCycles=${usedCycles}`);
         }
         catch (e) {
             const msg = (e as object).toString();
