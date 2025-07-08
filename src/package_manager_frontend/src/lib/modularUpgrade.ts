@@ -1,5 +1,5 @@
 import { Location, ModuleCode, SharedFullPackageInfo } from '../../../declarations/repository/repository.did.js';
-import { Actor, Agent } from "@dfinity/agent";
+import { Actor, Agent, ActorSubclass } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as Repository } from '../../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../../declarations/repository';
@@ -7,6 +7,112 @@ import { PackageManager, SharedModule, SharedRealPackageInfo } from '../../../de
 import { GlobalContextType } from "../state";
 import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
+import { idlFactory as assetIdlFactory } from '../../../bootstrapper_frontend/src/misc/frontend.did';
+import type { _SERVICE as AssetService, Permission } from '../../../bootstrapper_frontend/src/misc/frontend.did';
+
+function concatChunks(chunks: Uint8Array[]): Uint8Array {
+    const total = chunks.reduce((acc, c) => acc + c.length, 0);
+    const result = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+        result.set(c, offset);
+        offset += c.length;
+    }
+    return result;
+}
+
+async function copyAllAssets(from: ActorSubclass<AssetService>, to: ActorSubclass<AssetService>): Promise<void> {
+    const fromAssets = await from.list({});
+    const toAssets = await to.list({});
+    const fromSet = new Set(fromAssets.map(a => a.key));
+    const toMap = new Map(toAssets.map(a => [a.key, a]));
+    const { batch_id } = await to.create_batch({});
+    const operations: any[] = [];
+
+    for (const toAsset of toAssets) {
+        if (!fromSet.has(toAsset.key)) {
+            operations.push({ DeleteAsset: { key: toAsset.key } });
+        }
+    }
+
+    for (const fromAsset of fromAssets) {
+        const props = await from.get_asset_properties(fromAsset.key);
+        const toAsset = toMap.get(fromAsset.key);
+        if (toAsset) {
+            const fromEncodings = new Set(fromAsset.encodings.map(e => e.content_encoding));
+            for (const encoding of toAsset.encodings) {
+                if (!fromEncodings.has(encoding.content_encoding)) {
+                    operations.push({ UnsetAssetContent: { key: fromAsset.key, content_encoding: encoding.content_encoding } });
+                }
+            }
+            operations.push({ SetAssetProperties: {
+                key: fromAsset.key,
+                max_age: props.max_age,
+                headers: props.headers,
+                allow_raw_access: props.allow_raw_access,
+                is_aliased: props.is_aliased,
+            }});
+        } else {
+            operations.push({ CreateAsset: {
+                key: fromAsset.key,
+                content_type: fromAsset.content_type,
+                allow_raw_access: props.allow_raw_access,
+                max_age: props.max_age,
+                headers: props.headers,
+                enable_aliasing: props.is_aliased,
+            }});
+        }
+
+        for (const encoding of fromAsset.encodings) {
+            const got = await from.get({ key: fromAsset.key, accept_encodings: [encoding.content_encoding] });
+            const first = got.content as Uint8Array;
+            const chunkSize = first.length;
+            const total = BigInt(got.total_length);
+            const chunksNum = total === 0n ? 0n : ((total - 1n) / BigInt(chunkSize)) + 1n;
+            const chunkIds: bigint[] = [];
+            let info = await to.create_chunk({ batch_id, content: first });
+            chunkIds.push(info.chunk_id);
+            for (let i = 1n; i < chunksNum; i++) {
+                const { content } = await from.get_chunk({ key: fromAsset.key, content_encoding: encoding.content_encoding, index: i, sha256: encoding.sha256 });
+                info = await to.create_chunk({ batch_id, content });
+                chunkIds.push(info.chunk_id);
+            }
+            operations.push({ SetAssetContent: { key: fromAsset.key, content_encoding: encoding.content_encoding, chunk_ids: chunkIds, sha256: null } });
+        }
+    }
+
+    await to.commit_batch({ batch_id, operations });
+}
+
+async function copyAssetsIfAny(opts: {
+    moduleInfo: SharedModule;
+    canisterId: Principal;
+    agent: Agent;
+    simpleIndirect: Principal;
+    mainIndirect: Principal;
+    user: Principal;
+}): Promise<void> {
+    const code = opts.moduleInfo.code as any;
+    if (code.Assets === undefined) return;
+    const fromId: Principal = code.Assets.assets;
+    const from = Actor.createActor<AssetService>(assetIdlFactory, { agent: opts.agent, canisterId: fromId });
+    const to = Actor.createActor<AssetService>(assetIdlFactory, { agent: opts.agent, canisterId: opts.canisterId });
+
+    await copyAllAssets(from, to);
+
+    const oldController = (await to.list_authorized())[0];
+    const perms: Permission[] = [{ Commit: null }, { Prepare: null }, { ManagePermissions: null }];
+    for (const permission of perms) {
+        for (const p of [opts.simpleIndirect, opts.mainIndirect, opts.user]) {
+            await to.grant_permission({ to_principal: p, permission });
+        }
+        if (oldController.toText() !== opts.simpleIndirect.toText() &&
+            oldController.toText() !== opts.mainIndirect.toText() &&
+            oldController.toText() !== opts.user.toText()) {
+            await to.revoke_permission({ of_principal: oldController, permission });
+        }
+    }
+}
 
 interface ModularUpgradeParams {
     package_manager: PackageManager;
@@ -151,11 +257,19 @@ export async function performModularUpgrade({
                             canisterId: moduleCanisterId,
                             wasmModule: wasmModuleBytes,
                             arg: new Uint8Array(arg),
-                        }); 
+                        });
                     } else {
                         throw e;
                     }
                 }
+                await copyAssetsIfAny({
+                    moduleInfo,
+                    canisterId: moduleCanisterId,
+                    agent,
+                    simpleIndirect,
+                    mainIndirect,
+                    user: principal,
+                });
                 modulesMap.set(moduleName, moduleCanisterId);
             } else {
                 // Install new module
@@ -172,6 +286,14 @@ export async function performModularUpgrade({
                     canisterId: newCanisterId,
                     wasmModule: wasmModuleBytes,
                     arg: new Uint8Array(arg),
+                });
+                await copyAssetsIfAny({
+                    moduleInfo,
+                    canisterId: newCanisterId,
+                    agent,
+                    simpleIndirect,
+                    mainIndirect,
+                    user: principal,
                 });
                 modulesMap.set(moduleName, newCanisterId);
             }
