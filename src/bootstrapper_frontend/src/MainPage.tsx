@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../lib/use-auth-client";
 import { getIsLocal } from "../../lib/state";
+import { createActor as createBootstrapperActor } from "../../declarations/bootstrapper";
 import { createActor as createBookmarkActor } from "../../declarations/bookmark";
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
 import { Bookmark } from '../../declarations/bookmark/bookmark.did';
@@ -48,11 +49,25 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
     // TODO@P3: Allow to change the bootstrap repo:
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
     async function bootstrap() {
+      let additionalSum = 0n;
+      try {
+        additionalSum = additionalPackages.map(p => p.installCost).reduce((x, y, _i, _a) => x+y);
+      } catch (e) {
+        if (e !instanceof TypeError) {
+          setError((e as any).toString());
+          return;
+        }
+      }
+      const fullSum = 13n * 10n**12n + additionalSum;
+      const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
+      if (await bootstrapper.userCycleBalance() < fullSum) {
+        setError(`Need to deploy ${Number(fullSum) / 10**12}T cycles`);
+        return;
+      }
       try {
         swetrix_track({ev: 'bootstrapStart', unique: false});
         setBusy(true);
 
-        // const bootstrapper = createBootstrapperIndirectActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
         const {installedModules, frontendTweakPrivKey, spentCycles} = await bootstrapFrontend({
           agent: props.agent!,
         });
@@ -64,8 +79,23 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(
           new Uint8Array(await window.crypto.subtle.exportKey("pkcs8", frontendTweakPrivKey))
         );
-        if (addExample) {
-          additionalPackages.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
+        if (addExamplePackage) {
+          additionalPackages = additionalPackages.filter(p => p.packageName === 'example');
+          additionalPackages.push({
+            packageName: "example",
+            version: "0.0.1",
+            repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            installCost: 2n * 10n**12n,
+          });
+        }
+        if (addWalletPackage) {
+          additionalPackages = additionalPackages.filter(p => p.packageName === 'wallet');
+          additionalPackages.push({
+            packageName: "wallet",
+            version: "0.0.1",
+            repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
+            installCost: 3n * 10n**12n,
+          });
         }
         const packages3 = additionalPackages.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
         open(
@@ -100,12 +130,14 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
 
     // TODO@P3: Move below variables to the top.
     const [searchParams, _] = useSearchParams();
-    const [addExample, setAddExample] = useState(false);
+    const [addWalletPackage, setAddWalletPackage] = useState(true);
+    const [addExamplePackage, setAddExamplePackage] = useState(false);
     const additionalPackagesStr = (searchParams as any).get('additionalPackages');
-    const additionalPackages: {
+    let additionalPackages: {
       packageName: string;
       version: string;
       repo: Principal;
+      installCost: bigint;
     }[] = additionalPackagesStr === null ? []
       : JSON.parse(additionalPackagesStr).map((p: any) => ({packageName: p.packageName, version: p.version, repo: Principal.fromText(p.repo)}));
     // [{packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)}];
@@ -138,6 +170,25 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
               </p>
             );
           })}
+          <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
+          <p>
+            <label>
+              <input type="checkbox" checked={addWalletPackage} onChange={e => setAddWalletPackage(e.target.checked)}/>{" "}
+              Add <q>Payments Wallet</q> package
+            </label>{" "}
+            <small>(will be also used for in-app payments)</small>
+          </p>
+          <p>
+            <label>
+              <input type="checkbox" checked={addExamplePackage} onChange={e => setAddExamplePackage(e.target.checked)}/>{" "}
+              Add example package
+            </label>{" "}
+            <small>(for testing)</small>
+          </p>
+          <p>
+            <Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button>
+            {!props.ok && <>{" "}You need to login to install it.</>}
+          </p>
           <Accordion defaultActiveKey={undefined}>
             <Accordion.Item eventKey="advanced">
               <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
@@ -152,21 +203,6 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
             </Accordion.Item>
           </Accordion>
           <BootstrapAgainDialog/>
-        </>
-        :
-        <>
-          <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
-          {/* <p> // Restore it.
-            <label>
-              <input type="checkbox" checked={addExample} onChange={e => setAddExample(e.target.checked)}/>{" "}
-              Add example package
-            </label>{" "}
-            <small>(for testing)</small>
-          </p> */}
-          <p>
-            <Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button>
-            {!props.ok && <>{" "}You need to login to install it.</>}
-          </p>
         </>}
       </>
     );
