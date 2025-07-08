@@ -372,7 +372,6 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
                         token0: {address: baseToken, standard: "ICRC1"},
                         token1: {address: props.selectedToken.canisterId.toText(), standard: "ICRC1"},
                     });
-                    console.log("PAIR", pair); // FIXME@P1: Remove.
                     if ((pair as any).ok) {
                         const swapPool = await createSwapPool((pair as any).ok.canisterId, {agent: mainnetAgent});
                         const icpSwap = await swapPool.quote({
