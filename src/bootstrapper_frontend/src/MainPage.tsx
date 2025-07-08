@@ -64,11 +64,10 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
         const frontendTweakPrivKeyEncoded = uint8ArrayToUrlSafeBase64(
           new Uint8Array(await window.crypto.subtle.exportKey("pkcs8", frontendTweakPrivKey))
         );
-        const packages2 = additionalPackages;
         if (addExample) {
-          packages2.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
+          additionalPackages.push({packageName: "example", version: "0.0.1", repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!)});
         }
-        const packages3 = packages2.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
+        const packages3 = additionalPackages.map(p => ({packageName: p.packageName, version: p.version, repo: p.repo.toText()}));
         open(
           `${url}?` +
             `frontendTweakPrivKey=${frontendTweakPrivKeyEncoded}&` +
