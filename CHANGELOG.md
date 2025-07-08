@@ -1,3 +1,7 @@
+2025 Jul 8
+
+* Installation of additional packages, such as `wallet`.
+
 2025 Jul 6
 
 * Bug fixes.
