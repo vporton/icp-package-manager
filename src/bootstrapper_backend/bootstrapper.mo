@@ -378,8 +378,8 @@ actor class Bootstrapper() = this {
                 packageName = p.packageName;
                 version = p.version;
                 repo = p.repo;
-                arg = "";
-                initArg = null;
+                arg = to_candid({});
+                initArg = ?to_candid({});
             }));
             user;
             afterInstallCallback = null;
