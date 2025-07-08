@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- FIXME@P1 Upgrading the PM through the UI does not update its frontend.
+
 - FIXME@P2:
 ```
 2025-07-06 14:52:29.386829007 UTC: [Canister hamwc-yx777-77774-qadfa-cai] topUpOneCanisterFinish: could not perform remote call
