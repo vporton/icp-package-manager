@@ -9,6 +9,8 @@ import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
 import { idlFactory as assetIdlFactory } from '../../../bootstrapper_frontend/src/misc/frontend.did';
 import type { _SERVICE as AssetService, Permission } from '../../../bootstrapper_frontend/src/misc/frontend.did';
+import { createActor as createInstallActor } from '../../../declarations/install';
+import type { _SERVICE as Install } from '../../../declarations/install/install.did';
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
     const total = chunks.reduce((acc, c) => acc + c.length, 0);
@@ -84,35 +86,6 @@ async function copyAllAssets(from: ActorSubclass<AssetService>, to: ActorSubclas
     await to.commit_batch({ batch_id, operations });
 }
 
-async function copyAssetsIfAny(opts: {
-    moduleInfo: SharedModule;
-    canisterId: Principal;
-    agent: Agent;
-    simpleIndirect: Principal;
-    mainIndirect: Principal;
-    user: Principal;
-}): Promise<void> {
-    const code = opts.moduleInfo.code as any;
-    if (code.Assets === undefined) return;
-    const fromId: Principal = code.Assets.assets;
-    const from = Actor.createActor<AssetService>(assetIdlFactory, { agent: opts.agent, canisterId: fromId });
-    const to = Actor.createActor<AssetService>(assetIdlFactory, { agent: opts.agent, canisterId: opts.canisterId });
-
-    await copyAllAssets(from, to);
-
-    const oldController = (await to.list_authorized())[0];
-    const perms: Permission[] = [{ Commit: null }, { Prepare: null }, { ManagePermissions: null }];
-    for (const permission of perms) {
-        for (const p of [opts.simpleIndirect, opts.mainIndirect, opts.user]) {
-            await to.grant_permission({ to_principal: p, permission });
-        }
-        if (oldController.toText() !== opts.simpleIndirect.toText() &&
-            oldController.toText() !== opts.mainIndirect.toText() &&
-            oldController.toText() !== opts.user.toText()) {
-            await to.revoke_permission({ of_principal: oldController, permission });
-        }
-    }
-}
 
 interface ModularUpgradeParams {
     package_manager: PackageManager;
@@ -174,6 +147,8 @@ export async function performModularUpgrade({
     const simpleIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'simple_indirect')!;
     const mainIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'main_indirect')!;
     const battery = await package_manager.getModulePrincipal(props.oldInstallation, 'battery')!;
+
+    const installActor: Install = createInstallActor(glob.backend!, { agent });
 
     // Then upgrade or install modules
     for (const moduleName of upgradeResult.modulesToUpgradeOrInstall) {
@@ -262,10 +237,9 @@ export async function performModularUpgrade({
                         throw e;
                     }
                 }
-                await copyAssetsIfAny({
-                    moduleInfo,
-                    canisterId: moduleCanisterId,
-                    agent,
+                await installActor.copyAssetsIfAny({
+                    wasmModule: moduleInfo,
+                    canister_id: moduleCanisterId,
                     simpleIndirect,
                     mainIndirect,
                     user: principal,
@@ -287,10 +261,9 @@ export async function performModularUpgrade({
                     wasmModule: wasmModuleBytes,
                     arg: new Uint8Array(arg),
                 });
-                await copyAssetsIfAny({
-                    moduleInfo,
-                    canisterId: newCanisterId,
-                    agent,
+                await installActor.copyAssetsIfAny({
+                    wasmModule: moduleInfo,
+                    canister_id: newCanisterId,
                     simpleIndirect,
                     mainIndirect,
                     user: principal,
