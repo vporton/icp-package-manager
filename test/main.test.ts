@@ -174,6 +174,7 @@ describe('My Test Suite', () => {
             installedModules,
             user: backendUser,
             signature: new Uint8Array(signature),
+            additionalPackages: [],
         });
         for (const [name, m] of pmInst.entries()) {
             canisterNames.set(m.toText(), name);

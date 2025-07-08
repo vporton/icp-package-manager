@@ -104,6 +104,7 @@ function GlobalUI() {
           installedModules,
           user: principal!,
           signature: new Uint8Array(signature),
+          additionalPackages,
         });
         const installedModulesMap = new Map(installedModules);
         const backendPrincipal = installedModulesMap.get('backend')!;
