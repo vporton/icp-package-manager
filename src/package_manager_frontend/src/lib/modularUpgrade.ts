@@ -9,8 +9,6 @@ import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
 import { idlFactory as assetIdlFactory } from '../../../bootstrapper_frontend/src/misc/frontend.did';
 import type { _SERVICE as AssetService, Permission } from '../../../bootstrapper_frontend/src/misc/frontend.did';
-import { createActor as createInstallActor } from '../../../declarations/install';
-import type { _SERVICE as Install } from '../../../declarations/install/install.did';
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
     const total = chunks.reduce((acc, c) => acc + c.length, 0);
@@ -22,70 +20,6 @@ function concatChunks(chunks: Uint8Array[]): Uint8Array {
     }
     return result;
 }
-
-async function copyAllAssets(from: ActorSubclass<AssetService>, to: ActorSubclass<AssetService>): Promise<void> {
-    const fromAssets = await from.list({});
-    const toAssets = await to.list({});
-    const fromSet = new Set(fromAssets.map(a => a.key));
-    const toMap = new Map(toAssets.map(a => [a.key, a]));
-    const { batch_id } = await to.create_batch({});
-    const operations: any[] = [];
-
-    for (const toAsset of toAssets) {
-        if (!fromSet.has(toAsset.key)) {
-            operations.push({ DeleteAsset: { key: toAsset.key } });
-        }
-    }
-
-    for (const fromAsset of fromAssets) {
-        const props = await from.get_asset_properties(fromAsset.key);
-        const toAsset = toMap.get(fromAsset.key);
-        if (toAsset) {
-            const fromEncodings = new Set(fromAsset.encodings.map(e => e.content_encoding));
-            for (const encoding of toAsset.encodings) {
-                if (!fromEncodings.has(encoding.content_encoding)) {
-                    operations.push({ UnsetAssetContent: { key: fromAsset.key, content_encoding: encoding.content_encoding } });
-                }
-            }
-            operations.push({ SetAssetProperties: {
-                key: fromAsset.key,
-                max_age: props.max_age,
-                headers: props.headers,
-                allow_raw_access: props.allow_raw_access,
-                is_aliased: props.is_aliased,
-            }});
-        } else {
-            operations.push({ CreateAsset: {
-                key: fromAsset.key,
-                content_type: fromAsset.content_type,
-                allow_raw_access: props.allow_raw_access,
-                max_age: props.max_age,
-                headers: props.headers,
-                enable_aliasing: props.is_aliased,
-            }});
-        }
-
-        for (const encoding of fromAsset.encodings) {
-            const got = await from.get({ key: fromAsset.key, accept_encodings: [encoding.content_encoding] });
-            const first = got.content as Uint8Array;
-            const chunkSize = first.length;
-            const total = BigInt(got.total_length);
-            const chunksNum = total === 0n ? 0n : ((total - 1n) / BigInt(chunkSize)) + 1n;
-            const chunkIds: bigint[] = [];
-            let info = await to.create_chunk({ batch_id, content: first });
-            chunkIds.push(info.chunk_id);
-            for (let i = 1n; i < chunksNum; i++) {
-                const { content } = await from.get_chunk({ key: fromAsset.key, content_encoding: encoding.content_encoding, index: i, sha256: encoding.sha256 });
-                info = await to.create_chunk({ batch_id, content });
-                chunkIds.push(info.chunk_id);
-            }
-            operations.push({ SetAssetContent: { key: fromAsset.key, content_encoding: encoding.content_encoding, chunk_ids: chunkIds, sha256: null } });
-        }
-    }
-
-    await to.commit_batch({ batch_id, operations });
-}
-
 
 interface ModularUpgradeParams {
     package_manager: PackageManager;
@@ -147,8 +81,6 @@ export async function performModularUpgrade({
     const simpleIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'simple_indirect')!;
     const mainIndirect = await package_manager.getModulePrincipal(props.oldInstallation, 'main_indirect')!;
     const battery = await package_manager.getModulePrincipal(props.oldInstallation, 'battery')!;
-
-    const installActor: Install = createInstallActor(glob.backend!, { agent });
 
     // Then upgrade or install modules
     for (const moduleName of upgradeResult.modulesToUpgradeOrInstall) {
