@@ -179,6 +179,11 @@ actor class Bootstrapper() = this {
         installedModules: [(Text, Principal)];
         user: Principal; // to address security vulnerabilities, used only to add as a controller.
         signature: Blob;
+        additionalPackages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+        }];
     }): async {spentCycles: Int} {
         let initialBalance = Cycles.balance();
 
@@ -203,6 +208,7 @@ actor class Bootstrapper() = this {
             user;
             amountToMove;
             tweaker;
+            additionalPackages;
         });
 
         let spentCycles = (initialBalance: Int) - Cycles.balance();
@@ -215,6 +221,11 @@ actor class Bootstrapper() = this {
         user: Principal; // to address security vulnerabilities, used only to add as a controller.
         amountToMove: Nat;
         tweaker: Data.FrontendTweaker;
+        additionalPackages: [{
+            packageName: Common.PackageName;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+        }];
     }): async {battery: Principal} {
         checkItself(caller);
 
@@ -303,13 +314,24 @@ actor class Bootstrapper() = this {
             facilitateBootstrap: shared ({
                 packageName: Common.PackageName;
                 version: Common.Version;
-                repo: Common.RepositoryRO; 
+                repo: Common.RepositoryRO;
                 arg: Blob;
                 initArg: ?Blob;
                 user: Principal;
                 mainIndirect: Principal;
                 /// Additional packages to install after bootstrapping.
                 preinstalledModules: [(Text, Principal)];
+            }) -> async {minInstallationId: Common.InstallationId};
+            installPackages: shared ({
+                packages: [{
+                    packageName: Common.PackageName;
+                    version: Common.Version;
+                    repo: Common.RepositoryRO;
+                    arg: Blob;
+                    initArg: ?Blob;
+                }];
+                user: Principal;
+                afterInstallCallback: ?{ canister: Principal; name: Text; data: Blob };
             }) -> async {minInstallationId: Common.InstallationId};
         };
         ignore await backendActor.facilitateBootstrap({
@@ -340,6 +362,28 @@ actor class Bootstrapper() = this {
                 };
             });
         };
+
+        ignore await backendActor.installPackages({
+            packages = Iter.toArray(Iter.map<{
+                packageName: Common.PackageName;
+                version: Common.Version;
+                repo: Common.RepositoryRO;
+            }, {
+                packageName: Common.PackageName;
+                version: Common.Version;
+                repo: Common.RepositoryRO;
+                arg: Blob;
+                initArg: ?Blob;
+            }>(additionalPackages.vals(), func (p) = {
+                packageName = p.packageName;
+                version = p.version;
+                repo = p.repo;
+                arg = "";
+                initArg = null;
+            }));
+            user;
+            afterInstallCallback = null;
+        });
 
         {battery};
     };
