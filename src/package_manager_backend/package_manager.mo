@@ -25,6 +25,7 @@ import LIB "mo:icpack-lib";
 import env "mo:env";
 // import Account "mo:icrc1/ICRC1/Account";
 import Battery "battery";
+import Install "../install";
 
 shared({caller = initialCaller}) actor class PackageManager({
     packageManager: Principal; // may be the bootstrapper instead.
@@ -1506,6 +1507,26 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
         await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
+    };
+
+    /// Copy assets from one canister to another if the module contains assets
+    /// wrapper around Install.copyAssetsIfAny from install.mo
+    public shared({caller}) func copyAssetsIfAny({
+        wasmModule: Common.SharedModule;
+        canister_id: Principal;
+        simpleIndirect: Principal;
+        mainIndirect: Principal;
+        user: Principal;
+    }): async () {
+        onlyOwner(caller, "copyAssetsIfAny");
+
+        await* Install.copyAssetsIfAny({
+            wasmModule = Common.unshareModule(wasmModule);
+            canister_id;
+            simpleIndirect;
+            mainIndirect;
+            user;
+        });
     };
 
     /// New API for step-by-step upgrades
