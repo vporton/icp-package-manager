@@ -91,7 +91,6 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
       }
       const fullSum = 13n * 10n**12n + additionalSum;
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: props.agent});
-      console.log("WW", await bootstrapper.userCycleBalance(), fullSum);
       if ((await bootstrapper.userCycleBalance()) < fullSum) {
         setError(`Need to deploy ${Number(fullSum) / 10**12}T cycles`);
         return;
