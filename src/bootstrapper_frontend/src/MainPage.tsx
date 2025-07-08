@@ -53,7 +53,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
       try {
         additionalSum = additionalPackages.map(p => p.installCost).reduce((x, y, _i, _a) => x+y);
       } catch (e) {
-        if (e !instanceof TypeError) {
+        if (!/^TypeError/.test(e as any)) {
           setError((e as any).toString());
           return;
         }
@@ -80,7 +80,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
           new Uint8Array(await window.crypto.subtle.exportKey("pkcs8", frontendTweakPrivKey))
         );
         if (addExamplePackage) {
-          additionalPackages = additionalPackages.filter(p => p.packageName === 'example');
+          additionalPackages = additionalPackages.filter(p => p.packageName !== 'example');
           additionalPackages.push({
             packageName: "example",
             version: "0.0.1",
@@ -89,7 +89,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
           });
         }
         if (addWalletPackage) {
-          additionalPackages = additionalPackages.filter(p => p.packageName === 'wallet');
+          additionalPackages = additionalPackages.filter(p => p.packageName !== 'wallet');
           additionalPackages.push({
             packageName: "wallet",
             version: "0.0.1",
@@ -148,47 +148,43 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
     // TODO@P3: Give user freedom to change whether bootstrap or install.
     return (
       <>
+        <h2>Installed Package Manager</h2>
+        {!props.ok ? <i>Not logged in</i> :
+          <ul>
+            {bookmarks.map(inst => {
+              const base = getIsLocal() ? `http://${inst.frontend}.localhost:8080?` : `https://${inst.frontend}.icp0.io?`;
+              const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
+              return <li key={url}><a href={url}>{url}</a></li>;
+            })}
+          </ul>
+        }
+        {additionalPackages.map(p => {
+          const frontend = getIsLocal() ? `http://${b.frontend}.localhost:8080` : `https://${b.frontend}.icp0.io`;
+          return (
+            <p>
+              <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
+                Install package <code>{p.packageName}</code>
+              </Link>
+            </p>
+          );
+        })}
+        <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
+        <p>
+          <label>
+            <input type="checkbox" checked={addWalletPackage} onChange={e => setAddWalletPackage(e.target.checked)}/>{" "}
+            Add <q>Payments Wallet</q> package
+          </label>{" "}
+          <small>(will be also used for in-app payments)</small>
+        </p>
+        <p>
+          <label>
+            <input type="checkbox" checked={addExamplePackage} onChange={e => setAddExamplePackage(e.target.checked)}/>{" "}
+            Add example package
+          </label>{" "}
+          <small>(for testing)</small>
+        </p>
         {bookmarks.length !== 0 ?
         <>
-          <h2>Installed Package Manager</h2>
-          {!props.ok ? <i>Not logged in</i> :
-            <ul>
-              {bookmarks.map(inst => {
-                const base = getIsLocal() ? `http://${inst.frontend}.localhost:8080?` : `https://${inst.frontend}.icp0.io?`;
-                const url = base + `_pm_pkg0.backend=${inst.backend.toString()}`;
-                return <li key={url}><a href={url}>{url}</a></li>;
-              })}
-            </ul>
-          }
-          {additionalPackages.map(p => {
-            const frontend = getIsLocal() ? `http://${b.frontend}.localhost:8080` : `https://${b.frontend}.icp0.io`;
-            return (
-              <p>
-                <Link to={`${frontend}/choose-version/${p.repo}/${p.packageName}?_pm_pkg0.backend=${b.backend}`}>
-                  Install package <code>{p.packageName}</code>
-                </Link>
-              </p>
-            );
-          })}
-          <p>Additional packages to be installed: {additionalPackages.map(p => <><code>{p.packageName}</code>{" "}</>)}</p>
-          <p>
-            <label>
-              <input type="checkbox" checked={addWalletPackage} onChange={e => setAddWalletPackage(e.target.checked)}/>{" "}
-              Add <q>Payments Wallet</q> package
-            </label>{" "}
-            <small>(will be also used for in-app payments)</small>
-          </p>
-          <p>
-            <label>
-              <input type="checkbox" checked={addExamplePackage} onChange={e => setAddExamplePackage(e.target.checked)}/>{" "}
-              Add example package
-            </label>{" "}
-            <small>(for testing)</small>
-          </p>
-          <p>
-            <Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button>
-            {!props.ok && <>{" "}You need to login to install it.</>}
-          </p>
           <Accordion defaultActiveKey={undefined}>
             <Accordion.Item eventKey="advanced">
               <Accordion.Header onClick={() => setShowAdvanced(!showAdvanced)}>{showAdvanced ? "Hide advanced items" : "Show advanced items"}</Accordion.Header>
@@ -203,7 +199,11 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
             </Accordion.Item>
           </Accordion>
           <BootstrapAgainDialog/>
-        </>}
+        </> :
+        <p>
+          <Button disabled={!props.ok} onClick={bootstrap}>Install package manager IC Pack</Button>
+          {!props.ok && <>{" "}You need to login to install it.</>}
+        </p>}
       </>
     );
   }
