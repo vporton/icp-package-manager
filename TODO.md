@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P2 Note for the user that if, for example, bootstrap with wallet package, the wallet appears in the list of installed apps after a delay.
+
 - FIXME@P2:
 ```
 2025-07-06 14:52:29.386829007 UTC: [Canister hamwc-yx777-77774-qadfa-cai] topUpOneCanisterFinish: could not perform remote call
