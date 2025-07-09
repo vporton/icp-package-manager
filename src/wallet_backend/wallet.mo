@@ -17,7 +17,7 @@ import ICPLedger "canister:nns-ledger";
 import XR "canister:exchange-rate";
 import Int "mo:base/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
-import UserAuth "../lib/UserAuth";
+import UserAuth "mo:icpack-lib/UserAuth";
 
 persistent actor class Wallet({
     installationId: Nat;

@@ -5,6 +5,7 @@ import { createActor as createPackageManager } from '../../declarations/package_
 import { useAuth } from "../../lib/use-auth-client";
 import { idlFactory as packageManagerIDL } from '../../declarations/package_manager/package_manager.did.js';
 import { Actor } from "@dfinity/agent";
+import { urlSafeBase64ToUint8Array } from '../../../icpack-js';
 
 export type GlobalContextType = {
   frontend: Principal | undefined,
@@ -20,24 +21,6 @@ export const GlobalContext = createContext<GlobalContextType>({
   frontendTweakPrivKey: undefined,
 });
 
-function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
-  // Make the string standard Base64 by reversing the URL-safe replacements
-  const base64String = urlSafeBase64
-      .replace(/-/g, '+') // Replace '-' with '+'
-      .replace(/_/g, '/') // Replace '_' with '/'
-      .padEnd(urlSafeBase64.length + (4 - urlSafeBase64.length % 4) % 4, '='); // Add padding '='
-
-  // Decode Base64 to binary string
-  const binaryString = atob(base64String);
-
-  // Convert binary string to Uint8Array
-  const binaryArray = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-      binaryArray[i] = binaryString.charCodeAt(i);
-  }
-
-  return binaryArray;
-}
 
 /**
  * @type {React.FC}
