@@ -49,10 +49,9 @@
     </div>
     <div class="container">
         <p><strong>IC Pack</strong> is the package manager and app store(s) that installs <q>packages</q> (apps) into the Internet Computer (ICP) blockchain and ensures that nobody except of the sovereign user can remove or update his/her app.</p>
-        <p>We are releasing an MVP/beta preview of IC Pack for developers. This is similar to Google Play or Apple App Store, but for online apps. <strong>This is a developer preview, not a finished product, and we provide no warranty whatsoever. Particularly, we don't provide warranty that your cycles spend using this software won't become inaccessible for you.</strong></p>
+        <p>We have released an MVP/beta preview of IC Pack for developers. This is similar to Google Play or Apple App Store, but for online apps.</p>
         <h2>For Developers And Testers</h2>
-        <p><a href="https://app.package-manager.com">MVP beta-1 online.</a> (<strong>Attention:</strong> It was tested a little and all seems to work.)</p>
-        <p>Currently the only package available is <code>example</code> from the repo <code>d54aj-5yaaa-aaaad-aamlq-cai</code>.</p>
+        <p><a href="https://app.package-manager.com">Past-MVP beta online.</a></p>
         <p><a href="https://github.com/vporton/icp-package-manager">Source</a> (Your contributions will be valuable.)</p>
         <p><a href="html/icpack/index.html">API docs</a></p>
         <p>For how to create a package, see examples in
@@ -64,6 +63,10 @@
             <li>Then you upload WASM files of your app.</li>
             <li>Then you create a package, that can be installed using IC Pack from your repository (app store).</li>
         </ul>
+        <p>To make your finished application <code>xyz</code> available to users, create a link with JSON like:</p>
+        <p><code>https://app.package-manager.com?additionalPackages=[{"packageName":"xyz","version":"1.0.0","repo":"XXX","installCost":"2000000000000"}]</code> Here <code>XXX</code> is the principal of your repository, as created above. <code>installCost</code> will be shown to you (in trillions of cycles), when you test-install your app.</p>
+        <p>(You an add more than one app in the JSON array.)</p>
+        <p>Currently, we support only freeware, packaging paid apps will be added later. You can start development of your paid app and wait till we release the code for charging user for unlocking a ciphered app.</p>
         <p>You are able to bootstrap your own copy of package manager after sending 13T cycles or more (You want to send more, if you like to actually install something.) to the account shown in our bootstrapping app. <q>To bootstrap</q> means to install the package manager itself and make it (<code>icpack</code>) one of the installed packages. A big part of the 13T (or more) cycles will be transferred to the <code>battery</code> module (your own canister) of <code>icpack</code> package and you can withdraw cycles from them back.</p>
     </div>
 
