@@ -5,8 +5,8 @@ import Tabs from 'react-bootstrap/Tabs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import TokensTable from './TokensTable';
 import Settings from './Settings';
-import { lazy, Suspense, useContext, useEffect, useMemo } from 'react';
-const Invest = lazy(() => import('./Invest'));
+import { useContext, useEffect, useMemo } from 'react';
+import Invest from './Invest';
 import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
 import { AuthButton }  from '../../lib/AuthButton';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
@@ -94,9 +94,7 @@ function App2() {
                         <Settings/>
                     </Tab>
                     <Tab eventKey="invest" title="Invest">
-                        <Suspense fallback={<div>Loading...</div>}>
-                            <Invest/>
-                        </Suspense>
+                        <Invest/>
                     </Tab>
                 </Tabs>
             }
