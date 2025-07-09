@@ -6,5 +6,6 @@ repository = "https://github.com/vporton/icp-package-manager"
 keywords = [ "package", "manager", "managing", "cycles" ]
 license = "MIT"
 
-[dependencies]
-icrc1-types = "1.0.0"
+[dependencies]icrc1-types = "1.0.0"
+base = "0.14.0"
+ecdsa = "6.0.0"

@@ -29,7 +29,7 @@ import Map "mo:base/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
-import UserAuth "../lib/UserAuth";
+import UserAuth "mo:icpack-lib/UserAuth";
 import BootstrapperData "canister:bootstrapper_data";
 import ICPLedger "canister:nns-ledger";
 import CyclesLedger "canister:cycles_ledger";

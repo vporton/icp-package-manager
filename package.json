@@ -16,7 +16,8 @@
     "src/package_manager_frontend",
     "src/repository_frontend",
     "src/wallet_frontend",
-    "examples/example_frontend"
+    "examples/example_frontend",
+    "icpack-js"
   ],
   "dependencies": {
     "@dfinity/agent": "^2.4.1",

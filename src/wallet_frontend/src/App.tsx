@@ -15,23 +15,8 @@ import { useState, useRef } from 'react';
 import { GlobalContext, GlobalContextProvider } from './state';
 import AddTokenDialog from './AddTokenDialog';
 import { signPrincipal } from '../../lib/signatures';
+import { urlSafeBase64ToUint8Array } from '../../../icpack-js';
 
-function urlSafeBase64ToUint8Array(urlSafeBase64: string) {
-    const cleaned = urlSafeBase64.trim();
-    if (!/^[0-9A-Za-z_-]+$/.test(cleaned)) {
-        throw new Error('Invalid Base64');
-    }
-    const base64String = cleaned
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(cleaned.length + (4 - cleaned.length % 4) % 4, '=');
-    const binaryString = atob(base64String);
-    const binaryArray = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-        binaryArray[i] = binaryString.charCodeAt(i);
-    }
-    return binaryArray;
-}
 
 export default function App() {
     return (
