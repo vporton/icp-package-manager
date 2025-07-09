@@ -71,15 +71,7 @@ persistent actor class Wallet({
 
     /// Change wallet owner after verifying caller's signature with the provided public key.
     public shared({caller}) func setOwner(signature: Blob): async () {
-        let backendActor = actor(Principal.toText(packageManager)): actor {
-            getInstallationPubKey: query (id: Common.InstallationId) -> async ?Blob;
-        };
-        let ?pubKey = await backendActor.getInstallationPubKey(installationId) else {
-            Debug.trap("no public key");
-        };
-        if (not UserAuth.verifySignature(pubKey, caller, signature)) {
-            Debug.trap("invalid signature");
-        };
+        await* UserAuth.checkOwnerSignature(packageManager, installationId, caller, signature); // traps on error
         owner := caller;
     };
 

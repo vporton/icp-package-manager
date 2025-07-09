@@ -26,4 +26,16 @@ module {
         };
         publicKey.verify(Blob.toArray(Principal.toBlob(user)).vals(), sig);
     };
+
+    public func checkOwnerSignature(packageManager: Principal, installationId: Nat, newOwner: Principal, signature: Blob): async* () {
+        let backendActor = actor(Principal.toText(packageManager)): actor {
+            getInstallationPubKey: query (id: Nat) -> async ?Blob;
+        };
+        let ?pubKey = await backendActor.getInstallationPubKey(installationId) else {
+            Debug.trap("no public key");
+        };
+        if (not verifySignature(pubKey, newOwner, signature)) {
+            Debug.trap("invalid signature");
+        };
+    };
 }
