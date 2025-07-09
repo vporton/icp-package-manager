@@ -1,7 +1,5 @@
 Remaining things TODO
 
-- FIXME@P2 It says "Need to deploy 13T cycles" even if I also install `wallet`.
-
 - TODO@P2 Extract into special packages
   [code for verifying user's signature](https://docs.package-manager.com/how-to-create-an-app-for-ic-pack-package-manager/).
 
