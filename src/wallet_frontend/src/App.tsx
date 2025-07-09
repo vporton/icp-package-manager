@@ -14,8 +14,7 @@ import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
 import { useState, useRef } from 'react';
 import { GlobalContext, GlobalContextProvider } from './state';
 import AddTokenDialog from './AddTokenDialog';
-import { signPrincipal } from '../../lib/signatures';
-import { urlSafeBase64ToUint8Array } from '../../../icpack-js';
+import { urlSafeBase64ToUint8Array, signPrincipal } from '../../../icpack-js';
 
 
 export default function App() {

@@ -34,7 +34,7 @@ import ModuleCycles from './ModuleCycles';
 import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
 import { package_manager } from '../../declarations/package_manager';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
-import { getPublicKeyFromPrivateKey, signPrincipal } from "../../lib/signatures";
+import { getPublicKeyFromPrivateKey, signPrincipal } from "../../../icpack-js";
 
 function App() {
   return (
