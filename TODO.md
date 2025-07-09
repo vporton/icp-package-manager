@@ -13,9 +13,6 @@ Remaining things TODO
 
 - TODO@P3 Addresses for sending/receiving Bitcoin and Ethereum in wallet.
 
-- TODO@P2 Unjustified growth of `mainIndirect` by passing `1_000_000_000_000`(?) cycles to it when upgrade.
-          Need to reduce installation costs.
-
 - TODO@P3 Make the "reload" button rotating, while reloading.
 
 - TODO@P3 Opt-in Swetrix events in the PM.
@@ -37,8 +34,6 @@ Remaining things TODO
 - TODO@P3 When topping up bootstrapper with ICP, 0.0001 remains.
 
 - TODO@P3 Automatically retrieve the name of the added repo.
-
-- TODO@P3: Allow to fund with both ICP or cycles.
 
 - TODO@P3: `inspect`.
 
