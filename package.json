@@ -28,7 +28,7 @@
     "@dfinity/principal": "^2.4.1",
     "@vitejs/plugin-react": "^4.4.1",
     "bootstrap": "^5.3.3",
-    "chart.js": "^4.4.9",
+    "chart.js": "^4.5.0",
     "dotenv": "^16.5.0",
     "fetch": "^1.1.0",
     "ic-use-internet-identity": "^0.2.0",
