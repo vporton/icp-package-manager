@@ -188,7 +188,7 @@ async function main() {
             shortDescription: "Example package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([4, 222, 95, 192, 252, 162, 223, 235, 230, 55, 16, 42, 26, 177, 208, 208]),
-            developer: null,
+            developer: [{owner: Principal.fromText("2qop4-5u6dp-g4pmz-lpzyb-hjv6c-be66l-twfuo-ynxgi-hb456-g75bi-rae"), subaccount: []}],
         },
         specific: {real: paidExampleReal},
     };

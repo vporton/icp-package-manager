@@ -13,6 +13,7 @@ import Nat8 "mo:base/Nat8";
 import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
 import Account "lib/Account";
+import CyclesLedger "canister:cycles_ledger";
 
 module {
     public func intHash(value: Int): Hash.Hash {
@@ -44,7 +45,7 @@ module {
         price: Nat;
         shortDescription: Text;
         longDescription: Text;
-        developer: ?Account.Account;
+        developer: ?CyclesLedger.Account;
     };
 
     // Probably, not very efficient.

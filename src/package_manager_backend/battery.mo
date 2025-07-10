@@ -257,6 +257,13 @@ shared({caller = initialOwner}) actor class Battery({
         await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
     };
 
+    public shared({caller}) func depositCycles(amount: Nat, payee: CyclesLedger.Account) : async () {
+        ignore await (with cycles = amount) CyclesLedger.deposit({
+            to = payee;
+            memo = null;
+        });
+    };
+
     /// TODO@P3: Unused function.
     // public shared({caller}) func withdrawCycles2(amount: Nat, payee: Principal) : async () {
     //     if (not principalSet.contains(withdrawers, caller)) {

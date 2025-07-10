@@ -447,6 +447,8 @@ generate@wallet_frontend: src/declarations/wallet_frontend/wallet_frontend.did.j
 src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_frontend/index.js src/declarations/wallet_frontend/wallet_frontend.did.d.ts src/declarations/wallet_frontend/index.d.ts src/declarations/wallet_frontend/wallet_frontend.did: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
 	dfx generate --no-compile --network $(NETWORK) wallet_frontend
 
+src/common.mo: src/lib/Account.mo
+
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: src/common.mo
 
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
