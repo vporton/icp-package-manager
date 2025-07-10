@@ -1,3 +1,11 @@
+2025 Jul 10
+
+* Paid packages.
+
+2025 Jul 9
+
+* Bug fixes.
+
 2025 Jul 8
 
 * Installation of additional packages, such as `wallet`.
