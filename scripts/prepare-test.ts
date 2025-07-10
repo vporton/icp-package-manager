@@ -34,6 +34,8 @@ async function main() {
     const pmUpgradeable2V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm`));
     const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm`));
     const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm`));
+    const pmExampleFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_frontend/example_frontend.wasm.gz`));
+    const pmExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_backend/example_backend.wasm`));
 
     const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
@@ -86,6 +88,22 @@ async function main() {
     });
     const pmUpgradeable3V2 = await repositoryIndex.uploadModule({
         code: {Wasm: pmUpgradeable3V2Blob},
+        installByDefault: true,
+        forceReinstall: false,
+        canisterVersion: [],
+        callbacks: [
+            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+        ],
+    });
+    const exampleFrontend = await repositoryIndex.uploadModule({
+        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
+        installByDefault: true,
+        forceReinstall: false,
+        canisterVersion: [],
+        callbacks: [],
+    });
+    const exampleBackend = await repositoryIndex.uploadModule({
+        code: {Wasm: pmExampleBackendBlob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -148,6 +166,36 @@ async function main() {
         versionsMap: [["stable", "0.0.1"], ["beta", "0.0.2"]],
     };
     await repositoryIndex.setFullPackageInfo("upgradeable", upgradeableFullInfo);
+
+    const paidExampleReal: SharedRealPackageInfo = {
+        modules: [
+            ['example1', exampleFrontend],
+            ['example2', exampleBackend],
+        ],
+        dependencies: [],
+        suggests: [],
+        recommends: [],
+        functions: [],
+        permissions: [],
+        checkInitializedCallback: [{moduleName: 'example1', how: {urlPath: '/index.html'}}],
+        frontendModule: ['example1'],
+    };
+    const paidExampleInfo: SharedPackageInfo = {
+        base: {
+            name: "paid_example",
+            version: "0.0.1",
+            price: 10_000_000n,
+            shortDescription: "Example package",
+            longDescription: "Used as an example",
+            guid: Uint8Array.from([120, 68, 12, 243, 157, 118, 167, 114, 67, 64, 141, 121, 164, 126, 115, 1]),
+        },
+        specific: {real: paidExampleReal},
+    };
+    const paidExampleFullInfo: SharedFullPackageInfo = {
+        packages: [["0.0.1", paidExampleInfo]],
+        versionsMap: [["stable", "0.0.1"]],
+    };
+    await repositoryIndex.setFullPackageInfo("paid_example", paidExampleFullInfo);
 
     console.log("Cleaning unused WASMs...");
     await repositoryIndex.cleanUnusedWasms();
