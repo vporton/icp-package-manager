@@ -134,6 +134,7 @@ async function main() {
             shortDescription: "Example upgradeable package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
+            developer: [],
         },
         specific: {real: upgradeableV1Real},
     };
@@ -158,6 +159,7 @@ async function main() {
             shortDescription: "Example upgradeable package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
+            developer: [],
         },
         specific: {real: upgradeableV2Real},
     };

@@ -168,6 +168,7 @@ async function main() {
             shortDescription: "Package manager",
             longDescription: "Manager for installing ICP app to user's subnet",
             guid: Uint8Array.from([83,  42, 115, 145, 27, 107,  70, 196, 150, 131,  3,  14, 110, 136, 210,  74]),
+            developer: [],
         },
         specific: {real: pmReal},
     };
@@ -198,6 +199,7 @@ async function main() {
             shortDescription: "Example package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([39, 165, 164, 221, 113,  51,  73,  53, 145, 150,  31,  42, 238, 133, 124, 210]),
+            developer: [],
         },
         specific: {real: efReal},
     };
@@ -228,6 +230,7 @@ async function main() {
             shortDescription: "Wallet for IC Pack",
             longDescription: "Wallet for IC Pack, used among other for in-app payments",
             guid: Uint8Array.from([206,  18, 101,   7, 174, 170, 142, 240,  90, 165, 231, 131, 186, 119, 122,  57]),
+            developer: [],
         },
         specific: {real: walletReal},
     };
