@@ -105,7 +105,7 @@ Remaining things TODO
 
 - TODO@P3 Backing/restoring state of packages.
 
-- TODO@P3 Paid soft.
+- TODO@P3 tECDSA for unlocking paid soft.
 
 - TODO@P3 When user adds a new repository canister, check that it is an index canister.
 
