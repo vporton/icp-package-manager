@@ -68,6 +68,7 @@ function ChooseVersion2(props: {
     const navigate = myUseNavigate();
     const {ok, principal, agent, defaultAgent} = useAuth();
     const [versions, setVersions] = useState<[string, string][] | undefined>();
+    const [versionPrices, setVersionPrices] = useState<Map<string, bigint> | undefined>();
     const [installedVersions, setInstalledVersions] = useState<Map<string, 1>>(new Map());
     // const [guidInfo, setGUIDInfo] = useState<Uint8Array | undefined>();
     // TODO@P3: I doubt consistency, and performance in the case if there is no such package.
@@ -79,6 +80,7 @@ function ChooseVersion2(props: {
                 const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
                 const v = fullInfo.versionsMap.map(([name, version]) => [`${name} → ${version}`, version] as [string, string]).concat(p2);
                 setVersions(v);
+                setVersionPrices(new Map(fullInfo.packages.map(pkg => [pkg[0], BigInt((pkg[1] as any).base.price)])));
                 const guid2 = fullInfo.packages[0][1].base.guid;
                 if (guid2 !== undefined) {
                     const guidArray = guid2 instanceof Uint8Array ? guid2 : new Uint8Array(guid2);
@@ -205,6 +207,8 @@ function ChooseVersion2(props: {
                 </Alert>
             }
             <p>Package: {props.packageName}</p> {/* TODO@P3: no "No such package." message, while the package loads */}
+            {chosenVersion !== undefined && versionPrices !== undefined && versionPrices.get(chosenVersion) !== undefined &&
+                <p>Price: {Number(versionPrices.get(chosenVersion)!) / 10**12} ICP</p>}
             {versions === undefined ? <p>No such package.</p> : <>
                 <p>
                     {props.oldInstallation !== undefined && <>Current version: {props.currentVersion}{" "}</>}
