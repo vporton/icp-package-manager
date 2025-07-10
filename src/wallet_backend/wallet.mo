@@ -172,6 +172,7 @@ persistent actor class Wallet({
 
 
 
+
     // query func isPersonalWallet(): async Bool {
     //     not owner.isAnonymous();
     // };

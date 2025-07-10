@@ -40,6 +40,7 @@ module {
         guid: Blob;
         name: PackageName;
         version: Version;
+        price: Nat;
         shortDescription: Text;
         longDescription: Text;
     };

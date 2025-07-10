@@ -112,6 +112,7 @@ async function main() {
         base: {
             name: "upgradeable",
             version: "0.0.1",
+            price: 0n,
             shortDescription: "Example upgradeable package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
@@ -135,6 +136,7 @@ async function main() {
         base: {
             name: "upgradeable",
             version: "0.0.2",
+            price: 0n,
             shortDescription: "Example upgradeable package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([109, 30, 239, 245, 65, 4, 168, 138, 77, 89, 159, 205, 146, 220, 143, 20]),
