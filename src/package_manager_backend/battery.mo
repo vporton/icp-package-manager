@@ -290,14 +290,6 @@ shared({caller = initialOwner}) actor class Battery({
         await IC.ic.deposit_cycles({canister_id = payee});
     };
 
-    public shared({caller}) func withdrawCycles4(amount: Nat) : async () {
-        if (not Principal.isController(caller)) {
-            Debug.trap("withdrawCycles4: caller is not allowed");
-        };
-        Cycles.add<system>(amount);
-        await IC.ic.deposit_cycles({canister_id = caller});
-    };
-
     public shared({caller}) func topUpCycles() {
         onlyOwner(caller, "topUpCycles");
 
