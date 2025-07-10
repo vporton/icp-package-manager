@@ -410,6 +410,20 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
+        let batteryActor = actor(Principal.toText(battery)) : actor {
+            withdrawCycles: shared (Nat, Principal) -> async ();
+        };
+
+        for (p in packages.vals()) {
+            let info = await p.repo.getPackage(p.packageName, p.version);
+            if (info.base.price != 0) {
+                let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
+                let developerAmount = info.base.price - revenue;
+                await batteryActor.withdrawCycles(developerAmount, Principal.fromActor(p.repo));
+                await batteryActor.withdrawCycles(revenue, Principal.fromText(env.revenueRecipient));
+            };
+        };
+
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
             minInstallationId;

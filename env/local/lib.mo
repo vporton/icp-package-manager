@@ -3,7 +3,11 @@ module {
 
     public let revenueRecipient = "2qop4-5u6dp-g4pmz-lpzyb-hjv6c-be66l-twfuo-ynxgi-hb456-g75bi-rae"; // just something
 
+    /// Share taken from cycle top-ups
     public let revenueShare = 0.05;
+
+    /// Share taken from paid package sales
+    public let paidAppRevenueShare = 0.1;
 
     public let subnetSize = 13; // 1 for localhost replica, 13 for most subnets, 13 for localhost PocketIC
 
