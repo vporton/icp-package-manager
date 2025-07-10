@@ -411,9 +411,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
-        for (p in packages.vals()) {
+        label l for (p in packages.vals()) {
             let info = await p.repo.getPackage(p.packageName, p.version);
             if (info.base.price != 0) {
+                let ?developer = p.developer else {
+                    // Dishonest to the developer? What else we can do?
+                    await IC.ic.deposit(
+                        battery,
+                        {to = {owner = Principal.fromText(env.revenueRecipient); subaccount = null}; memo = null},
+                        info.base.price - Common.cycles_transfer_fee,
+                    );
+                    continue l;
+                };
                 let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
                 let developerAmount = info.base.price - revenue;
                 await IC.ic.deposit(
@@ -423,7 +432,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 );
                 await IC.ic.deposit(
                     battery,
-                    {to = {owner = Principal.fromActor(p.developerPrincipal); subaccount = p.developerSubaccount}; memo = null},
+                    {to = developer.subaccount; memo = null},
                     developerAmount - Common.cycles_transfer_fee,
                 );
             };
