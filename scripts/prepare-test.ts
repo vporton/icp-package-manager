@@ -30,12 +30,12 @@ async function main() {
     const identity = decodeFile(key);
     const net = process.env.DFX_NETWORK;
 
-    const pmUpgradeable1V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm`));
-    const pmUpgradeable2V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm`));
-    const pmUpgradeable2V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm`));
-    const pmUpgradeable3V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm`));
-    const pmExampleFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_frontend/example_frontend.wasm.gz`));
-    const pmExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_backend/example_backend.wasm`));
+    const upgradeable1V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm`));
+    const upgradeable2V1Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm`));
+    const upgradeable2V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm`));
+    const upgradeable3V2Blob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm`));
+    const paidExampleFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_frontend/example_frontend.wasm.gz`));
+    const paidExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/example_backend/example_backend.wasm`));
 
     const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
     if (process.env.DFX_NETWORK === 'local') {
@@ -59,8 +59,8 @@ async function main() {
     await repositoryIndex.setDefaultVersions({versions: ['stable'], defaultVersionIndex: BigInt(0)});
 
     console.log("Uploading WASM code...");
-    const pmUpgradeable1V1 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable1V1Blob},
+    const upgradeable1V1 = await repositoryIndex.uploadModule({
+        code: {Wasm: upgradeable1V1Blob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -68,8 +68,8 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmUpgradeable2V1 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable2V1Blob},
+    const upgradeable2V1 = await repositoryIndex.uploadModule({
+        code: {Wasm: upgradeable2V1Blob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -77,8 +77,8 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmUpgradeable2V2 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable2V2Blob},
+    const upgradeable2V2 = await repositoryIndex.uploadModule({
+        code: {Wasm: upgradeable2V2Blob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -86,8 +86,8 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmUpgradeable3V2 = await repositoryIndex.uploadModule({
-        code: {Wasm: pmUpgradeable3V2Blob},
+    const upgradeable3V2 = await repositoryIndex.uploadModule({
+        code: {Wasm: upgradeable3V2Blob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -95,15 +95,15 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const exampleFrontend = await repositoryIndex.uploadModule({
-        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
+    const paidExampleFrontend = await repositoryIndex.uploadModule({
+        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: paidExampleFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
         callbacks: [],
     });
-    const exampleBackend = await repositoryIndex.uploadModule({
-        code: {Wasm: pmExampleBackendBlob},
+    const paidExampleBackend = await repositoryIndex.uploadModule({
+        code: {Wasm: paidExampleBackendBlob},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
@@ -115,8 +115,8 @@ async function main() {
     console.log("Creating packages...");
     const upgradeableV1Real: SharedRealPackageInfo = {
         modules: [
-            ['m1', pmUpgradeable1V1],
-            ['m2', pmUpgradeable2V1],
+            ['m1', upgradeable1V1],
+            ['m2', upgradeable2V1],
         ],
         dependencies: [],
         suggests: [],
@@ -139,8 +139,8 @@ async function main() {
     };
     const upgradeableV2Real: SharedRealPackageInfo = {
         modules: [
-            ['m2', pmUpgradeable2V2],
-            ['m3', pmUpgradeable3V2],
+            ['m2', upgradeable2V2],
+            ['m3', upgradeable3V2],
         ],
         dependencies: [],
         suggests: [],
@@ -169,8 +169,8 @@ async function main() {
 
     const paidExampleReal: SharedRealPackageInfo = {
         modules: [
-            ['example1', exampleFrontend],
-            ['example2', exampleBackend],
+            ['example1', paidExampleFrontend],
+            ['example2', paidExampleBackend],
         ],
         dependencies: [],
         suggests: [],
@@ -182,12 +182,12 @@ async function main() {
     };
     const paidExampleInfo: SharedPackageInfo = {
         base: {
-            name: "paid_example",
+            name: "paid-example",
             version: "0.0.1",
-            price: 10_000_000n,
+            price: BigInt(0.1 * 10**12),
             shortDescription: "Example package",
             longDescription: "Used as an example",
-            guid: Uint8Array.from([120, 68, 12, 243, 157, 118, 167, 114, 67, 64, 141, 121, 164, 126, 115, 1]),
+            guid: Uint8Array.from([4, 222, 95, 192, 252, 162, 223, 235, 230, 55, 16, 42, 26, 177, 208, 208]),
         },
         specific: {real: paidExampleReal},
     };
@@ -195,7 +195,7 @@ async function main() {
         packages: [["0.0.1", paidExampleInfo]],
         versionsMap: [["stable", "0.0.1"]],
     };
-    await repositoryIndex.setFullPackageInfo("paid_example", paidExampleFullInfo);
+    await repositoryIndex.setFullPackageInfo("paid-example", paidExampleFullInfo);
 
     console.log("Cleaning unused WASMs...");
     await repositoryIndex.cleanUnusedWasms();

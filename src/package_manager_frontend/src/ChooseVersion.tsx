@@ -9,12 +9,11 @@ import { ICManagementCanister } from '@dfinity/ic-management';
 import { _SERVICE as Repository } from '../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../declarations/repository';
 import { createActor as createPackageManager } from '../../declarations/package_manager';
-import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "../../lib/ErrorContext";
-import { InstallationId, PackageName, PackageManager, Version, SharedRealPackageInfo, CheckInitializedCallback, SharedModule } from '../../declarations/package_manager/package_manager.did';
+import { InstallationId, PackageName, PackageManager, Version } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
 import { performModularUpgrade } from './lib/modularUpgrade';
@@ -208,7 +207,7 @@ function ChooseVersion2(props: {
             }
             <p>Package: {props.packageName}</p> {/* TODO@P3: no "No such package." message, while the package loads */}
             {chosenVersion !== undefined && versionPrices !== undefined && versionPrices.get(chosenVersion) !== undefined &&
-                <p>Price: {Number(versionPrices.get(chosenVersion)!) / 10**12} ICP</p>}
+                <p>Price: {Number(versionPrices.get(chosenVersion)!) / 10**12}T cycles</p>}
             {versions === undefined ? <p>No such package.</p> : <>
                 <p>
                     {props.oldInstallation !== undefined && <>Current version: {props.currentVersion}{" "}</>}

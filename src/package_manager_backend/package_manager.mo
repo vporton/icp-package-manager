@@ -8,6 +8,7 @@ import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
+import Float "mo:base/Float";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Error "mo:base/Error";
@@ -410,17 +411,21 @@ shared({caller = initialCaller}) actor class PackageManager({
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
 
-        let batteryActor = actor(Principal.toText(battery)) : actor {
-            withdrawCycles: shared (Nat, Principal) -> async ();
-        };
-
         for (p in packages.vals()) {
             let info = await p.repo.getPackage(p.packageName, p.version);
             if (info.base.price != 0) {
                 let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
                 let developerAmount = info.base.price - revenue;
-                await batteryActor.withdrawCycles(developerAmount - Common.icp_transfer_fee, Principal.fromActor(p.repo));
-                await batteryActor.withdrawCycles(revenue - Common.icp_transfer_fee, Principal.fromText(env.revenueRecipient));
+                await IC.ic.deposit(
+                    battery,
+                    {to = {owner = Principal.fromText(env.revenueRecipient); subaccount = null}; memo = null},
+                    revenue - Common.cycles_transfer_fee,
+                );
+                await IC.ic.deposit(
+                    battery,
+                    {to = {owner = Principal.fromActor(p.developerPrincipal); subaccount = p.developerSubaccount}; memo = null},
+                    developerAmount - Common.cycles_transfer_fee,
+                );
             };
         };
 
