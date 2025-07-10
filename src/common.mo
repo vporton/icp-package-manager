@@ -12,6 +12,7 @@ import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
 import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
+import Account "lib/Account";
 
 module {
     public func intHash(value: Int): Hash.Hash {
@@ -43,6 +44,7 @@ module {
         price: Nat;
         shortDescription: Text;
         longDescription: Text;
+        developer: ?Account.Account;
     };
 
     // Probably, not very efficient.

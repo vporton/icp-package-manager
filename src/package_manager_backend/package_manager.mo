@@ -414,7 +414,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         label l for (p in packages.vals()) {
             let info = await p.repo.getPackage(p.packageName, p.version);
             if (info.base.price != 0) {
-                let ?developer = p.developer else {
+                let ?developer = info.base.developer else {
                     // Dishonest to the developer? What else we can do?
                     await IC.ic.deposit(
                         battery,
