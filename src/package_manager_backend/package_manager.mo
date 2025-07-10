@@ -419,8 +419,8 @@ shared({caller = initialCaller}) actor class PackageManager({
             if (info.base.price != 0) {
                 let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
                 let developerAmount = info.base.price - revenue;
-                await batteryActor.withdrawCycles(developerAmount, Principal.fromActor(p.repo));
-                await batteryActor.withdrawCycles(revenue, Principal.fromText(env.revenueRecipient));
+                await batteryActor.withdrawCycles(developerAmount - Common.icp_transfer_fee, Principal.fromActor(p.repo));
+                await batteryActor.withdrawCycles(revenue - Common.icp_transfer_fee, Principal.fromText(env.revenueRecipient));
             };
         };
 
