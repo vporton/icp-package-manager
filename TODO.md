@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P2 Option for paid upgrade of a package.
+
 - TODO@P2 Note for the user that if, for example, bootstrap with wallet package, the wallet appears in the list of installed apps after a delay.
 
 - FIXME@P2 (probably, fixed):
