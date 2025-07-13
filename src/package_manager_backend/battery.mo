@@ -206,8 +206,7 @@ shared({caller = initialOwner}) actor class Battery({
     private func topUpAllCanisters(): async () {
         let newCycles = Int.abs(+Cycles.balance() - battery.activatedCycles);
         if (newCycles != 0) {
-            // let fee = Float.toInt(Float.fromInt(newCycles) * 0.05); // 5%
-            let fee = newCycles / 20; // 5% // TODO@P2: duplicate code
+            let fee = Int.abs(Float.toInt(Float.fromInt(newCycles) * env.revenueShare));
             let res2 = await CyclesLedger.icrc1_transfer({
                 to = {owner = revenueRecipient; subaccount = null};
                 fee = null;
