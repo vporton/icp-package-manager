@@ -543,6 +543,29 @@ shared({caller = initialCaller}) actor class PackageManager({
     {
         onlyOwner(caller, "upgradePackages");
 
+        let batteryActor = actor(Principal.toText(battery)) : actor {
+            depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
+        };
+        label l for (p in packages.vals()) {
+            let info = await p.repo.getPackage(p.packageName, p.version);
+            if (info.base.upgradePrice != 0) {
+                let ?developer = info.base.developer else {
+                    await batteryActor.depositCycles(
+                        info.base.upgradePrice - Common.cycles_transfer_fee,
+                        {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
+                    );
+                    continue l;
+                };
+                let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.upgradePrice) * env.paidAppRevenueShare));
+                let developerAmount = info.base.upgradePrice - revenue;
+                await batteryActor.depositCycles(
+                    revenue - Common.cycles_transfer_fee,
+                    {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
+                );
+                await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
+            };
+        };
+
         let minUpgradeId = nextUpgradeId;
         nextUpgradeId += Array.size(packages);
 

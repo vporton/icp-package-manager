@@ -33,6 +33,7 @@ const pmEFInfo: SharedPackageInfo = {
         name: "example",
         version: "0.0.1",
         price: 0n,
+        upgradePrice: 0n,
         shortDescription: "Example package",
         longDescription: "Used as an example",
         guid: Uint8Array.from([39, 165, 164, 221, 113,  51,  73,  53, 145, 150,  31,  42, 238, 133, 124, 210]), // 16 random 0..255

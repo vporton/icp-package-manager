@@ -9,6 +9,7 @@ module {
     /// Share taken from paid package sales
     public let paidAppRevenueShare = 0.1;
 
+
     public let subnetSize = 13; // 1 for localhost replica, 13 for most subnets, 13 for localhost PocketIC
 
     public let bootstrapFrontendCost = 11_620_000_000_000; // an experimental value: 11.592288921601053T
