@@ -43,6 +43,7 @@ module {
         name: PackageName;
         version: Version;
         price: Nat;
+        upgradePrice: Nat;
         shortDescription: Text;
         longDescription: Text;
         developer: ?CyclesLedger.Account;
