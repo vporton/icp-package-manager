@@ -188,8 +188,8 @@ async function main() {
         base: {
             name: "paid-example",
             version: "0.0.1",
-            price: BigInt(0.1 * 10**12),
-            upgradePrice: 0n,
+            price: BigInt(1 * 10**12),
+            upgradePrice: BigInt(0.5 * 10**12),
             shortDescription: "Example package",
             longDescription: "Used as an example",
             guid: Uint8Array.from([4, 222, 95, 192, 252, 162, 223, 235, 230, 55, 16, 42, 26, 177, 208, 208]),
