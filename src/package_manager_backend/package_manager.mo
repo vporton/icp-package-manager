@@ -928,7 +928,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
         };
         await batteryActor.withdrawCycles3(
-            newCanisterCycles * newPkgModules.size() - pkg.modulesToDelete.size(), // TODO@P2: symbolic constant, twice 2_000_000
+            newCanisterCycles * newPkgModules.size() - pkg.modulesToDelete.size(),
             Principal.fromActor(main_indirect_));
 
         // TODO@P3: repeated calculation
