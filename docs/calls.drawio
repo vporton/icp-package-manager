@@ -1,52 +1,34 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" version="26.0.15">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36" version="26.1.1">
   <diagram name="Page-1" id="0-yv6A6n49uS_1keauYF">
-    <mxGraphModel dx="1140" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+    <mxGraphModel dx="1368" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="yhu626VlGzJRChlpP-3W-2" value="PackageMananger.installPackages:&lt;br&gt;Create installationId" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2130" y="850" width="200" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-3" value="&lt;div&gt;IndirectCaller.InstallPackagesWrapper:&lt;/div&gt;&lt;div&gt;Retrieve package data&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2120" y="940" width="220" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" source="yhu626VlGzJRChlpP-3W-2" target="yhu626VlGzJRChlpP-3W-3" edge="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" source="yhu626VlGzJRChlpP-3W-2" target="yhu626VlGzJRChlpP-3W-3" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2230" y="950" as="sourcePoint" />
             <mxPoint x="2280" y="900" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-7" value="&lt;div&gt;PackageManager.installStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2110" y="1040" width="240" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="yhu626VlGzJRChlpP-3W-3" target="yhu626VlGzJRChlpP-3W-7" edge="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="yhu626VlGzJRChlpP-3W-3" target="yhu626VlGzJRChlpP-3W-7" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2330" y="1110" as="sourcePoint" />
             <mxPoint x="2380" y="1060" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-9" value="&lt;div&gt;IndirectCaller.installModule:&lt;/div&gt;&lt;div&gt;[create_canister, install_code]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2410" y="1040" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-10" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" source="yhu626VlGzJRChlpP-3W-7" target="yhu626VlGzJRChlpP-3W-9" edge="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-10" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="yhu626VlGzJRChlpP-3W-7" target="yhu626VlGzJRChlpP-3W-9" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2370" y="1170" as="sourcePoint" />
-            <mxPoint x="2370" y="1260" as="targetPoint" />
+            <mxPoint x="2410" y="1080" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-11" value="&lt;div&gt;PackageManager.onCreateCanister&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2620" y="980" width="200" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-14" value="&lt;div&gt;PackageManager.onInstallCode&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;&lt;div&gt;If it is a package and the last module, mark the package as installed.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="2625" y="1090" width="190" height="90" as="geometry" />
-        </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="yhu626VlGzJRChlpP-3W-9" edge="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="yhu626VlGzJRChlpP-3W-9" edge="1" target="yhu626VlGzJRChlpP-3W-11">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2570" y="1060" as="sourcePoint" />
             <mxPoint x="2620" y="1010" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-21" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="yhu626VlGzJRChlpP-3W-14" edge="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-21" value="" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" target="yhu626VlGzJRChlpP-3W-14" edge="1" source="yhu626VlGzJRChlpP-3W-9">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2570" y="1070" as="sourcePoint" />
             <mxPoint x="2620" y="1020" as="targetPoint" />
@@ -54,60 +36,84 @@
         </mxCell>
         <mxCell id="yhu626VlGzJRChlpP-3W-22" value="" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="2540" y="854.66" as="sourcePoint" />
-            <mxPoint x="2580" y="855" as="targetPoint" />
+            <mxPoint x="1640" y="714.66" as="sourcePoint" />
+            <mxPoint x="1680" y="715" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="yhu626VlGzJRChlpP-3W-23" value="" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#000000;" parent="1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="2540" y="879.66" as="sourcePoint" />
-            <mxPoint x="2580" y="880" as="targetPoint" />
+            <mxPoint x="1640" y="739.66" as="sourcePoint" />
+            <mxPoint x="1680" y="740" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="yhu626VlGzJRChlpP-3W-24" value="One-way call" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="2590" y="840" width="80" height="30" as="geometry" />
+          <mxGeometry x="1690" y="700" width="80" height="30" as="geometry" />
         </mxCell>
         <mxCell id="yhu626VlGzJRChlpP-3W-25" value="Regular call" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="2590" y="865" width="80" height="30" as="geometry" />
+          <mxGeometry x="1690" y="725" width="80" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-14" value="PackageMananger.upgradePackages:&lt;br&gt;Create upgradeId" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-14" value="PackageMananger.upgradePackages:&lt;br&gt;Create upgradeId" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="2130" y="1190" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-15" value="&lt;div&gt;IndirectCaller.upgradePackagesWrapper:&lt;/div&gt;&lt;div&gt;Retrieve package data&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-15" value="&lt;div&gt;IndirectCaller.upgradePackagesWrapper:&lt;/div&gt;&lt;div&gt;Retrieve package data&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="2120" y="1280" width="220" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-16" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1" source="APH5WXeS6YXflVMqeEUV-14" target="APH5WXeS6YXflVMqeEUV-15">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-16" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" source="APH5WXeS6YXflVMqeEUV-14" target="APH5WXeS6YXflVMqeEUV-15" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2230" y="1290" as="sourcePoint" />
             <mxPoint x="2280" y="1240" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-17" value="&lt;div&gt;PackageManager.upgradeStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-17" value="&lt;div&gt;PackageManager.upgradeStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="2110" y="1380" width="240" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="APH5WXeS6YXflVMqeEUV-15" target="APH5WXeS6YXflVMqeEUV-17">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="APH5WXeS6YXflVMqeEUV-15" target="APH5WXeS6YXflVMqeEUV-17" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2330" y="1450" as="sourcePoint" />
             <mxPoint x="2380" y="1400" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-19" value="&lt;div&gt;IndirectCaller.upgradeOrI&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;nstallModule:&lt;/span&gt;&lt;/div&gt;&lt;div&gt;[create_canister, install_code]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-19" value="&lt;div&gt;IndirectCaller.upgradeOrI&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;nstallModule:&lt;/span&gt;&lt;/div&gt;&lt;div&gt;[create_canister, install_code]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="2420" y="1380" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-20" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1" source="APH5WXeS6YXflVMqeEUV-17" target="APH5WXeS6YXflVMqeEUV-19">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-20" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fillColor=#e51400;strokeColor=#B20000;" parent="1" source="APH5WXeS6YXflVMqeEUV-17" target="APH5WXeS6YXflVMqeEUV-19" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2370" y="1510" as="sourcePoint" />
             <mxPoint x="2370" y="1600" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-21" value="PM.onUpgradeOrInstallModule" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-21" value="PM.onUpgradeOrInstallModule" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="2670" y="1310" width="220" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-25" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="APH5WXeS6YXflVMqeEUV-19" target="APH5WXeS6YXflVMqeEUV-21">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-25" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="APH5WXeS6YXflVMqeEUV-19" target="APH5WXeS6YXflVMqeEUV-21" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="2520" y="1180" as="sourcePoint" />
             <mxPoint x="2667" y="1350" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="8vLrs7TOPBqVclJcaYAg-3" value="Package manager" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="780" width="270" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-2" value="installPackages:&lt;br&gt;Create installationId" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
+          <mxGeometry x="20" y="40" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-7" value="&lt;div&gt;installStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
+          <mxGeometry x="20" y="105" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-14" value="&lt;div&gt;onInstallCode&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;&lt;div&gt;If it is a package and the last module, mark the package as installed.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
+          <mxGeometry x="20" y="180" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-11" value="&lt;div&gt;onCreateCanister&lt;/div&gt;&lt;div&gt;Store module state.&lt;/div&gt;&lt;div&gt;Call callbacks.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
+          <mxGeometry x="20" y="300" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="8vLrs7TOPBqVclJcaYAg-7" value="Indirect caller" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="780" width="260" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-3" value="&lt;div&gt;IndirectCaller.InstallPackagesWrapper:&lt;/div&gt;&lt;div&gt;Retrieve package data&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-7" vertex="1">
+          <mxGeometry x="20" y="90" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="yhu626VlGzJRChlpP-3W-9" value="&lt;div&gt;IndirectCaller.installModule:&lt;/div&gt;&lt;div&gt;[create_canister, install_code]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-7" vertex="1">
+          <mxGeometry x="30" y="220" width="210" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
