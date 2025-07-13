@@ -207,7 +207,7 @@ function ChooseVersion2(props: {
             }
             <p>Package: {props.packageName}</p> {/* TODO@P3: no "No such package." message, while the package loads */}
             {chosenVersion !== undefined && versionPrices !== undefined && versionPrices.get(chosenVersion) !== undefined &&
-                <p>Price: {Number(versionPrices.get(chosenVersion)!) / 10**12}T cycles</p>}
+                <p>Price: {Number(versionPrices.get(chosenVersion)!) / 10**12}T cycles from the battery.</p>}
             {versions === undefined ? <p>No such package.</p> : <>
                 <p>
                     {props.oldInstallation !== undefined && <>Current version: {props.currentVersion}{" "}</>}
