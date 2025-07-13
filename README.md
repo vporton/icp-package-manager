@@ -1,9 +1,30 @@
 # ICP Package Manager
 
-This is a preliminary release. Use `stable` Git branch to run it.
-
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
 
+[**IC Pack**](https://docs.package-manager.com) is an apps package manager (like Google Play), but for remote apps. It redefines SaaS.
+
+Internet users (and future AI agents) lost control over their apps in cloud era due to SaaS. An app may be up-priced, hacked, blocked, undesirably updated, gone bankrupt. Apps installed with my package manager cannot be removed or updated without user's consent - While the user pays for hardware, the app works.
+
+Another reason, why this is good to developers, is that it frees the developer from the need to do any DevOps: The developer just creates a repository and an installation link.
+
+IC Pack will also provide a standard for "events" and "permissions" between apps.
+
+I have also shipped the first useful app for IC Pack - Payments Wallet. Payments Wallet is distinguished by configurable threshold of payments requiring extra user's confirmation, to protect the user from erroneous accidental payments. Payments Wallet will also provide in-app payments for IC Pack. The wallet has Invest tab, allowing users to invest into IC Pack. This wallet is superior over other ICP wallets by installing it into a user's canister, hindering the wallet provider (e.g. a dev or a DAO) from cheating (e.g. stealing user's funds) by substituting wallet's canisters content. For the wallet the following features are not yet finished: Bitcoin, Ethereum, and Solana payments, displaying a QR code. In-app payments are not standardized, yet.
+
+In a future version, I will give the user option for an app to do in-app payments up to a certain amount without asking user.
+
+Here is feature comparison of IC Pack with other ways to install apps:
+
+[Feature comparison with other ways to install apps.](https://docs.package-manager.com/features-comparison/)
+
+Unlike Google Play we support installing apps from multiple repositories. (It is anticipated that every developer creates their own repository.) There is provided a bootstrapper of the package manager that helps to install the package manager and partially installed package manager to finish its own installation. There is a simple API for installing package manager together with a third-party app, so app authors will advertise our package manager together with their apps.
+
+By a sophisticated way of programming, the canisters of the package manager are well-protected against non-returning-function DoS attack. By a sophisticated way of programming, during bootstrapping partly installed package manager installs itself.
+
+We are going to make money charging 10% of paid apps prices (paid apps and paid app updates have been implemented), 5% of hardware costs and 3% of in-app payments.
+
+Economic breakdown: An average SaaS company (our potential customer) has revenue $15M/year (we expect to take like 5% of such a customer's revenue) and there are 17K SaaS companies in the US only.
 For more information on this project [see here](https://dev.package-manager.com) and [here](https://docs.package-manager.com).
 
 See [`TODO.md`](TODO.md) about yet unimplemented features.
