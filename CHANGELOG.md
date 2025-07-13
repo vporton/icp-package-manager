@@ -2,6 +2,8 @@
 
 * Paid package updates.
 
+* Updated README.
+
 2025 Jul 10
 
 * Paid packages.
