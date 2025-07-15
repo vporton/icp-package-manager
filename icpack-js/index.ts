@@ -46,11 +46,10 @@ export async function signPrincipal(privateKey: CryptoKey, principal: Principal)
   const signature = await crypto.subtle.sign(
     {
       name: 'ECDSA',
-      saltLength: 32,
-      hash: 'SHA-256',
+      hash: { name: 'SHA-256' },
     },
     privateKey,
-    principal.toUint8Array()
+    principal.toUint8Array(),
   );
   return new Uint8Array(signature);
 }
