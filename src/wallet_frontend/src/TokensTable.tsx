@@ -75,12 +75,13 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
     const handleAddToken = async () => {
         if (!agent || !principal || !glob.walletBackend) return;
 
-        // TODO@P3: also `archiveCanisterId`:
         await glob.walletBackend.addToken({
             symbol: newToken.symbol,
             name: newToken.name,
             canisterId: newToken.canisterId!,
-            archiveCanisterId: [],
+            archiveCanisterId: newToken.archiveCanisterId === undefined
+                ? []
+                : [newToken.archiveCanisterId],
         });
         
         setShowAddModal(false);
