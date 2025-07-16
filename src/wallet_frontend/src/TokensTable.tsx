@@ -311,15 +311,12 @@ function SendModal(props: {showSendModal: boolean, setShowSendModal: (show: bool
     const [sendAmount, setSendAmount] = useState('');
     const [sendTo, setSendTo] = useState('');
 
-    // console.log("WW", props.selectedToken); // FIXME
-    // return; // FIXME
-
     // The limits are loaded asynchronously from the backend.  They were
     // previously initialized with hard-coded defaults which resulted in wrong
     // confirmation thresholds being used briefly after opening the modal.  We
     // start with `undefined` values to avoid that glitch until real values are
     // fetched.
-    const [limits, setLimits] = useState<{amountAddCheckbox?: number, amountAddInput?: number}>({}); // FIXME@P3: duplicate code
+    const [limits, setLimits] = useState<{amountAddCheckbox?: number, amountAddInput?: number}>({});
     useEffect(() => {
         if (glob.walletBackend) {
             glob.walletBackend.getLimitAmounts().then(v =>
