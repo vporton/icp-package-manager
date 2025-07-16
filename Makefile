@@ -51,6 +51,7 @@ init:
 	-dfx ledger fabricate-cycles --t 20000 --canister exchange-rate
 	-dfx canister call repository init "()"
 	-dfx canister call bootstrapper_data setOwner "(principal \"`dfx canister id bootstrapper`\")"
+	-dfx cycles convert --icp 1000
 
 .PHONY: deploy-work
 deploy-work: prepare deploy
