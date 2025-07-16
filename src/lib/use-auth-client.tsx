@@ -24,12 +24,26 @@ type AuthContextType = {
 function createAuth(): AuthContextType {
   const v = useInternetIdentity();
   const host = getIsLocal() ? "http://localhost:8080" : undefined;
-  // TODO@P3: Use `HttpAgent.create`.
-  const agent = useMemo(
-    () => v.identity ? new HttpAgent({ host, identity: v.identity, shouldFetchRootKey: getIsLocal() }) : undefined,
-    [v.identity],
-  );
-  const defaultAgent = useMemo(() => new HttpAgent({ host, shouldFetchRootKey: getIsLocal() }), []);
+  const [agent, setAgent] = useState<Agent | undefined>(undefined);
+  const [defaultAgent, setDefaultAgent] = useState<Agent | undefined>(undefined);
+
+  useEffect(() => {
+    (async () => {
+      const a = await HttpAgent.create({ host, shouldFetchRootKey: getIsLocal() });
+      setDefaultAgent(a);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (v.identity) {
+        const a = await HttpAgent.create({ host, identity: v.identity, shouldFetchRootKey: getIsLocal() });
+        setAgent(a);
+      } else {
+        setAgent(undefined);
+      }
+    })();
+  }, [v.identity]);
   return {
     identity: v.identity,
     ok: v.identity !== undefined,
