@@ -131,7 +131,7 @@ export default function InstalledPackage(props: {}) {
                 </p>
                 <p><strong>Frontend:</strong> {frontend === undefined ? <em>(none)</em> :
                     <>
-                        <a href={frontend}>here</a> <Button onClick={openWithSignature}>Set package's owner</Button>
+                        <a href={frontend}>here</a> <Button onClick={openWithSignature}>Go to the app setting package's owner</Button>
                     </>}
                 </p>
                 <p><strong>Installation ID:</strong> {installationId}</p>

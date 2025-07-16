@@ -80,7 +80,7 @@ function App2() {
             { installKey && ok ? <FinishInstallation installationPrivKey={installKey!}/> :
                 isAnonymous || !ok ?
                 <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
-                    Set package owner
+                    Login to set package owner
                 </a> :
                 <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'tokens')}>
                     <Tab eventKey="tokens" title="Tokens">
