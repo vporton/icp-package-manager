@@ -125,6 +125,7 @@ export async function waitTillInitialized(agent: Agent, package_manager: Princip
             }
             if (i == 30) {
                 reject("Cannot initialize canisters, possibly not enough cycles on battery, fund your account");
+                return;
             }
             await new Promise<void>((resolve, _reject) => {
                 setTimeout(() => resolve(), 1000);
