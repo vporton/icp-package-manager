@@ -104,7 +104,6 @@ function AddressPopup(props: {
   );
   return props.cyclesPaymentAddress !== undefined
     ? (
-      // TODO@P3: `stopPropagation` doesn't work in some reason.
       <div>
         {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
         <p><strong>Warning: 5% fee applied.</strong></p>
