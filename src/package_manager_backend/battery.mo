@@ -366,7 +366,7 @@ shared({caller = initialOwner}) actor class Battery({
             canister_id = Principal.fromActor(this);
         });
         let #Ok cyclesAmount = res3 else {
-            Debug.trap("notify_top_up failed: " # debug_show(res2));
+            Debug.trap("notify_top_up failed: " # debug_show(res3));
         };
 
         {balance = cyclesAmount};
