@@ -26,7 +26,7 @@ import { principalToSubAccount } from "../src/lib/misc";
 import { commandOutput } from "../src/lib/scripts";
 import { decodeFile } from "../scripts/lib/key";
 import { ICManagementCanister } from "@dfinity/ic-management";
-import { signPrincipal } from "../src/lib/signatures";
+import { signPrincipal } from "../icpack-js";
 
 global.fetch = node_fetch as any;
 const { subtle } = crypto ?? globalThis.crypto;
