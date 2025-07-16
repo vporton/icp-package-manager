@@ -1,7 +1,6 @@
 import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
-import CyclesLedger "canister:cycles_ledger"; // TODO@P3: canister import in a library is wrong
 
 module {
     type BlockIndex = Nat;
@@ -28,15 +27,20 @@ module {
         #GenericError : { message : Text; error_code : Nat };
     };
 
+    /// Interface for the cycles ledger actor used to perform withdrawals.
+    public type CyclesLedger = actor {
+        withdraw : shared TransferArgs -> async { #Err : TransferError; #Ok : BlockIndex };
+    };
+
     // public type MyICRC1 = actor {
     //     icrc1_transfer : shared TransferArgs -> async {#Err : TransferError; #Ok : BlockIndex};
     // };
 
-    public func withdrawCycles(/*_ledger: CyclesLedger,*/ amount: Nat, payee: Principal, caller: Principal) : async* () {
+    public func withdrawCycles(ledger: CyclesLedger, amount: Nat, payee: Principal, caller: Principal) : async* () {
         if (not Principal.isController(caller)) {
             Debug.trap("withdrawCycles: payee is not a controller");
         };
-        let res = await CyclesLedger.withdraw({
+        let res = await ledger.withdraw({
             amount;
             from_subaccount = null;
             to = payee;

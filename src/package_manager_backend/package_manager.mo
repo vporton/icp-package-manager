@@ -1554,7 +1554,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
     };
 
     /// Copy assets from one canister to another if the module contains assets

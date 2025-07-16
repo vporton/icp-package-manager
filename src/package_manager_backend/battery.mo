@@ -253,7 +253,7 @@ shared({caller = initialOwner}) actor class Battery({
     addWithdrawer(packageManager);
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
     };
 
     public shared({caller}) func depositCycles(amount: Nat, payee: CyclesLedger.Account) : async () {

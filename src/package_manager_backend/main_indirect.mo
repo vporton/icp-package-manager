@@ -553,6 +553,6 @@ shared({caller = initialCaller}) actor class MainIndirect({
 //    };
 
     public shared({caller}) func withdrawCycles(amount: Nat, payee: Principal) : async () {
-        await* LIB.withdrawCycles(/*CyclesLedger,*/ amount, payee, caller);
+        await* LIB.withdrawCycles(CyclesLedger, amount, payee, caller);
     };
 }
