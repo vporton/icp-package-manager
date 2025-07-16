@@ -178,7 +178,7 @@ module {
             arg;
             user;
             afterInstallCallback;
-            canister_id: Principal;
+            canister_id;
         });
     };
 
