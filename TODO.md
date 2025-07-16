@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P3 Fiat payments: https://github.com/Expeera/IC-PayPortal/tree/phase-3
+
 - FIXME@P3 After logout/login on `/choose-upgrade/*`, we have "Upgrade package" button disabled.
 
 - TODO@P3 (For saving gas) does it make sense to check module hash before upgrading it?
