@@ -93,7 +93,7 @@ function ChooseVersion2(props: {
                 }
             });
         }
-    }, [glob.packageManager, props.packageName, props.repo]); // TODO@P3: Check if `agent` is needed here (without it, it doesn't work properly).
+    }, [glob.packageManager, props.packageName, props.repo, agent]); // Fixed: Added `agent` to dependency array to ensure proper re-rendering after authentication changes
     const [chosenVersion, setChosenVersion] = useState<string | undefined>(undefined);
     const [installing, setInstalling] = useState(false);
     let errorContext = useContext(ErrorContext);
@@ -223,7 +223,7 @@ function ChooseVersion2(props: {
                 </p>
                 <p>
                     {props.oldInstallation !== undefined ?
-                        <Button onClick={upgrade} disabled={installing || chosenVersion === undefined}>Upgrade package</Button>
+                        <Button onClick={upgrade} disabled={!ok || installing || chosenVersion === undefined}>Upgrade package</Button>
                         : installedVersions.size == 0
                         ? <Button onClick={install} disabled={installing || chosenVersion === undefined}>Install new package</Button>
                         : installedVersions.has(chosenVersion ?? "")
