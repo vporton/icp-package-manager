@@ -26,7 +26,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
 
     // User cycle balance management
-    let principalMap = Map.Make<Principal>(Principal.compare);
+    transient let principalMap = Map.Make<Principal>(Principal.compare);
     stable var userCycleBalanceMap = principalMap.empty<Nat>();
 
     private func onlyOwner(caller: Principal) {
