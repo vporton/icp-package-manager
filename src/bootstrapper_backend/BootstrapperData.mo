@@ -4,6 +4,8 @@ import Debug "mo:base/Debug";
 import RBTree "mo:base/RBTree";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
+import Nat "mo:base/Nat";
+import Map "mo:base/OrderedMap";
 import UserAuth "mo:icpack-lib/UserAuth";
 import Account "../lib/Account";
 
@@ -22,6 +24,10 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable var _frontendTweakersSave = frontendTweakers.share();
     transient var frontendTweakerTimes = RBTree.RBTree<Time.Time, PubKey>(Int.compare);
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
+
+    // User cycle balance management
+    let principalMap = Map.Make<Principal>(Principal.compare);
+    stable var userCycleBalanceMap = principalMap.empty<Nat>();
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -78,6 +84,43 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
         frontendTweakers.delete(pubKey);
         // TODO@P3: Remove also from `frontendTweakerTimes`.
+    };
+
+    // User cycle balance management functions
+    public query({caller}) func getUserCycleBalance(user: Principal): async Nat {
+        onlyOwner(caller);
+        
+        switch (principalMap.get(userCycleBalanceMap, user)) {
+            case (?amount) amount;
+            case null 0;
+        };
+    };
+
+    public shared({caller}) func updateUserCycleBalance(user: Principal, newBalance: Nat): async () {
+        onlyOwner(caller);
+        
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, newBalance);
+    };
+
+    public shared({caller}) func addToUserCycleBalance(user: Principal, amount: Nat): async () {
+        onlyOwner(caller);
+        
+        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
+            case (?oldBalance) oldBalance;
+            case null 0;
+        };
+        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + amount);
+    };
+
+    public shared({caller}) func removeUserCycleBalance(user: Principal): async Nat {
+        onlyOwner(caller);
+        
+        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
+            case (?amount) amount;
+            case null 0;
+        };
+        userCycleBalanceMap := principalMap.delete(userCycleBalanceMap, user);
+        amountToMove;
     };
 
     system func preupgrade() {
