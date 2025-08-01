@@ -21,8 +21,6 @@ import UserAuth "mo:icpack-lib/UserAuth";
 
 persistent actor class Wallet({
     installationId: Nat;
-    // TODO@P2: Remove wrong value of user also from other packages and from initialization code for modules in the package manager.
-    // user: Principal;
     packageManager: Principal;
 }) = this {
     stable var owner = Principal.fromText("2vxsx-fae");

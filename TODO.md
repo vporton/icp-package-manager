@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P2 Remove wrong (valid only for the bootstrapper frontend) value of `user` from initialization/upgrade code for modules in the package manager.
+
 - TODO@P2 Withdraw cycles when uninstalling a package.
 
 - TODO@P3 Fiat payments: https://github.com/Expeera/IC-PayPortal/tree/phase-3
