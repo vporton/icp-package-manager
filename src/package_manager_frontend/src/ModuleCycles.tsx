@@ -26,6 +26,29 @@ export default function ModuleCycles() {
     };
     const [counter, setCounter] = useState(0);
     const [pkgs, setPkgs] = useState<{packageName: string, packageVersion: string, modules: Module[]}[]>([]);
+    const [loadingOperations, setLoadingOperations] = useState<Set<string>>(new Set());
+
+    const getOperationKey = (module: Module, target: Principal) => {
+        return `${module.principal.toText()}-${target.toText()}`;
+    };
+
+    const setOperationLoading = (module: Module, target: Principal, loading: boolean) => {
+        const key = getOperationKey(module, target);
+        setLoadingOperations(prev => {
+            const newSet = new Set(prev);
+            if (loading) {
+                newSet.add(key);
+            } else {
+                newSet.delete(key);
+            }
+            return newSet;
+        });
+    };
+
+    const isOperationLoading = (module: Module, target: Principal) => {
+        return loadingOperations.has(getOperationKey(module, target));
+    };
+
     const reloadPackages = () => {
         if (glob.packageManager === undefined || agent === undefined || !ok) {
             setPkgs([]);
@@ -73,6 +96,16 @@ export default function ModuleCycles() {
         principal: Principal,
         cycles: bigint | undefined;
     }, to: Principal) {
+        const operationKey = getOperationKey(module, to);
+        
+        // Check if operation is already in progress
+        if (loadingOperations.has(operationKey)) {
+            return;
+        }
+
+        setOperationLoading(module, to, true);
+        setError(undefined);
+
         try {
             const cyclesLedger = createCyclesLedger(process.env.CANISTER_ID_CYCLES_LEDGER!, {agent});
             const balance = await cyclesLedger.icrc1_balance_of({owner: module.principal, subaccount: []});
@@ -95,6 +128,8 @@ export default function ModuleCycles() {
         catch (e) {
             console.error(e);
             setError((e as object).toString());
+        } finally {
+            setOperationLoading(module, to, false);
         }
     }
     return (
@@ -113,21 +148,33 @@ export default function ModuleCycles() {
                                 : " Loading..."}
                                 {ok && <>
                                     {" "}
-                                    <Button onClick={() => sendTo(module, principal!)}>
-                                        to user
+                                    <Button 
+                                        onClick={() => sendTo(module, principal!)}
+                                        disabled={isOperationLoading(module, principal!)}
+                                    >
+                                        {isOperationLoading(module, principal!) ? 'Withdrawing...' : 'to user'}
                                     </Button>
                                     {" "}
-                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "battery")[0].principal)}>
-                                        to battery
+                                    <Button 
+                                        onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "battery")[0].principal)}
+                                        disabled={isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "battery")[0].principal)}
+                                    >
+                                        {isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "battery")[0].principal) ? 'Withdrawing...' : 'to battery'}
                                     </Button>
                                     {/* Cannot transfer to package manager backend module, because it is not a controller. */}
                                     {" "}
-                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "backend")[0].principal)}>
-                                        to backend
+                                    <Button 
+                                        onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "backend")[0].principal)}
+                                        disabled={isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "backend")[0].principal)}
+                                    >
+                                        {isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "backend")[0].principal) ? 'Withdrawing...' : 'to backend'}
                                     </Button>
                                     {" "}
-                                    <Button onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "simple_indirect")[0].principal)}>
-                                        to simple indirect
+                                    <Button 
+                                        onClick={() => sendTo(module, pkgs[0].modules.filter(m => m.moduleName === "simple_indirect")[0].principal)}
+                                        disabled={isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "simple_indirect")[0].principal)}
+                                    >
+                                        {isOperationLoading(module, pkgs[0].modules.filter(m => m.moduleName === "simple_indirect")[0].principal) ? 'Withdrawing...' : 'to simple indirect'}
                                     </Button>
                                 </>}
                             </li>
