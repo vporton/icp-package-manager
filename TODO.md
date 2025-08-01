@@ -1,7 +1,5 @@
 Remaining things TODO
 
-- FIXME@P3 Clicking Reload button should not switch from Cycles to ICP tab in the payment popup.
-
 - TODO@P2 Withdraw cycles when uninstalling a package.
 
 - TODO@P3 Fiat payments: https://github.com/Expeera/IC-PayPortal/tree/phase-3

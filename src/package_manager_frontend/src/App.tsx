@@ -268,6 +268,7 @@ function App2() {
   }) {
     const address = cyclesPaymentAddress!;
     const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState("icp");
     const copyToClipboard = async (event: React.MouseEvent) => {
       const str = (event.target as HTMLElement).innerText;
       navigator.clipboard.writeText(str).then(() => {
@@ -289,7 +290,7 @@ function App2() {
         <div>
           {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
           <p><strong>Warning: 5% fee applied.</strong></p>
-          <Tabs defaultActiveKey="icp">
+          <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || "icp")}>
             <Tab eventKey="icp" title="ICP">
               <p>ICP to top-up:{" "}
                 {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
