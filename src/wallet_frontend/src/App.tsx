@@ -76,8 +76,7 @@ function App2() {
                     <img src="/github-mark.svg" width="24" height="24"/>
                 </a>
             </p>
-            {/* TODO@P3: Remove `!`. */}
-            { installKey && ok ? <FinishInstallation installationPrivKey={installKey!}/> :
+            { installKey && ok ? <FinishInstallation installationPrivKey={installKey}/> :
                 isAnonymous || !ok ?
                 <a href={`${packageManagerURL}/installed/show/${installationId}?_pm_pkg0.backend=${pkg0BackendId}`}>
                     Login to set package owner
