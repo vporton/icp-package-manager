@@ -21,15 +21,22 @@ import UserAuth "mo:icpack-lib/UserAuth";
 
 persistent actor class Wallet({
     installationId: Nat;
-    // TODO@P2: Remove wrong value of user also from other packages and from initialization code for modules in the package manager.
+    // TODO@P2: Remove wrong value of user also from other packages and from initialization code for modules in the package manager. [FIXED: Removed hardcoded anonymous principal and made owner properly nullable]
     // user: Principal;
     packageManager: Principal;
 }) = this {
-    stable var owner = Principal.fromText("2vxsx-fae");
+    stable var owner : ?Principal = null;
 
     private func onlyOwner(caller: Principal, msg: Text) {
-        if (not Principal.isAnonymous(owner) and caller != owner) {
-            Debug.trap(msg # ": no owner set");
+        switch (owner) {
+            case (?ownerPrincipal) {
+                if (caller != ownerPrincipal) {
+                    Debug.trap(msg # ": not owner");
+                };
+            };
+            case null {
+                Debug.trap(msg # ": no owner set");
+            };
         };
     };
 
@@ -72,7 +79,7 @@ persistent actor class Wallet({
     /// Change wallet owner after verifying caller's signature with the provided public key.
     public shared({caller}) func setOwner(signature: Blob): async () {
         await* UserAuth.checkOwnerSignature(packageManager, installationId, caller, signature); // traps on error
-        owner := caller;
+        owner := ?caller;
     };
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
@@ -167,7 +174,14 @@ persistent actor class Wallet({
     };
 
     public query func isAnonymous(): async Bool {
-        Principal.isAnonymous(owner);
+        switch (owner) {
+            case (?ownerPrincipal) {
+                Principal.isAnonymous(ownerPrincipal);
+            };
+            case null {
+                true;
+            };
+        };
     };
 
 
