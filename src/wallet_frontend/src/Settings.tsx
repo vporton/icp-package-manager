@@ -5,6 +5,11 @@ import Button from 'react-bootstrap/Button';
 import { useAuth } from '../../lib/use-auth-client';
 import { GlobalContext } from './state';
 
+// Helper function to extract first value from array with default fallback
+const getFirstValueOrDefault = <T,>(array: T[] | undefined, defaultValue: T): T => {
+    return array?.[0] ?? defaultValue;
+};
+
 export default function Settings() {
     const { agent, ok, principal } = useAuth();
     const [amountAddCheckbox, setAmountAddCheckbox] = useState<number | undefined>();
@@ -16,8 +21,8 @@ export default function Settings() {
         if (!agent || !principal || !glob.walletBackend) return;
 
         const limits = await glob.walletBackend.getLimitAmounts();
-        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10); // FIXME@P3: duplicate code
-        setAmountAddInput(limits.amountAddInput[0] ?? 30);
+        setAmountAddCheckbox(getFirstValueOrDefault(limits.amountAddCheckbox, 10));
+        setAmountAddInput(getFirstValueOrDefault(limits.amountAddInput, 30));
     };
 
     function doSetAmountAddCheckbox(e: HTMLInputElement) {
