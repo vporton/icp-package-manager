@@ -1,5 +1,7 @@
 2025 Aug 1
 
+* Removed confusing UI for withdrawing cycles.
+
 * Bug fixes.
 
 2025 Jul 16
