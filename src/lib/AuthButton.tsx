@@ -1,7 +1,7 @@
 import Button from 'react-bootstrap/Button';
 
 import { useInternetIdentity } from 'ic-use-internet-identity';
-import DisplayPrincipal from '../bootstrapper_frontend/src/DisplayPrincipal';
+import DisplayPrincipal from './DisplayPrincipal';
 import { useAuth } from './use-auth-client';
 import { useEffect } from 'react';
 

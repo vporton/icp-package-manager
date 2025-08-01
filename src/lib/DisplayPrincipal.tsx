@@ -42,4 +42,4 @@ export default function DisplayPrincipal(props: {value: Principal | undefined}) 
             </button>
         </div>
     );
-}
+} 

@@ -6,6 +6,8 @@
 
 * Bug fixes.
 
+* Refactoring.
+
 2025 Jul 16
 
 * Bug fixes.
