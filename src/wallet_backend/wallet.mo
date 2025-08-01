@@ -18,6 +18,7 @@ import XR "canister:exchange-rate";
 import Int "mo:base/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 import UserAuth "mo:icpack-lib/UserAuth";
+import Asset "mo:assets-api";
 
 persistent actor class Wallet({
     installationId: Nat;
@@ -168,8 +169,29 @@ persistent actor class Wallet({
         Principal.isAnonymous(owner);
     };
 
-
-
+    public composite query func isAllInitialized(): async () {
+        try {
+            // Check that wallet backend is initialized (owner is set)
+            if (Principal.isAnonymous(owner)) {
+                Debug.trap("wallet_backend: not initialized (owner is anonymous)");
+            };
+            
+            // Get the frontend canister principal from package manager
+            let packageManagerActor: actor {
+                getModulePrincipal: query (installationId: Nat, moduleName: Text) -> async Principal;
+            } = actor(Principal.toText(packageManager));
+            
+            let frontendCanister = await packageManagerActor.getModulePrincipal(installationId, "frontend");
+            
+            // Check that frontend is accessible
+            let frontend: Asset.AssetCanister = actor(Principal.toText(frontendCanister));
+            let _ = await frontend.get({key = "/index.html"; accept_encodings = ["gzip"]});
+        }
+        catch(e) {
+            Debug.print("Wallet isAllInitialized: " # Error.message(e));
+            Debug.trap(Error.message(e));
+        };
+    };
 
     // query func isPersonalWallet(): async Bool {
     //     not owner.isAnonymous();
