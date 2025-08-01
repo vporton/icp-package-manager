@@ -71,11 +71,11 @@ function AddressPopup(props: {
       }
     });
   }
-  async function topUpCycles() {
+  async function withdrawCycles() {
     try {
       swetrix_track({ev: 'paidCycles', unique: false, meta: {amount: props.cyclesLedgerAmount!.toString()}});
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
-      await bootstrapper.topUpCycles(); // FIXME@P3: Rename the function.
+      await bootstrapper.withdrawCycles();
       props.updateCyclesAmount();
       props.updateCyclesLedgerAmount();
     }
@@ -88,7 +88,7 @@ function AddressPopup(props: {
     try {
       swetrix_track({ev: 'paidICP', unique: false, meta: {amount: props.icpAmount!.toString()}});
       const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent})!;
-      await bootstrapper.topUpWithICP(); // FIXME@P3: Rename the function.
+      await bootstrapper.convertICPToCycles();
       props.updateCyclesAmount();
       props.updateICPAmount();
     }
@@ -135,7 +135,7 @@ function AddressPopup(props: {
           <Tab eventKey="cycles" title="Cycles">
             <p>Cycles to top-up:{" "}
               {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
-              {" "}<Button onClick={topUpCycles}>Use</Button>
+              {" "}<Button onClick={withdrawCycles}>Use</Button>
             </p>
             <p>
               Send cycles to{" "}

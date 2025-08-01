@@ -153,7 +153,7 @@ describe('My Test Suite', () => {
             throw "transfer failed: " + (initialTransferResult as any).Err.toString();
         }
         const bootstrapper = createBootstrapperActor(process.env.CANISTER_ID_BOOTSTRAPPER!, {agent: bootstrapperAgent});
-        await bootstrapper.topUpCycles();
+        await bootstrapper.withdrawCycles();
 
         console.log("Bootstrapping frontend...");
         const {installedModules, frontendTweakPrivKey, frontendTweakPubKey} =

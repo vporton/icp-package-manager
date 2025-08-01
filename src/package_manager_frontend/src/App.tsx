@@ -173,12 +173,12 @@ function App2() {
   const [icpAmount, setICPAmount] = useState<number | undefined>();
   const [cyclesPaymentAddress, setCyclesPaymentAddress] = useState<Principal | undefined>();
   const glob = useContext(GlobalContext);
-  async function topUpCycles() {
+  async function withdrawCycles() {
     try {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
         const battery = createBatteryActor(batteryPrincipal, {agent});
-        battery.topUpCycles().then(() => {
+        battery.withdrawCycles().then(() => {
           updateCyclesAmount();
           updateCyclesLedgerAmount();
           // updateICPAmount();
@@ -190,12 +190,12 @@ function App2() {
       setError((e as object).toString());
     }
   }
-  async function topUpWithICP() {
+  async function convertICPToCycles() {
     try {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
         const battery = createBatteryActor(batteryPrincipal, {agent});
-        battery.topUpWithICP().then(() => {
+        battery.convertICPToCycles().then(() => {
           updateCyclesAmount();
           // updateCyclesLedgerAmount();
           updateICPAmount();
@@ -293,7 +293,7 @@ function App2() {
             <Tab eventKey="icp" title="ICP">
               <p>ICP to top-up:{" "}
                 {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}
-                {" "}<Button onClick={topUpWithICP}>Use</Button>
+                {" "}<Button onClick={convertICPToCycles}>Use</Button>
               </p>
               <p>
                 Send ICP to{" "}
@@ -315,7 +315,7 @@ function App2() {
             <Tab eventKey="cycles" title="Cycles">
               <p>Cycles to top-up:{" "}
                 {props.cyclesLedgerAmount !== undefined ? `${String(props.cyclesLedgerAmount/10**12)}T` : "Loading..."}
-                {" "}<Button onClick={topUpCycles}>Use</Button>
+                {" "}<Button onClick={withdrawCycles}>Use</Button>
               </p>
               <p>
                 Send cycles to{" "}
