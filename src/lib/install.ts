@@ -18,10 +18,7 @@ async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
     }
 }
 
-// TODO@P3: duplicate code
-async function sha256(v: Uint8Array): Promise<Uint8Array> {
-    return new Uint8Array(await subtle.digest('SHA-256', v));
-}
+import { sha256 } from './crypto';
 
 export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.
