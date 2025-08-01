@@ -1,5 +1,7 @@
 2025 Aug 1
 
+* Add UI for copying the principal to clipboard.
+
 * Removed confusing UI for withdrawing cycles.
 
 * Bug fixes.

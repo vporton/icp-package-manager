@@ -178,7 +178,7 @@ function App2() {
       // TODO@P3: `!`
       glob.packageManager!.getModulePrincipal(0n, 'battery').then((batteryPrincipal) => { // TODO@P3: Don't hardcode `installationId == 0n`.
         const battery = createBatteryActor(batteryPrincipal, {agent});
-        battery.withdrawCycles().then(() => {
+        battery.withdrawAllCycles().then(() => {
           updateCyclesAmount();
           updateCyclesLedgerAmount();
           // updateICPAmount();

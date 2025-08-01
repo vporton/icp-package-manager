@@ -296,7 +296,7 @@ shared({caller = initialOwner}) actor class Battery({
         await IC.ic.deposit_cycles({canister_id = payee});
     };
 
-    public shared({caller}) func withdrawCycles() {
+    public shared({caller}) func withdrawAllCycles() {
         onlyOwner(caller, "withdrawCycles");
 
         let balance = await CyclesLedger.icrc1_balance_of({
@@ -309,12 +309,12 @@ shared({caller = initialOwner}) actor class Battery({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
+            from_subaccount = null;
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = revenue - Common.cycles_transfer_fee;
         });
         let #Ok tx = res2 else {
-            Debug.trap("transfer failed: " # debug_show(res2));
+            Debug.trap("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await CyclesLedger.withdraw({
@@ -339,12 +339,12 @@ shared({caller = initialOwner}) actor class Battery({
             to = {owner = revenueRecipient; subaccount = null};
             fee = null;
             memo = null;
-            from_subaccount = ?(Common.principalToSubaccount(user));
+            from_subaccount = null;
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
             amount = revenue - Common.icp_transfer_fee;
         });
         let #Ok tx2 = res2 else {
-            Debug.trap("transfer failed: " # debug_show(res2));
+            Debug.trap("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await ICPLedger.icrc1_transfer({
