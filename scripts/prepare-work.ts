@@ -221,7 +221,7 @@ async function main() {
         recommends: [],
         functions: [],
         permissions: [],
-        checkInitializedCallback: [{moduleName: 'frontend', how: {urlPath: '/index.html'}}], // FIXME@P3
+        checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}],
         frontendModule: ['frontend'],
     };
     const walletInfo: SharedPackageInfo = {
