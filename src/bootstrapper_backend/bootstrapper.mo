@@ -501,7 +501,7 @@ actor class Bootstrapper() = this {
         Cycles.balance();
     };
 
-    public shared({caller = user}) func userCycleBalance(): async Nat {
+    public query({caller = user}) func userCycleBalance(): async Nat {
         // TODO@P3: Allow only to the owner?
         await Data.getUserCycleBalance(user);
     };

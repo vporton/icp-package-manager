@@ -87,7 +87,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     };
 
     // User cycle balance management functions
-    public shared({caller}) func getUserCycleBalance(user: Principal): async Nat {
+    public query({caller}) func getUserCycleBalance(user: Principal): async Nat {
         onlyOwner(caller);
         
         switch (principalMap.get(userCycleBalanceMap, user)) {
