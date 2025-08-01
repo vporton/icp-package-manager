@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P2 Withdraw cycles when uninstalling a package.
+
 - TODO@P3 Fiat payments: https://github.com/Expeera/IC-PayPortal/tree/phase-3
 
 - FIXME@P3 After logout/login on `/choose-upgrade/*`, we have "Upgrade package" button disabled.
