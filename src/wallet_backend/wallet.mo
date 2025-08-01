@@ -48,8 +48,8 @@ persistent actor class Wallet({
 
     private func initialUserData(): UserData {
         {
-            var amountAddCheckbox = ?10.0;
-            var amountAddInput = ?30.0;
+            var amountAddCheckbox = ?Common.default_amount_add_checkbox;
+            var amountAddInput = ?Common.default_amount_add_input;
             var tokens = defaultTokens();
         }
     };

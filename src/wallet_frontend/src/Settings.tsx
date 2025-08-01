@@ -4,6 +4,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { useAuth } from '../../lib/use-auth-client';
 import { GlobalContext } from './state';
+import { DEFAULT_AMOUNT_ADD_CHECKBOX, DEFAULT_AMOUNT_ADD_INPUT } from './constants';
 
 export default function Settings() {
     const { agent, ok, principal } = useAuth();
@@ -16,8 +17,8 @@ export default function Settings() {
         if (!agent || !principal || !glob.walletBackend) return;
 
         const limits = await glob.walletBackend.getLimitAmounts();
-        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? 10); // FIXME@P3: duplicate code
-        setAmountAddInput(limits.amountAddInput[0] ?? 30);
+        setAmountAddCheckbox(limits.amountAddCheckbox[0] ?? DEFAULT_AMOUNT_ADD_CHECKBOX);
+        setAmountAddInput(limits.amountAddInput[0] ?? DEFAULT_AMOUNT_ADD_INPUT);
     };
 
     function doSetAmountAddCheckbox(e: HTMLInputElement) {
