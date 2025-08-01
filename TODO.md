@@ -33,7 +33,6 @@ Remaining things TODO
 - TODO@P3 Automatically retrieve the name of the added repo.
 
 - TODO@P3: `inspect`.
-- ✅ FIXED: Consolidated duplicate SHA-256 implementations in `src/wallet_frontend/src/accountUtils.ts` and `src/lib/install.ts` into shared utility `src/lib/crypto.ts`.
 
 - TODO@P3 Option to install additional software after bootstrapping.
 
