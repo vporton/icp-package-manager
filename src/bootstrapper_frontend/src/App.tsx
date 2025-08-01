@@ -60,6 +60,7 @@ function AddressPopup(props: {
   const {agent} = useAuth();
   const address = props.cyclesPaymentAddress!;
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("icp");
   const copyToClipboard = async (event: React.MouseEvent) => {
     const str = (event.target as HTMLElement).innerText;
     navigator.clipboard.writeText(str).then(() => {
@@ -108,7 +109,7 @@ function AddressPopup(props: {
         {/* <p>ICP balance: {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}</p> */}
         <p><strong>Warning: 5% fee applied.</strong></p>
         <p>Fund it with 13T cycles, at least.</p>
-        <Tabs defaultActiveKey="icp">
+        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || "icp")}>
           <Tab eventKey="icp" title="ICP">
             <p>ICP to top-up:{" "}
               {props.icpAmount !== undefined ? `${String(props.icpAmount/10**8)}` : "Loading..."}

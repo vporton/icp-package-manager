@@ -1,6 +1,6 @@
 Remaining things TODO
 
-- FIXME@P3 Clicking Reload button should not switch from Cycles to ICP tab in the payment popup.
+- ✅ FIXME@P3 Clicking Reload button should not switch from Cycles to ICP tab in the payment popup.
 
 - TODO@P2 Withdraw cycles when uninstalling a package.
 
