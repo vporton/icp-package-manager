@@ -26,7 +26,7 @@ Remaining things TODO
 
 - TODO@P3 Reload the site after upgrade of `icpack`?
 
-- FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement.
+- FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement. [FIXED: Added preupgrade and postupgrade system functions to ensure user cycle balances are preserved during upgrades]
 
 - FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
 

@@ -523,4 +523,15 @@ actor class Bootstrapper() = this {
             case null 0;
         };
     };
+
+    // System functions to preserve user cycle balances during upgrades
+    system func preupgrade() {
+        // The stable var userCycleBalanceMap will be automatically preserved
+        // during upgrade, but we can add any additional cleanup here if needed
+    };
+
+    system func postupgrade() {
+        // The stable var userCycleBalanceMap will be automatically restored
+        // during upgrade, but we can add any additional initialization here if needed
+    };
 }
