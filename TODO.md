@@ -160,5 +160,3 @@ Remaining things TODO
 - TODO@P3 Wallet & other: QR codes for payments.
 
 - TODO@P3 Wallet: Update Balances button.
-
-- FIXME@P3 Wallet: Remove tokens not by Symbol but by canister ID.

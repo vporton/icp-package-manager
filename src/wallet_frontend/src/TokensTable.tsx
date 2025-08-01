@@ -106,7 +106,7 @@ const TokensTable = forwardRef<TokensTableRef, TokensTableProps>((props, ref) =>
         
         try {
             await glob.walletBackend.addArchiveCanister(
-                selectedToken.symbol,
+                selectedToken.canisterId!,
                 Principal.fromText(archiveCanisterId)
             );
             setShowManageModal(false);
