@@ -21,11 +21,9 @@ import UserAuth "mo:icpack-lib/UserAuth";
 
 persistent actor class Wallet({
     installationId: Nat;
-    // TODO@P2: Remove wrong value of user also from other packages and from initialization code.
-    // user: Principal; // Pass the anonymous principal `2vxsx-fae` to be controlled by nobody.
     packageManager: Principal;
 }) = this {
-    stable var owner = Principal.fromText("2vxsx-fae");
+    stable var owner = Principal.fromText("2vxsx-fae"); // Anonymous principal - will be replaced by actual user via setOwner method
 
     private func onlyOwner(caller: Principal, msg: Text) {
         if (not Principal.isAnonymous(owner) and caller != owner) {
