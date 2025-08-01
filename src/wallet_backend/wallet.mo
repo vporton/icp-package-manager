@@ -171,11 +171,6 @@ persistent actor class Wallet({
 
     public composite query func isAllInitialized(): async () {
         try {
-            // Check that wallet backend is initialized (owner is set)
-            if (Principal.isAnonymous(owner)) {
-                Debug.trap("wallet_backend: not initialized (owner is anonymous)");
-            };
-            
             // Get the frontend canister principal from package manager
             let packageManagerActor: actor {
                 getModulePrincipal: query (installationId: Nat, moduleName: Text) -> async Principal;
