@@ -1,0 +1,1 @@
+- When fixing a FIXME or TODO, remove the FIXME or TODO note rather than just marking it as fixed.
