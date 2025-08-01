@@ -161,4 +161,4 @@ Remaining things TODO
 
 - TODO@P3 Wallet: Update Balances button.
 
-- FIXME@P3 Wallet: Remove tokens not by Symbol but by canister ID.
+- ✅ FIXME@P3 Wallet: Remove tokens not by Symbol but by canister ID. (Fixed: Updated addArchiveCanister to use canisterId instead of symbol)

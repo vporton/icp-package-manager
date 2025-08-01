@@ -148,14 +148,14 @@ persistent actor class Wallet({
         };
     };
 
-    public shared({caller}) func addArchiveCanister(symbol: Text, archiveCanisterId: Principal): async () {
+    public shared({caller}) func addArchiveCanister(canisterId: Principal, archiveCanisterId: Principal): async () {
         onlyOwner(caller, "addArchiveCanister");
         
         let data = principalMap.get(userData, caller);
         switch (data) {
             case (?data) {
                 data.tokens := Array.map(data.tokens, func(t: Token): Token {
-                    if (t.symbol == symbol) {
+                    if (t.canisterId == canisterId) {
                         {t with archiveCanisterId = ?archiveCanisterId}
                     } else {
                         t
