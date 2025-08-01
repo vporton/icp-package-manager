@@ -452,4 +452,8 @@ module {
     public let icp_transfer_fee = 10_000;
 
     public let minimalFunding = 13_000_000_000_000;
+
+    // Wallet default settings
+    public let default_amount_add_checkbox = 10.0;
+    public let default_amount_add_input = 30.0;
 }
