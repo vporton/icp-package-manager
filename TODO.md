@@ -27,7 +27,7 @@ Remaining things TODO
 - TODO@P3 Reload the site after upgrade of `icpack`?
 
 - FIXME@P2 Don't steal cycles from users when upgrading `bootstrapper` canister by replacement:
-           To do it, move `userCycleBalanceMap` to `BootstrapperData.mo`.
+           To do it, move `userCycleBalanceMap` to `BootstrapperData.mo`. [FIXED: Moved userCycleBalanceMap to BootstrapperData.mo and updated bootstrapper.mo to use BootstrapperData for user cycle balance management]
 
 - FIXME@P3 It keeps producing `Waiting for initialization...` in browser console log, despite it's finished.
 

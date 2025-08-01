@@ -25,7 +25,6 @@ import Array "mo:base/Array";
 import IC "mo:base/ExperimentalInternetComputer";
 import TrieMap "mo:base/TrieMap";
 import Order "mo:base/Order";
-import Map "mo:base/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -145,16 +144,11 @@ actor class Bootstrapper() = this {
         frontendTweakPubKey: PubKey;
     }): async {installedModules: [(Text, Principal)]; spentCycles: Int} {
         let initialBalance = Cycles.balance();
-        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
-            case (?amount) amount;
-            case null 0;
-        };
+        let amountToMove = await Data.removeUserCycleBalance(user);
 
         if (amountToMove < ((Common.minimalFunding - Common.cycles_transfer_fee): Nat)) {
             Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
-
-        userCycleBalanceMap := principalMap.delete(userCycleBalanceMap, user);
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
 
@@ -422,9 +416,6 @@ actor class Bootstrapper() = this {
         Account.toText({owner; subaccount});
     };
 
-    let principalMap = Map.Make<Principal>(Principal.compare);
-    stable var userCycleBalanceMap = principalMap.empty<Nat>();
-
     public shared({caller = user}) func withdrawCycles(): async {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
@@ -454,11 +445,8 @@ actor class Bootstrapper() = this {
             Debug.trap("transfer failed: " # debug_show(res3));
         };
 
-        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
-            case (?oldBalance) oldBalance;
-            case null 0;
-        };
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + balance - revenue - Common.cycles_transfer_fee);
+        // Update user cycle balance in BootstrapperData
+        await Data.addToUserCycleBalance(user, balance - revenue - Common.cycles_transfer_fee);
         {balance = balance - revenue - Common.cycles_transfer_fee};
     };
 
@@ -503,11 +491,8 @@ actor class Bootstrapper() = this {
             Debug.trap("notify_top_up failed: " # debug_show(res2));
         };
 
-        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
-            case (?oldBalance) oldBalance;
-            case null 0;
-        };
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + cyclesAmount);
+        // Update user cycle balance in BootstrapperData
+        await Data.addToUserCycleBalance(user, cyclesAmount);
         {balance = cyclesAmount};
     };
 
@@ -516,11 +501,8 @@ actor class Bootstrapper() = this {
         Cycles.balance();
     };
 
-    public query({caller = user}) func userCycleBalance(): async Nat {
+    public shared({caller = user}) func userCycleBalance(): async Nat {
         // TODO@P3: Allow only to the owner?
-        switch (principalMap.get(userCycleBalanceMap, user)) {
-            case (?amount) amount;
-            case null 0;
-        };
+        await Data.getUserCycleBalance(user);
     };
 }
