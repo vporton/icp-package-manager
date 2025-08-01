@@ -425,7 +425,7 @@ actor class Bootstrapper() = this {
     let principalMap = Map.Make<Principal>(Principal.compare);
     stable var userCycleBalanceMap = principalMap.empty<Nat>();
 
-    public shared({caller = user}) func topUpCycles(): async {balance: Nat} {
+    public shared({caller = user}) func withdrawCycles(): async {balance: Nat} {
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Blob.toArray(Common.principalToSubaccount(user)));
         });
@@ -462,7 +462,7 @@ actor class Bootstrapper() = this {
         {balance = balance - revenue - Common.cycles_transfer_fee};
     };
 
-    public shared({caller = user}) func topUpWithICP(): async {balance: Nat} {
+    public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
         let icpBalance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = ?(Common.principalToSubaccount(user));
         });

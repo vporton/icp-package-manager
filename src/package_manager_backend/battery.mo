@@ -296,8 +296,8 @@ shared({caller = initialOwner}) actor class Battery({
         await IC.ic.deposit_cycles({canister_id = payee});
     };
 
-    public shared({caller}) func topUpCycles() {
-        onlyOwner(caller, "topUpCycles");
+    public shared({caller}) func withdrawCycles() {
+        onlyOwner(caller, "withdrawCycles");
 
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = null;
@@ -328,7 +328,7 @@ shared({caller = initialOwner}) actor class Battery({
         };
     };
 
-    public shared({caller = user}) func topUpWithICP(): async {balance: Nat} {
+    public shared({caller = user}) func convertICPToCycles(): async {balance: Nat} {
         let icpBalance = await ICPLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = null;
         });
