@@ -1,11 +1,10 @@
-import Principal "mo:base/Principal";
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import RBTree "mo:base/RBTree";
-import Time "mo:base/Time";
-import Int "mo:base/Int";
-import Nat "mo:base/Nat";
-import Map "mo:base/OrderedMap";
+import Principal "mo:core/Principal";
+import Blob "mo:core/Blob";
+import Debug "mo:core/Debug";
+import Time "mo:core/Time";
+import Int "mo:core/Int";
+import Nat "mo:core/Nat";
+import Map "mo:core/Map";
 import UserAuth "mo:icpack-lib/UserAuth";
 import Account "../lib/Account";
 
@@ -26,8 +25,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     stable var _frontendTweakerTimesSave = frontendTweakerTimes.share();
 
     // User cycle balance management
-    transient let principalMap = Map.Make<Principal>(Principal.compare);
-    stable var userCycleBalanceMap = principalMap.empty<Nat>();
+    stable var userCycleBalanceMap = principalMap.empty<Principal, Nat>();
 
     private func onlyOwner(caller: Principal) {
         if (caller != owner) {
@@ -90,7 +88,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public query({caller}) func getUserCycleBalance(user: Principal): async Nat {
         onlyOwner(caller);
         
-        switch (principalMap.get(userCycleBalanceMap, user)) {
+        switch (Map.get(userCycleBalanceMap, Principal.compare, user)) {
             case (?amount) amount;
             case null 0;
         };
@@ -99,27 +97,27 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     public shared({caller}) func updateUserCycleBalance(user: Principal, newBalance: Nat): async () {
         onlyOwner(caller);
         
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, newBalance);
+        ignore Map.insert(userCycleBalanceMap, Principal.compare, user, newBalance);
     };
 
     public shared({caller}) func addToUserCycleBalance(user: Principal, amount: Nat): async () {
         onlyOwner(caller);
         
-        let oldBalance = switch (principalMap.get(userCycleBalanceMap, user)) {
+        let oldBalance = switch (Map.get(userCycleBalanceMap, Principal.compare, user)) {
             case (?oldBalance) oldBalance;
             case null 0;
         };
-        userCycleBalanceMap := principalMap.put(userCycleBalanceMap, user, oldBalance + amount);
+        ignore Map.insert(userCycleBalanceMap, Principal.compare, user, oldBalance + amount);
     };
 
     public shared({caller}) func removeUserCycleBalance(user: Principal): async Nat {
         onlyOwner(caller);
         
-        let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) {
+        let amountToMove = switch (Map.get(userCycleBalanceMap, Principal.compare, user)) {
             case (?amount) amount;
             case null 0;
         };
-        userCycleBalanceMap := principalMap.delete(userCycleBalanceMap, user);
+        ignore Map.delete(userCycleBalanceMap, Principal.compare, user);
         amountToMove;
     };
 

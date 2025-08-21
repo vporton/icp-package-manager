@@ -8,7 +8,6 @@ license = "MIT"
 
 [dependencies]
 env = "./env/{MOPS_ENV}"
-base = "0.14.0"
 itertools = "0.2.2"
 assets-api = "1.0.1"
 ic = "2.0.0"
@@ -25,3 +24,4 @@ icrc3-mo = "0.2.4"
 icrc4-mo = "0.0.5"
 ecdsa = "6.0.0"
 xtended-numbers = "0.4.0"
+core = "1.0.0"

@@ -1,9 +1,9 @@
-import Buffer "mo:base/Buffer";
-import HashMap "mo:base/HashMap";
-import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Int "mo:base/Int";
-import Time "mo:base/Time";
+import Buffer "mo:core/Buffer";
+import HashMap "mo:core/HashMap";
+import Text "mo:core/Text";
+import Iter "mo:core/Iter";
+import Int "mo:core/Int";
+import Time "mo:core/Time";
 import Asset "mo:assets-api";
 
 module {

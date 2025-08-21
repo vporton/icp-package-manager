@@ -1,6 +1,6 @@
 import LIB "mo:icpack-lib";
 import CyclesLedger "canister:cycles_ledger";
-import Principal "mo:base/Principal";
+import Principal "mo:core/Principal";
 
 actor {
   public shared func f() {};

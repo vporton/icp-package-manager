@@ -1,12 +1,12 @@
 import Common "../src/common";
-import Hash "mo:base/Hash";
-import HashMap "mo:base/HashMap";
-import Text "mo:base/Text";
-import Principal "mo:base/Principal";
-import Buffer "mo:base/Buffer";
-import Iter "mo:base/Iter";
-import Array "mo:base/Array";
-import Debug "mo:base/Debug";
+import Hash "mo:core/Hash";
+import HashMap "mo:core/HashMap";
+import Text "mo:core/Text";
+import Principal "mo:core/Principal";
+import Buffer "mo:core/Buffer";
+import Iter "mo:core/Iter";
+import Array "mo:core/Array";
+import Debug "mo:core/Debug";
 import {test} "mo:test";
 
 /// Principals used for testing:

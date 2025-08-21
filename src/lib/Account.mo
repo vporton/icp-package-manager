@@ -1,14 +1,15 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Char "mo:base/Char";
-import Text "mo:base/Text";
-import Int "mo:base/Int";
-import Iter "mo:base/Iter";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Principal "mo:base/Principal";
-import Option "mo:base/Option";
-import Result "mo:base/Result";
+import Array "mo:core/Array";
+import Blob "mo:core/Blob";
+import Char "mo:core/Char";
+import Text "mo:core/Text";
+import Int "mo:core/Int";
+import Iter "mo:core/Iter";
+import Nat8 "mo:core/Nat8";
+import Nat32 "mo:core/Nat32";
+import Principal "mo:core/Principal";
+import Option "mo:core/Option";
+import Result "mo:core/Result";
+import Nat "mo:core/Nat";
 
 module {
   public type Account = { owner : Principal; subaccount : ?Blob };
@@ -49,7 +50,7 @@ module {
     var dot = n;
 
     // Find the last dash and the dot.
-    label l for (i in Iter.range(0, n - 1)) {
+    label l for (i in Nat.range(0, n)) {
       if (chars[i] == '-') { lastDash := i };
       if (chars[i] == '.') { dot := i; break l };
     };
@@ -90,7 +91,7 @@ module {
     let principalText = Text.fromIter(iterSlice(chars, 0, lastDash - 1 : Nat));
     let owner = Principal.fromText(principalText);
 
-    var subaccountMut = Array.init<Nat8>(32, 0);
+    var subaccountMut = Array.toVarArray<Nat8>(Array.repeat<Nat8>(0, 32));
 
     let subaccountDigits = iterChain(
       iterReplicate('0', 64 - numSubaccountDigits : Nat),
@@ -113,7 +114,7 @@ module {
       return #err(#not_canonical);
     };
 
-    let subaccount = Blob.fromArrayMut(subaccountMut);
+    let subaccount = Blob.fromVarArray(subaccountMut);
 
     if (not iterEqual<Char>(checkSum(owner, subaccount).chars(), iterSlice(chars, lastDash + 1, dot - 1 : Nat), Char.equal)) {
       return #err(#bad_checksum);
@@ -237,7 +238,7 @@ module {
   // Helper functions to deal with iterators
 
   func iterSlice<T>(a : [T], from : Nat, to : Nat) : Iter.Iter<T> {
-    Iter.map(Iter.range(from, to), func(i : Nat) : T { a[i] });
+    Iter.map(Nat.rangeInclusive(from, to), func(i : Nat) : T { a[i] });
   };
 
   func iterEqual<T>(xs : Iter.Iter<T>, ys : Iter.Iter<T>, eq : (T, T) -> Bool) : Bool {

@@ -1,8 +1,8 @@
-import Principal "mo:base/Principal";
-import Array "mo:base/Array";
-import Map "mo:base/OrderedMap";
-import Set "mo:base/OrderedSet";
-import Debug "mo:base/Debug";
+import Principal "mo:core/Principal";
+import Array "mo:core/Array";
+import Map "mo:core/OrderedMap";
+import Set "mo:core/OrderedSet";
+import Debug "mo:core/Debug";
 
 // TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {

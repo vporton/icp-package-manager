@@ -1,13 +1,13 @@
-import Debug "mo:base/Debug";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Blob "mo:base/Blob";
-import TrieMap "mo:base/TrieMap";
-import Nat "mo:base/Nat";
-import Option "mo:base/Option";
-import Iter "mo:base/Iter";
-import HashMap "mo:base/HashMap";
-import Array "mo:base/Array";
+import Debug "mo:core/Debug";
+import Principal "mo:core/Principal";
+import Text "mo:core/Text";
+import Blob "mo:core/Blob";
+import TrieMap "mo:core/TrieMap";
+import Nat "mo:core/Nat";
+import Option "mo:core/Option";
+import Iter "mo:core/Iter";
+import HashMap "mo:core/HashMap";
+import Array "mo:core/Array";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 

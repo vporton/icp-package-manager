@@ -1,31 +1,31 @@
 /// This module is legible to non-returning-function attack. Throw it away if it fails this way.
 /// Data is stored in `bootstrapper_data` instead.
 import Asset "mo:assets-api";
-import Iter "mo:base/Iter";
-import Text "mo:base/Text";
-import Principal "mo:base/Principal";
-import HashMap "mo:base/HashMap";
-import Debug "mo:base/Debug";
+import Iter "mo:core/Iter";
+import Text "mo:core/Text";
+import Principal "mo:core/Principal";
+import HashMap "mo:core/HashMap";
+import Debug "mo:core/Debug";
 import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 import Battery "../package_manager_backend/battery";
-import Cycles "mo:base/ExperimentalCycles";
-import Nat64 "mo:base/Nat64";
-import Int "mo:base/Int";
-import Time "mo:base/Time";
-import Float "mo:base/Float";
-import Error "mo:base/Error";
-import Nat "mo:base/Nat";
-import Buffer "mo:base/Buffer";
-import Blob "mo:base/Blob";
-import Nat8 "mo:base/Nat8";
-import Array "mo:base/Array";
-import IC "mo:base/ExperimentalInternetComputer";
-import TrieMap "mo:base/TrieMap";
-import Order "mo:base/Order";
-import Map "mo:base/OrderedMap";
+import Cycles "mo:core/ExperimentalCycles";
+import Nat64 "mo:core/Nat64";
+import Int "mo:core/Int";
+import Time "mo:core/Time";
+import Float "mo:core/Float";
+import Error "mo:core/Error";
+import Nat "mo:core/Nat";
+import Buffer "mo:core/Buffer";
+import Blob "mo:core/Blob";
+import Nat8 "mo:core/Nat8";
+import Array "mo:core/Array";
+import IC "mo:core/ExperimentalInternetComputer";
+import TrieMap "mo:core/TrieMap";
+import Order "mo:core/Order";
+import Map "mo:core/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -183,8 +183,9 @@ actor class Bootstrapper() = this {
         let initialBalance = Cycles.balance();
 
         let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
-        if (not UserAuth.verifySignature(frontendTweakPubKey, user, signature)) {
-            Debug.trap("account validation failed");
+        switch (UserAuth.verifySignature(frontendTweakPubKey, user, signature)) {
+            case (#err e) throw Error.reject(e);
+            case (#ok false) throw Error.reject("account validation failed");
         };
 
         // let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) { // wrong user

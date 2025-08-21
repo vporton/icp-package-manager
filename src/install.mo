@@ -1,7 +1,7 @@
-import Principal "mo:base/Principal";
-import Cycles "mo:base/ExperimentalCycles";
-import Debug "mo:base/Debug";
-import Blob "mo:base/Blob";
+import Principal "mo:core/Principal";
+import Cycles "mo:core/ExperimentalCycles";
+import Debug "mo:core/Debug";
+import Blob "mo:core/Blob";
 import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";

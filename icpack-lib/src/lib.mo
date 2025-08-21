@@ -1,6 +1,6 @@
-import Principal "mo:base/Principal";
-import Debug "mo:base/Debug";
-import Nat64 "mo:base/Nat64";
+import Principal "mo:core/Principal";
+import Debug "mo:core/Debug";
+import Nat64 "mo:core/Nat64";
 
 module {
     type BlockIndex = Nat;

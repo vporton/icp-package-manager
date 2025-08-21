@@ -1,13 +1,13 @@
 /// Canister that takes on itself potentially non-returning calls.
-import Error "mo:base/Error";
-import Debug "mo:base/Debug";
-import Principal "mo:base/Principal";
-import Blob "mo:base/Blob";
-import Text "mo:base/Text";
-import HashMap "mo:base/HashMap";
-import Iter "mo:base/Iter";
-import Array "mo:base/Array";
-import Cycles "mo:base/ExperimentalCycles";
+import Error "mo:core/Error";
+import Debug "mo:core/Debug";
+import Principal "mo:core/Principal";
+import Blob "mo:core/Blob";
+import Text "mo:core/Text";
+import HashMap "mo:core/HashMap";
+import Iter "mo:core/Iter";
+import Array "mo:core/Array";
+import Cycles "mo:core/ExperimentalCycles";
 import Itertools "mo:itertools/Iter";
 import Common "../common";
 import Install "../install";
