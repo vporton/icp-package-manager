@@ -13,9 +13,9 @@ import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
 // FIXME@P1: Need to make it persistent.
-shared ({caller = initialOwner}) actor class Repository() = this {
-  var owners = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare);
-  var packageCreators = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare);
+shared ({caller = initialOwner}) persistent actor class Repository() = this {
+  var owners = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
+  var packageCreators = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
 
   stable var initialized: Bool = false;
 
@@ -134,7 +134,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     let id0 = Sha256.fromBlob(#sha256, wasm);
     let id = Blob.fromArray(Array.sliceToArray(Blob.toArray(id0), 0, 16));
 
-    wasms.put(id, wasm);
+    ignore Map.insert(wasms, Blob.compare, id, wasm);
 
     {id};
   };
@@ -187,11 +187,11 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   /// Data ///
 
-  let wasms = Map.empty<Blob, Blob>(Blob.equal, Blob.hash);
+  let wasms = Map.empty<Blob, Blob>();
 
   public query func getWasmModule(key: Blob): async Blob { 
-    let ?v = wasms.get(key) else {
-      Debug.trap("no such module");
+    let ?v = Map.get(wasms, Blob.compare, key) else {
+      throw Error.reject("no such module");
     };
     v;
   };
@@ -203,24 +203,30 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     owners: Map.Map<Principal, ()>;
   }>();
 
-  private func _getFullPackageInfo(name: Common.PackageName): Common.SharedFullPackageInfo {
-    let ?v = packages.get(name) else {
-      Debug.trap("no such package");
+  private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
+    let ?v = Map.get(packages, Text.compare, name) else {
+      return #err("no such package");
     };
-    Common.shareFullPackageInfo(v.pkg);
+    #ok(Common.shareFullPackageInfo(v.pkg));
   };
 
   public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
-    _getFullPackageInfo(name);
+    switch (_getFullPackageInfo(name)) {
+      case (#ok v) v;
+      case (#err e) throw Error.reject(e);
+    };
   };
 
   /// TODO@P3: Put a barrier to make the update atomic.
   /// TODO@P3: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
-    let p = packages.get(name);
+    let p = Map.get(packages, Text.compare, name);
     switch (p) {
       case (?p) {
-        onlyPackageOwner(caller, name); // TODO@P3: queries by name second time.
+        switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
+          case (#ok) {};
+          case (#err e) throw Error.reject(e);
+        };
       };
       case null {
         await* onlyPackageCreator(caller);
@@ -233,42 +239,40 @@ shared ({caller = initialOwner}) actor class Repository() = this {
         owners;
       };
       case null {
-        HashMap.fromIter<Principal, ()>(
+        Map.fromIter<Principal, ()>(
           [(caller, ())].vals(),
-          1,
-          Principal.equal,
-          Principal.hash);
+          Principal.compare);
       };
     };
-    packages.put(name, {owners; pkg = Common.unshareFullPackageInfo(info)});
+    ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
   };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
-    let ?fullInfo = packages.get(name) else {
-      Debug.trap("no such package");
+    let ?fullInfo = Map.get(packages, Text.compare, name) else {
+      throw Error.reject("no such package");
     };
-    for ((curVersion, info) in fullInfo.pkg.packages.entries()) {
-      if (curVersion == version or fullInfo.pkg.versionsMap.get(version) == ?curVersion) {
+    for ((curVersion, info) in Map.entries(fullInfo.pkg.packages)) {
+      if (curVersion == version or Map.get(fullInfo.pkg.versionsMap, Text.compare, version) == ?curVersion) {
         return Common.sharePackageInfo(info);
       };
     };
-    Debug.trap("no such package version");
+    throw Error.reject("no such package version");
   };
 
   public shared({caller}) func cleanUnusedWasms() {
     await* onlyOwner(caller);
 
-    let usedWasms = HashMap.HashMap<Blob, ()>(0, Blob.equal, Blob.hash);
-    for (pkg in packages.vals()) {
-      for (info in pkg.pkg.packages.vals()) {
+    let usedWasms = Map.empty<Blob, ()>();
+    for (pkg in Map.values(packages)) {
+      for (info in Map.values(pkg.pkg.packages)) {
         switch (info.specific) {
           case (#real p) {
-            for ({code} in p.modules.vals()) {
+            for ({code} in Map.values(p.modules)) {
               let id = switch (code) {
                 case (#Wasm wasm) wasm;
                 case (#Assets {wasm}) wasm;
               };
-              usedWasms.put(id.1, ());
+              ignore Map.insert(usedWasms, Blob.compare, id.1, ());
             };
           };
           case (#virtual _) {};
@@ -276,9 +280,9 @@ shared ({caller = initialOwner}) actor class Repository() = this {
       };
     };
 
-    for (wasm in wasms.keys()) {
-      if (Option.isNull(usedWasms.get(wasm))) {
-        wasms.delete(wasm);
+    for (wasm in Map.keys(wasms)) {
+      if (Option.isNull(Map.get(usedWasms, Blob.compare, wasm))) {
+        ignore Map.delete<Blob, Blob>(wasms, Blob.compare, wasm);
       };
     };
   };

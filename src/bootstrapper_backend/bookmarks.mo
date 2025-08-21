@@ -1,8 +1,8 @@
 import Principal "mo:core/Principal";
 import Array "mo:core/Array";
-import Map "mo:core/OrderedMap";
-import Set "mo:core/OrderedSet";
-import Debug "mo:core/Debug";
+import Map "mo:core/Map";
+import Set "mo:core/Set";
+import Error "mo:core/Error";
 
 // TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {
@@ -17,10 +17,10 @@ persistent actor class Bookmarks(initialOwner: Principal) {
 
     public shared({caller}) func init(args: {bootstrapper: Principal}): async () {
         if (caller != initialOwner) {
-            Debug.trap("bookmarks: not the initiaizer");
+            throw Error.reject("bookmarks: not the initiaizer");
         };
         if (initialized) {
-            Debug.trap("bookmarks: already initialized");
+            throw Error.reject("bookmarks: already initialized");
         };
         bootstrapper := args.bootstrapper;
         initialized := true;
@@ -38,30 +38,28 @@ persistent actor class Bookmarks(initialOwner: Principal) {
     //     Principal.hash(a.frontend) ^ Principal.hash(a.backend);
     // };
 
-    transient let principalMap = Map.Make<Principal>(Principal.compare);
-    transient let bookmarkSet = Set.Make<Bookmark>(bookmarksCompare);
-
     /// user -> [Bookmark]
-    stable var userToBookmark = principalMap.empty<[Bookmark]>();
+    /// FIXME@P1: Use `List` instead of array.
+    stable var userToBookmark = Map.empty<Principal, [Bookmark]>();
 
-    stable var bookmarks = bookmarkSet.empty();
+    stable var bookmarks = Set.empty<Bookmark>();
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
-        switch (principalMap.get(userToBookmark, caller)) {
+        switch (Map.get(userToBookmark, Principal.compare, caller)) {
             case (?a) a;
             case null [];
         };
     };
 
     public query func hasBookmark(b: Bookmark): async Bool {
-        bookmarkSet.contains(bookmarks, b);
+        Set.contains<Bookmark>(bookmarks, bookmarksCompare, b);
     };
 
     // TODO@P3: Remove unused argument `battery`.
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark({b: Bookmark; battery = _: Principal; user: Principal}): async Bool {
         if (caller != bootstrapper) {
-            Debug.trap("bookmarks: not the owner");
+            throw Error.reject("bookmarks: not the owner");
         };
 
         // let res = await CyclesLedger.icrc2_transfer_from({
@@ -80,16 +78,16 @@ persistent actor class Bookmarks(initialOwner: Principal) {
         //     };
         //     case (#Ok _) {};
         // };
-        if (bookmarkSet.contains(bookmarks, b)) {
+        if (Set.contains<Bookmark>(bookmarks, bookmarksCompare, b)) {
             true;
         } else {
-            bookmarks := bookmarkSet.put(bookmarks, b);
-            let a = principalMap.get(userToBookmark, user);
+            ignore Set.insert<Bookmark>(bookmarks, bookmarksCompare, b);
+            let a = Map.get(userToBookmark, Principal.compare, user);
             let a2 = switch (a) {
-                case (?a) Array.append(a, [b]);
+                case (?a) Array.concat(a, [b]);
                 case null [b];
             };
-            userToBookmark := principalMap.put(userToBookmark, user, a2);
+            ignore Map.insert(userToBookmark, Principal.compare, user, a2);
             false;
         };
     };
