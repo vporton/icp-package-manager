@@ -8,6 +8,7 @@ import Int64 "mo:base/Int64";
 import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";
 import Time "mo:base/Time";
+import Error "mo:base/Error";
 import Common "../common";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";

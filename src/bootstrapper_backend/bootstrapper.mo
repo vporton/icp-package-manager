@@ -38,7 +38,6 @@ import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
 
-(with migration = func ({userCycleBalanceMap: Map.Map<Principal, Nat>}): {} = {})
 actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).

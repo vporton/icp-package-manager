@@ -11,6 +11,7 @@ import Array "mo:base/Array";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
+// FIXME@P1: Need to make it persistent.
 shared ({caller = initialOwner}) actor class Repository() = this {
   stable var _ownersSave: [(Principal, ())] = [];
   var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
