@@ -1,5 +1,5 @@
 import Principal "mo:core/Principal";
-import Cycles "mo:core/ExperimentalCycles";
+import Cycles "mo:core/Cycles";
 import Debug "mo:core/Debug";
 import Blob "mo:core/Blob";
 import Common "common";

@@ -4,28 +4,26 @@ import Asset "mo:assets-api";
 import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
-import HashMap "mo:core/HashMap";
+import Map "mo:core/Map";
 import Debug "mo:core/Debug";
 import Sha256 "mo:sha2/Sha256";
 import {ic} "mo:ic";
 import Common "../common";
 import Install "../install";
 import Battery "../package_manager_backend/battery";
-import Cycles "mo:core/ExperimentalCycles";
+import Cycles "mo:core/Cycles";
 import Nat64 "mo:core/Nat64";
 import Int "mo:core/Int";
 import Time "mo:core/Time";
 import Float "mo:core/Float";
 import Error "mo:core/Error";
 import Nat "mo:core/Nat";
-import Buffer "mo:core/Buffer";
+import List "mo:core/List";
 import Blob "mo:core/Blob";
 import Nat8 "mo:core/Nat8";
 import Array "mo:core/Array";
-import IC "mo:core/ExperimentalInternetComputer";
-import TrieMap "mo:core/TrieMap";
+import IC "mo:core/InternetComputer";
 import Order "mo:core/Order";
-import Map "mo:core/OrderedMap";
 import env "mo:env";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -63,11 +61,11 @@ actor class Bootstrapper() = this {
         let #real icPackPkgReal = icPackPkg.specific else {
             Debug.trap("icpack isn't a real package");
         };
-        let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
+        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(
             icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
 
-        let installedModules = HashMap.HashMap<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
+        let installedModules = Map.Map<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
         for (moduleName in modulesToInstall.keys()) {
             let cyclesAmount = if (moduleName == "battery") { // TODO@P3: Use only `newCanisterCycles`, copy to the battery later.
                 3_000_000_000_000 // TODO@P3: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
@@ -230,12 +228,12 @@ actor class Bootstrapper() = this {
             Debug.trap("icpack isn't a real package");
         };
 
-        let modulesToInstall = HashMap.fromIter<Text, Common.SharedModule>(
+        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(
             icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
         );
 
         // We bootstrap backend at this stage:
-        let installedModules2 = HashMap.fromIter<Text, Principal>(
+        let installedModules2 = Map.fromIter<Text, Principal>(
             installedModules.vals(), installedModules.size(), Text.equal, Text.hash);
         let ?backend = installedModules2.get("backend") else {
             Debug.trap("module not deployed");

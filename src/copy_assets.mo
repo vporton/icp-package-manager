@@ -1,8 +1,9 @@
-import Buffer "mo:core/Buffer";
-import HashMap "mo:core/HashMap";
+import List "mo:core/List";
+import Map "mo:core/Map";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Int "mo:core/Int";
+import Nat "mo:core/Nat";
 import Time "mo:core/Time";
 import Asset "mo:assets-api";
 
@@ -10,11 +11,11 @@ module {
     public func copyAll({from: Asset.AssetCanister; to: Asset.AssetCanister}): async* () {
         let fromAssets = await from.list({});
         let toAssets = await to.list({});
-        let fromAssetsSet = HashMap.HashMap<Asset.Key, ()>(fromAssets.size(), Text.equal, Text.hash);
+        let fromAssetsSet = Map.empty<Asset.Key, ()>(); // TODO@P3: Use `Set` instead of `Map`.
         for (x in fromAssets.vals()) {
-            fromAssetsSet.put(x.key, ());
+            ignore Map.insert(fromAssetsSet, Text.compare, x.key, ());
         };
-        let toAssetsSet = HashMap.HashMap<Text, {
+        let toAssetsSet = Map.empty<Text, {
             key: Asset.Key;
             content_type: Text;
             encodings: [{
@@ -23,36 +24,36 @@ module {
                 length: Nat; // Size of this encoding's Blob. Calculated when uploading assets.
                 modified: Time.Time;
             }];
-        }>(toAssets.size(), Text.equal, Text.hash);
+        }>();
         for (x in toAssets.vals()) {
-            toAssetsSet.put(x.key, x);
+            ignore Map.insert(toAssetsSet, Text.compare, x.key, x);
         };
         let { batch_id } = await to.create_batch({});
-        let buf = Buffer.Buffer<Asset.BatchOperationKind>(0);
+        let buf = List.empty<Asset.BatchOperationKind>();
         for (toAsset in toAssets.vals()) {
-            if (fromAssetsSet.get(toAsset.key) == null) {
-                buf.add(#DeleteAsset {key = toAsset.key});
+            if (Map.get(fromAssetsSet, Text.compare, toAsset.key) == null) {
+                List.add(buf, #DeleteAsset {key = toAsset.key});
             };
         };
         for (fromAsset in fromAssets.vals()) {
             let props = await from.get_asset_properties(fromAsset.key);
-            switch (toAssetsSet.get(fromAsset.key)) {
+            switch (Map.get(toAssetsSet, Text.compare, fromAsset.key)) {
                 case(?toAsset) {
                     // Remove missing encodings:
-                    let fromEncodings = HashMap.HashMap<Asset.Key, ()>(0, Text.equal, Text.hash);
+                    let fromEncodings = Map.empty<Asset.Key, ()>(); // TODO@P3: Use `Set` instead of `Map`.
                     for (fromEncoding in fromAsset.encodings.vals()) {
-                        fromEncodings.put(fromEncoding.content_encoding, ());
+                        ignore Map.insert(fromEncodings, Text.compare, fromEncoding.content_encoding, ());
                     };
                     for (encoding in toAsset.encodings.vals()) {
-                        if (fromEncodings.get(encoding.content_encoding) == null) {
-                            buf.add(#UnsetAssetContent {
+                        if (Map.get(fromEncodings, Text.compare, encoding.content_encoding) == null) {
+                            List.add(buf, #UnsetAssetContent {
                                 key = fromAsset.key;
                                 content_encoding = encoding.content_encoding;
                             })
                         };
                     };
 
-                    buf.add(#SetAssetProperties {
+                    List.add(buf, #SetAssetProperties {
                         key = fromAsset.key;
                         max_age = ?props.max_age;
                         headers = ?props.headers;
@@ -61,7 +62,7 @@ module {
                     });
                 };
                 case null {
-                    buf.add(#CreateAsset {
+                    List.add(buf, #CreateAsset {
                         allow_raw_access = props.allow_raw_access;
                         content_type = fromAsset.content_type;
                         enable_aliasing = props.is_aliased;
@@ -79,10 +80,10 @@ module {
                 } else {
                     Int.abs((got.total_length: Int - 1) / got.content.size() + 1);
                 };
-                let chunkIds = Buffer.Buffer<Asset.ChunkId>(chunksNum);
+                let chunkIds = List.empty<Asset.ChunkId>();
                 let chunk_info = await to.create_chunk({batch_id; content = got.content});
-                chunkIds.add(chunk_info.chunk_id);
-                for (i in Iter.range(1, chunksNum - 1)) {
+                List.add(chunkIds, chunk_info.chunk_id);
+                for (i in Nat.range(1, chunksNum)) {
                     let { content } = await from.get_chunk({
                         key = fromAsset.key;
                         content_encoding = encoding.content_encoding;
@@ -90,16 +91,16 @@ module {
                         sha256 = encoding.sha256; // sha256 of entire fromAsset encoding, calculated by dfx and passed in SetAssetContentArguments
                     });
                     let chunk_info = await to.create_chunk({batch_id; content});
-                    chunkIds.add(chunk_info.chunk_id);
+                    List.add(chunkIds, chunk_info.chunk_id);
                 };
-                buf.add(#SetAssetContent {
+                List.add(buf, #SetAssetContent {
                     key = fromAsset.key;
                     content_encoding = encoding.content_encoding;
-                    chunk_ids = Buffer.toArray(chunkIds);
+                    chunk_ids = List.toArray(chunkIds);
                     sha256 = null;
                 });
             };
         };
-        await to.commit_batch({batch_id; operations = Buffer.toArray(buf)});
+        await to.commit_batch({batch_id; operations = List.toArray(buf)});
     };
 }
