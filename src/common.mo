@@ -2,9 +2,9 @@ import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
-import Buffer "mo:core/Buffer";
-import HashMap "mo:core/HashMap";
-import Hash "mo:core/Hash";
+import Types "mo:core/Types";
+import List "mo:core/List";
+import Map "mo:core/Map";
 import Int "mo:core/Int";
 import Nat32 "mo:core/Nat32";
 import Nat "mo:core/Nat";
@@ -16,20 +16,6 @@ import Account "lib/Account";
 import CyclesLedger "canister:cycles_ledger";
 
 module {
-    public func intHash(value: Int): Hash.Hash {
-        var v2 = Int.abs(value);
-        var hash: Nat32 = 0;
-        while (v2 != 0) {
-            let rem = v2 % (2**32);
-            v2 /= 2**32;
-            hash ^= Nat32.fromNat(rem);
-        };
-        if (value < 0) {
-            hash ^= Nat32.fromNat(2**32 - 1); // invert every bit
-        };
-        hash;
-    };
-
     public type PackageName = Text;
 
     // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.
@@ -51,11 +37,11 @@ module {
 
     // Probably, not very efficient.
     public func amendedGUID(guid: Blob, name: PackageName): Blob {
-        let b = Buffer.Buffer<Nat8>(guid.size() + name.size());
-        b.append(Buffer.fromArray(Blob.toArray(guid)));
-        b.append(Buffer.fromArray(Blob.toArray(Text.encodeUtf8(name))));
-        let h256 = Sha256.fromArray(#sha256, Buffer.toArray(b));
-        Blob.fromArray(Array.subArray(Blob.toArray(h256), 0, 16)); // 128-bit hash
+        let b = Array.empty<Nat8>();
+        let b1 = Array.concat(b, Blob.toArray(guid));
+        let b2 = Array.concat(b1, Blob.toArray(Text.encodeUtf8(name)));
+        let h256 = Sha256.fromArray(#sha256, b2);
+        Blob.fromArray(Array.sliceToArray<Nat8>(Blob.toArray(h256), 0, 16)); // 128-bit hash
     };
 
     public type Location = (canister: Principal, id: Blob); // `id` is a 128-bit hash of the module code.
@@ -66,12 +52,17 @@ module {
         #WithdrawCycles;
     };
 
-    private func moduleEventHash(e: ModuleEvent): Hash.Hash =
+    public func moduleEventToNat(e: ModuleEvent): Nat {
         switch (e) {
             case (#CodeInstalledForAllCanisters) 0;
             case (#CodeUpgradedForAllCanisters) 1;
             case (#WithdrawCycles) 2;
         };
+    };
+
+    public func moduleEventCompare(a: ModuleEvent, b: ModuleEvent): Types.Order {
+        Nat.compare(moduleEventToNat(a), moduleEventToNat(b));
+    };
 
     /// Shared/query method name.
     public type MethodName = {method: Text};
@@ -97,7 +88,7 @@ module {
         installByDefault: Bool;
         forceReinstall: Bool; // used with such canisters as `MainIndirect`.
         canisterVersion: ?Nat64; // sender_canister_version
-        callbacks: HashMap.HashMap<ModuleEvent, MethodName>;
+        callbacks: Map.Map<ModuleEvent, MethodName>;
     };
 
     public func shareModule(m: Module): SharedModule =
@@ -106,7 +97,7 @@ module {
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             canisterVersion = m.canisterVersion;
-            callbacks = Iter.toArray(m.callbacks.entries());
+            callbacks = Iter.toArray(Map.entries<ModuleEvent, MethodName>(m.callbacks));
         };
 
     public func unshareModule(m: SharedModule): Module =
@@ -115,12 +106,7 @@ module {
             installByDefault = m.installByDefault;
             forceReinstall = m.forceReinstall;
             canisterVersion = m.canisterVersion;
-            callbacks = HashMap.fromIter(
-                m.callbacks.vals(),
-                m.callbacks.size(),
-                func (a: ModuleEvent, b: ModuleEvent): Bool = a == b,
-                moduleEventHash,
-            );
+            callbacks = Map.fromIter(m.callbacks.vals(), moduleEventCompare);
         };
 
     public type ModuleUploadCode = {
@@ -168,7 +154,7 @@ module {
     /// `modules` are named canisters. (Names are needed for example to know which module should be
     /// replaced by which during an upgrade.)
     public type RealPackageInfo = {
-        modules: HashMap.HashMap<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
+        modules: Map.Map<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
         dependencies: [(PackageName, ?[VersionRange])];
         suggests: [(PackageName, ?[VersionRange])];
         recommends: [(PackageName, ?[VersionRange])];
@@ -182,7 +168,7 @@ module {
         {
             modules = Iter.toArray(
                 Iter.map<(Text, Module), (Text, SharedModule)>(
-                    package.modules.entries(),
+                    Map.entries(package.modules),
                     func ((k, m): (Text, Module)): (Text, SharedModule) = (k, shareModule(m)),
                 ),
             );
@@ -197,14 +183,12 @@ module {
 
     public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
         {
-            modules = HashMap.fromIter(
+            modules = Map.fromIter(
                 Iter.map<(Text, SharedModule), (Text, Module)>(
                     package.modules.vals(),
                     func ((k, m): (Text, SharedModule)): (Text, Module) = (k, unshareModule(m)),
                 ),
-                package.modules.size(),
-                Text.equal,
-                Text.hash,
+                Text.compare,
             );
             dependencies = package.dependencies;
             suggests = package.suggests;
@@ -291,20 +275,21 @@ module {
         id: InstallationId;
         var package: PackageInfo;
         var packageRepoCanister: Principal;
-        var modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
-        additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>;
+        var modulesInstalledByDefault: Map.Map<Text, Principal>;
+        additionalModules: Map.Map<Text, List.List<Principal>>;
         /// Public key used to verify configuration requests for this installation.
         var pubKey: ?Blob;
         var pinned: Bool;
     };
 
-    private func additionalModulesIter(additionalModules: HashMap.HashMap<Text, Buffer.Buffer<Principal>>)
+    private func additionalModulesIter(additionalModules: Map.Map<Text, List.List<Principal>>)
         : Iter.Iter<(Text, Principal)>
     {
         Itertools.flatten(
-            Iter.map<(Text, Buffer.Buffer<Principal>), Iter.Iter<(Text, Principal)>>(
-                additionalModules.entries(),
-                func ((name, buf): (Text, Buffer.Buffer<Principal>)) = Itertools.zip(Iter.make(name), buf.vals()),
+            Iter.map<(Text, List.List<Principal>), Iter.Iter<(Text, Principal)>>(
+                Map.entries(additionalModules),
+                // TODO@P3: Use standard functions rather that `Itertools`.
+                func ((name, buf): (Text, List.List<Principal>)) = Itertools.zip(Iter.infinite(name), List.values(buf)),
             ),
         );
     };
@@ -312,11 +297,11 @@ module {
     // Tested in `modulesIter.test.mo`.
     /// Iterate over all modules in `pkg.namedModules`.
     public func modulesIterator(pkg: InstalledPackageInfo): Iter.Iter<(Text, Principal)> {
-        Iter.concat(pkg.modulesInstalledByDefault.entries(), additionalModulesIter(pkg.additionalModules));
+        Iter.concat(Map.entries(pkg.modulesInstalledByDefault), additionalModulesIter(pkg.additionalModules));
     };
 
     public func numberOfModules(pkg: InstalledPackageInfo): Nat {
-        pkg.modulesInstalledByDefault.size() + Iter.size(additionalModulesIter(pkg.additionalModules));
+        Map.size(pkg.modulesInstalledByDefault) + Iter.size(additionalModulesIter(pkg.additionalModules));
     };
 
     public type SharedInstalledPackageInfo = {
@@ -333,11 +318,11 @@ module {
         id = info.id;
         package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
-        modulesInstalledByDefault = Iter.toArray(info.modulesInstalledByDefault.entries());
+        modulesInstalledByDefault = Iter.toArray(Map.entries(info.modulesInstalledByDefault));
         additionalModules = Iter.toArray(
-            Iter.map<(Text, Buffer.Buffer<Principal>), (Text, [Principal])>(
-                info.additionalModules.entries(),
-                func ((k, v): (Text, Buffer.Buffer<Principal>)): (Text, [Principal]) = (k, Buffer.toArray(v))
+            Iter.map<(Text, List.List<Principal>), (Text, [Principal])>(
+                Map.entries(info.additionalModules),
+                func ((k, v): (Text, List.List<Principal>)): (Text, [Principal]) = (k, List.toArray(v))
             )
         );
         pubKey = info.pubKey;
@@ -348,20 +333,16 @@ module {
         id = info.id;
         var package = unsharePackageInfo(info.package);
         var packageRepoCanister = info.packageRepoCanister;
-        var modulesInstalledByDefault = HashMap.fromIter(
+        var modulesInstalledByDefault = Map.fromIter(
             info.modulesInstalledByDefault.vals(),
-            info.modulesInstalledByDefault.size(),
-            Text.equal,
-            Text.hash,
+            Text.compare,
         );
-        additionalModules = HashMap.fromIter(
-            Iter.map<(Text, [Principal]), (Text, Buffer.Buffer<Principal>)>(
+        additionalModules = Map.fromIter(
+            Iter.map<(Text, [Principal]), (Text, List.List<Principal>)>(
                 info.additionalModules.vals(),
-                func ((k, v): (Text, [Principal])): (Text, Buffer.Buffer<Principal>) = (k, Buffer.fromArray(v))
+                func ((k, v): (Text, [Principal])): (Text, List.List<Principal>) = (k, List.fromArray(v))
             ),
-            info.additionalModules.size(),
-            Text.equal,
-            Text.hash,
+            Text.compare,
         );
         var pubKey = info.pubKey;
         var pinned = info.pinned;
@@ -375,37 +356,33 @@ module {
 
     // Remark: There can be same named real package and a virtual package (of different versions).
     public type FullPackageInfo = {
-        packages: HashMap.HashMap<Version, PackageInfo>;
-        versionsMap: HashMap.HashMap<Version, Version>;
+        packages: Map.Map<Version, PackageInfo>;
+        versionsMap: Map.Map<Version, Version>;
     };
 
     public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
         {
             packages = Iter.toArray(
                 Iter.map<(Version, PackageInfo), (Version, SharedPackageInfo)>(
-                    info.packages.entries(),
+                    Map.entries(info.packages),
                     func ((v, i): (Version, PackageInfo)): (Version, SharedPackageInfo) = (v, sharePackageInfo(i)),
                 ),
             );
-            versionsMap = Iter.toArray(info.versionsMap.entries());
+            versionsMap = Iter.toArray(Map.entries(info.versionsMap));
         };
 
     public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
         {
-            packages = HashMap.fromIter(
+            packages = Map.fromIter(
                 Iter.map<(Version, SharedPackageInfo), (Version, PackageInfo)>(
                     info.packages.vals(),
                     func ((v, i): (Version, SharedPackageInfo)): (Version, PackageInfo) = (v, unsharePackageInfo(i)),
                 ),
-                info.packages.size(),
-                Text.equal,
-                Text.hash,
+                Text.compare,
             );
-            versionsMap = HashMap.fromIter(
+            versionsMap = Map.fromIter(
                 info.versionsMap.vals(),
-                info.versionsMap.size(),
-                Text.equal,
-                Text.hash,
+                Text.compare,
             );
         };
 
@@ -435,16 +412,19 @@ module {
     };
 
     public func principalToSubaccount(principal : Principal) : Blob {
-        var sub = Buffer.Buffer<Nat8>(32);
+        var sub = List.empty<Nat8>();
         let subaccount_blob = Principal.toBlob(principal);
 
-        sub.add(Nat8.fromNat(subaccount_blob.size()));
-        sub.append(Buffer.fromArray<Nat8>(Blob.toArray(subaccount_blob)));
-        while (sub.size() < 32) {
-            sub.add(0);
+        List.add(sub, Nat8.fromNat(subaccount_blob.size()));
+        // List.append(sub, List.fromArray<Nat8>(Blob.toArray(subaccount_blob)));
+        for (b in Blob.toArray(subaccount_blob).vals()) { // TODO@P3: inefficient
+            List.add(sub, b);
+        };
+        while (List.size(sub) < 32) {
+            List.add<Nat8>(sub, 0);
         };
 
-        Blob.fromArray(Buffer.toArray(sub));
+        Blob.fromArray(List.toArray(sub));
     };
 
     public let cycles_transfer_fee = 100_000_000;

@@ -2,98 +2,93 @@ import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Blob "mo:core/Blob";
-import TrieMap "mo:core/TrieMap";
+import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Option "mo:core/Option";
+import Result "mo:core/Result";
 import Iter "mo:core/Iter";
-import HashMap "mo:core/HashMap";
 import Array "mo:core/Array";
+import Error "mo:core/Error";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
 // FIXME@P1: Need to make it persistent.
 shared ({caller = initialOwner}) actor class Repository() = this {
-  stable var _ownersSave: [(Principal, ())] = [];
-  var owners = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
-  stable var _packageCreatorsSave: [(Principal, ())] = [];
-  var packageCreators = HashMap.fromIter<Principal, ()>([(initialOwner, ())].vals(), 1, Principal.equal, Principal.hash);
+  var owners = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare);
+  var packageCreators = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare);
 
   stable var initialized: Bool = false;
 
-  private func onlyOwner(caller: Principal) {
-    if (Option.isNull(owners.get(caller))) {
-      Debug.trap("not an owner");
+  private func onlyOwner(caller: Principal): async* () {
+    if (Option.isNull(Map.get(owners, Principal.compare, caller))) {
+      throw Error.reject("not an owner");
     }
   };
 
-  private func onlyPackageCreator(caller: Principal) {
-    if (Option.isNull(owners.get(caller)) and Option.isNull(packageCreators.get(caller))) {
-      Debug.trap("not an owner");
+  private func onlyPackageCreator(caller: Principal): async* () {
+    if (Option.isNull(Map.get(owners, Principal.compare, caller)) and Option.isNull(Map.get(packageCreators, Principal.compare, caller))) {
+      throw Error.reject("not an owner");
     }
   };
 
-  private func onlyPackageOwner(caller: Principal, name: Text) {
-    if (Option.isSome(owners.get(caller))) {
-      return;
+  private func onlyPackageOwner(caller: Principal, name: Text): Result.Result<(), Text> {
+    if (Option.isSome(Map.get(owners, Principal.compare, caller))) {
+      return #ok;
     };
-    if (Option.isSome(do ? { packages.get(name)!.owners.get(caller) })) {
-      return;
+    if (Option.isSome(do ? { Map.get(Map.get(packages, Text.compare, name)!.owners, Principal.compare, caller) })) {
+      return #ok;
     };
-    Debug.trap("not an owner");
+    #err("not an owner");
   };
 
   public query func getOwners(): async [Principal] {
-    Iter.toArray(owners.keys());
+    Iter.toArray(Map.keys(owners));
   };
 
   public query func getPackageCreators(): async [Principal] {
-    Iter.toArray(packageCreators.keys());
+    Iter.toArray(Map.keys(packageCreators));
   };
 
   public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-    onlyOwner(caller);
-    owners := HashMap.fromIter(
+    await* onlyOwner(caller);
+    owners := Map.fromIter(
       Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
-      newOwners.size(),
-      Principal.equal,
-      Principal.hash);
+      Principal.compare);
   };
 
   public shared({caller}) func setPackageCreators(newOwners: [Principal]): async () {
-    onlyOwner(caller);
-    packageCreators := HashMap.fromIter(
+    await* onlyOwner(caller);
+    packageCreators := Map.fromIter(
       Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
-      newOwners.size(),
-      Principal.equal,
-      Principal.hash);
+      Principal.compare);
   };
 
   public shared({caller}) func addOwner(newOwner: Principal): async () {
-    onlyOwner(caller);
-    owners.put(newOwner, ());
+    await* onlyOwner(caller);
+    ignore Map.insert(owners, Principal.compare, newOwner, ());
   };
 
   public shared({caller}) func addPackageCreator(newCreator: Principal): async () {
-    onlyOwner(caller);
-    packageCreators.put(newCreator, ());
+    await* onlyOwner(caller);
+    ignore Map.insert(packageCreators, Principal.compare, newCreator, ());
   };
 
   public shared({caller}) func deleteOwner(oldOwner: Principal): async () {
-    onlyOwner(caller);
-    owners.delete(oldOwner);
+    await* onlyOwner(caller);
+    ignore Map.delete<Principal, ()>(owners, Principal.compare, oldOwner); // FIXME@P1: Use `Set` instead of `Map`.
   };
 
   public shared({caller}) func deletePackageCreator(oldPackageCreator: Principal): async () {
-    onlyOwner(caller);
-    packageCreators.delete(oldPackageCreator);
+    await* onlyOwner(caller);
+    ignore Map.delete<Principal, ()>(packageCreators, Principal.compare, oldPackageCreator); // FIXME@P1: Use `Set` instead of `Map`.
   };
 
   // TODO@P3: not needed
   public shared({caller}) func init(): async () {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
     
     if (initialized) {
-      Debug.trap("already initialized");
+      throw Error.reject("already initialized");
     };
 
     initialized := true;
@@ -121,23 +116,23 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   };
 
   public shared({caller}) func setRepositoryName(value: Text): async () {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
     repositoryName := value;
   };
 
   public shared({caller}) func setRepositoryInfoURL(value: Text): async () {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
     repositoryInfoURL := value;
   };
 
   public shared({caller}) func setReleases(value: [(Text, ?Text)]): async () {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
     releases := value;
   };
 
   private func _uploadWasm(wasm: Blob): async* {id: Blob} {
     let id0 = Sha256.fromBlob(#sha256, wasm);
-    let id = Blob.fromArray(Array.subArray(Blob.toArray(id0), 0, 16));
+    let id = Blob.fromArray(Array.sliceToArray(Blob.toArray(id0), 0, 16));
 
     wasms.put(id, wasm);
 
@@ -145,13 +140,13 @@ shared ({caller = initialOwner}) actor class Repository() = this {
   };
 
   public shared({caller}) func uploadWasm(wasm: Blob): async {id: Blob} {
-    onlyPackageCreator(caller);
+    await* onlyPackageCreator(caller);
   
     await* _uploadWasm(wasm);
   };
 
   public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.SharedModule {
-    onlyPackageCreator(caller);
+    await* onlyPackageCreator(caller);
 
     {
       callbacks = module_.callbacks;
@@ -181,7 +176,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     versions: [Common.Version];
     defaultVersionIndex: Nat;
   }) {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
 
     defaultVersions := {versions; defaultVersionIndex};
   };
@@ -192,7 +187,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   /// Data ///
 
-  let wasms = TrieMap.TrieMap<Blob, Blob>(Blob.equal, Blob.hash);
+  let wasms = Map.empty<Blob, Blob>(Blob.equal, Blob.hash);
 
   public query func getWasmModule(key: Blob): async Blob { 
     let ?v = wasms.get(key) else {
@@ -203,10 +198,10 @@ shared ({caller = initialOwner}) actor class Repository() = this {
 
   // TODO@P3: `removeWasmModule`
 
-  let packages = TrieMap.TrieMap<Text, {
+  let packages = Map.empty<Text, {
     pkg: Common.FullPackageInfo;
-    owners: HashMap.HashMap<Principal, ()>;
-  }>(Text.equal, Text.hash);
+    owners: Map.Map<Principal, ()>;
+  }>();
 
   private func _getFullPackageInfo(name: Common.PackageName): Common.SharedFullPackageInfo {
     let ?v = packages.get(name) else {
@@ -228,7 +223,7 @@ shared ({caller = initialOwner}) actor class Repository() = this {
         onlyPackageOwner(caller, name); // TODO@P3: queries by name second time.
       };
       case null {
-        onlyPackageCreator(caller);
+        await* onlyPackageCreator(caller);
       };
     };
 
@@ -260,31 +255,8 @@ shared ({caller = initialOwner}) actor class Repository() = this {
     Debug.trap("no such package version");
   };
 
-  system func preupgrade() {
-    _ownersSave := Iter.toArray(owners.entries());
-    _packageCreatorsSave := Iter.toArray(packageCreators.entries());
-  };
-
-  system func postupgrade() {
-    owners := HashMap.fromIter(
-      _ownersSave.vals(),
-      Array.size(_ownersSave),
-      Principal.equal,
-      Principal.hash,
-    );
-    _ownersSave := []; // Free memory.
-
-    packageCreators := HashMap.fromIter(
-      _packageCreatorsSave.vals(),
-      Array.size(_ownersSave),
-      Principal.equal,
-      Principal.hash,
-    );
-    _packageCreatorsSave := []; // Free memory.
-  };
-
   public shared({caller}) func cleanUnusedWasms() {
-    onlyOwner(caller);
+    await* onlyOwner(caller);
 
     let usedWasms = HashMap.HashMap<Blob, ()>(0, Blob.equal, Blob.hash);
     for (pkg in packages.vals()) {
