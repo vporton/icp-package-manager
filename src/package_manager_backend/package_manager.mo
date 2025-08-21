@@ -1,6 +1,6 @@
 /// TODO@P3: Methods to query for all installed packages.
 import Option "mo:core/Option";
-import HashMap "mo:core/HashMap";
+import Map "mo:core/Map";
 import Principal "mo:core/Principal";
 import Debug "mo:core/Debug";
 import Iter "mo:core/Iter";
@@ -12,8 +12,7 @@ import Float "mo:core/Float";
 import Blob "mo:core/Blob";
 import Bool "mo:core/Bool";
 import Error "mo:core/Error";
-import RBTree "mo:core/RBTree";
-import Cycles "mo:core/ExperimentalCycles";
+import Cycles "mo:core/Cycles";
 import Common "../common";
 import MainIndirect "main_indirect";
 import SimpleIndirect "simple_indirect";
@@ -45,7 +44,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     public type HalfInstalledPackageInfo = {
         package: Common.PackageInfo;
         packageRepoCanister: Principal;
-        modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
+        modulesInstalledByDefault: Map.Map<Text, Principal>;
         minInstallationId: Nat; // hack
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -85,7 +84,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
         packageRepoCanister = x.packageRepoCanister;
-        modulesInstalledByDefault = HashMap.fromIter(x.modulesInstalledByDefault.vals(), x.modulesInstalledByDefault.size(), Text.equal, Text.hash);
+        modulesInstalledByDefault = Map.fromIter(x.modulesInstalledByDefault.vals(), ext.compare);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -122,7 +121,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         package: Common.PackageInfo;
         newRepo: Principal;
-        modulesInstalledByDefault: HashMap.HashMap<Text, Principal>;
+        modulesInstalledByDefault: Map.Map<Text, Principal>;
         modulesToDelete: [(Text, Principal)];
         var remainingModules: Nat;
         arg: Blob;
@@ -154,7 +153,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfUpgradedPackageInfo(x: SharedHalfUpgradedPackageInfo): HalfUpgradedPackageInfo = {
         installationId = x.installationId;
         package = Common.unsharePackageInfo(x.package);
-        modulesInstalledByDefault = HashMap.fromIter(x.modulesInstalledByDefault.vals(), x.modulesInstalledByDefault.size(), Text.equal, Text.hash);
+        modulesInstalledByDefault = Map.fromIter(x.modulesInstalledByDefault.vals(), Text.compare);
         modulesToDelete = x.modulesToDelete;
         newRepo = x.newRepo;
         var remainingModules = x.remainingModules;
@@ -164,9 +163,8 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var initialized = false;
 
-    stable var _ownersSave: [(Principal, ())] = [];
-    var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter(
+    var owners: Map.Map<Principal, ()> = // FIXME@P1: Use `Set`.
+        Map.fromIter(
             [
                 (packageManager, ()),
                 (mainIndirect, ()), // temporary
@@ -174,9 +172,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 (battery, ()),
                 (user, ()),
             ].vals(),
-            4,
-            Principal.equal,
-            Principal.hash);
+            Principal.compare);
 
     var batteryActor: Battery.Battery = actor(Principal.toText(battery));
 
@@ -203,11 +199,9 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         onlyOwner(caller, "setOwners");
 
-        owners := HashMap.fromIter(
+        owners := Map.fromIter(
             Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Array.size(newOwners),
-            Principal.equal,
-            Principal.hash,
+            Principal.compare,
         );
     };
 
@@ -278,9 +272,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     stable var nextUninstallationId: Common.UninstallationId = 0;
     stable var nextUpgradeId: Common.UpgradeId = 0;
 
-    stable var _installedPackagesSave: [(Common.InstallationId, Common.SharedInstalledPackageInfo)] = [];
-    var installedPackages: HashMap.HashMap<Common.InstallationId, Common.InstalledPackageInfo> =
-        HashMap.HashMap(0, Nat.equal, Common.intHash);
+    stable var installedPackages = Map.empty<Common.InstallationId, Common.InstalledPackageInfo>();
 
     stable var _installedPackagesByNameSave: [(Blob, {
         all: RBTree.Tree<Common.InstallationId, ()>;
@@ -1157,14 +1149,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     // };
 
    system func preupgrade() {
-        _ownersSave := Iter.toArray(owners.entries());
-
-        _installedPackagesSave := Iter.toArray(
-            Iter.map<(Common.InstallationId, Common.InstalledPackageInfo), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(installedPackages.entries(), func ((id, info): (Common.InstallationId, Common.InstalledPackageInfo)): (Common.InstallationId, Common.SharedInstalledPackageInfo) {
-                (id, Common.installedPackageInfoShare(info));
-            }
-        ));
-
         _installedPackagesByNameSave := Iter.toArray/*<{all: [Common.InstallationId]; default: Common.InstallationId}>*/(
             Iter.map<
                 (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId}),
@@ -1198,27 +1182,6 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     system func postupgrade() {
-        owners := HashMap.fromIter(
-            _ownersSave.vals(),
-            Array.size(_ownersSave),
-            Principal.equal,
-            Principal.hash,
-        );
-        _ownersSave := []; // Free memory.
-
-        installedPackages := HashMap.fromIter<Common.InstallationId, Common.InstalledPackageInfo>(
-            Iter.map<(Common.InstallationId, Common.SharedInstalledPackageInfo), (Common.InstallationId, Common.InstalledPackageInfo)>(
-                _installedPackagesSave.vals(),
-                func ((id, info): (Common.InstallationId, Common.SharedInstalledPackageInfo)): (Common.InstallationId, Common.InstalledPackageInfo) {
-                    (id, Common.installedPackageInfoUnshare(info));
-                },
-            ),
-            Array.size(_installedPackagesSave),
-            Nat.equal,
-            Common.intHash,
-        );
-        _installedPackagesSave := []; // Free memory.
-
         installedPackagesByName := HashMap.fromIter(
             Iter.map<
                 (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId}),

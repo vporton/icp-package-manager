@@ -1,16 +1,16 @@
 /// Battery canister or battery module is a canister that holds cycles and delivers them to other canisters.
 import Timer "mo:core/Timer";
+import Error "mo:core/Error";
 import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Int "mo:core/Int";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
-import Map "mo:core/OrderedMap";
-import Set "mo:core/OrderedSet";
-import HashMap "mo:core/HashMap";
+import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Text "mo:core/Text";
 import Blob "mo:core/Blob";
-import Cycles "mo:core/ExperimentalCycles";
+import Cycles "mo:core/Cycles";
 import Float "mo:core/Float";
 import Common "../common";
 import IC "mo:ic";
@@ -22,7 +22,7 @@ import CMC "canister:nns-cycles-minting";
 import BootstrapperData "canister:bootstrapper_data";
 import env "mo:env";
 
-shared({caller = initialOwner}) actor class Battery({
+shared({caller = initialOwner}) persistent actor class Battery({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
@@ -30,9 +30,9 @@ shared({caller = initialOwner}) actor class Battery({
     installationId = _: Common.InstallationId;
     userArg = _: Blob;
 }) = this {
-    stable var _ownersSave: [(Principal, ())] = [];
-    var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter(
+    // TODO@P3: Use `Set` instead of `Map`.
+    stable var owners: Map.Map<Principal, ()> =
+        Map.fromIter(
             [
                 (packageManager, ()),
                 (mainIndirect, ()), // temporary
@@ -40,49 +40,45 @@ shared({caller = initialOwner}) actor class Battery({
                 (Principal.fromActor(this), ()), // to execute the timer
                 (user, ()),
             ].vals(),
-            5,
-            Principal.equal,
-            Principal.hash);
+            Principal.compare);
 
-    func onlyOwner(caller: Principal, msg: Text) {
-        if (owners.get(caller) == null) {
-            Debug.trap("not the owner: " # msg);
+    func onlyOwner(caller: Principal, msg: Text): async* () {
+        if (Map.get(owners, Principal.compare, caller) == null) {
+            throw Error.reject("not the owner: " # msg);
         };
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        onlyOwner(caller, "setOwners");
+        await* onlyOwner(caller, "setOwners");
 
-        owners := HashMap.fromIter(
+        owners := Map.fromIter(
             Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Array.size(newOwners),
-            Principal.equal,
-            Principal.hash,
+            Principal.compare,
         );
     };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
-        onlyOwner(caller, "addOwner");
+        await* onlyOwner(caller, "addOwner");
 
-        owners.put(newOwner, ());
+        ignore Map.insert<Principal, ()>(owners, Principal.compare, newOwner, ());
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
-        onlyOwner(caller, "removeOwner");
+        await* onlyOwner(caller, "removeOwner");
 
-        owners.delete(oldOwner);
+        ignore Map.delete<Principal, ()>(owners, Principal.compare, oldOwner);
     };
 
     public query func getOwners(): async [Principal] {
-        Iter.toArray(owners.keys());
+        Iter.toArray(Map.keys(owners));
     };
 
     stable var initialized = false;
 
     public shared({caller}) func init() : async () {
-        onlyOwner(caller, "init");
+        await* onlyOwner(caller, "init");
         if (initialized) {
-            Debug.trap("already initialized");
+            throw Error.reject("already initialized");
         };
 
         initTimer<system>();
@@ -92,11 +88,11 @@ shared({caller = initialOwner}) actor class Battery({
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            Debug.trap("battery: not initialized");
+            throw Error.reject("battery: not initialized");
         };
     };
 
-    let revenueRecipient = Principal.fromText(env.revenueRecipient);
+    stable let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     private type OurPMType = actor {
         // getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
@@ -141,10 +137,8 @@ shared({caller = initialOwner}) actor class Battery({
 
     public type CanisterKind = Text;
 
-    let moduleLocationMap = Map.Make<ModuleLocation>(compareModuleLocation);
     public type CanisterMap = Map.Map<ModuleLocation, CanisterKind>;
 
-    let textMap = Map.Make<Text>(Text.compare);
     public type CanisterKindsMap = Map.Map<CanisterKind, Common.CanisterFulfillment>;
 
     public type Battery = {
@@ -163,13 +157,13 @@ shared({caller = initialOwner}) actor class Battery({
                 threshold = 800_000_000_000;
                 topupAmount = 500_000_000_000;
             };
-            canisterMap = moduleLocationMap.empty<CanisterKind>();
-            canisterKindsMap = textMap.empty<Common.CanisterFulfillment>();
+            canisterMap = Map.empty<ModuleLocation, CanisterKind>();
+            canisterKindsMap = Map.empty<Text, Common.CanisterFulfillment>();
             var activatedCycles = 0;
         };
 
     public query func getCanisterInitialCycles(): async Nat {
-        // onlyOwner(caller, "setDefaultFulfillment");
+        // await* onlyOwner(caller, "setDefaultFulfillment");
 
         battery.canisterInitialCycles;
     };
@@ -189,18 +183,17 @@ shared({caller = initialOwner}) actor class Battery({
 
     private func topUpOneCanister(canister: ModuleLocation, canister_id: Principal): async* () {
         let info0 = do ? {
-            let kind = moduleLocationMap.get(battery.canisterMap, canister)!;
-            textMap.get(battery.canisterKindsMap, kind)!;
+            let kind = Map.get(battery.canisterMap, compareModuleLocation, canister)!;
+            Map.get(battery.canisterKindsMap, Text.compare, kind)!;
         };
         let fulfillment = switch (info0) {
             case (?x) x;
             case null battery.defaultFulfillment;
         };
-        Cycles.add<system>(fulfillment.topupAmount); // TODO@P3: If this traps on a too high amount, keep filling other canisters?
         let mainIndirectActor = actor(Principal.toText(mainIndirect)) : actor {
             topUpOneCanisterFinish: shared (canister_id: Principal, fulfillment: Common.CanisterFulfillment) -> async ();
         };
-        ignore mainIndirectActor.topUpOneCanisterFinish(canister_id, fulfillment);
+        ignore(with cycles = fulfillment.topupAmount) mainIndirectActor.topUpOneCanisterFinish(canister_id, fulfillment);
     };
 
     private func topUpAllCanisters(): async () {
@@ -241,12 +234,11 @@ shared({caller = initialOwner}) actor class Battery({
         };
     };
 
-    let principalSet = Set.Make<Principal>(Principal.compare);
-    var withdrawers = principalSet.empty();
+    stable var withdrawers = Set.empty<Principal>();
 
     /// TODO@P3: Make it editable using user confirmation.
     private func addWithdrawer(withdrawer: Principal) {
-        withdrawers := principalSet.put(withdrawers, withdrawer);
+        ignore Set.insert<Principal>(withdrawers, Principal.compare, withdrawer);
     };
 
     addWithdrawer(mainIndirect);
@@ -287,17 +279,16 @@ shared({caller = initialOwner}) actor class Battery({
 
     public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
         if (not Principal.isController(caller)) { // important to use controllers not owners, for this to be initialized during bootstrapping
-            Debug.trap("withdrawCycles3: caller is not allowed");
+            throw Error.reject("withdrawCycles3: caller is not allowed");
         };
         if (Cycles.balance() < amount) {
-            Debug.trap("not enough cycles");
+            throw Error.reject("not enough cycles");
         };
-        Cycles.add<system>(amount);
-        await IC.ic.deposit_cycles({canister_id = payee});
+        await (with cycles = amount) IC.ic.deposit_cycles({canister_id = payee});
     };
 
     public shared({caller}) func withdrawAllCycles() {
-        onlyOwner(caller, "withdrawCycles");
+        await* onlyOwner(caller, "withdrawCycles");
 
         let balance = await CyclesLedger.icrc1_balance_of({
             owner = Principal.fromActor(this); subaccount = null;
@@ -314,7 +305,7 @@ shared({caller = initialOwner}) actor class Battery({
             amount = revenue - Common.cycles_transfer_fee;
         });
         let #Ok tx = res2 else {
-            Debug.trap("revenue transfer failed: " # debug_show(res2));
+            throw Error.reject("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await CyclesLedger.withdraw({
@@ -324,7 +315,7 @@ shared({caller = initialOwner}) actor class Battery({
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
         let #Ok _ = res else {
-            Debug.trap("transfer failed: " # debug_show(res));
+            throw Error.reject("transfer failed: " # debug_show(res));
         };
     };
 
@@ -344,7 +335,7 @@ shared({caller = initialOwner}) actor class Battery({
             amount = revenue - Common.icp_transfer_fee;
         });
         let #Ok tx2 = res2 else {
-            Debug.trap("revenue transfer failed: " # debug_show(res2));
+            throw Error.reject("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await ICPLedger.icrc1_transfer({
@@ -359,14 +350,14 @@ shared({caller = initialOwner}) actor class Battery({
             amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
-            Debug.trap("transfer failed: " # debug_show(res));
+            throw Error.reject("transfer failed: " # debug_show(res));
         };
         let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
         let #Ok cyclesAmount = res3 else {
-            Debug.trap("notify_top_up failed: " # debug_show(res3));
+            throw Error.reject("notify_top_up failed: " # debug_show(res3));
         };
 
         {balance = cyclesAmount};
@@ -375,24 +366,12 @@ shared({caller = initialOwner}) actor class Battery({
     system func inspect({
         caller : Principal;
     }): Bool {
-        onlyOwner(caller, "inspect"/*TODO@P3*/);
+        // await* onlyOwner(caller, "inspect"/*TODO@P3*/);
         true;
-    };
-
-    system func preupgrade() {
-        _ownersSave := Iter.toArray(owners.entries());
     };
 
     system func postupgrade() {
         initTimer<system>();
-
-        owners := HashMap.fromIter(
-            _ownersSave.vals(),
-            Array.size(_ownersSave),
-            Principal.equal,
-            Principal.hash,
-        );
-        _ownersSave := []; // Free memory.
     };
 
     public query func balance(): async Nat {

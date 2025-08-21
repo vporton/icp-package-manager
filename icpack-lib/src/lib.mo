@@ -1,5 +1,5 @@
 import Principal "mo:core/Principal";
-import Debug "mo:core/Debug";
+import Error "mo:core/Error";
 import Nat64 "mo:core/Nat64";
 
 module {
@@ -50,7 +50,7 @@ module {
 
     public func withdrawCycles(ledger: CyclesLedger, amount: Nat, payee: Principal, caller: Principal) : async* () {
         if (not Principal.isController(caller)) {
-            Debug.trap("withdrawCycles: payee is not a controller");
+            throw Error.reject("withdrawCycles: payee is not a controller");
         };
         let res = await ledger.withdraw({
             amount;
@@ -61,7 +61,7 @@ module {
             memo = null;
         });
         let #Ok _ = res else {
-            Debug.trap("transfer failed: " # debug_show(res));
+            throw Error.reject("transfer failed: " # debug_show(res));
         };
     };
 };

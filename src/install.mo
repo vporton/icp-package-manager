@@ -2,6 +2,7 @@ import Principal "mo:core/Principal";
 import Cycles "mo:core/Cycles";
 import Debug "mo:core/Debug";
 import Blob "mo:core/Blob";
+import Error "mo:core/Error";
 import Common "common";
 import CopyAssets "copy_assets";
 import {ic} "mo:ic";
@@ -35,7 +36,7 @@ module {
             case (#Err err) {
                 let msg = debug_show(err);
                 Debug.print("cannot create canister: " # msg);
-                Debug.trap("cannot create canister: " # msg);
+                throw Error.reject("cannot create canister: " # msg);
             };  
         };
         {canister_id};

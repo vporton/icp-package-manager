@@ -36,16 +36,16 @@ import Data "canister:bootstrapper_data";
 import Repository "canister:repository";
 import Bookmarks "canister:bookmark";
 
-actor class Bootstrapper() = this {
+persistent actor class Bootstrapper() = this {
     /// `cyclesAmount` is the total cycles amount, including canister creation fee.
     transient let newCanisterCycles = 2_000_000_000_000; // TODO@P3: Make it editable (move to `bootstrapper_data`).
 
     transient let revenueRecipient = Principal.fromText(env.revenueRecipient);
 
     /// TODO@P3: Do we need this check?
-    private func checkItself(caller: Principal) {
+    private func checkItself(caller: Principal): async* () {
         if (caller != Principal.fromActor(this)) {
-            Debug.trap("can be called only by itself");
+            throw Error.reject("can be called only by itself");
         };
     };
 
@@ -54,19 +54,17 @@ actor class Bootstrapper() = this {
     public shared({caller}) func doBootstrapFrontend(frontendTweakPubKey: PubKey, user: Principal, amountToMove: Nat)
         : async {installedModules: [(Text, Principal)]}
     {
-        checkItself(caller);
+        await* checkItself(caller);
 
         // ignore Cycles.accept<system>(); // TODO@P3
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
-            Debug.trap("icpack isn't a real package");
+            throw Error.reject("icpack isn't a real package");
         };
-        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(
-            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
-        );
+        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(icPackPkgReal.modules.vals(), Text.compare);
 
-        let installedModules = Map.Map<Text, Principal>(modulesToInstall.size(), Text.equal, Text.hash);
-        for (moduleName in modulesToInstall.keys()) {
+        let installedModules = Map.empty<Text, Principal>();
+        for (moduleName in Map.keys(modulesToInstall)) {
             let cyclesAmount = if (moduleName == "battery") { // TODO@P3: Use only `newCanisterCycles`, copy to the battery later.
                 3_000_000_000_000 // TODO@P3: It can be reduced to 2_000_000_000_000 for UI, but auto-test requires more.
             } else {
@@ -80,27 +78,27 @@ actor class Bootstrapper() = this {
                     #Filter({subnet_type = if (env.isLocal) { null } else {?"Application"}})
                 );
             });
-            installedModules.put(moduleName, canister_id);
+            ignore Map.insert(installedModules, Text.compare, moduleName, canister_id);
         };
 
-        let ?frontend = installedModules.get("frontend") else {
-            Debug.trap("module not deployed");
+        let ?frontend = Map.get(installedModules, Text.compare, "frontend") else {
+            throw Error.reject("module not deployed");
         };
-        let ?backend = installedModules.get("backend") else {
-            Debug.trap("module not deployed");
+        let ?backend = Map.get(installedModules, Text.compare, "backend") else {
+            throw Error.reject("module not deployed");
         };
-        let ?simpleIndirect = installedModules.get("simple_indirect") else {
-            Debug.trap("module not deployed");
+        let ?simpleIndirect = Map.get(installedModules, Text.compare, "simple_indirect") else {
+            throw Error.reject("module not deployed");
         };
-        let ?mainIndirect = installedModules.get("main_indirect") else {
-            Debug.trap("module not deployed");
+        let ?mainIndirect = Map.get(installedModules, Text.compare, "main_indirect") else {
+            throw Error.reject("module not deployed");
         };
-        let ?battery = installedModules.get("battery") else {
-            Debug.trap("module not deployed");
+        let ?battery = Map.get(installedModules, Text.compare, "battery") else {
+            throw Error.reject("module not deployed");
         };
 
-        let ?mFrontend = modulesToInstall.get("frontend") else {
-            Debug.trap("module not found");
+        let ?mFrontend = Map.get(modulesToInstall, Text.compare, "frontend") else {
+            throw Error.reject("module not found");
         };
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
         let wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
@@ -132,7 +130,7 @@ actor class Bootstrapper() = this {
         //          It seems that there is an easy solution: Leave a part of the paid sum on the account to pay for bookmark.
         ignore await Bookmarks.addBookmark({b = {frontend; backend}; battery; user});
 
-        {installedModules = Iter.toArray(installedModules.entries())};
+        {installedModules = Iter.toArray(Map.entries(installedModules))};
     };
 
     /// We don't allow to substitute user-chosen modules, because it would be a security risk of draining cycles.
@@ -146,7 +144,7 @@ actor class Bootstrapper() = this {
         let amountToMove = await Data.removeUserCycleBalance(user);
 
         if (amountToMove < ((Common.minimalFunding - Common.cycles_transfer_fee): Nat)) {
-            Debug.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
+            throw Error.reject("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
@@ -154,7 +152,7 @@ actor class Bootstrapper() = this {
         let {installedModules} = await /*(with cycles = amountToMove)*/ doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let ?battery = Iter.filter(installedModules.vals(), func (x: (Text, Principal)): Bool = x.0 == "battery").next() else {
-            Debug.trap("error getting battery");
+            throw Error.reject("error getting battery");
         };
         let cyclesToBattery = amountToMove - env.bootstrapFrontendCost;
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery.1});
@@ -221,31 +219,28 @@ actor class Bootstrapper() = this {
             repo: Common.RepositoryRO;
         }];
     }): async {battery: Principal} {
-        checkItself(caller);
+        await* checkItself(caller);
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
-            Debug.trap("icpack isn't a real package");
+            throw Error.reject("icpack isn't a real package");
         };
 
-        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(
-            icPackPkgReal.modules.vals(), icPackPkgReal.modules.size(), Text.equal, Text.hash
-        );
+        let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(icPackPkgReal.modules.vals(), Text.compare);
 
         // We bootstrap backend at this stage:
-        let installedModules2 = Map.fromIter<Text, Principal>(
-            installedModules.vals(), installedModules.size(), Text.equal, Text.hash);
-        let ?backend = installedModules2.get("backend") else {
-            Debug.trap("module not deployed");
+        let installedModules2 = Map.fromIter<Text, Principal>(installedModules.vals(), Text.compare);
+        let ?backend = Map.get(installedModules2, Text.compare, "backend") else {
+            throw Error.reject("module not deployed");
         };
-        let ?mainIndirect = installedModules2.get("main_indirect") else {
-            Debug.trap("module not deployed");
+        let ?mainIndirect = Map.get(installedModules2, Text.compare, "main_indirect") else {
+            throw Error.reject("module not deployed");
         };
-        let ?simpleIndirect = installedModules2.get("simple_indirect") else {
-            Debug.trap("module not deployed");
+        let ?simpleIndirect = Map.get(installedModules2, Text.compare, "simple_indirect") else {
+            throw Error.reject("module not deployed");
         };
-        let ?battery = installedModules2.get("battery") else {
-            Debug.trap("module not deployed");
+        let ?battery = Map.get(installedModules2, Text.compare, "battery") else {
+            throw Error.reject("module not deployed");
         };
 
         let controllers = [simpleIndirect, mainIndirect, backend, battery, user, Principal.fromActor(this)]; // TODO@P3: duplicate code
@@ -256,7 +251,7 @@ actor class Bootstrapper() = this {
         await* tweakFrontend(tweaker, controllers2, user);
         await Data.deleteFrontendTweaker(pubKey);
 
-        for (canister_id in installedModules2.vals()) { // including frontend
+        for (canister_id in Map.values(installedModules2)) { // including frontend
             // TODO@P3: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
@@ -278,10 +273,10 @@ actor class Bootstrapper() = this {
             if (moduleName == "frontend") {
                 continue install;
             };
-            let ?m = modulesToInstall.get(moduleName) else {
-                Debug.trap("module not found");
+            let ?m = Map.get(modulesToInstall, Text.compare, moduleName) else {
+                throw Error.reject("module not found");
             };
-            Cycles.add<system>(1_000_000_000_000); // TODO@P3
+            // Cycles.add<system>(1_000_000_000_000); // TODO@P1: Works without this?
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
@@ -339,7 +334,7 @@ actor class Bootstrapper() = this {
           mainIndirect;
         });
 
-        for (canister_id in installedModules2.vals()) { // including frontend
+        for (canister_id in Map.values(installedModules2)) { // including frontend
             // TODO@P3: We can provide these setting initially and thus update just one canister.
             await ic.update_settings({
                 canister_id;
@@ -432,7 +427,7 @@ actor class Bootstrapper() = this {
             amount = revenue - Common.cycles_transfer_fee;
         });
         let #Ok tx = res2 else {
-            Debug.trap("transfer failed: " # debug_show(res2));
+            throw Error.reject("transfer failed: " # debug_show(res2));
         };
 
         let res3 = await CyclesLedger.withdraw({
@@ -442,7 +437,7 @@ actor class Bootstrapper() = this {
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
         let #Ok tx3 = res3 else {
-            Debug.trap("transfer failed: " # debug_show(res3));
+            throw Error.reject("transfer failed: " # debug_show(res3));
         };
 
         // Update user cycle balance in BootstrapperData
@@ -470,7 +465,7 @@ actor class Bootstrapper() = this {
             amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
-            Debug.trap("transfer failed: " # debug_show(res));
+            throw Error.reject("transfer failed: " # debug_show(res));
         };
         let res2 = await ICPLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
@@ -481,14 +476,14 @@ actor class Bootstrapper() = this {
             amount = revenue - Common.icp_transfer_fee;
         });
         let #Ok tx2 = res2 else {
-            Debug.trap("transfer failed: " # debug_show(res2));
+            throw Error.reject("transfer failed: " # debug_show(res2));
         };
         let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
         let #Ok cyclesAmount = res3 else {
-            Debug.trap("notify_top_up failed: " # debug_show(res2));
+            throw Error.reject("notify_top_up failed: " # debug_show(res2));
         };
 
         // Update user cycle balance in BootstrapperData
