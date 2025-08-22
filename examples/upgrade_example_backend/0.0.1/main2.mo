@@ -2,7 +2,7 @@ import LIB "mo:icpack-lib";
 import CyclesLedger "canister:cycles_ledger";
 import Principal "mo:core/Principal";
 
-actor {
+persistent actor {
   public shared func f() {};
 
   // TODO@P3: use other withdraw function.

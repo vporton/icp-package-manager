@@ -182,6 +182,7 @@ persistent actor class Bootstrapper() = this {
         switch (UserAuth.verifySignature(frontendTweakPubKey, user, signature)) {
             case (#err e) throw Error.reject(e);
             case (#ok false) throw Error.reject("account validation failed");
+            case (#ok true) {};
         };
 
         // let amountToMove = switch (principalMap.get(userCycleBalanceMap, user)) { // wrong user
