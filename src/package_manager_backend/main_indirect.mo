@@ -100,9 +100,8 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
     };
 
-    // TODO@P1: Check.
-    stable var ourPM: OurPMType = actor (Principal.toText(packageManager)); // actor("aaaaa-aa");
-    // /*stable*/ var ourSimpleIndirect = simpleIndirect;
+    // TODO@P3: Refactor.
+    transient var ourPM: OurPMType = actor (Principal.toText(packageManager)); // actor("aaaaa-aa");
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
         await* onlyOwner(caller, "setOurPM");

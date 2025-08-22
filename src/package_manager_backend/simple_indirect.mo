@@ -2,6 +2,7 @@ import ICE "mo:core/InternetComputer"; // TODO@P3: Rename.
 import Cycles "mo:core/Cycles";
 import Error "mo:core/Error";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
@@ -28,15 +29,14 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
 
     stable var initialized = false;
 
-    // FIXME@P1: Use `Set`.
-    stable var owners: Map.Map<Principal, ()> =
-        Map.fromIter(
+    stable var owners: Set.Set<Principal> =
+        Set.fromIter<Principal>(
             [
-                (packageManager, ()),
-                (mainIndirect, ()),
-                (user, ()),
-                (simpleIndirect, ()),
-                (battery, ()),
+                packageManager,
+                mainIndirect,
+                user,
+                simpleIndirect,
+                battery,
             ].vals(),
             Principal.compare);
 
@@ -48,14 +48,14 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
     }): async () {
         await* onlyOwner(caller, "init");
 
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed here?
+        ignore Set.insert<Principal>(owners, Principal.compare, Principal.fromActor(this)); // self-usage to call `this.installModule`. // TODO@P3: needed here?
 
         type OurPMType = actor {
             getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
         };
         let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, battery, ());
+        ignore Set.insert<Principal>(owners, Principal.compare, battery);
 
         initialized := true;
     };
@@ -67,32 +67,29 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
     };
 
     public query func getOwners(): async [Principal] {
-        Iter.toArray(Map.keys(owners));
+        Iter.toArray(Set.values(owners));
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
         await* onlyOwner(caller, "setOwners");
 
-        owners := Map.fromIter(
-            Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Principal.compare,
-        );
+        owners := Set.fromIter<Principal>(newOwners.vals(), Principal.compare);
     };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
         await* onlyOwner(caller, "addOwner");
 
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, newOwner, ());
+        ignore Set.insert<Principal>(owners, Principal.compare, newOwner);
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
         await* onlyOwner(caller, "removeOwner");
 
-        ignore Map.delete(owners, Principal.compare, oldOwner);
+        ignore Set.delete(owners, Principal.compare, oldOwner);
     };
 
     func onlyOwner(caller: Principal, msg: Text): async* () {
-        if (Map.get(owners, Principal.compare, caller) == null) {
+        if (not Set.contains(owners, Principal.compare, caller)) {
             throw Error.reject("not the owner: " # msg);
         };
     };
@@ -239,7 +236,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
 
     public composite query({caller}) func fetch_canister_logs(args: IC.FetchCanisterLogsArgs): async IC.FetchCanisterLogsResult {
         // TODO@P2: duplicate code
-        if (Map.get(owners, Principal.compare, caller) == null) {
+        if (not Set.contains(owners, Principal.compare, caller)) {
             throw Error.reject("not the owner: " # "fetch_canister_logs");
         };
 
