@@ -307,7 +307,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     stable var installedPackages = Map.empty<Common.InstallationId, Common.InstalledPackageInfo>();
 
     var installedPackagesByName: Map.Map<Blob, {
-        all: Map.Map<Common.InstallationId, ()>; // FIXME@P1: `Set`
+        all: Map.Map<Common.InstallationId, {}>; // I prefer not to use `Set` here for future extensibility.
         var default: Common.InstallationId;
     }> = Map.empty();
     // TODO@P3: `var` or `let` here and in other places:
@@ -778,7 +778,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                     } else {
                         ignore Map.delete(info.all, Nat.compare, uninst.installationId);
                         if (info.default == uninst.installationId) {
-                            let ?(last, ()) = Map.reverseEntries(info.all).next() else {
+                            let ?(last, {}) = Map.reverseEntries(info.all).next() else {
                                 throw Error.reject("programming error");
                             };
                             info.default := last;
@@ -1130,12 +1130,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             var pinned = false;
         });
         let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
-        let tree = switch (Map.get<Blob, {all: Map.Map<Common.InstallationId, ()>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2)) {
+        let tree = switch (Map.get<Blob, {all: Map.Map<Common.InstallationId, {}>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2)) {
             case (?old) {
                 old.all;
             };
             case null {
-                let tree = Map.empty<Common.InstallationId, ()>();
+                let tree = Map.empty<Common.InstallationId, {}>();
                 ignore Map.insert(installedPackagesByName, Blob.compare, guid2, {
                     all = tree;
                     var default = installationId;
@@ -1143,7 +1143,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 tree;
             };
         };
-        ignore Map.insert(tree, Nat.compare, installationId, ());
+        ignore Map.insert(tree, Nat.compare, installationId, {});
     };
 
     //     let ?installation = installedPackages.get(installationId) else {
@@ -1288,12 +1288,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         };
 
         let guid2 = Common.amendedGUID(guid, name);
-        let ?data = Map.get<Blob, {all: Map.Map<Common.InstallationId, ()>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2) else {
+        let ?data = Map.get<Blob, {all: Map.Map<Common.InstallationId, {}>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2) else {
             return {all = []; default = 0};
         };
-        let all = Iter.toArray(Iter.filterMap<(Common.InstallationId, ()), Common.SharedInstalledPackageInfo>(
+        let all = Iter.toArray(Iter.filterMap<(Common.InstallationId, {}), Common.SharedInstalledPackageInfo>(
             Map.entries(data.all),
-            func (id: Common.InstallationId, _: ()): ?Common.SharedInstalledPackageInfo {
+            func (id: Common.InstallationId, {}): ?Common.SharedInstalledPackageInfo {
                 let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
                     // throw Error.reject("getInstalledPackagesInfoByName: programming error");
                     return null;
@@ -1586,7 +1586,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         let guid2 = Common.amendedGUID(guid, name);
         let ?data = Map.get<Blob, {
-            all: Map.Map<Common.InstallationId, ()>; // FIXME@P1: `Set`
+            all: Map.Map<Common.InstallationId, {}>; // FIXME@P1: `Set`
             var default: Common.InstallationId;
         }>(installedPackagesByName, Blob.compare, guid2) else {
             throw Error.reject("no such package");
