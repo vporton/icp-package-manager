@@ -1586,7 +1586,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         let guid2 = Common.amendedGUID(guid, name);
         let ?data = Map.get<Blob, {
-            all: Map.Map<Common.InstallationId, {}>; // FIXME@P1: `Set`
+            all: Map.Map<Common.InstallationId, {}>;
             var default: Common.InstallationId;
         }>(installedPackagesByName, Blob.compare, guid2) else {
             throw Error.reject("no such package");
