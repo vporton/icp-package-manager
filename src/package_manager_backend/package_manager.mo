@@ -165,16 +165,17 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     stable var initialized = false;
 
-    stable var owners: Map.Map<Principal, ()> = // FIXME@P1: Use `Set`.
-        Map.fromIter(
+    stable let systemOwners = // FIXME@P1: Use `Set`.
+        Map.fromIter<Principal, ()>(
             [
                 (packageManager, ()),
                 (mainIndirect, ()), // temporary
                 (simpleIndirect, ()),
                 (battery, ()),
-                (user, ()),
             ].vals(),
             Principal.compare);
+    stable var mainOwner = user;
+    stable let additionalOwners = Map.empty<Principal, ()>(); // FIXME@P1: Use `Set`.
 
     transient let batteryActor: Battery.Battery = actor(Principal.toText(battery));
 
@@ -322,7 +323,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     // TODO@P3: Copy this code to other modules:
     func onlyOwner(caller: Principal, msg: Text): Result.Result<(), Text> {
-        if (not env.isLocal and Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller))) { // allow everybody on localhost, for debugging
+        if (not env.isLocal // allow everybody on localhost, for debugging
+            and caller != mainOwner
+            and Option.isNull(Map.get<Principal, ()>(systemOwners, Principal.compare, caller))
+            and Option.isNull(Map.get<Principal, ()>(additionalOwners, Principal.compare, caller))
+        ) {
             return #err(debug_show(caller) # " is not the owner: " # msg);
         };
         #ok;
