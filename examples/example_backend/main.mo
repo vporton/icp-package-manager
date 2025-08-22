@@ -1,7 +1,7 @@
 import LIB "mo:icpack-lib";
 import CyclesLedger "canister:cycles_ledger";
 
-actor {
+persistent actor {
   public query func greet(name : Text) : async Text {
     return "Hello, " # name # "!";
   };

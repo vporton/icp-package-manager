@@ -1,6 +1,6 @@
 import Principal "mo:core/Principal";
 import Debug "mo:core/Debug";
-import Map "mo:core/OrderedMap";
+import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Float "mo:core/Float";
@@ -20,6 +20,7 @@ import Int "mo:core/Int";
 import BootstrapperData "../bootstrapper_backend/BootstrapperData";
 import UserAuth "mo:icpack-lib/UserAuth";
 import Asset "mo:assets-api";
+import Result "mo:core/Result";
 
 persistent actor class Wallet({
     installationId: Nat;
@@ -27,10 +28,11 @@ persistent actor class Wallet({
 }) = this {
     stable var owner = Principal.fromText("2vxsx-fae");
 
-    private func onlyOwner(caller: Principal, msg: Text) {
+    private func onlyOwner(caller: Principal, msg: Text): Result.Result<(), Text> {
         if (not Principal.isAnonymous(owner) and caller != owner) {
-            Debug.trap(msg # ": no owner set");
+            return #err(msg # ": no owner set");
         };
+        #ok;
     };
 
     type Token = {
@@ -54,8 +56,7 @@ persistent actor class Wallet({
         }
     };
 
-    transient var principalMap = Map.Make<Principal>(Principal.compare);
-    stable var userData = principalMap.empty<UserData>();
+    stable var userData = Map.empty<Principal, UserData>();
 
     // Initialize default tokens for new users
     private func defaultTokens() : [Token] {
@@ -71,14 +72,24 @@ persistent actor class Wallet({
 
     /// Change wallet owner after verifying caller's signature with the provided public key.
     public shared({caller}) func setOwner(signature: Blob): async () {
-        await* UserAuth.checkOwnerSignature(packageManager, installationId, caller, signature); // traps on error
+        switch (await* UserAuth.checkOwnerSignature(packageManager, installationId, caller, signature)) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
         owner := caller;
     };
 
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
-        onlyOwner(caller, "getLimitAmounts");
+        switch (onlyOwner(caller, "getLimitAmounts")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
 
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) {
                 {amountAddCheckbox = data.amountAddCheckbox; amountAddInput = data.amountAddInput};
@@ -91,24 +102,34 @@ persistent actor class Wallet({
     };
 
     public shared({caller}) func setLimitAmounts(values: {amountAddCheckbox: ?Float; amountAddInput: ?Float}): async () {
-        onlyOwner(caller, "setLimitAmounts");
+        switch (onlyOwner(caller, "setLimitAmounts")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
 
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) {
                 data.amountAddCheckbox := values.amountAddCheckbox;
                 data.amountAddInput := values.amountAddInput;
             };
             case null {
-                userData := principalMap.put<UserData>(userData, caller, initialUserData());
+                ignore Map.insert(userData, Principal.compare, caller, initialUserData());
             };
         };
     };
 
     public query({caller}) func getTokens(): async [Token] {
-        onlyOwner(caller, "getTokens");
+        switch (onlyOwner(caller, "getTokens")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
         
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) { data.tokens };
             case null { defaultTokens() };
@@ -116,28 +137,38 @@ persistent actor class Wallet({
     };
 
     public shared({caller}) func addToken(token: Token): async () {
-        onlyOwner(caller, "addToken");
+        switch (onlyOwner(caller, "addToken")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
         
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) {
                 for (t in data.tokens.vals()) {
                     if (t.canisterId == token.canisterId) {
-                        Debug.trap("token already exists");
+                        throw Error.reject("token already exists");
                     };
                 };
-                data.tokens := Array.append(data.tokens, [token]);
+                data.tokens := Array.concat(data.tokens, [token]);
             };
             case null {
-                userData := principalMap.put<UserData>(userData, caller, initialUserData());
+                ignore Map.insert(userData, Principal.compare, caller, initialUserData());
             };
         };
     };
 
     public shared({caller}) func removeToken(canisterId: Principal): async () {
-        onlyOwner(caller, "removeToken");
+        switch (onlyOwner(caller, "removeToken")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
         
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) {
                 data.tokens := Array.filter(data.tokens, func(t: Token): Bool {
@@ -149,9 +180,14 @@ persistent actor class Wallet({
     };
 
     public shared({caller}) func addArchiveCanister(canisterId: Principal, archiveCanisterId: Principal): async () {
-        onlyOwner(caller, "addArchiveCanister");
+                switch (onlyOwner(caller, "addArchiveCanister")) {
+            case (#err(msg)) {
+                throw Error.reject(msg);
+            };
+            case (#ok()) {};
+        };
         
-        let data = principalMap.get(userData, caller);
+        let data = Map.get(userData, Principal.compare, caller);
         switch (data) {
             case (?data) {
                 data.tokens := Array.map(data.tokens, func(t: Token): Token {
@@ -185,7 +221,7 @@ persistent actor class Wallet({
         }
         catch(e) {
             Debug.print("Wallet isAllInitialized: " # Error.message(e));
-            Debug.trap(Error.message(e));
+            throw Error.reject(Error.message(e));
         };
     };
 
