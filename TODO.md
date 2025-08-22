@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- FIXME@P1 `package_manager` has a wrong owner (need to do like as in wallet?)
+
 - TODO@P2 [Migrate](https://internetcomputer.org/docs/motoko/base-core-migration) from `base` to `core`.
 
 - TODO@P2 Remove wrong (valid only for the bootstrapper frontend) value of `user` from initialization/upgrade code for modules in the package manager.
