@@ -3,6 +3,7 @@ import Array "mo:core/Array";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Error "mo:core/Error";
+import List "mo:core/List";
 
 // TODO@P3: Allow only the user to see his bookmarks?
 persistent actor class Bookmarks(initialOwner: Principal) {
@@ -38,15 +39,14 @@ persistent actor class Bookmarks(initialOwner: Principal) {
     //     Principal.hash(a.frontend) ^ Principal.hash(a.backend);
     // };
 
-    /// user -> [Bookmark]
-    /// FIXME@P1: Use `List` instead of array.
-    stable var userToBookmark = Map.empty<Principal, [Bookmark]>();
+    /// user -> List<Bookmark>
+    stable var userToBookmark = Map.empty<Principal, List.List<Bookmark>>();
 
     stable var bookmarks = Set.empty<Bookmark>();
 
     public query({caller}) func getUserBookmarks(): async [Bookmark] {
         switch (Map.get(userToBookmark, Principal.compare, caller)) {
-            case (?a) a;
+            case (?a) List.toArray(a);
             case null [];
         };
     };
@@ -84,10 +84,11 @@ persistent actor class Bookmarks(initialOwner: Principal) {
             ignore Set.insert<Bookmark>(bookmarks, bookmarksCompare, b);
             let a = Map.get(userToBookmark, Principal.compare, user);
             let a2 = switch (a) {
-                case (?a) Array.concat(a, [b]);
-                case null [b];
+                case (?a) List.add(a, b);
+                case null {
+                    ignore Map.insert(userToBookmark, Principal.compare, user, List.singleton<Bookmark>(b));
+                };
             };
-            ignore Map.insert(userToBookmark, Principal.compare, user, a2);
             false;
         };
     };
