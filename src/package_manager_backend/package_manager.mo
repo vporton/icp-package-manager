@@ -3,6 +3,7 @@ import Result "mo:core/Result";
 import List "mo:core/List";
 import Option "mo:core/Option";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Debug "mo:core/Debug";
 import Iter "mo:core/Iter";
@@ -165,17 +166,16 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     stable var initialized = false;
 
-    stable let systemOwners = // FIXME@P1: Use `Set`.
-        Map.fromIter<Principal, ()>(
+    stable let systemOwners = Set.fromIter<Principal>(
             [
-                (packageManager, ()),
-                (mainIndirect, ()), // temporary
-                (simpleIndirect, ()),
-                (battery, ()),
+                packageManager,
+                mainIndirect, // temporary
+                simpleIndirect,
+                battery,
             ].vals(),
             Principal.compare);
     stable var mainOwner = user;
-    stable let additionalOwners = Map.empty<Principal, ()>(); // FIXME@P1: Use `Set`.
+    stable let additionalOwners = Set.empty<Principal>();
 
     transient let batteryActor: Battery.Battery = actor(Principal.toText(battery));
 
@@ -193,8 +193,8 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 case (#ok) {};
             };
 
-            ignore Map.insert(systemOwners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
-            ignore Map.delete(systemOwners, Principal.compare, packageManager); // delete bootstrapper
+            ignore Set.insert(systemOwners, Principal.compare, Principal.fromActor(this)); // self-usage to call `this.installPackages`. // TODO@P3: needed?
+            ignore Set.delete(systemOwners, Principal.compare, packageManager); // delete bootstrapper
 
             initialized := true;
         }
@@ -226,7 +226,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        ignore Map.insert(additionalOwners, Principal.compare, newOwner, ());
+        ignore Set.insert(additionalOwners, Principal.compare, newOwner);
     };
 
     public shared({caller}) func removeAdditionalOwner(oldOwner: Principal): async () {
@@ -237,14 +237,14 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        ignore Map.delete(additionalOwners, Principal.compare, oldOwner);
+        ignore Set.delete(additionalOwners, Principal.compare, oldOwner);
     };
 
     // TODO@P3: This is a supplementary method, used for testing.
     public query func getOwners(): async [Principal] {
-        let a1 = Iter.toArray(Map.keys<Principal, ()>(systemOwners));
+        let a1 = Iter.toArray(Set.values<Principal>(systemOwners));
         let a2 = [mainOwner];
-        let a3 = Iter.toArray(Map.keys<Principal, ()>(additionalOwners));
+        let a3 = Iter.toArray(Set.values<Principal>(additionalOwners));
         Array.concat<Principal>(Array.concat<Principal>(a1, a2), a3);
     };
 
@@ -329,8 +329,8 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     func onlyOwner(caller: Principal, msg: Text): Result.Result<(), Text> {
         if (not env.isLocal // allow everybody on localhost, for debugging
             and caller != mainOwner
-            and Option.isNull(Map.get<Principal, ()>(systemOwners, Principal.compare, caller))
-            and Option.isNull(Map.get<Principal, ()>(additionalOwners, Principal.compare, caller))
+            and not Set.contains<Principal>(systemOwners, Principal.compare, caller)
+            and not Set.contains<Principal>(additionalOwners, Principal.compare, caller)
         ) {
             return #err(debug_show(caller) # " is not the owner: " # msg);
         };
