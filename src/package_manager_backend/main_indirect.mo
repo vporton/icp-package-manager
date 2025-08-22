@@ -34,7 +34,6 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 
     stable var initialized = false;
 
-    // TODO@P1: Use `Set`.
     stable var owners = Set.fromIter<Principal>(
         [
             packageManager,
