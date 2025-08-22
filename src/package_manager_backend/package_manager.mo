@@ -193,8 +193,8 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 case (#ok) {};
             };
 
-            ignore Map.insert(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
-            ignore Map.delete(owners, Principal.compare, packageManager); // delete bootstrapper
+            ignore Map.insert(systemOwners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
+            ignore Map.delete(systemOwners, Principal.compare, packageManager); // delete bootstrapper
 
             initialized := true;
         }
@@ -204,21 +204,21 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         };
     };
 
-    public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        switch (onlyOwner(caller, "setOwners")) {
-            case (#err err) {
-                throw Error.reject(err);
-            };
-            case (#ok) {};
-        };
+    // public shared({caller}) func setOwners(newOwners: [Principal]): async () {
+    //     switch (onlyOwner(caller, "setOwners")) {
+    //         case (#err err) {
+    //             throw Error.reject(err);
+    //         };
+    //         case (#ok) {};
+    //     };
 
-        owners := Map.fromIter(
-            Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Principal.compare,
-        );
-    };
+    //     owners := Map.fromIter(
+    //         Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
+    //         Principal.compare,
+    //     );
+    // };
 
-    public shared({caller}) func addOwner(newOwner: Principal): async () {
+    public shared({caller}) func addAdditionalOwner(newOwner: Principal): async () {
         switch (onlyOwner(caller, "addOwner")) {
             case (#err err) {
                 throw Error.reject(err);
@@ -226,10 +226,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        ignore Map.insert(owners, Principal.compare, newOwner, ());
+        ignore Map.insert(additionalOwners, Principal.compare, newOwner, ());
     };
 
-    public shared({caller}) func removeOwner(oldOwner: Principal): async () {
+    public shared({caller}) func removeAdditionalOwner(oldOwner: Principal): async () {
         switch (onlyOwner(caller, "removeOwner")) {
             case (#err err) {
                 throw Error.reject(err);
@@ -237,12 +237,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        ignore Map.delete(owners, Principal.compare, oldOwner);
+        ignore Map.delete(additionalOwners, Principal.compare, oldOwner);
     };
 
-    public query func getOwners(): async [Principal] {
-        Iter.toArray(Map.keys<Principal, ()>(owners));
-    };
+    // TODO@P2:
+    // public query func getOwners(): async [Principal] {
+    //     Iter.toArray(Map.keys<Principal, ()>(owners));
+    // };
 
     public composite query func isAllInitialized(): async () {
         try {
