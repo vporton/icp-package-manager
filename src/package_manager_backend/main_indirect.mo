@@ -5,7 +5,7 @@ import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Blob "mo:core/Blob";
 import Text "mo:core/Text";
-import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
 import Cycles "mo:core/Cycles";
@@ -35,16 +35,15 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
     stable var initialized = false;
 
     // TODO@P1: Use `Set`.
-    stable var owners: Map.Map<Principal, ()> =
-        Map.fromIter(
-            [
-                (packageManager, ()),
-                (mainIndirect, ()),
-                (simpleIndirect, ()),
-                (battery, ()),
-                (user, ()),
-            ].vals(),
-            Principal.compare);
+    stable var owners = Set.fromIter<Principal>(
+        [
+            packageManager,
+            mainIndirect,
+            simpleIndirect,
+            battery,
+            user,
+        ].vals(),
+        Principal.compare);
 
     public shared({caller}) func init({
         installationId: Common.InstallationId;
@@ -54,11 +53,11 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
     }): async () {
         await* onlyOwner(caller, "init");
 
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed?
+        ignore Set.insert<Principal>(owners, Principal.compare, Principal.fromActor(this)); // self-usage to call `this.installModule`. // TODO@P3: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, battery, ());
+        ignore Set.insert<Principal>(owners, Principal.compare, battery);
 
         initialized := true;
     };
@@ -70,32 +69,29 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
     };
 
     public query func getOwners(): async [Principal] {
-        Iter.toArray(Map.keys(owners));
+        Iter.toArray(Set.values(owners));
     };
 
-    public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        await* onlyOwner(caller, "setOwners");
+    // public shared({caller}) func setOwners(newOwners: [Principal]): async () {
+    //     await* onlyOwner(caller, "setOwners");
 
-        owners := Map.fromIter(
-            Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Principal.compare,
-        );
-    };
+    //     owners := Set.fromIter<Principal>(newOwners.vals(), Principal.compare);
+    // };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
         await* onlyOwner(caller, "addOwner");
 
-        ignore Map.insert<Principal, ()>(owners, Principal.compare, newOwner, ());
+        ignore Set.insert<Principal>(owners, Principal.compare, newOwner);
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
         await* onlyOwner(caller, "removeOwner");
 
-        ignore Map.delete(owners, Principal.compare, oldOwner);
+        ignore Set.delete(owners, Principal.compare, oldOwner);
     };
 
     func onlyOwner(caller: Principal, msg: Text): async* () {
-        if (Map.get(owners, Principal.compare, caller) == null) {
+        if (not Set.contains<Principal>(owners, Principal.compare, caller)) {
             throw Error.reject("not the owner: " # msg);
         };
     };
