@@ -12,7 +12,6 @@ import Error "mo:core/Error";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
-// FIXME@P1: Need to make it persistent.
 shared ({caller = initialOwner}) persistent actor class Repository() = this {
   var owners = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
   var packageCreators = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
