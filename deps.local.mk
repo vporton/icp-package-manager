@@ -449,6 +449,8 @@ src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_
 
 src/common.mo: src/lib/Account.mo
 
+src/common.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: src/common.mo
 
 .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did: 
@@ -507,6 +509,8 @@ src/package_manager_backend/battery.mo: .dfx/$(NETWORK)/canisters/bootstrapper_d
 
 .dfx/$(NETWORK)/canisters/bootstrapper_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/repository/repository.wasm .dfx/$(NETWORK)/canisters/repository/repository.did
 
+.dfx/$(NETWORK)/canisters/example_backend/example_backend.wasm .dfx/$(NETWORK)/canisters/example_backend/example_backend.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
 .dfx/$(NETWORK)/canisters/example_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/example_backend/example_backend.wasm .dfx/$(NETWORK)/canisters/example_backend/example_backend.did
 
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/common.mo
@@ -514,6 +518,8 @@ src/package_manager_backend/battery.mo: .dfx/$(NETWORK)/canisters/bootstrapper_d
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/install.mo
 
 src/package_manager_backend/simple_indirect.mo: src/common.mo
+
+src/package_manager_backend/simple_indirect.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did: src/package_manager_backend/simple_indirect.mo
 
@@ -554,6 +560,16 @@ src/package_manager_backend/main_indirect.mo: src/package_manager_backend/batter
 .dfx/$(NETWORK)/canisters/package_manager_frontend/assetstorage.wasm.gz: .dfx/$(NETWORK)/canisters/battery/battery.wasm .dfx/$(NETWORK)/canisters/battery/battery.did
 
 .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: src/common.mo
+
+.dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.wasm .dfx/$(NETWORK)/canisters/simple_indirect/simple_indirect.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
+.dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend1_v1/upgrade_example_backend1_v1.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
+.dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend2_v1/upgrade_example_backend2_v1.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
+.dfx/$(NETWORK)/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend2_v2/upgrade_example_backend2_v2.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
+
+.dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.wasm .dfx/$(NETWORK)/canisters/upgrade_example_backend3_v2/upgrade_example_backend3_v2.did: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
 .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.wasm .dfx/$(NETWORK)/canisters/wallet_backend/wallet_backend.did: src/common.mo
 

@@ -185,7 +185,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         // packageManager: Principal;
     }): async () {
         try {
-            await* onlyOwner(caller, "init");
+            switch (onlyOwner(caller, "init")) {
+                case (#err err) {
+                    throw Error.reject(err);
+                };
+                case (#ok) {};
+            };
 
             ignore Map.insert(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
             ignore Map.delete(owners, Principal.compare, packageManager); // delete bootstrapper
@@ -199,7 +204,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        await* onlyOwner(caller, "setOwners");
+        switch (onlyOwner(caller, "setOwners")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         owners := Map.fromIter(
             Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
@@ -208,13 +218,23 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
-        await* onlyOwner(caller, "addOwner");
+        switch (onlyOwner(caller, "addOwner")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         ignore Map.insert(owners, Principal.compare, newOwner, ());
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
-        await* onlyOwner(caller, "removeOwner");
+        switch (onlyOwner(caller, "removeOwner")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         ignore Map.delete(owners, Principal.compare, oldOwner);
     };
@@ -265,7 +285,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     // TODO@P3: too low-level?
     public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
-        await* onlyOwner(caller, "setMainIndirect");
+        switch (onlyOwner(caller, "")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         main_indirect_ := main_indirect_v;
     };
@@ -296,10 +321,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     stable var repositories: [{canister: Principal; name: Text}] = [];
 
     // TODO@P3: Copy this code to other modules:
-    func onlyOwner(caller: Principal, msg: Text): async* () {
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # msg);
+    func onlyOwner(caller: Principal, msg: Text): Result.Result<(), Text> {
+        if (not env.isLocal and Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller))) { // allow everybody on localhost, for debugging
+            return #err(debug_show(caller) # " is not the owner: " # msg);
         };
+        #ok;
     };
 
     /// Private helper function to prepare upgrade data structures
@@ -388,7 +414,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        await* onlyOwner(caller, "installPackages");
+        switch (onlyOwner(caller, "")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
@@ -463,7 +494,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minUninstallationId: Common.UninstallationId}
     {
-        await* onlyOwner(caller, "uninstallPackages");
+        switch (onlyOwner(caller, "uninstallPackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let minUninstallationId = nextUninstallationId;
         nextUninstallationId += Array.size(packages);
@@ -523,7 +559,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
-        await* onlyOwner(caller, "upgradePackages");
+        switch (onlyOwner(caller, "upgradePackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
@@ -576,7 +617,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        await* onlyOwner(caller, "upgradeStart");
+        switch (onlyOwner(caller, "upgradeStart")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         for (newPkgNum in packages.keys()) {
             let newPkgData = packages[newPkgNum];
@@ -610,7 +656,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        await* onlyOwner(caller, "onUpgradeOrInstallModule");
+        switch (onlyOwner(caller, "onUpgradeOrInstallModule")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
             throw Error.reject("no such upgrade: " # debug_show(upgradeId));
@@ -693,7 +744,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }): async () {
         Debug.print("onDeleteCanister");
 
-        await* onlyOwner(caller, "onDeleteCanister");
+        switch (onlyOwner(caller, "onDeleteCanister")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?uninst = Map.get<Common.UninstallationId, HalfUninstalledPackageInfo>(halfUninstalledPackages, Int.compare, uninstallationId) else {
             return;
@@ -740,7 +796,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        await* onlyOwner(caller, "facilitateBootstrap");
+        switch (onlyOwner(caller, "facilitateBootstrap")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += 1;
@@ -792,7 +853,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         }];
         bootstrapping: Bool;
     }) {
-        await* onlyOwner(caller, "installStart");
+        switch (onlyOwner(caller, "installStart")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         for (p0 in packages.keys()) {
             let p = packages[p0];
@@ -973,10 +1039,15 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        // TODO@P3: Move after `await* onlyOwner` call:
+        // TODO@P3: Move after `onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
 
-        await* onlyOwner(caller, "onInstallCode");
+        switch (onlyOwner(caller, "onInstallCode")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         Debug.print("onInstallCode: Cycles accepted: " # debug_show(Cycles.available()));
         ignore Cycles.accept<system>(Cycles.available());
@@ -1148,9 +1219,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     /// Returns all (default installed and additional) modules canisters.
     /// Internal.
     public query({caller}) func getAllCanisters(): async [({packageName: Text; guid: Blob}, [(Text, Principal)])] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getAllCanisters");
+        switch (onlyOwner(caller, "getAllCanisters")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         Iter.toArray(Iter.map<Common.InstalledPackageInfo, ({packageName: Text; guid: Blob}, [(Text, Principal)])>(
@@ -1164,9 +1237,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public query({caller}) func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getInstalledPackage");
+        switch (onlyOwner(caller, "getInstalledPackage")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         let ?result = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
@@ -1177,9 +1252,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     /// Note that it applies only to default installed modules and fails for additional modules.
     public query({caller}) func getModulePrincipal(installationId: Common.InstallationId, moduleName: Text): async Principal {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getModulePrincipal");
+        switch (onlyOwner(caller, "getModulePrincipal")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
@@ -1194,9 +1271,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
         : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
     {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getInstalledPackagesInfoByName");
+        switch (onlyOwner(caller, "getInstalledPackagesInfoByName")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         let guid2 = Common.amendedGUID(guid, name);
@@ -1216,9 +1295,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getAllInstalledPackages");
+        switch (onlyOwner(caller, "getAllInstalledPackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         Iter.toArray(
@@ -1240,7 +1321,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     /// Update public key for an installation.
     public shared({caller}) func setInstallationPubKey(id: Common.InstallationId, pubKey: Blob): async () {
-        await* onlyOwner(caller, "setInstallationPubKey");
+        switch (onlyOwner(caller, "setInstallationPubKey")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
             throw Error.reject("no such installation");
@@ -1253,9 +1339,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
     }] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfInstalledPackages");
+        switch (onlyOwner(caller, "getHalfInstalledPackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), {
@@ -1277,9 +1365,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         uninstallationId: Common.UninstallationId;
         package: Common.SharedPackageInfo;
     }] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfUninstalledPackages");
+        switch (onlyOwner(caller, "getHalfUninstalledPackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), {
@@ -1301,9 +1391,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         upgradeId: Common.UpgradeId;
         package: Common.SharedPackageInfo;
     }] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfUpgradedPackages");
+        switch (onlyOwner(caller, "getHalfUpgradedPackages")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), {
@@ -1322,9 +1414,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     /// TODO@P3: very unstable API.
     public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
-        // TODO@P3: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfInstalledPackageModulesById");
+        switch (onlyOwner(caller, "getHalfInstalledPackageModulesById")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         let ?res = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Int.compare, installationId) else {
@@ -1368,8 +1462,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         {minInstallationId};
     };
 
-    public shared func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {
-        await* onlyOwner(Principal.fromActor(this), "setPinned");
+    public shared({caller}) func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {
+        switch (onlyOwner(caller, "setPinned")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
             throw Error.reject("no such installed package");
@@ -1380,7 +1479,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func removeStalled(
         {install: [Common.InstallationId]; uninstall: [Common.UninstallationId]; upgrade: [Common.UpgradeId]}
     ): async () {
-        await* onlyOwner(caller, "removeStalled");
+        switch (onlyOwner(caller, "removeStalled")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         for (i in install.vals()) {
             ignore Map.delete(halfInstalledPackages, Int.compare, i);
@@ -1416,9 +1520,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     transient let newCanisterCycles = 1_500_000_000_000 * env.subnetSize / 13; // TODO@P3
     /// The total cycles amount, including canister creation fee.
     public query({caller}) func getNewCanisterCycles(): async Nat {
-        // TODO@P1: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getNewCanisterCycles");
+        switch (onlyOwner(caller, "getNewCanisterCycles")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         newCanisterCycles;
@@ -1427,13 +1533,23 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
-        await* onlyOwner(caller, "addRepository");
+        switch (onlyOwner(caller, "addRepository")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         repositories := Array.concat(repositories, [{canister; name}]);
     };
 
     public shared({caller}) func removeRepository(canister: Principal): async () {
-        await* onlyOwner(caller, "removeRepository");
+        switch (onlyOwner(caller, "removeRepository")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         repositories := Iter.toArray(Iter.filter(
             repositories.vals(),
@@ -1441,16 +1557,23 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public query({caller}) func getRepositories(): async [{canister: Principal; name: Text}] {
-        // TODO@P1: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getRepositories");
+        switch (onlyOwner(caller, "getRepositories")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         repositories;
     };
 
     public shared({caller}) func setDefaultInstalledPackage(name: Common.PackageName, guid: Blob, installationId: Common.InstallationId): async () {
-        await* onlyOwner(caller, "setDefaultPackage");
+        switch (onlyOwner(caller, "setDefaultInstalledPackage")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let guid2 = Common.amendedGUID(guid, name);
         let ?data = Map.get<Blob, {
@@ -1475,7 +1598,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         mainIndirect: Principal;
         user: Principal;
     }): async () {
-        await* onlyOwner(caller, "copyAssetsIfAny");
+        switch (onlyOwner(caller, "copyAssetsIfAny")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(wasmModule);
@@ -1504,7 +1632,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             modulesToDelete: [(Text, Principal)];
         }
     {
-        await* onlyOwner(caller, "startModularUpgrade");
+        switch (onlyOwner(caller, "startModularUpgrade")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         // Get package info from repository first
         let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
@@ -1562,7 +1695,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         moduleName: Text;
         user: Principal;
     }): async {completed: Bool} {
-        await* onlyOwner(caller, "upgradeModule");
+        switch (onlyOwner(caller, "upgradeModule")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
             throw Error.reject("no such upgrade: " # debug_show(upgradeId));
@@ -1620,9 +1758,11 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         remainingModules: Nat;
         isCompleted: Bool;
     } {
-        // TODO@P1: duplicate code
-        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            throw Error.reject(debug_show(caller) # " is not the owner: " # "getModularUpgradeStatus");
+        switch (onlyOwner(caller, "getModularUpgradeStatus")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
         };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
@@ -1651,7 +1791,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         upgradeId: Common.UpgradeId,
         modules: [(Text, Principal)]
     ): async () {
-        await* onlyOwner(caller, "completeModularUpgrade");
+        switch (onlyOwner(caller, "completeModularUpgrade")) {
+            case (#err err) {
+                throw Error.reject(err);
+            };
+            case (#ok) {};
+        };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
             throw Error.reject("no such upgrade: " # debug_show(upgradeId));
