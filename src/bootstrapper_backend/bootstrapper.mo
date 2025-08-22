@@ -277,7 +277,6 @@ persistent actor class Bootstrapper() = this {
             let ?m = Map.get(modulesToInstall, Text.compare, moduleName) else {
                 throw Error.reject("module not found");
             };
-            // Cycles.add<system>(1_000_000_000_000); // TODO@P1: Works without this?
             await* Install.myInstallCode({
                 installationId = 0;
                 upgradeId = null;
