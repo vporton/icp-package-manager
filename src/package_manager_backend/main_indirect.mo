@@ -1,5 +1,6 @@
 /// Canister that takes on itself potentially non-returning calls.
 import Error "mo:core/Error";
+import List "mo:core/List";
 import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Blob "mo:core/Blob";
@@ -17,7 +18,7 @@ import LIB "mo:icpack-lib";
 import CyclesLedger "canister:cycles_ledger";
 import Battery "battery";
 
-shared({caller = initialCaller}) actor class MainIndirect({
+shared({caller = initialCaller}) persistent actor class MainIndirect({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
@@ -28,14 +29,14 @@ shared({caller = initialCaller}) actor class MainIndirect({
 }) = this {
     // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
-    //     Debug.trap("argument userArg is wrong");
+    //     throw Error.reject("argument userArg is wrong");
     // };
 
     stable var initialized = false;
 
-    // stable var _ownersSave: [(Principal, ())] = []; // We don't ugrade this package
-    var owners: HashMap.HashMap<Principal, ()> =
-        HashMap.fromIter(
+    // TODO@P1: Use `Set`.
+    stable var owners: Map.Map<Principal, ()> =
+        Map.fromIter(
             [
                 (packageManager, ()),
                 (mainIndirect, ()),
@@ -43,9 +44,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                 (battery, ()),
                 (user, ()),
             ].vals(),
-            4,
-            Principal.equal,
-            Principal.hash);
+            Principal.compare);
 
     public shared({caller}) func init({
         installationId: Common.InstallationId;
@@ -53,53 +52,51 @@ shared({caller = initialCaller}) actor class MainIndirect({
         // user: Principal;
         // packageManager: Principal;
     }): async () {
-        onlyOwner(caller, "init");
+        await* onlyOwner(caller, "init");
 
-        owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed?
+        ignore Map.insert<Principal, ()>(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installModule`. // TODO@P3: needed?
 
         let pm: OurPMType = actor (Principal.toText(packageManager));
         let battery = await pm.getModulePrincipal(installationId, "battery");
-        owners.put(battery, ());
+        ignore Map.insert<Principal, ()>(owners, Principal.compare, battery, ());
 
         initialized := true;
     };
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            Debug.trap("main_indirect: not initialized");
+            throw Error.reject("main_indirect: not initialized");
         };
     };
 
     public query func getOwners(): async [Principal] {
-        Iter.toArray(owners.keys());
+        Iter.toArray(Map.keys(owners));
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        onlyOwner(caller, "setOwners");
+        await* onlyOwner(caller, "setOwners");
 
-        owners := HashMap.fromIter(
+        owners := Map.fromIter(
             Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
-            Array.size(newOwners),
-            Principal.equal,
-            Principal.hash,
+            Principal.compare,
         );
     };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
-        onlyOwner(caller, "addOwner");
+        await* onlyOwner(caller, "addOwner");
 
-        owners.put(newOwner, ());
+        ignore Map.insert<Principal, ()>(owners, Principal.compare, newOwner, ());
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
-        onlyOwner(caller, "removeOwner");
+        await* onlyOwner(caller, "removeOwner");
 
-        owners.delete(oldOwner);
+        ignore Map.delete(owners, Principal.compare, oldOwner);
     };
 
-    func onlyOwner(caller: Principal, msg: Text) {
-        if (owners.get(caller) == null) {
-            Debug.trap("not the owner: " # msg);
+    func onlyOwner(caller: Principal, msg: Text): async* () {
+        if (Map.get(owners, Principal.compare, caller) == null) {
+            throw Error.reject("not the owner: " # msg);
         };
     };
 
@@ -108,11 +105,12 @@ shared({caller = initialCaller}) actor class MainIndirect({
         getModulePrincipal: query (installationId: Common.InstallationId, moduleName: Text) -> async Principal;
     };
 
-    /*stable*/ var ourPM: OurPMType = actor (Principal.toText(packageManager)); // actor("aaaaa-aa");
+    // TODO@P1: Check.
+    stable var ourPM: OurPMType = actor (Principal.toText(packageManager)); // actor("aaaaa-aa");
     // /*stable*/ var ourSimpleIndirect = simpleIndirect;
 
     public shared({caller}) func setOurPM(pm: Principal): async () {
-        onlyOwner(caller, "setOurPM");
+        await* onlyOwner(caller, "setOurPM");
 
         ourPM := actor(Principal.toText(pm));
     };
@@ -136,9 +134,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
-            onlyOwner(caller, "installPackagesWrapper");
+            await* onlyOwner(caller, "installPackagesWrapper");
 
-            let packages2 = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+            let packages2 = Array.toVarArray<?Common.PackageInfo>(Array.repeat<?Common.PackageInfo>(null, Array.size(packages)));
             for (i in packages.keys()) {
                 // unsafe operation, run in main_indirect:
                 let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
@@ -171,20 +169,16 @@ shared({caller = initialCaller}) actor class MainIndirect({
             //     (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P3: 100_000_000_000 is install_code() amount.
             //         packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
             //             let ?pkg2 = pkg else {
-            //                 Debug.trap("programming error");
+            //                 throw Error.reject("programming error");
             //             };
             //             let #real specific = pkg2.specific else {
             //                 // TODO@P3: Support virtual packages.
-            //                 Debug.trap("programming error");
+            //                 throw Error.reject("programming error");
             //             };
             //             acc + specific.modules.size()
             //         });
             // };
-            await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // Cycles are already delivered to `main_indirect`.
-                minInstallationId;
-                afterInstallCallback;
-                user;
-                packages = Iter.toArray(Iter.map<Nat, {
+            let pkgx = Iter.toArray(Iter.filterMap<Nat, {
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
                     preinstalledModules: [(Text, Principal)];
@@ -194,9 +188,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     packages.keys(),
                     func (i: Nat) = do {
                         let ?pkg = packages2[i] else {
-                            Debug.trap("programming error");
+                            // throw Error.reject("programming error"); // Can't throw here, because not async.
+                            return null;
                         };
-                        {
+                        ?{
                             package = Common.sharePackageInfo(pkg);
                             repo = packages[i].repo;
                             preinstalledModules = packages[i].preinstalledModules;
@@ -205,12 +200,17 @@ shared({caller = initialCaller}) actor class MainIndirect({
                         };
                     },
                 ));
+            await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // Cycles are already delivered to `main_indirect`.
+                minInstallationId;
+                afterInstallCallback;
+                user;
+                packages = pkgx;
                 bootstrapping;
             });
         }
         catch (e) {
             Debug.print("installPackagesWrapper: " # Error.message(e));
-            Debug.trap(Error.message(e));
+            throw Error.reject(Error.message(e));
         };
     };
 
@@ -230,7 +230,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         };
     }): () {
         try {
-            onlyOwner(caller, "installModule");
+            await* onlyOwner(caller, "installModule");
 
             Debug.print("installModule " # debug_show(moduleName) # " preinstalled: " # debug_show(preinstalledCanisterId));
 
@@ -272,7 +272,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         catch (e) {
             let msg = "installModule: " # Error.message(e);
             Debug.print(msg);
-            Debug.trap(msg);
+            throw Error.reject(msg);
         };
     };
 
@@ -292,9 +292,9 @@ shared({caller = initialCaller}) actor class MainIndirect({
         };
     }): () {
         try {
-            onlyOwner(caller, "upgradePackageWrapper");
+            await* onlyOwner(caller, "upgradePackageWrapper");
 
-            let newPackages = Array.init<?Common.PackageInfo>(Array.size(packages), null);
+            let newPackages = Array.toVarArray<?Common.PackageInfo>(Array.repeat<?Common.PackageInfo>(null, Array.size(packages)));
             for (i in packages.keys()) {
                 // TODO@P3: Run in parallel.
                 // unsafe operation, run in main_indirect:
@@ -321,7 +321,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
             await backendObj.upgradeStart({
                 minUpgradeId;
                 user;
-                packages = Iter.toArray(Iter.map<Nat, {
+                packages = Iter.toArray(Iter.filterMap<Nat, {
                     installationId: Common.InstallationId;
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
@@ -331,9 +331,10 @@ shared({caller = initialCaller}) actor class MainIndirect({
                     packages.keys(),
                     func (i: Nat) = do {
                         let ?pkg = newPackages[i] else {
-                            Debug.trap("programming error");
+                            // throw Error.reject("programming error"); // Can't throw here, because not async.
+                            return null;
                         };
-                        {
+                        ?{
                             installationId = packages[i].installationId;
                             package = Common.sharePackageInfo(pkg);
                             repo = packages[i].repo;
@@ -366,7 +367,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
         };
     }): () {
         try {
-            onlyOwner(caller, "upgradeOrInstallModule");
+            await* onlyOwner(caller, "upgradeOrInstallModule");
 
             Debug.print("upgradeOrInstallModule " # debug_show(moduleName) # " " # debug_show(upgradeId));
 
@@ -430,7 +431,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
                                 canister_id;
                             }, 1059 * wasm_module.size());
                         } else {
-                            Debug.trap(Error.message(e));
+                            throw Error.reject(Error.message(e));
                         };
                     };
                     canister_id;
@@ -504,14 +505,13 @@ shared({caller = initialCaller}) actor class MainIndirect({
     /// Internal.
     public shared({caller}) func topUpOneCanisterFinish(canister_id: Principal, fulfillment: Common.CanisterFulfillment): () {
         try {
-            onlyOwner(caller, "topUpOneCanisterFinish");
+            await* onlyOwner(caller, "topUpOneCanisterFinish");
 
             let status = await IC.ic.canister_status({canister_id});
             let remaining = status.cycles;
             if (remaining <= fulfillment.threshold) {
                 ignore Cycles.accept<system>(fulfillment.topupAmount);
-                Cycles.add<system>(fulfillment.topupAmount);
-                await IC.ic.deposit_cycles({canister_id});
+                await (with cycles = fulfillment.topupAmount) IC.ic.deposit_cycles({canister_id});
             };
         }
         catch (e) {
@@ -523,7 +523,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 //         canister_ids: [Principal];
 //     }): async Bool {
 //         try {
-//             onlyOwner(caller, "checkCodeInstalled");
+//             await* onlyOwner(caller, "checkCodeInstalled");
 
 //             type Callee = {
 //                 b44c4a9beec74e1c8a7acbe46256f92f_isInitialized: query () -> async ();
@@ -548,7 +548,7 @@ shared({caller = initialCaller}) actor class MainIndirect({
 //         catch (e) {
 //             let msg = "checkCodeInstalled: " # Error.message(e);
 //             Debug.print(msg);
-//             Debug.trap(msg);
+//             throw Error.reject(msg);
 //         };
 //    };
 

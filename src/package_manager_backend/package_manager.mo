@@ -1,4 +1,6 @@
 /// TODO@P3: Methods to query for all installed packages.
+import Result "mo:core/Result";
+import List "mo:core/List";
 import Option "mo:core/Option";
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
@@ -27,7 +29,7 @@ import env "mo:env";
 import Battery "battery";
 import Install "../install";
 
-shared({caller = initialCaller}) actor class PackageManager({
+shared({caller = initialCaller}) persistent actor class PackageManager({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
     simpleIndirect: Principal;
@@ -38,7 +40,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 }) = this {
     // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
-    //     Debug.trap("argument userArg is wrong");
+    //     throw Error.reject("argument userArg is wrong");
     // };
 
     public type HalfInstalledPackageInfo = {
@@ -72,7 +74,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func shareHalfInstalledPackageInfo(x: HalfInstalledPackageInfo): SharedHalfInstalledPackageInfo = {
         package = Common.sharePackageInfo(x.package);
         packageRepoCanister = x.packageRepoCanister;
-        modulesInstalledByDefault = Iter.toArray(x.modulesInstalledByDefault.entries());
+        modulesInstalledByDefault = Iter.toArray(Map.entries(x.modulesInstalledByDefault));
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -84,7 +86,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     private func unshareHalfInstalledPackageInfo(x: SharedHalfInstalledPackageInfo): HalfInstalledPackageInfo = {
         package = Common.unsharePackageInfo(x.package);
         packageRepoCanister = x.packageRepoCanister;
-        modulesInstalledByDefault = Map.fromIter(x.modulesInstalledByDefault.vals(), ext.compare);
+        modulesInstalledByDefault = Map.fromIter(x.modulesInstalledByDefault.vals(), Text.compare);
         minInstallationId = x.minInstallationId;
         afterInstallCallback = x.afterInstallCallback;
         bootstrapping = x.bootstrapping;
@@ -143,7 +145,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId = x.installationId;
         package = Common.sharePackageInfo(x.package);
         newRepo = x.newRepo;
-        modulesInstalledByDefault = Iter.toArray(x.modulesInstalledByDefault.entries());
+        modulesInstalledByDefault = Iter.toArray(Map.entries(x.modulesInstalledByDefault));
         modulesToDelete = x.modulesToDelete;
         remainingModules = x.remainingModules;
         arg = x.arg;
@@ -163,7 +165,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var initialized = false;
 
-    var owners: Map.Map<Principal, ()> = // FIXME@P1: Use `Set`.
+    stable var owners: Map.Map<Principal, ()> = // FIXME@P1: Use `Set`.
         Map.fromIter(
             [
                 (packageManager, ()),
@@ -174,7 +176,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             ].vals(),
             Principal.compare);
 
-    var batteryActor: Battery.Battery = actor(Principal.toText(battery));
+    transient let batteryActor: Battery.Battery = actor(Principal.toText(battery));
 
     public shared({caller}) func init({
         // installationId: Common.InstallationId;
@@ -183,21 +185,21 @@ shared({caller = initialCaller}) actor class PackageManager({
         // packageManager: Principal;
     }): async () {
         try {
-            onlyOwner(caller, "init");
+            await* onlyOwner(caller, "init");
 
-            owners.put(Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
-            owners.delete(packageManager); // delete bootstrapper
+            ignore Map.insert(owners, Principal.compare, Principal.fromActor(this), ()); // self-usage to call `this.installPackages`. // TODO@P3: needed?
+            ignore Map.delete(owners, Principal.compare, packageManager); // delete bootstrapper
 
             initialized := true;
         }
         catch(e) {
             Debug.print("PM init: " # Error.message(e));
-            Debug.trap(Error.message(e));
+            throw Error.reject(Error.message(e));
         };
     };
 
     public shared({caller}) func setOwners(newOwners: [Principal]): async () {
-        onlyOwner(caller, "setOwners");
+        await* onlyOwner(caller, "setOwners");
 
         owners := Map.fromIter(
             Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (owner: Principal): (Principal, ()) = (owner, ())),
@@ -206,36 +208,36 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared({caller}) func addOwner(newOwner: Principal): async () {
-        onlyOwner(caller, "addOwner");
+        await* onlyOwner(caller, "addOwner");
 
-        owners.put(newOwner, ());
+        ignore Map.insert(owners, Principal.compare, newOwner, ());
     };
 
     public shared({caller}) func removeOwner(oldOwner: Principal): async () {
-        onlyOwner(caller, "removeOwner");
+        await* onlyOwner(caller, "removeOwner");
 
-        owners.delete(oldOwner);
+        ignore Map.delete(owners, Principal.compare, oldOwner);
     };
 
     public query func getOwners(): async [Principal] {
-        Iter.toArray(owners.keys());
+        Iter.toArray(Map.keys<Principal, ()>(owners));
     };
 
     public composite query func isAllInitialized(): async () {
         try {
             if (not initialized) {
-                Debug.trap("package_manager: not initialized");
+                throw Error.reject("package_manager: not initialized");
             };
             // TODO@P3: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
             let _ = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = getSimpleIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = batteryActor.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = do {
-                let ?pkg = installedPackages.get(installationId) else {
-                    Debug.trap("package manager is not yet installed");
+                let ?pkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
+                    throw Error.reject("package manager is not yet installed");
                 };
-                let ?frontend = pkg.modulesInstalledByDefault.get("frontend") else {
-                    Debug.trap("programming error 1");
+                let ?frontend = Map.get(pkg.modulesInstalledByDefault, Text.compare, "frontend") else {
+                    throw Error.reject("programming error 1");
                 };
                 let f: Asset.AssetCanister = actor(Principal.toText(frontend));
                 f.get({key = "/index.html"; accept_encodings = ["gzip"]});
@@ -245,7 +247,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         }
         catch(e) {
             Debug.print("PM isAllInitialized: " # Error.message(e));
-            Debug.trap(Error.message(e));
+            throw Error.reject(Error.message(e));
         };
     };
 
@@ -263,7 +265,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     // TODO@P3: too low-level?
     public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
-        onlyOwner(caller, "setMainIndirect");
+        await* onlyOwner(caller, "setMainIndirect");
 
         main_indirect_ := main_indirect_v;
     };
@@ -274,38 +276,29 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     stable var installedPackages = Map.empty<Common.InstallationId, Common.InstalledPackageInfo>();
 
-    stable var _installedPackagesByNameSave: [(Blob, {
-        all: RBTree.Tree<Common.InstallationId, ()>;
-        default: Common.InstallationId;
-    })] = [];
-    var installedPackagesByName: HashMap.HashMap<Blob, {
-        all: RBTree.RBTree<Common.InstallationId, ()>;
+    var installedPackagesByName: Map.Map<Blob, {
+        all: Map.Map<Common.InstallationId, ()>; // FIXME@P1: `Set`
         var default: Common.InstallationId;
-    }> =
-        HashMap.HashMap(0, Blob.equal, Blob.hash);
-
-    stable var _halfInstalledPackagesSave: [(Common.InstallationId, SharedHalfInstalledPackageInfo)] = [];
+    }> = Map.empty();
     // TODO@P3: `var` or `let` here and in other places:
-    var halfInstalledPackages: HashMap.HashMap<Common.InstallationId, HalfInstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
+    stable var halfInstalledPackages: Map.Map<Common.InstallationId, HalfInstalledPackageInfo> =
+        Map.fromIter([].vals(), Int.compare); // TODO@P3: use `Nat.compare`?
 
 
-    stable var _halfUninstalledPackagesSave: [(Common.UninstallationId, SharedHalfUninstalledPackageInfo)] = [];
     // TODO@P3: `var` or `let` here and in other places:
-    var halfUninstalledPackages: HashMap.HashMap<Common.UninstallationId, HalfUninstalledPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
+    stable var halfUninstalledPackages: Map.Map<Common.UninstallationId, HalfUninstalledPackageInfo> =
+        Map.fromIter([].vals(), Int.compare); // TODO@P3: use `Nat.compare`?
 
-    stable var _halfUpgradedPackagesSave: [(Common.UpgradeId, SharedHalfUpgradedPackageInfo)] = [];
     // TODO@P3: `var` or `let` here and in other places:
-    var halfUpgradedPackages: HashMap.HashMap<Common.UpgradeId, HalfUpgradedPackageInfo> =
-        HashMap.fromIter([].vals(), 0, Nat.equal, Common.intHash);
+    stable var halfUpgradedPackages: Map.Map<Common.UpgradeId, HalfUpgradedPackageInfo> =
+        Map.fromIter([].vals(), Int.compare); // TODO@P3: use `Nat.compare`?
 
     stable var repositories: [{canister: Principal; name: Text}] = [];
 
     // TODO@P3: Copy this code to other modules:
-    func onlyOwner(caller: Principal, msg: Text) {
-        if (Option.isNull(owners.get(caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
-            Debug.trap(debug_show(caller) # " is not the owner: " # msg);
+    func onlyOwner(caller: Principal, msg: Text): async* () {
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # msg);
         };
     };
 
@@ -316,70 +309,67 @@ shared({caller = initialCaller}) actor class PackageManager({
         newRepo: Principal;
         arg: Blob;
         initArg: ?Blob;
-    }): {
+    }): Result.Result<{
         halfUpgradedInfo: HalfUpgradedPackageInfo;
         modulesToDelete: [(Text, Principal)];
         allModulesCount: Nat;
-    } {
+    }, Text> {
         let #real newPkgReal = newPkg.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
+            return #err("trying to directly upgrade a virtual package");
         };
         let newPkgModules = newPkgReal.modules;
 
-        let ?oldPkg = installedPackages.get(installationId) else {
-            Debug.trap("no such package installation");
+        let ?oldPkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
+            return #err("no such package installation");
         };
         let #real oldPkgReal = oldPkg.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
+            return #err("trying to directly upgrade a virtual package");
         };
 
         // Calculate modules to delete
-        let modulesToDelete0 = HashMap.fromIter<Text, Common.Module>(
+        let modulesToDelete0 = Map.fromIter<Text, Common.Module>(
             Iter.filter<(Text, Common.Module)>(
-                oldPkgReal.modules.entries(),
-                func (x: (Text, Common.Module)) = Option.isNull(newPkgModules.get(x.0))
+                Map.entries(oldPkgReal.modules),
+                func (x: (Text, Common.Module)) = Option.isNull(Map.get(newPkgModules, Text.compare, x.0))
             ),
-            oldPkgReal.modules.size(),
-            Text.equal,
-            Text.hash,
+            Text.compare,
         );
         let modulesToDelete = Iter.toArray(
-            Iter.map<Text, (Text, Principal)>(
-                modulesToDelete0.keys(),
+            Iter.filterMap<Text, (Text, Principal)>(
+                Map.keys(modulesToDelete0),
                 func (name: Text) {
-                    let ?m = oldPkg.modulesInstalledByDefault.get(name) else {
-                        Debug.trap("programming error");
+                    let ?m = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, name) else {
+                        // throw Error.reject("programming error");
+                        return null;
                     };
-                    (name, m);
+                    ?(name, m);
                 },
             )
         );
 
         // Calculate all modules (old + new)
-        let allModules = HashMap.fromIter<Text, ()>(
+        let allModules = Map.fromIter<Text, ()>(
             Iter.map<Text, (Text, ())>(
-                Iter.concat(oldPkg.modulesInstalledByDefault.keys(), newPkgModules.keys()), func (x: Text) = (x, ())
+                Iter.concat(Map.keys(oldPkg.modulesInstalledByDefault), Map.keys(newPkgModules)), func (x: Text) = (x, ())
             ),
-            oldPkg.modulesInstalledByDefault.size() + newPkgModules.size(),
-            Text.equal,
-            Text.hash,
+            Text.compare,
         );
 
         let halfUpgradedInfo: HalfUpgradedPackageInfo = {
             installationId;
             package = newPkg;
             newRepo;
-            modulesInstalledByDefault = HashMap.HashMap(0, Text.equal, Text.hash);
+            modulesInstalledByDefault = Map.empty();
             modulesToDelete;
-            var remainingModules = allModules.size() - modulesToDelete.size(); // modules to install or upgrade
+            var remainingModules = Map.size(allModules) - modulesToDelete.size(); // modules to install or upgrade
             arg;
             initArg;
         };
 
-        {
+        #ok {
             halfUpgradedInfo;
             modulesToDelete;
-            allModulesCount = allModules.size();
+            allModulesCount = Map.size(allModules);
         };
     };
 
@@ -398,7 +388,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        onlyOwner(caller, "installPackages");
+        await* onlyOwner(caller, "installPackages");
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += packages.size();
@@ -473,7 +463,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minUninstallationId: Common.UninstallationId}
     {
-        onlyOwner(caller, "uninstallPackages");
+        await* onlyOwner(caller, "uninstallPackages");
 
         let minUninstallationId = nextUninstallationId;
         nextUninstallationId += Array.size(packages);
@@ -482,10 +472,10 @@ shared({caller = initialCaller}) actor class PackageManager({
         label cycle for (installationId in packages.vals()) {
             let uninstallationId = ourNextUninstallationId;
             ourNextUninstallationId += 1;
-            let ?pkg = installedPackages.get(installationId) else {
+            let ?pkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
                 continue cycle; // already uninstalled
             };
-            halfUninstalledPackages.put(uninstallationId, {
+            ignore Map.insert(halfUninstalledPackages, Int.compare, uninstallationId, {
                 installationId;
                 package = pkg.package;
                 var remainingModules = Common.numberOfModules(pkg);
@@ -533,7 +523,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
-        onlyOwner(caller, "upgradePackages");
+        await* onlyOwner(caller, "upgradePackages");
 
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
@@ -586,23 +576,28 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        onlyOwner(caller, "upgradeStart");
+        await* onlyOwner(caller, "upgradeStart");
 
         for (newPkgNum in packages.keys()) {
             let newPkgData = packages[newPkgNum];
             let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO@P3: Need to unshare the entire variable?
             
-            let {halfUpgradedInfo; modulesToDelete; allModulesCount} = prepareUpgradeData({
+            switch (prepareUpgradeData({
                 installationId = newPkgData.installationId;
                 newPkg;
                 newRepo = Principal.fromActor(newPkgData.repo);
                 arg = newPkgData.arg;
                 initArg = newPkgData.initArg;
-            });
-
-            // Debug.print("XXX: " # debug_show(halfUpgradedInfo.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
-            halfUpgradedPackages.put(minUpgradeId + newPkgNum, halfUpgradedInfo);
-            await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
+            })) {
+                case (#ok {halfUpgradedInfo; modulesToDelete; allModulesCount}) {
+                    // Debug.print("XXX: " # debug_show(halfUpgradedInfo.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
+                    ignore Map.insert(halfUpgradedPackages, Int.compare, minUpgradeId + newPkgNum, halfUpgradedInfo);
+                    await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
+                };
+                case (#err err) {
+                    throw Error.reject("Error in upgradeStart: " # err);
+                };
+            };
         };
     };
 
@@ -615,12 +610,12 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        onlyOwner(caller, "onUpgradeOrInstallModule");
+        await* onlyOwner(caller, "onUpgradeOrInstallModule");
 
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
+            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
         };
-        upgrade.modulesInstalledByDefault.put(moduleName, canister_id);
+        ignore Map.insert(upgrade.modulesInstalledByDefault, Text.compare, moduleName, canister_id);
 
         upgrade.remainingModules -= 1;
         if (upgrade.remainingModules == 0) {
@@ -639,27 +634,27 @@ shared({caller = initialCaller}) actor class PackageManager({
                     error = #abort;
                 }]);
             };
-            let ?inst = installedPackages.get(upgrade.installationId) else {
-                Debug.trap("no such installed package");
+            let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
+                throw Error.reject("no such installed package");
             };
             inst.packageRepoCanister := upgrade.newRepo;
             inst.package := upgrade.package;
             inst.modulesInstalledByDefault := upgrade.modulesInstalledByDefault;
-            halfUpgradedPackages.delete(upgradeId);
+            ignore Map.delete(halfUpgradedPackages, Int.compare, upgradeId);
         };
 
         // Call the user's callback if provided
         let #real real = upgrade.package.specific else {
-            Debug.trap("trying to directly install a virtual package");
+            throw Error.reject("trying to directly install a virtual package");
         };
-        let ?inst = installedPackages.get(upgrade.installationId) else {
-            Debug.trap("no such installed package");
+        let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
+            throw Error.reject("no such installed package");
         };
-        label r for ((moduleName, module_) in real.modules.entries()) {
-            let ?cbPrincipal = inst.modulesInstalledByDefault.get(moduleName) else {
+        label r for ((moduleName, module_) in Map.entries(real.modules)) {
+            let ?cbPrincipal = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName) else {
                 continue r; // We remove the module in other part of the code.
             };
-            switch (module_.callbacks.get(#CodeUpgradedForAllCanisters)) {
+            switch (Map.get(module_.callbacks, Common.moduleEventCompare, #CodeUpgradedForAllCanisters)) {
                 case (?callbackName) {
                     ignore getSimpleIndirect().callAll([{
                         canister = cbPrincipal;
@@ -688,7 +683,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
-            halfInstalledPackages.delete(installationId);
+            ignore Map.delete(halfInstalledPackages, Int.compare, installationId);
         };
     };
 
@@ -698,28 +693,28 @@ shared({caller = initialCaller}) actor class PackageManager({
     }): async () {
         Debug.print("onDeleteCanister");
 
-        onlyOwner(caller, "onDeleteCanister");
+        await* onlyOwner(caller, "onDeleteCanister");
 
-        let ?uninst = halfUninstalledPackages.get(uninstallationId) else {
+        let ?uninst = Map.get<Common.UninstallationId, HalfUninstalledPackageInfo>(halfUninstalledPackages, Int.compare, uninstallationId) else {
             return;
         };
         uninst.remainingModules -= 1;
         if (uninst.remainingModules == 0) {
-            let ?pkg = installedPackages.get(uninst.installationId) else {
+            let ?pkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, uninst.installationId) else {
                 return;
             };
-            installedPackages.delete(uninst.installationId);
+            ignore Map.delete(installedPackages, Nat.compare, uninst.installationId);
             let guid2 = Common.amendedGUID(pkg.package.base.guid, pkg.package.base.name);
-            switch (installedPackagesByName.get(guid2)) {
+            switch (Map.get(installedPackagesByName, Blob.compare, guid2)) {
                 case (?info) {
-                    if (RBTree.size(info.all.share()) == 1) {
-                        installedPackagesByName.delete(guid2);
+                    if (Map.size(info.all) == 1) {
+                        ignore Map.delete(installedPackagesByName, Blob.compare, guid2);
                         info.default := 0;
                     } else {
-                        info.all.delete(uninst.installationId);
+                        ignore Map.delete(info.all, Nat.compare, uninst.installationId);
                         if (info.default == uninst.installationId) {
-                            let ?(last, ()) = info.all.entriesRev().next() else {
-                                Debug.trap("programming error");
+                            let ?(last, ()) = Map.reverseEntries(info.all).next() else {
+                                throw Error.reject("programming error");
                             };
                             info.default := last;
                         };
@@ -727,7 +722,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
-            halfUninstalledPackages.delete(uninstallationId);
+            ignore Map.delete(halfUninstalledPackages, Int.compare, uninstallationId);
         };
     };
 
@@ -745,7 +740,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        onlyOwner(caller, "facilitateBootstrap");
+        await* onlyOwner(caller, "facilitateBootstrap");
 
         let minInstallationId = nextInstallationId;
         nextInstallationId += 1;
@@ -762,7 +757,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         });
 
         // let ?battery = coreModules.get("battery") else {
-        //     Debug.trap("error getting battery");
+        //     throw Error.reject("error getting battery");
         // };
         {minInstallationId}
     };
@@ -797,19 +792,18 @@ shared({caller = initialCaller}) actor class PackageManager({
         }];
         bootstrapping: Bool;
     }) {
-        onlyOwner(caller, "installStart");
+        await* onlyOwner(caller, "installStart");
 
         for (p0 in packages.keys()) {
             let p = packages[p0];
             let #real realPackage = p.package.specific else {
-                Debug.trap("trying to directly install a virtual package");
+                throw Error.reject("trying to directly install a virtual package");
             };
 
             let package2 = Common.unsharePackageInfo(p.package); // TODO@P3: why used twice below? seems to be a mis-programming.
             let numModules = realPackage.modules.size();
 
-            let preinstalledModules = HashMap.fromIter<Text, Principal>(
-                p.preinstalledModules.vals(), p.preinstalledModules.size(), Text.equal, Text.hash);
+            let preinstalledModules = Map.fromIter<Text, Principal>(p.preinstalledModules.vals(), Text.compare);
 
             let ourHalfInstalled: HalfInstalledPackageInfo = {
                 package = package2;
@@ -822,7 +816,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 arg = p.arg;
                 initArg = p.initArg;
             };
-            halfInstalledPackages.put(minInstallationId + p0, ourHalfInstalled);
+            ignore Map.insert(halfInstalledPackages, Int.compare, minInstallationId + p0, ourHalfInstalled);
 
             await* doInstallFinish(minInstallationId + p0, ourHalfInstalled);
         };
@@ -835,7 +829,7 @@ shared({caller = initialCaller}) actor class PackageManager({
             switch (p.specific) {
                 case (#real pkgReal) {
                     Iter.filter<(Text, Common.Module)>(
-                        pkgReal.modules.entries(),
+                        Map.entries(pkgReal.modules),
                         func (p: (Text, Common.Module)) = p.1.installByDefault,
                     );
                 };
@@ -844,23 +838,23 @@ shared({caller = initialCaller}) actor class PackageManager({
 
         // TODO@P3: `Iter.toArray` is a (small) slowdown.
         let bi = if (pkg.bootstrapping) {
-            Iter.toArray(pkg.modulesInstalledByDefault.entries());
+            Iter.toArray(Map.entries(pkg.modulesInstalledByDefault));
         } else {
-            let ?pkg0 = installedPackages.get(0) else {
-                Debug.trap("package manager not installed");
+            let ?pkg0 = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, 0) else {
+                throw Error.reject("package manager not installed");
             };
-            Iter.toArray(pkg0.modulesInstalledByDefault.entries());
+            Iter.toArray(Map.entries(pkg0.modulesInstalledByDefault));
         };
-        let coreModules = HashMap.fromIter<Text, Principal>(bi.vals(), bi.size(), Text.equal, Text.hash);
+        let coreModules = Map.fromIter<Text, Principal>(bi.vals(), Text.compare);
         var moduleNumber = 0;
-        let ?backend = coreModules.get("backend") else {
-            Debug.trap("error getting backend");
+        let ?backend = Map.get(coreModules, Text.compare, "backend") else {
+            throw Error.reject("error getting backend");
         };
-        let ?main_indirect = coreModules.get("main_indirect") else {
-            Debug.trap("error getting main_indirect");
+        let ?main_indirect = Map.get(coreModules, Text.compare, "main_indirect") else {
+            throw Error.reject("error getting main_indirect");
         };
-        let ?simple_indirect = coreModules.get("simple_indirect") else {
-            Debug.trap("error getting simple_indirect");
+        let ?simple_indirect = Map.get(coreModules, Text.compare, "simple_indirect") else {
+            throw Error.reject("error getting simple_indirect");
         };
         let batteryActor = actor(Principal.toText(battery)) : actor {
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
@@ -868,7 +862,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         if (not pkg.bootstrapping) {
             await batteryActor.withdrawCycles3(
                 newCanisterCycles * (switch (p.specific) {
-                    case (#real pkgReal) pkgReal.modules.size();
+                    case (#real pkgReal) Map.size(pkgReal.modules);
                     case (#virtual _) 0;
                 }),
                 Principal.fromActor(main_indirect_));
@@ -889,7 +883,7 @@ shared({caller = initialCaller}) actor class PackageManager({
                 packageManager = backend;
                 mainIndirect = main_indirect;
                 simpleIndirect = simple_indirect;
-                preinstalledCanisterId = if (pkg.bootstrapping) { coreModules.get(name) } else { null };
+                preinstalledCanisterId = if (pkg.bootstrapping) { Map.get(coreModules, Text.compare, name) } else { null };
                 user;
                 wasmModule = Common.shareModule(m); // TODO@P3: We unshared, then shared it, huh?
                 afterInstallCallback = pkg.afterInstallCallback;
@@ -911,7 +905,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     ): async* () {
         var posTmp = 0;
         let #real newPkgReal = pkg.package.specific else {
-            Debug.trap("trying to directly install a virtual package");
+            throw Error.reject("trying to directly install a virtual package");
         };
         // TODO@P3: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgReal.modules;
@@ -920,26 +914,26 @@ shared({caller = initialCaller}) actor class PackageManager({
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
         };
         await batteryActor.withdrawCycles3(
-            newCanisterCycles * newPkgModules.size() - pkg.modulesToDelete.size(),
+            newCanisterCycles * Map.size(newPkgModules) - Array.size(pkg.modulesToDelete),
             Principal.fromActor(main_indirect_));
 
         // TODO@P3: repeated calculation
-        let ?oldPkg = installedPackages.get(pkg.installationId) else {
-            Debug.trap("no such package installation");
+        let ?oldPkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, pkg.installationId) else {
+            throw Error.reject("no such package installation");
         };
         // let #real oldPkgReal = oldPkg.package.specific else {
-        //     Debug.trap("trying to directly upgrade a virtual package");
+        //     throw Error.reject("trying to directly upgrade a virtual package");
         // };
         // let oldPkgModules = oldPkgReal.modules; // Corrected: Use oldPkgReal modules.
-        // let oldPkgModulesHash = HashMap.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
+        // let oldPkgModulesHash = Map.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
 
-        for (name in newPkgModules.keys()) {
+        for (name in Map.keys(newPkgModules)) {
             let pos = posTmp;
             posTmp += 1;
 
-            let canister_id = oldPkg.modulesInstalledByDefault.get(name);
-            let ?wasmModule = newPkgModules.get(name) else {
-                Debug.trap("programming error: no such module");
+            let canister_id = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, name);
+            let ?wasmModule = Map.get<Text, Common.Module>(newPkgModules, Text.compare, name) else {
+                throw Error.reject("programming error: no such module");
             };
             getMainIndirect().upgradeOrInstallModule({
                 upgradeId = p0;
@@ -979,35 +973,35 @@ shared({caller = initialCaller}) actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
     }): async () {
-        // TODO@P3: Move after `onlyOwner` call:
+        // TODO@P3: Move after `await* onlyOwner` call:
         Debug.print("Called onInstallCode for canister " # debug_show(canister) # " (" # debug_show(moduleName) # ")");
 
-        onlyOwner(caller, "onInstallCode");
+        await* onlyOwner(caller, "onInstallCode");
 
         Debug.print("onInstallCode: Cycles accepted: " # debug_show(Cycles.available()));
         ignore Cycles.accept<system>(Cycles.available());
 
-        let ?inst = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package"); // better message
+        let ?inst = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Nat.compare, installationId) else {
+            throw Error.reject("no such package"); // better message
         };
         switch (moduleName) {
             case (?name) {
-                inst.modulesInstalledByDefault.put(name, canister);
+                ignore Map.insert(inst.modulesInstalledByDefault, Text.compare, name, canister);
             };
             case null {};
         };
         let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
-            Debug.trap("trying to directly install a virtual installation");
+            throw Error.reject("trying to directly install a virtual installation");
         };
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
         if (inst.remainingModules == 0) { // All module have been installed.
-            _updateAfterInstall({installationId});
-            for ((moduleName2, module4) in realPackage.modules.entries()) {
-                switch (module4.callbacks.get(#CodeInstalledForAllCanisters)) {
+            await* _updateAfterInstall({installationId});
+            for ((moduleName2, module4) in Map.entries(realPackage.modules)) {
+                switch (Map.get(module4.callbacks, Common.moduleEventCompare, #CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
-                        let ?cbPrincipal = inst.modulesInstalledByDefault.get(moduleName2) else {
-                            Debug.trap("programming error 3");
+                        let ?cbPrincipal = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName2) else {
+                            throw Error.reject("programming error 3");
                         };
                         ignore getSimpleIndirect().callAll([{
                             canister = cbPrincipal;
@@ -1037,43 +1031,43 @@ shared({caller = initialCaller}) actor class PackageManager({
                 };
                 case null {};
             };
-            halfInstalledPackages.delete(installationId);
+            ignore Map.delete(halfInstalledPackages, Int.compare, installationId);
         };
     };
 
-    private func _updateAfterInstall({installationId: Common.InstallationId}) {
-        let ?ourHalfInstalled = halfInstalledPackages.get(installationId) else {
-            Debug.trap("package installation has not been started");
+    private func _updateAfterInstall({installationId: Common.InstallationId}): async* () {
+        let ?ourHalfInstalled = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Nat.compare, installationId) else {
+            throw Error.reject("package installation has not been started");
         };
-        let pubKey : ?Blob = null;
-        installedPackages.put(installationId, {
+        // let pubKey : ?Blob = null;
+        ignore Map.insert<Nat, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId, {
             id = installationId;
             var package = ourHalfInstalled.package;
             var packageRepoCanister = ourHalfInstalled.packageRepoCanister;
             var modulesInstalledByDefault = ourHalfInstalled.modulesInstalledByDefault; // no need for deep copy, because we delete `ourHalfInstalled` soon
-            additionalModules = HashMap.HashMap(0, Text.equal, Text.hash);
+            additionalModules = Map.empty<Text, List.List<Principal>>();
             var pubKey = null;
             var pinned = false;
         });
         let guid2 = Common.amendedGUID(ourHalfInstalled.package.base.guid, ourHalfInstalled.package.base.name);
-        let tree = switch (installedPackagesByName.get(guid2)) {
+        let tree = switch (Map.get<Blob, {all: Map.Map<Common.InstallationId, ()>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2)) {
             case (?old) {
                 old.all;
             };
             case null {
-                let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
-                installedPackagesByName.put(guid2, {
+                let tree = Map.empty<Common.InstallationId, ()>();
+                ignore Map.insert(installedPackagesByName, Blob.compare, guid2, {
                     all = tree;
                     var default = installationId;
                 });
                 tree;
             };
         };
-        tree.put(installationId, ());
+        ignore Map.insert(tree, Nat.compare, installationId, ());
     };
 
     //     let ?installation = installedPackages.get(installationId) else {
-    //         Debug.trap("no such installed installation");
+    //         throw Error.reject("no such installed installation");
     //     };
     //     let part: repository.repository = actor (Principal.toText(installation.packageRepoCanister));
     //     let packageInfo = await part.getPackage(installation.name, installation.version);
@@ -1082,7 +1076,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //         numberOfModulesToInstall = installation.modules.size();
     //         name = installation.name;
     //         version = installation.version;
-    //         modules = HashMap.fromIter<Text, (Principal, {#empty; #installed})>(
+    //         modules = Map.fromIter<Text, (Principal, {#empty; #installed})>(
     //             Iter.map<(Text, Principal), (Text, (Principal, {#empty; #installed}))>(
     //                 installation.modules.entries(),
     //                 func ((x, y): (Text, Principal)): (Text, (Principal, {#empty; #installed})) = (x, (y, #installed)),
@@ -1100,7 +1094,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     // let part: Common.RepositoryRO = actor (Principal.toText(canister));
     //     // let installation = await part.getPackage(packageName, version);
     //     let #real realPackage = packageInfo.specific else {
-    //         Debug.trap("trying to directly install a virtual installation");
+    //         throw Error.reject("trying to directly install a virtual installation");
     //     };
 
     //     await* _finishUninstallPackage({
@@ -1135,7 +1129,7 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     };
     //     installedPackages.delete(installationId);
     //     let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
-    //         Debug.trap("programming error: can't get package by name");
+    //         throw Error.reject("programming error: can't get package by name");
     //     };
     //     if (Array.size(byName) == 1) {
     //         installedPackagesByName.delete(ourHalfInstalled.name);
@@ -1148,101 +1142,19 @@ shared({caller = initialCaller}) actor class PackageManager({
     //     halfInstalledPackages.delete(installationId);
     // };
 
-   system func preupgrade() {
-        _installedPackagesByNameSave := Iter.toArray/*<{all: [Common.InstallationId]; default: Common.InstallationId}>*/(
-            Iter.map<
-                (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId}),
-                (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId})
-            >(
-                installedPackagesByName.entries(),
-                func (x: (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId})) {
-                    (
-                        x.0,
-                        {all = x.1.all.share(); default = x.1.default},
-                    );
-                },
-            ),
-        );
-
-        _halfInstalledPackagesSave := Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), (Common.InstallationId, SharedHalfInstalledPackageInfo)>(
-            halfInstalledPackages.entries(),
-            func (elt: (Common.InstallationId, HalfInstalledPackageInfo)) = (elt.0, shareHalfInstalledPackageInfo(elt.1)),
-        ));
-
-
-        _halfUninstalledPackagesSave := Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), (Common.UninstallationId, SharedHalfUninstalledPackageInfo)>(
-            halfUninstalledPackages.entries(),
-            func (elt: (Common.InstallationId, HalfUninstalledPackageInfo)) = (elt.0, shareHalfUninstalledPackageInfo(elt.1)),
-        ));
-
-        _halfUpgradedPackagesSave := Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), (Common.UpgradeId, SharedHalfUpgradedPackageInfo)>(
-            halfUpgradedPackages.entries(),
-            func (elt: (Common.UpgradeId, HalfUpgradedPackageInfo)) = (elt.0, shareHalfUpgradedPackageInfo(elt.1)),
-        ));
-    };
-
-    system func postupgrade() {
-        installedPackagesByName := HashMap.fromIter(
-            Iter.map<
-                (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId}),
-                (Blob, {all: RBTree.RBTree<Common.InstallationId, ()>; var default: Common.InstallationId})
-            >(
-                _installedPackagesByNameSave.vals(),
-                func ((name, x): (Blob, {all: RBTree.Tree<Common.InstallationId, ()>; default: Common.InstallationId})) {
-                    let tree = RBTree.RBTree<Common.InstallationId, ()>(Nat.compare);
-                    tree.unshare(x.all);
-                    (name, {all = tree; var default = x.default});
-                },
-            ),
-            Array.size(_installedPackagesByNameSave),
-            Blob.equal,
-            Blob.hash,
-        );
-        _installedPackagesByNameSave := []; // Free memory.
-
-        halfInstalledPackages := HashMap.fromIter<Common.InstallationId, HalfInstalledPackageInfo>(
-            Iter.map<(Common.InstallationId, SharedHalfInstalledPackageInfo), (Common.InstallationId, HalfInstalledPackageInfo)>(
-                _halfInstalledPackagesSave.vals(),
-                func (x: (Common.InstallationId, SharedHalfInstalledPackageInfo)) = (x.0, unshareHalfInstalledPackageInfo(x.1)),
-            ),
-            _halfInstalledPackagesSave.size(),
-            Nat.equal,
-            Common.intHash,
-        );
-        _halfInstalledPackagesSave := []; // Free memory;
-
-        halfUninstalledPackages := HashMap.fromIter<Common.UninstallationId, HalfUninstalledPackageInfo>(
-            Iter.map<(Common.UninstallationId, SharedHalfUninstalledPackageInfo), (Common.UninstallationId, HalfUninstalledPackageInfo)>(
-                _halfUninstalledPackagesSave.vals(),
-                func (x: (Common.UninstallationId, SharedHalfUninstalledPackageInfo)) = (x.0, unshareHalfUninstalledPackageInfo(x.1)),
-            ),
-            _halfInstalledPackagesSave.size(),
-            Nat.equal,
-            Common.intHash,
-        );
-        _halfUninstalledPackagesSave := []; // Free memory.
-        halfUpgradedPackages := HashMap.fromIter<Common.UpgradeId, HalfUpgradedPackageInfo>(
-            Iter.map<(Common.UpgradeId, SharedHalfUpgradedPackageInfo), (Common.UpgradeId, HalfUpgradedPackageInfo)>(
-                _halfUpgradedPackagesSave.vals(),
-                func (x: (Common.UpgradeId, SharedHalfUpgradedPackageInfo)) = (x.0, unshareHalfUpgradedPackageInfo(x.1)),
-            ),
-            _halfUpgradedPackagesSave.size(),
-            Nat.equal,
-            Common.intHash,
-        );
-        _halfUpgradedPackagesSave := []; // Free memory.
-    };
-
     // Accessor method //
 
     // TODO@P3: needed?
     /// Returns all (default installed and additional) modules canisters.
     /// Internal.
     public query({caller}) func getAllCanisters(): async [({packageName: Text; guid: Blob}, [(Text, Principal)])] {
-        onlyOwner(caller, "getAllCanisters");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getAllCanisters");
+        };
 
         Iter.toArray(Iter.map<Common.InstalledPackageInfo, ({packageName: Text; guid: Blob}, [(Text, Principal)])>(
-            installedPackages.vals(),
+            Map.values(installedPackages),
             func (pkg: Common.InstalledPackageInfo) =
                 (
                     {packageName = pkg.package.base.name; guid = pkg.package.base.guid}, 
@@ -1252,23 +1164,29 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public query({caller}) func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
-        onlyOwner(caller, "getInstalledPackage");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getInstalledPackage");
+        };
 
-        let ?result = installedPackages.get(id) else {
-            Debug.trap("no such installed package");
+        let ?result = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
+            throw Error.reject("no such installed package");
         };
         Common.installedPackageInfoShare(result);
     };
 
     /// Note that it applies only to default installed modules and fails for additional modules.
     public query({caller}) func getModulePrincipal(installationId: Common.InstallationId, moduleName: Text): async Principal {
-        onlyOwner(caller, "getModulePrincipal");
-
-        let ?inst = installedPackages.get(installationId) else {
-            Debug.trap("no such installation");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getModulePrincipal");
         };
-        let ?m = inst.modulesInstalledByDefault.get(moduleName) else {
-            Debug.trap("no such module");
+
+        let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
+            throw Error.reject("no such installation");
+        };
+        let ?m = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName) else {
+            throw Error.reject("no such module");
         };
         m;
     };
@@ -1276,29 +1194,36 @@ shared({caller = initialCaller}) actor class PackageManager({
     public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
         : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
     {
-        onlyOwner(caller, "getInstalledPackagesInfoByName");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getInstalledPackagesInfoByName");
+        };
 
         let guid2 = Common.amendedGUID(guid, name);
-        let ?data = installedPackagesByName.get(guid2) else {
+        let ?data = Map.get<Blob, {all: Map.Map<Common.InstallationId, ()>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2) else {
             return {all = []; default = 0};
         };
-        let all = Iter.toArray(Iter.map<(Common.InstallationId, ()), Common.SharedInstalledPackageInfo>(
-            data.all.entries(),
-            func (id: Common.InstallationId, _: ()): Common.SharedInstalledPackageInfo {
-                let ?info = installedPackages.get(id) else {
-                    Debug.trap("getInstalledPackagesInfoByName: programming error");
+        let all = Iter.toArray(Iter.filterMap<(Common.InstallationId, ()), Common.SharedInstalledPackageInfo>(
+            Map.entries(data.all),
+            func (id: Common.InstallationId, _: ()): ?Common.SharedInstalledPackageInfo {
+                let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
+                    // throw Error.reject("getInstalledPackagesInfoByName: programming error");
+                    return null;
                 };
-                Common.installedPackageInfoShare(info);
+                ?(Common.installedPackageInfoShare(info));
             }));
         {all; default = data.default};
     };
 
     public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
-        onlyOwner(caller, "getAllInstalledPackages");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getAllInstalledPackages");
+        };
 
         Iter.toArray(
             Iter.map<(Common.InstallationId, Common.InstalledPackageInfo), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(
-                installedPackages.entries(),
+                Map.entries(installedPackages),
                 func (info: (Common.InstallationId, Common.InstalledPackageInfo)): (Common.InstallationId, Common.SharedInstalledPackageInfo) =
                     (info.0, Common.installedPackageInfoShare(info.1))
             )
@@ -1307,7 +1232,7 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// Get public key associated with an installation.
     public query({caller}) func getInstallationPubKey(id: Common.InstallationId): async ?Blob {
-        switch (installedPackages.get(id)) {
+        switch (Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id)) {
             case (?info) info.pubKey;
             case null null;
         };
@@ -1315,10 +1240,10 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// Update public key for an installation.
     public shared({caller}) func setInstallationPubKey(id: Common.InstallationId, pubKey: Blob): async () {
-        onlyOwner(caller, "setInstallationPubKey");
+        await* onlyOwner(caller, "setInstallationPubKey");
 
-        let ?info = installedPackages.get(id) else {
-            Debug.trap("no such installation");
+        let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
+            throw Error.reject("no such installation");
         };
         info.pubKey := ?pubKey;
     };
@@ -1328,12 +1253,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         installationId: Common.InstallationId;
         package: Common.SharedPackageInfo;
     }] {
-        onlyOwner(caller, "getHalfInstalledPackages");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfInstalledPackages");
+        };
 
         Iter.toArray(Iter.map<(Common.InstallationId, HalfInstalledPackageInfo), {
             installationId: Common.InstallationId;
             package: Common.SharedPackageInfo;
-        }>(halfInstalledPackages.entries(), func (x: (Common.InstallationId, HalfInstalledPackageInfo)): {
+        }>(Map.entries(halfInstalledPackages), func (x: (Common.InstallationId, HalfInstalledPackageInfo)): {
             installationId: Common.InstallationId;
             package: Common.SharedPackageInfo;
         } =
@@ -1349,12 +1277,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         uninstallationId: Common.UninstallationId;
         package: Common.SharedPackageInfo;
     }] {
-        onlyOwner(caller, "getHalfUninstalledPackages");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfUninstalledPackages");
+        };
 
         Iter.toArray(Iter.map<(Common.UninstallationId, HalfUninstalledPackageInfo), {
             uninstallationId: Common.UninstallationId;
             package: Common.SharedPackageInfo;
-        }>(halfUninstalledPackages.entries(), func (x: (Common.UninstallationId, HalfUninstalledPackageInfo)): {
+        }>(Map.entries(halfUninstalledPackages), func (x: (Common.UninstallationId, HalfUninstalledPackageInfo)): {
             uninstallationId: Common.UninstallationId;
             package: Common.SharedPackageInfo;
         } =
@@ -1370,12 +1301,15 @@ shared({caller = initialCaller}) actor class PackageManager({
         upgradeId: Common.UpgradeId;
         package: Common.SharedPackageInfo;
     }] {
-        onlyOwner(caller, "getHalfUpgradedPackages");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfUpgradedPackages");
+        };
 
         Iter.toArray(Iter.map<(Common.UpgradeId, HalfUpgradedPackageInfo), {
             upgradeId: Common.UpgradeId;
             package: Common.SharedPackageInfo;
-        }>(halfUpgradedPackages.entries(), func (x: (Common.UpgradeId, HalfUpgradedPackageInfo)): {
+        }>(Map.entries(halfUpgradedPackages), func (x: (Common.UpgradeId, HalfUpgradedPackageInfo)): {
             upgradeId: Common.UpgradeId;
             package: Common.SharedPackageInfo;
         } =
@@ -1388,13 +1322,16 @@ shared({caller = initialCaller}) actor class PackageManager({
 
     /// TODO@P3: very unstable API.
     public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
-        onlyOwner(caller, "getHalfInstalledPackageModulesById");
+        // TODO@P3: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getHalfInstalledPackageModulesById");
+        };
 
-        let ?res = halfInstalledPackages.get(installationId) else {
-            Debug.trap("no such package");
+        let ?res = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Int.compare, installationId) else {
+            throw Error.reject("no such package");
         };
         // TODO@P3: May be a little bit slow.
-        Iter.toArray<(Text, Principal)>(res.modulesInstalledByDefault.entries());
+        Iter.toArray<(Text, Principal)>(Map.entries(res.modulesInstalledByDefault));
     };
 
     // TODO@P3: Rearrage functions, possible rename:
@@ -1432,10 +1369,10 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public shared func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {
-        onlyOwner(Principal.fromActor(this), "setPinned");
+        await* onlyOwner(Principal.fromActor(this), "setPinned");
 
-        let ?inst = installedPackages.get(installationId) else {
-            Debug.trap("no such installed package");
+        let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
+            throw Error.reject("no such installed package");
         };
         inst.pinned := pinned;
     };
@@ -1443,16 +1380,16 @@ shared({caller = initialCaller}) actor class PackageManager({
     public shared({caller}) func removeStalled(
         {install: [Common.InstallationId]; uninstall: [Common.UninstallationId]; upgrade: [Common.UpgradeId]}
     ): async () {
-        onlyOwner(caller, "removeStalled");
+        await* onlyOwner(caller, "removeStalled");
 
         for (i in install.vals()) {
-            halfInstalledPackages.delete(i);
+            ignore Map.delete(halfInstalledPackages, Int.compare, i);
         };
         for (i in uninstall.vals()) {
-            halfUninstalledPackages.delete(i);
+            ignore Map.delete(halfUninstalledPackages, Int.compare, i);
         };
         for (i in upgrade.vals()) {
-            halfUpgradedPackages.delete(i);
+            ignore Map.delete(halfUpgradedPackages, Int.compare, i);
         };
     };
 
@@ -1476,10 +1413,13 @@ shared({caller = initialCaller}) actor class PackageManager({
     // TODO@P3: a way to set.
 
     /// The total cycles amount, including canister creation fee.
-    let newCanisterCycles = 1_500_000_000_000 * env.subnetSize / 13; // TODO@P3
+    transient let newCanisterCycles = 1_500_000_000_000 * env.subnetSize / 13; // TODO@P3
     /// The total cycles amount, including canister creation fee.
     public query({caller}) func getNewCanisterCycles(): async Nat {
-        onlyOwner(caller, "getNewCanisterCycles");
+        // TODO@P1: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getNewCanisterCycles");
+        };
 
         newCanisterCycles;
     };
@@ -1487,13 +1427,13 @@ shared({caller = initialCaller}) actor class PackageManager({
     // Convenience methods //
 
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
-        onlyOwner(caller, "addRepository");
+        await* onlyOwner(caller, "addRepository");
 
-        repositories := Array.append(repositories, [{canister; name}]);
+        repositories := Array.concat(repositories, [{canister; name}]);
     };
 
     public shared({caller}) func removeRepository(canister: Principal): async () {
-        onlyOwner(caller, "removeRepository");
+        await* onlyOwner(caller, "removeRepository");
 
         repositories := Iter.toArray(Iter.filter(
             repositories.vals(),
@@ -1501,17 +1441,23 @@ shared({caller = initialCaller}) actor class PackageManager({
     };
 
     public query({caller}) func getRepositories(): async [{canister: Principal; name: Text}] {
-        onlyOwner(caller, "getRepositories");
+        // TODO@P1: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getRepositories");
+        };
 
         repositories;
     };
 
     public shared({caller}) func setDefaultInstalledPackage(name: Common.PackageName, guid: Blob, installationId: Common.InstallationId): async () {
-        onlyOwner(caller, "setDefaultPackage");
+        await* onlyOwner(caller, "setDefaultPackage");
 
         let guid2 = Common.amendedGUID(guid, name);
-        let ?data = installedPackagesByName.get(guid2) else {
-            Debug.trap("no such package");
+        let ?data = Map.get<Blob, {
+            all: Map.Map<Common.InstallationId, ()>; // FIXME@P1: `Set`
+            var default: Common.InstallationId;
+        }>(installedPackagesByName, Blob.compare, guid2) else {
+            throw Error.reject("no such package");
         };
         data.default := installationId;
     };
@@ -1529,7 +1475,7 @@ shared({caller = initialCaller}) actor class PackageManager({
         mainIndirect: Principal;
         user: Principal;
     }): async () {
-        onlyOwner(caller, "copyAssetsIfAny");
+        await* onlyOwner(caller, "copyAssetsIfAny");
 
         await* Install.copyAssetsIfAny({
             wasmModule = Common.unshareModule(wasmModule);
@@ -1558,52 +1504,56 @@ shared({caller = initialCaller}) actor class PackageManager({
             modulesToDelete: [(Text, Principal)];
         }
     {
-        onlyOwner(caller, "startModularUpgrade");
+        await* onlyOwner(caller, "startModularUpgrade");
 
         // Get package info from repository first
         let newPkg = Common.unsharePackageInfo(await repo.getPackage(packageName, version));
         
         // Extract modules for cycles calculation
         let #real newPkgReal = newPkg.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
+            throw Error.reject("trying to directly upgrade a virtual package");
         };
 
         let upgradeId = nextUpgradeId;
         nextUpgradeId += 1;
         
-        let {halfUpgradedInfo; modulesToDelete; allModulesCount} = prepareUpgradeData({
+        switch (prepareUpgradeData({
             installationId;
             newPkg;
             newRepo = Principal.fromActor(repo);
             arg;
             initArg;
-        });
-        
-        halfUpgradedPackages.put(upgradeId, halfUpgradedInfo);
+        })) {
+            case (#ok {halfUpgradedInfo; modulesToDelete; allModulesCount}) {
+                ignore Map.insert(halfUpgradedPackages, Int.compare, upgradeId, halfUpgradedInfo);
 
-        let modulesToDeleteSet = HashMap.fromIter<Text, ()>(
-            Iter.map<(Text, Principal), (Text, ())>(
-                modulesToDelete.vals(),
-                func ((name: Text, _principal: Principal)) = (name, ()),
-            ),
-            modulesToDelete.size(),
-            Text.equal,
-            Text.hash,
-        );
+                let modulesToDeleteSet = Map.fromIter<Text, ()>(
+                    Iter.map<(Text, Principal), (Text, ())>(
+                        modulesToDelete.vals(),
+                        func ((name: Text, _principal: Principal)) = (name, ()),
+                    ),
+                    Text.compare,
+                );
 
-        let modulesToUpgradeOrInstall = Iter.toArray(
-            Iter.filter<Text>(
-                newPkgReal.modules.keys(),
-                func (name: Text) = Option.isNull(modulesToDeleteSet.get(name)),
-            )
-        );
+                let modulesToUpgradeOrInstall = Iter.toArray(
+                    Iter.filter<Text>(
+                        Map.keys(newPkgReal.modules),
+                        func (name: Text) = Option.isNull(Map.get(modulesToDeleteSet, Text.compare, name)),
+                    )
+                );
 
-        {
-            upgradeId;
-            totalModules = halfUpgradedInfo.remainingModules;
-            modulesToUpgradeOrInstall;
-            modulesToDelete;
+                {
+                    upgradeId;
+                    totalModules = halfUpgradedInfo.remainingModules;
+                    modulesToUpgradeOrInstall;
+                    modulesToDelete;
+                };
+            };
+            case (#err err) {
+                throw Error.reject("Error in startModularUpgrade: " # err);
+            };
         };
+        
     };
 
     /// Upgrade a specific module as part of modular upgrade
@@ -1612,27 +1562,27 @@ shared({caller = initialCaller}) actor class PackageManager({
         moduleName: Text;
         user: Principal;
     }): async {completed: Bool} {
-        onlyOwner(caller, "upgradeModule");
+        await* onlyOwner(caller, "upgradeModule");
 
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
+            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
         };
 
         let #real newPkgReal = upgrade.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
+            throw Error.reject("trying to directly upgrade a virtual package");
         };
         let newPkgModules = newPkgReal.modules;
 
-        let ?wasmModule = newPkgModules.get(moduleName) else {
-            Debug.trap("no such module: " # moduleName);
+        let ?wasmModule = Map.get(newPkgModules, Text.compare, moduleName) else {
+            throw Error.reject("no such module: " # moduleName);
         };
 
         // Get the old package info
-        let ?oldPkg = installedPackages.get(upgrade.installationId) else {
-            Debug.trap("no such package installation");
+        let ?oldPkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
+            throw Error.reject("no such package installation");
         };
 
-        let canister_id = oldPkg.modulesInstalledByDefault.get(moduleName);
+        let canister_id = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, moduleName);
 
         // Upgrade the module using main_indirect
         getMainIndirect().upgradeOrInstallModule({
@@ -1670,16 +1620,19 @@ shared({caller = initialCaller}) actor class PackageManager({
         remainingModules: Nat;
         isCompleted: Bool;
     } {
-        onlyOwner(caller, "getModularUpgradeStatus");
+        // TODO@P1: duplicate code
+        if (Option.isNull(Map.get<Principal, ()>(owners, Principal.compare, caller)) and not env.isLocal) { // allow everybody on localhost, for debugging
+            throw Error.reject(debug_show(caller) # " is not the owner: " # "getModularUpgradeStatus");
+        };
 
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
+            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
         };
 
         let #real newPkgReal = upgrade.package.specific else {
-            Debug.trap("trying to directly upgrade a virtual package");
+            throw Error.reject("trying to directly upgrade a virtual package");
         };
-        let totalModules = newPkgReal.modules.size();
+        let totalModules = Map.size(newPkgReal.modules);
         let completedModules = totalModules - upgrade.remainingModules;
 
         {
@@ -1698,13 +1651,13 @@ shared({caller = initialCaller}) actor class PackageManager({
         upgradeId: Common.UpgradeId,
         modules: [(Text, Principal)]
     ): async () {
-        onlyOwner(caller, "completeModularUpgrade");
+        await* onlyOwner(caller, "completeModularUpgrade");
 
-        let ?upgrade = halfUpgradedPackages.get(upgradeId) else {
-            Debug.trap("no such upgrade: " # debug_show(upgradeId));
+        let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
+            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
         };
-        let ?inst = installedPackages.get(upgrade.installationId) else {
-            Debug.trap("no such installed package for upgrade: " # debug_show(upgrade.installationId));
+        let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
+            throw Error.reject("no such installed package for upgrade: " # debug_show(upgrade.installationId));
         };
 
         // Update package info
@@ -1712,9 +1665,9 @@ shared({caller = initialCaller}) actor class PackageManager({
         inst.package := upgrade.package;
         
         // Update modules map - keep only the modules that were successfully upgraded/installed
-        inst.modulesInstalledByDefault := HashMap.fromIter(modules.vals(), modules.size(), Text.equal, Text.hash);
+        inst.modulesInstalledByDefault := Map.fromIter(modules.vals(), Text.compare);
         
         // Clean up
-        halfUpgradedPackages.delete(upgradeId);
+        ignore Map.delete(halfUpgradedPackages, Int.compare, upgradeId);
     }
 }
