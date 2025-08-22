@@ -240,10 +240,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         ignore Map.delete(additionalOwners, Principal.compare, oldOwner);
     };
 
-    // TODO@P2:
-    // public query func getOwners(): async [Principal] {
-    //     Iter.toArray(Map.keys<Principal, ()>(owners));
-    // };
+    // TODO@P3: This is a supplementary method, used for testing.
+    public query func getOwners(): async [Principal] {
+        let a1 = Iter.toArray(Map.keys<Principal, ()>(systemOwners));
+        let a2 = [mainOwner];
+        let a3 = Iter.toArray(Map.keys<Principal, ()>(additionalOwners));
+        Array.concat<Principal>(Array.concat<Principal>(a1, a2), a3);
+    };
 
     public composite query func isAllInitialized(): async () {
         try {
