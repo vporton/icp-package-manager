@@ -12,9 +12,15 @@ Another reason, why this is good to developers, is that it frees the developer f
 
 IC Pack will also provide a standard for "events" and "permissions" between apps.
 
+## Wallet
+
 I have also shipped the first useful app for IC Pack - Payments Wallet. Payments Wallet is distinguished by configurable threshold of payments requiring extra user's confirmation, to protect the user from erroneous accidental payments. Payments Wallet will also provide in-app payments for IC Pack. The wallet has Invest tab, allowing users to invest into IC Pack. This wallet is superior over other ICP wallets by installing it into a user's canister, hindering the wallet provider (e.g. a dev or a DAO) from cheating (e.g. stealing user's funds) by substituting wallet's canisters content. For the wallet the following features are not yet finished: Bitcoin, Ethereum, and Solana payments, displaying a QR code. In-app payments are not standardized, yet.
 
 In a future version, I will give the user option for an app to do in-app payments up to a certain amount without asking user.
+
+In the future, the wallet will support **Yellow Network** for easy currency conversion.
+
+## More
 
 Here is feature comparison of IC Pack with other ways to install apps:
 
