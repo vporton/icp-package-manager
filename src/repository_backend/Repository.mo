@@ -3,6 +3,7 @@ import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Blob "mo:core/Blob";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Nat "mo:core/Nat";
 import Option "mo:core/Option";
 import Result "mo:core/Result";
@@ -13,73 +14,69 @@ import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
 shared ({caller = initialOwner}) persistent actor class Repository() = this {
-  var owners = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
-  var packageCreators = Map.fromIter<Principal, ()>([(initialOwner, ())].vals(), Principal.compare); // FIXME@P1: Use `Set` instead of `Map`.
+  var owners = Set.fromIter<Principal>([initialOwner].vals(), Principal.compare);
+  var packageCreators = Set.fromIter<Principal>([initialOwner].vals(), Principal.compare);
 
   stable var initialized: Bool = false;
 
   private func onlyOwner(caller: Principal): async* () {
-    if (Option.isNull(Map.get(owners, Principal.compare, caller))) {
+    if (not Set.contains(owners, Principal.compare, caller)) {
       throw Error.reject("not an owner");
     }
   };
 
   private func onlyPackageCreator(caller: Principal): async* () {
-    if (Option.isNull(Map.get(owners, Principal.compare, caller)) and Option.isNull(Map.get(packageCreators, Principal.compare, caller))) {
+    if (not Set.contains(owners, Principal.compare, caller) and not Set.contains(packageCreators, Principal.compare, caller)) {
       throw Error.reject("not an owner");
     }
   };
 
   private func onlyPackageOwner(caller: Principal, name: Text): Result.Result<(), Text> {
-    if (Option.isSome(Map.get(owners, Principal.compare, caller))) {
+    if (Set.contains(owners, Principal.compare, caller)) {
       return #ok;
     };
-    if (Option.isSome(do ? { Map.get(Map.get(packages, Text.compare, name)!.owners, Principal.compare, caller) })) {
+    if ((do ? { Set.contains<Principal>(Map.get(packages, Text.compare, name)!.owners, Principal.compare, caller) }) == ?true) {
       return #ok;
     };
     #err("not an owner");
   };
 
   public query func getOwners(): async [Principal] {
-    Iter.toArray(Map.keys(owners));
+    Iter.toArray(Set.values(owners));
   };
 
   public query func getPackageCreators(): async [Principal] {
-    Iter.toArray(Map.keys(packageCreators));
+    Iter.toArray(Set.values(packageCreators));
   };
 
   public shared({caller}) func setOwners(newOwners: [Principal]): async () {
     await* onlyOwner(caller);
-    owners := Map.fromIter(
-      Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
-      Principal.compare);
+    owners := Set.fromIter<Principal>(newOwners.vals(), Principal.compare);
   };
 
   public shared({caller}) func setPackageCreators(newOwners: [Principal]): async () {
     await* onlyOwner(caller);
-    packageCreators := Map.fromIter(
-      Iter.map<Principal, (Principal, ())>(newOwners.vals(), func (x: Principal) = (x, ())),
-      Principal.compare);
+    packageCreators := Set.fromIter<Principal>(newOwners.vals(), Principal.compare);
   };
 
   public shared({caller}) func addOwner(newOwner: Principal): async () {
     await* onlyOwner(caller);
-    ignore Map.insert(owners, Principal.compare, newOwner, ());
+    ignore Set.insert<Principal>(owners, Principal.compare, newOwner);
   };
 
   public shared({caller}) func addPackageCreator(newCreator: Principal): async () {
     await* onlyOwner(caller);
-    ignore Map.insert(packageCreators, Principal.compare, newCreator, ());
+    ignore Set.insert<Principal>(packageCreators, Principal.compare, newCreator);
   };
 
   public shared({caller}) func deleteOwner(oldOwner: Principal): async () {
     await* onlyOwner(caller);
-    ignore Map.delete<Principal, ()>(owners, Principal.compare, oldOwner); // FIXME@P1: Use `Set` instead of `Map`.
+    ignore Set.delete<Principal>(owners, Principal.compare, oldOwner);
   };
 
   public shared({caller}) func deletePackageCreator(oldPackageCreator: Principal): async () {
     await* onlyOwner(caller);
-    ignore Map.delete<Principal, ()>(packageCreators, Principal.compare, oldPackageCreator); // FIXME@P1: Use `Set` instead of `Map`.
+    ignore Set.delete<Principal>(packageCreators, Principal.compare, oldPackageCreator);
   };
 
   // TODO@P3: not needed
@@ -199,7 +196,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   let packages = Map.empty<Text, {
     pkg: Common.FullPackageInfo;
-    owners: Map.Map<Principal, ()>;
+    owners: Set.Set<Principal>;
   }>();
 
   private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
@@ -238,9 +235,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
         owners;
       };
       case null {
-        Map.fromIter<Principal, ()>(
-          [(caller, ())].vals(),
-          Principal.compare);
+        Set.singleton<Principal>(caller);
       };
     };
     ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
