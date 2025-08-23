@@ -285,12 +285,10 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     let ?fullInfo = Map.get(packages, Text.compare, name) else {
       throw Error.reject("no such package");
     };
-    for ((curVersion, info) in Map.entries(fullInfo.pkg.packages)) {
-      if (curVersion == version or Map.get(fullInfo.pkg.versionsMap, Text.compare, version) == ?curVersion) {
-        return Common.sharePackageInfo(info);
-      };
+    let ?t = Map.get(fullInfo.pkg.versionsMap, Text.compare, version) else {
+      throw Error.reject("no such package version");
     };
-    throw Error.reject("no such package version");
+    Common.sharePackageInfo(t.package);
   };
 
   public shared({caller}) func cleanUnusedWasms() {
@@ -298,8 +296,8 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
     let usedWasms = Map.empty<Blob, ()>();
     for (pkg in Map.values(packages)) {
-      for (info in Map.values(pkg.pkg.packages)) {
-        switch (info.specific) {
+      for (info in List.values(pkg.pkg.packages)) {
+        switch (info.package.specific) {
           case (#real p) {
             for ({code} in Map.values(p.modules)) {
               let id = switch (code) {
