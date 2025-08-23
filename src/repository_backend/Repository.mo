@@ -230,7 +230,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        List.add(p.pkg.specific, #real(info));
+        // List.add(p.pkg.specific, #real(info)); // FIXME@P1: Uncomment
       };
       case null {
         await* onlyPackageCreator(caller);
@@ -243,7 +243,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
             Set.singleton<Principal>(caller);
           };
         };
-        ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
+        // ignore Map.insert(packages, Text.compare, name, {owners; pkg = info}); // FIXME@P1: Uncomment
       };
     };
   };
