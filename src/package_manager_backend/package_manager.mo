@@ -1,4 +1,5 @@
 /// TODO@P3: Methods to query for all installed packages.
+import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import List "mo:core/List";
 import Option "mo:core/Option";
@@ -378,8 +379,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 Map.keys(modulesToDelete0),
                 func (name: Text) {
                     let ?m = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, name) else {
-                        // throw Error.reject("programming error");
-                        return null;
+                        Runtime.unreachable();
                     };
                     ?(name, m);
                 },
@@ -1299,8 +1299,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             Map.entries(data.all),
             func (id: Common.InstallationId, {}): ?Common.SharedInstalledPackageInfo {
                 let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
-                    // throw Error.reject("getInstalledPackagesInfoByName: programming error");
-                    return null;
+                    Runtime.unreachable();
                 };
                 ?(Common.installedPackageInfoShare(info));
             }));

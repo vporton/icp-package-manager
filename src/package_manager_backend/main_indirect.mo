@@ -1,4 +1,5 @@
 /// Canister that takes on itself potentially non-returning calls.
+import Runtime "mo:core/Runtime";
 import Error "mo:core/Error";
 import List "mo:core/List";
 import Debug "mo:core/Debug";
@@ -182,8 +183,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                     packages.keys(),
                     func (i: Nat) = do {
                         let ?pkg = packages2[i] else {
-                            // throw Error.reject("programming error"); // Can't throw here, because not async.
-                            return null;
+                            Runtime.unreachable();
                         };
                         ?{
                             package = Common.sharePackageInfo(pkg);
@@ -325,8 +325,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                     packages.keys(),
                     func (i: Nat) = do {
                         let ?pkg = newPackages[i] else {
-                            // throw Error.reject("programming error"); // Can't throw here, because not async.
-                            return null;
+                            Runtime.unreachable();
                         };
                         ?{
                             installationId = packages[i].installationId;
