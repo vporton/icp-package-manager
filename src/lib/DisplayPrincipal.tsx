@@ -1,10 +1,10 @@
 import { Principal } from "@dfinity/principal";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function DisplayPrincipal(props: {value: Principal | undefined}) {
     const [copied, setCopied] = useState(false);
     
-    if (props.value === undefined || props.value.isAnonymous()) {
+    if (props.value === undefined) {
         return "";
     }
     
@@ -24,7 +24,7 @@ export default function DisplayPrincipal(props: {value: Principal | undefined}) 
     
     return (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <code>{start}&hellip;{end}</code>
+            <code>{s.length > 11 ? <>{start}&hellip;{end}</> : s}</code> {/* FIXME@P3: Is the condition correct? */}
             <button 
                 onClick={handleCopy}
                 style={{
