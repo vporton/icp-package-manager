@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- TODO@P3 Pay back to all users with a minted token.
+
 - TODO@P3 Change the owner of PM and wallet.
 
 - TODO@P2 [Migrate](https://internetcomputer.org/docs/motoko/base-core-migration) from `base` to `core`.
