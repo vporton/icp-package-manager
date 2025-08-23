@@ -372,7 +372,7 @@ module {
     // Remark: There can be same named real package and a virtual package (of different versions).
     // TODO@P2: Remove this?
     public type SharedFullPackageInfo = {
-        packages: [(Version, SharedPackageInfo)];
+        packages: [(Version, SharedPackageInfo)]; // FIXME@P1: Pass version instead as a part of package?
         versionsMap: [(Version, Version)];
     };
 
@@ -388,31 +388,33 @@ module {
         versionsMap: Map.Map<Version, IndexedPackageInfo>;
     };
 
-    public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
-        {
-            packages = Iter.toArray(
-                Iter.map<(Version, PackageInfo), (Version, SharedPackageInfo)>(
-                    Map.entries(info.packages),
-                    func ((v, i): (Version, PackageInfo)): (Version, SharedPackageInfo) = (v, sharePackageInfo(i)),
-                ),
-            );
-            versionsMap = Iter.toArray(Map.entries(info.versionsMap));
-        };
+    // TODO@P2: Remove this?
+    // public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
+    //     {
+    //         packages = Iter.toArray(
+    //             Iter.map<(Version, PackageInfo), (Version, SharedPackageInfo)>(
+    //                 Iter.map<IndexedPackageInfo, (Version, PackageInfo)>(List.values(info.packages), func (p: IndexedPackageInfo): (Version, PackageInfo) = (p.package.base.version, p.package)),
+    //                 func ((v, i): (Version, PackageInfo)): (Version, SharedPackageInfo) = (v, sharePackageInfo(i)),
+    //             ),
+    //         );
+    //         versionsMap = Iter.toArray(Map.entries(info.versionsMap));
+    //     };
 
-    public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
-        {
-            packages = Map.fromIter(
-                Iter.map<(Version, SharedPackageInfo), (Version, PackageInfo)>(
-                    info.packages.vals(),
-                    func ((v, i): (Version, SharedPackageInfo)): (Version, PackageInfo) = (v, unsharePackageInfo(i)),
-                ),
-                Text.compare,
-            );
-            versionsMap = Map.fromIter(
-                info.versionsMap.vals(),
-                Text.compare,
-            );
-        };
+    // TODO@P2: Remove this?
+    // public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
+    //     {
+    //         packages = Map.fromIter(
+    //             Iter.map<(Version, SharedPackageInfo), (Version, PackageInfo)>(
+    //                 info.packages.vals(),
+    //                 func ((v, i): (Version, SharedPackageInfo)): (Version, PackageInfo) = (v, unsharePackageInfo(i)),
+    //             ),
+    //             Text.compare,
+    //         );
+    //         versionsMap = Map.fromIter(
+    //             info.versionsMap.vals(),
+    //             Text.compare,
+    //         );
+    //     };
 
     public func extractModuleLocation(code: ModuleCode): (Principal, Blob) =
         switch (code) {

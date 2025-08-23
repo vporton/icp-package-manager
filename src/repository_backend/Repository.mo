@@ -2,6 +2,7 @@ import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Blob "mo:core/Blob";
+import List "mo:core/List";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Nat "mo:core/Nat";
@@ -199,19 +200,20 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     owners: Set.Set<Principal>;
   }>();
 
-  private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
-    let ?v = Map.get(packages, Text.compare, name) else {
-      return #err("no such package");
-    };
-    #ok(Common.shareFullPackageInfo(v.pkg));
-  };
+  // private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
+  //   let ?v = Map.get(packages, Text.compare, name) else {
+  //     return #err("no such package");
+  //   };
+  //   #ok(Common.shareFullPackageInfo(v.pkg));
+  // };
 
-  public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
-    switch (_getFullPackageInfo(name)) {
-      case (#ok v) v;
-      case (#err e) throw Error.reject(e);
-    };
-  };
+  // TODO@P2: Uncomment.
+  // public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
+  //   switch (_getFullPackageInfo(name)) {
+  //     case (#ok v) v;
+  //     case (#err e) throw Error.reject(e);
+  //   };
+  // };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
   // FIXME@P1: Don't store, if `modules` is unchanged. [FIXME@P1: But if `tmpl` is changed, then we need to store it.]
@@ -230,7 +232,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        List.add(p.packages, {serial = List.size(p.packages); package = info}); // FIXME@P1: Uncomment
+        List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info}); // FIXME@P1: Uncomment
       };
       case null {
         await* onlyPackageCreator(caller);
@@ -243,38 +245,41 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
             Set.singleton<Principal>(caller);
           };
         };
-        ignore Map.insert(packages, Text.compare, name, {owners; pkg = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info})});
+        ignore Map.insert<Text, {
+          pkg: Common.FullPackageInfo;
+          owners: Set.Set<Principal>;
+        }>(packages, Text.compare, name, {owners; pkg = {packages = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info}); versionsMap = Map.empty<Common.Version, Common.IndexedPackageInfo>()}});
       };
     };
   };
 
   /// TODO@P3: Put a barrier to make the update atomic.
   /// TODO@P3: Don't call it directly.
-  public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
-    let p = Map.get(packages, Text.compare, name);
-    switch (p) {
-      case (?p) {
-        switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
-          case (#ok) {};
-          case (#err e) throw Error.reject(e);
-        };
-      };
-      case null {
-        await* onlyPackageCreator(caller);
-      };
-    };
+  // public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {
+  //   let p = Map.get(packages, Text.compare, name);
+  //   switch (p) {
+  //     case (?p) {
+  //       switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
+  //         case (#ok) {};
+  //         case (#err e) throw Error.reject(e);
+  //       };
+  //     };
+  //     case null {
+  //       await* onlyPackageCreator(caller);
+  //     };
+  //   };
 
-    // TODO@P3: Check that package exists?
-    let owners = switch (p) {
-      case (?{pkg = _; owners}) {
-        owners;
-      };
-      case null {
-        Set.singleton<Principal>(caller);
-      };
-    };
-    ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
-  };
+  //   // TODO@P3: Check that package exists?
+  //   let owners = switch (p) {
+  //     case (?{pkg = _; owners}) {
+  //       owners;
+  //     };
+  //     case null {
+  //       Set.singleton<Principal>(caller);
+  //     };
+  //   };
+  //   ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
+  // };
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
     let ?fullInfo = Map.get(packages, Text.compare, name) else {
