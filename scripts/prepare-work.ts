@@ -163,7 +163,7 @@ async function main() {
     const pmInfo: SharedPackageInfo = {
         base: {
             name: "icpack",
-            version: "0.0.1",
+            version: "0.0.1", // FIXME@P1: It's superfluous here.
             price: 0n,
             upgradePrice: 0n,
             shortDescription: "Package manager",
