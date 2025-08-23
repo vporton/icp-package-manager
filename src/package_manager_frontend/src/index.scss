@@ -14,7 +14,8 @@ body {
 }
 
 .error {
-  border: 1px solid red;
+  border: 1px solid red !important;
+  background-color: lightcoral;
 }
 
 ul.checklist {
