@@ -213,6 +213,41 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     };
   };
 
+  // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
+  // FIXME@P1: Don't store, if `modules` is unchanged.
+  public shared({caller}) func addPackageVersion(
+    name: Common.PackageName,
+    tmpl: Common.SharedPackageInfoTemplate,
+    modules: [(Text, Common.SharedModule)],
+  ): async () {
+    let info = Common.fillPackageInfoTemplate(tmpl, modules);
+
+    let p = Map.get(packages, Text.compare, name);
+    switch (p) {
+      case (?p) {
+        switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
+          case (#ok) {};
+          case (#err e) throw Error.reject(e);
+        };
+
+        List.add(p.pkg.specific, #real(info));
+      };
+      case null {
+        await* onlyPackageCreator(caller);
+
+        let owners = switch (p) {
+          case (?{pkg = _; owners}) {
+            owners;
+          };
+          case null {
+            Set.singleton<Principal>(caller);
+          };
+        };
+        ignore Map.insert(packages, Text.compare, name, {owners; pkg = Common.unshareFullPackageInfo(info)});
+      };
+    };
+  };
+
   /// TODO@P3: Put a barrier to make the update atomic.
   /// TODO@P3: Don't call it directly.
   public shared({caller}) func setFullPackageInfo(name: Common.PackageName, info: Common.SharedFullPackageInfo): async () {

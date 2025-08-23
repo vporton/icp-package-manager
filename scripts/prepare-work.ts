@@ -144,6 +144,7 @@ async function main() {
     });
 
     console.log("Creating packages...");
+////// TODO@P1: Remove. [[
     const pmReal: SharedRealPackageInfo = {
         modules: [
             ['battery', pmBatteryModule], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
@@ -173,6 +174,7 @@ async function main() {
         },
         specific: {real: pmReal},
     };
+////// ]]
     const pmFullInfo: SharedFullPackageInfo = {
         packages: [["0.0.1", pmInfo]],
         versionsMap: [["stable", "0.0.1"]],

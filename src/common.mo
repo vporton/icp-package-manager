@@ -207,9 +207,11 @@ module {
     public type SharedPackageInfoTemplate = SharedPackageInfoBase<None>;
 
     // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
-    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, Module)]): RealPackageInfo =
+    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModule)]): RealPackageInfo =
         {
-            modules = Map.fromIter(modules.vals(), Text.compare);
+            modules = Map.fromIter(
+                Iter.map<(Text, SharedModule), (Text, Module)>(modules.vals(),
+                func ((k, v): (Text, SharedModule)): (Text, Module) = (k, unshareModule(v))), Text.compare);
             dependencies = template.dependencies;
             suggests = template.suggests;
             recommends = template.recommends;
@@ -219,7 +221,7 @@ module {
             frontendModule = template.frontendModule;
         };
 
-    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, Module)]): PackageInfo =
+    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModule)]): PackageInfo =
         {
             base = template.base;
             specific = switch (template.specific) {
@@ -374,6 +376,7 @@ module {
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
+    // FIXME@P1: Should use List.List instead of Map.Map.
     public type FullPackageInfo = {
         packages: Map.Map<Version, PackageInfo>;
         versionsMap: Map.Map<Version, Version>;

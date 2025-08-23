@@ -35,7 +35,7 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 
 .PHONY: deploy-backend
 deploy-backend: prepare build@battery build@main_indirect build@package_manager build@simple_indirect deploy@repository deploy@bookmark generate@battery \
-  deploy@internet_identity generate@swap-factory init
+  deploy@internet_identity generate@swap-factory generate@repository init
 
 .PHONY: prepare
 prepare:
