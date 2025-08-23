@@ -1,5 +1,7 @@
 Remaining things TODO
 
+- FIXME@P1 Use a template parameter to pass Wasm values.
+
 - FIXME@P1 "wallet (3 ICP)" should be "wallet (3 TCycles)"
 
 - TODO@P3 Pay back to all users with a minted token.
