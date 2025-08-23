@@ -35,6 +35,7 @@ import { AuthProvider, getIsLocal, useAuth } from '../../lib/use-auth-client';
 import { package_manager } from '../../declarations/package_manager';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { getPublicKeyFromPrivateKey, signPrincipal } from "../../../icpack-js";
+import Settings from './Settings';
 
 function App() {
   return (
@@ -355,6 +356,9 @@ function App2() {
                 <MyLink className="nav-link" to="/cycles/modules">Cycles</MyLink>
               </Nav>
               <Nav>
+                <MyLink className="nav-link" to="/settings">Settings</MyLink>
+              </Nav>
+              <Nav>
                 <AuthButton/>
               </Nav>
               <Nav style={{display: ok ? undefined : 'none'}}>
@@ -383,6 +387,7 @@ function App2() {
             <Route path="/installed" element={<InstalledPackages/>}/>
             <Route path="/installed/show/:installationId" element={<InstalledPackage/>}/>
             <Route path="/cycles/modules" element={<ModuleCycles/>}/>
+            <Route path="/settings" element={<Settings/>}/>
             <Route path="*" element={<ErrorHandler error={"No such page"}/>}/>
           </Routes>
         </Container>

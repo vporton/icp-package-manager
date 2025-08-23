@@ -248,6 +248,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         Array.concat<Principal>(Array.concat<Principal>(a1, a2), a3);
     };
 
+    public query func getAdditionalOwners(): async [Principal] {
+        Iter.toArray(Set.values<Principal>(additionalOwners));
+    };
+
     public composite query func isAllInitialized(): async () {
         try {
             if (not initialized) {

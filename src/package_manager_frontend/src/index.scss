@@ -13,6 +13,10 @@ body {
   gap: 1rem;
 }
 
+.error {
+  border: 1px solid red;
+}
+
 ul.checklist {
   padding-left: 0;
 }
