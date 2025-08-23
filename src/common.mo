@@ -137,9 +137,8 @@ module {
         };
     };
 
-    /// See `RealPackageInfo`.
-    public type SharedRealPackageInfo = {
-        modules: [(Text, SharedModule)]; // Modules are named for correct upgrades.
+    public type SharedRealPackageInfoBase<Module> = {
+        modules: [(Text, Module)]; // Modules are named for correct upgrades.
         dependencies: [(PackageName, ?[VersionRange])];
         suggests: [(PackageName, ?[VersionRange])];
         recommends: [(PackageName, ?[VersionRange])];
@@ -148,6 +147,9 @@ module {
         checkInitializedCallback: ?CheckInitializedCallback;
         frontendModule: ?Text;
     };
+
+    /// See `RealPackageInfo`.
+    public type SharedRealPackageInfo = SharedRealPackageInfoBase<SharedModule>;
 
     /// `dependencies`, `suggests`, `recommends` (akin Debian) are currently not supported.
     /// Package's `functions` (currently not supported) are unrelated to Motoko functions.
@@ -200,16 +202,19 @@ module {
         };
 
     /// See `RealPackageInfo`.
-    public type RealPackageInfoUpload = {
-        modules: [(Text, ModuleUpload)]; // Modules are named for correct upgrades.
-        dependencies: [(PackageName, ?[VersionRange])];
-        suggests: [(PackageName, ?[VersionRange])];
-        recommends: [(PackageName, ?[VersionRange])];
-        functions: [(PackageName, ?[VersionRange])];
-        permissions: [(Text, [MethodName])];
-        checkInitializedCallback: ?CheckInitializedCallback;
-        frontendModule: ?Text;
-    };
+    public type RealPackageInfoTemplate = SharedRealPackageInfoBase<None>;
+
+    public func fillRealPackageInfoTemplate(template: RealPackageInfoTemplate, modules: [(Text, Module)]): RealPackageInfo =
+        {
+            modules = Map.fromIter(modules.vals(), Text.compare);
+            dependencies = template.dependencies;
+            suggests = template.suggests;
+            recommends = template.recommends;
+            functions = template.functions;
+            permissions = template.permissions;
+            checkInitializedCallback = template.checkInitializedCallback;
+            frontendModule = template.frontendModule;
+        };
 
     /// Yet unsupported.
     public type VirtualPackageInfo = {
