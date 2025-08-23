@@ -370,16 +370,22 @@ module {
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
+    // TODO@P2: Remove this?
     public type SharedFullPackageInfo = {
         packages: [(Version, SharedPackageInfo)];
         versionsMap: [(Version, Version)];
     };
 
+    public type IndexedPackageInfo = {
+        serial: Nat;
+        package: PackageInfo;
+    };
+
     // Remark: There can be same named real package and a virtual package (of different versions).
     // FIXME@P1: Should use List.List instead of Map.Map.
     public type FullPackageInfo = {
-        packages: Map.Map<Version, PackageInfo>;
-        versionsMap: Map.Map<Version, Version>;
+        packages: List.List<IndexedPackageInfo>; // TODO@P1: Rename?
+        versionsMap: Map.Map<Version, IndexedPackageInfo>;
     };
 
     public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =

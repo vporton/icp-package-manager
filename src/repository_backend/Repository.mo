@@ -214,7 +214,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
-  // FIXME@P1: Don't store, if `modules` is unchanged.
+  // FIXME@P1: Don't store, if `modules` is unchanged. [FIXME@P1: But if `tmpl` is changed, then we need to store it.]
   public shared({caller}) func addPackageVersion(
     name: Common.PackageName,
     tmpl: Common.SharedPackageInfoTemplate,
@@ -230,7 +230,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        // List.add(p.pkg.specific, #real(info)); // FIXME@P1: Uncomment
+        List.add(p.packages, {serial = List.size(p.packages); package = info}); // FIXME@P1: Uncomment
       };
       case null {
         await* onlyPackageCreator(caller);
@@ -243,7 +243,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
             Set.singleton<Principal>(caller);
           };
         };
-        // ignore Map.insert(packages, Text.compare, name, {owners; pkg = info}); // FIXME@P1: Uncomment
+        ignore Map.insert(packages, Text.compare, name, {owners; pkg = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info})});
       };
     };
   };
