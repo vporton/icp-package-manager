@@ -26,6 +26,8 @@ export default function Settings() {
     function addAdditionalOwner() {
         if (packageManager !== undefined && newPrincipal !== undefined) {
             packageManager.addAdditionalOwner(newPrincipal).then(reloadAdditionalOwners);
+            setNewPrincipal(undefined);
+            setNewPrincipalError(false); // TODO@P3: Should be removed, but now needed as a hack.
         }
     }
 
