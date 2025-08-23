@@ -7,6 +7,7 @@ import { GlobalContext } from "./state";
 import Button from "react-bootstrap/Button";
 import { assert } from "console";
 
+// TODO@P3: Also allow to replace the main owner.
 export default function Settings() {
     const {packageManager} = useContext(GlobalContext);
     const [additionalOwners, setAdditionalOwners] = useState<Principal[] | undefined>([]);
