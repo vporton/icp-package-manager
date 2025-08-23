@@ -26,7 +26,7 @@ export default function Settings() {
     function addAdditionalOwner() {
         if (packageManager !== undefined && newPrincipal !== undefined) {
             packageManager.addAdditionalOwner(newPrincipal).then(reloadAdditionalOwners);
-            setNewPrincipal(undefined);
+            setNewPrincipal(undefined); // FIXME@P3: It should reset the input field.
             setNewPrincipalError(false); // TODO@P3: Should be removed, but now needed as a hack.
         }
     }
