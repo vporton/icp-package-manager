@@ -202,9 +202,12 @@ module {
         };
 
     /// See `RealPackageInfo`.
-    public type RealPackageInfoTemplate = SharedRealPackageInfoBase<None>;
+    public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<None>;
 
-    public func fillRealPackageInfoTemplate(template: RealPackageInfoTemplate, modules: [(Text, Module)]): RealPackageInfo =
+    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None>;
+
+    // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
+    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, Module)]): RealPackageInfo =
         {
             modules = Map.fromIter(modules.vals(), Text.compare);
             dependencies = template.dependencies;
@@ -216,19 +219,30 @@ module {
             frontendModule = template.frontendModule;
         };
 
+    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, Module)]): PackageInfo =
+        {
+            base = template.base;
+            specific = switch (template.specific) {
+                case (#real x) #real(fillRealPackageInfoTemplate(x, modules));
+                case (#virtual x) #virtual x;
+            };
+        };
+
     /// Yet unsupported.
     public type VirtualPackageInfo = {
         choice: [(PackageName, ?[VersionRange])];
         default: PackageName;
     };
 
-    public type SharedPackageInfo = {
+    public type SharedPackageInfoBase<Module> = {
         base: CommonPackageInfo;
         specific: {
-            #real : SharedRealPackageInfo;
+            #real : SharedRealPackageInfoBase<Module>;
             #virtual : VirtualPackageInfo;
         };
     };
+
+    public type SharedPackageInfo = SharedPackageInfoBase<SharedModule>;
 
     public type PackageInfo = {
         base: CommonPackageInfo;
