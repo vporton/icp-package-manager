@@ -31,6 +31,7 @@ export async function submit(packages: {
 }[], identity: Identity) {
     // TODO@P1: Use save these two variables to `.env` (and for reliability to yet a location?)
     // FIXME@P1: Messed local and remote `.env` variables.
+    //           To fix allow the call only when local DFX and for remote principals use `canister_ids.json`.
     let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER;
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
