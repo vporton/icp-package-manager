@@ -232,11 +232,11 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        let ?previous = List.last(p.pkg.packages) else {
+        let ?previous = List.last(p.pkg.listByVersion) else {
           Runtime.unreachable(); // FIXME@P3: It may be reached due to `setFullPackageInfo()`.
         };
         if (Common.sharePackageInfo(info) != Common.sharePackageInfo(previous.package)) { // TODO@P3: inefficient
-          List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info});
+          List.add(p.pkg.listByVersion, {serial = List.size(p.pkg.listByVersion); package = info});
         };
       };
       case null {
@@ -253,7 +253,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
         ignore Map.insert<Text, {
           pkg: Common.FullPackageInfo;
           owners: Set.Set<Principal>;
-        }>(packages, Text.compare, name, {owners; pkg = {packages = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info}); versionsMap = Map.empty<Common.Version, Common.IndexedPackageInfo>()}});
+        }>(packages, Text.compare, name, {owners; pkg = {listByVersion = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info}); versionsMap = Map.empty<Common.Version, Common.IndexedPackageInfo>()}});
       };
     };
   };
@@ -301,7 +301,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
     let usedWasms = Map.empty<Blob, ()>();
     for (pkg in Map.values(packages)) {
-      for (info in List.values(pkg.pkg.packages)) {
+      for (info in List.values(pkg.pkg.listByVersion)) {
         switch (info.package.specific) {
           case (#real p) {
             for ({code} in Map.values(p.modules)) {

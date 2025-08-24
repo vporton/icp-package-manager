@@ -383,7 +383,7 @@ module {
 
     // Remark: There can be same named real package and a virtual package (of different versions).
     public type FullPackageInfo = {
-        packages: List.List<IndexedPackageInfo>; // TODO@P1: Rename?
+        listByVersion: List.List<IndexedPackageInfo>;
         versionsMap: Map.Map<Version, IndexedPackageInfo>;
     };
 
