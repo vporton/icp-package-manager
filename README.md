@@ -1,6 +1,9 @@
 # ICP Package Manager
 
-For testing use `stable` branch!
+For testing use `stable` branch! In some branches you need to run
+```sh
+git submodule update --init --recursive
+```
 
 [PLANS](PLANS.md) lists current works.
 
