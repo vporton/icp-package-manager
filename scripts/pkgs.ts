@@ -90,6 +90,7 @@ const walletInfo: SharedPackageInfoTemplate = {
     specific: {real: walletReal},
 };
 
+const net = process.env.DFX_NETWORK; // FIXME@P1: That's a wrong value!
 
 const frontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz`));
 const pmBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/package_manager/package_manager.wasm`));
