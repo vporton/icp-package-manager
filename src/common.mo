@@ -371,10 +371,10 @@ module {
 
     // Remark: There can be same named real package and a virtual package (of different versions).
     // TODO@P2: Remove this?
-    public type SharedFullPackageInfo = {
-        packages: [(Version, SharedPackageInfo)]; // FIXME@P1: Pass version instead as a part of package?
-        versionsMap: [(Version, Version)];
-    };
+    // public type SharedFullPackageInfo = {
+    //     packages: [(Version, SharedPackageInfo)]; // Pass version instead as a part of package?
+    //     versionsMap: [(Version, Version)];
+    // };
 
     public type IndexedPackageInfo = {
         serial: Nat;
