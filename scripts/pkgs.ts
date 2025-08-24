@@ -1,22 +1,23 @@
-import { SharedRealPackageInfo } from "../src/declarations/repository/repository.did";
+import { SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
 
-const pmReal: SharedRealPackageInfo = {
+const pmReal = {
     modules: [
-        ['battery', pmBatteryModule], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
-        ['backend', pmBackendModule],
-        ['frontend', pmFrontendModule],
-        ['main_indirect', pmMainIndirectModule],
-        ['simple_indirect', pmSimpleIndirectModule],
+        // TODO@P3: using magic with TS types
+        ['battery', undefined] as [string, never], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
+        ['backend', undefined] as [string, never],
+        ['frontend', undefined] as [string, never],
+        ['main_indirect', undefined] as [string, never],
+        ['simple_indirect', undefined] as [string, never],
     ],
     dependencies: [],
     suggests: [],
     recommends: [],
     functions: [],
     permissions: [],
-    checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}],
-    frontendModule: ['frontend'],
+    checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [any],
+    frontendModule: ['frontend'] as [string],
 };
-const pmInfo: SharedPackageInfo = {
+const pmInfo: SharedPackageInfoTemplate = {
     base: {
         name: "icpack",
         version: "0.0.1", // FIXME@P1: It's superfluous here.
