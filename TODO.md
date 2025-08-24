@@ -158,3 +158,5 @@ Remaining things TODO
 - TODO@P3 Wallet & other: QR codes for payments.
 
 - TODO@P3 Wallet: Update Balances button.
+
+- TODO@P3 Ability to remove ancient versions of a package.
