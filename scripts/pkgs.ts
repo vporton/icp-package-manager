@@ -1,3 +1,4 @@
+import { submit } from "../icpack-js/submitPkg";
 import { CheckInitializedCallback, SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
 
 const pmReal = {
@@ -30,3 +31,18 @@ const pmInfo: SharedPackageInfoTemplate = {
     },
     specific: {real: pmReal},
 };
+
+async function main() {
+    await submit({
+        name: "icpack",
+        tmpl: pmInfo,
+        modules: [
+            ["backend", undefined],
+            ["frontend", undefined],
+            ["main_indirect", undefined],
+            ["simple_indirect", undefined],
+        ],
+    }, identity: Identity)
+}
+
+main()

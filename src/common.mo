@@ -69,8 +69,6 @@ module {
 
     public type SharedModule = SharedModuleBase<Location>;
 
-    public type SharedModuleForTemplate = SharedModuleBase<Blob>;
-
     // TODO@P2: Ensure that functions receive args without template parameters (for conversion to TypeScript).
     // TODO@P3: Remove unnecessary types.
     public type ModuleBase<L> = {

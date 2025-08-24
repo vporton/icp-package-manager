@@ -216,11 +216,12 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
+  /// Returns `true` if the package version was added, `false` if it was already present.
   public shared({caller}) func addPackageVersion(
     name: Common.PackageName,
     tmpl: Common.SharedPackageInfoTemplate,
     modules: [(Text, Common.SharedModule)],
-  ): async () {
+  ): async Bool {
     let info = Common.fillPackageInfoTemplate(tmpl, modules);
 
     let p = Map.get(packages, Text.compare, name);
@@ -234,9 +235,12 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
         let ?previous = List.last(p.pkg.listByVersion) else {
           Runtime.unreachable(); // FIXME@P3: It may be reached due to `setFullPackageInfo()`.
         };
-        if (Common.sharePackageInfo(info) != Common.sharePackageInfo(previous.package)) { // TODO@P3: inefficient
+        let changed = Common.sharePackageInfo(info) != Common.sharePackageInfo(previous.package); // TODO@P3: inefficient
+        if (changed) {
           List.add(p.pkg.listByVersion, {serial = List.size(p.pkg.listByVersion); package = info});
         };
+
+        changed;
       };
       case null {
         await* onlyPackageCreator(caller);
@@ -253,6 +257,8 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           pkg: Common.FullPackageInfo;
           owners: Set.Set<Principal>;
         }>(packages, Text.compare, name, {owners; pkg = {listByVersion = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info}); versionsMap = Map.empty<Common.Version, Common.IndexedPackageInfo>()}});
+
+        true;
       };
     };
   };
