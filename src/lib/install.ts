@@ -1,5 +1,5 @@
 import { Principal } from '@dfinity/principal';
-import { InstallationId, PackageManager, SharedRealPackageInfo, SharedModule } from '../declarations/package_manager/package_manager.did';
+import { InstallationId, PackageManager } from '../declarations/package_manager/package_manager.did';
 import { createActor as createPackageManager } from '../declarations/package_manager';
 import { createActor as createFrontendActor } from '../declarations/example_frontend';
 import { Actor, Agent } from '@dfinity/agent';
@@ -19,6 +19,7 @@ async function getRandomValues(v: Uint8Array): Promise<Uint8Array> {
 }
 
 import { sha256 } from './crypto';
+import { SharedRealPackageInfo } from '../declarations/main_indirect/main_indirect.did';
 
 export async function bootstrapFrontend(props: {agent: Agent}) {
     const repoIndex = createRepositoryIndexActor(process.env.CANISTER_ID_REPOSITORY!, {agent: props.agent}); // TODO@P3: `defaultAgent` here and in other places.

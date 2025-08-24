@@ -22,7 +22,7 @@ import { Principal } from '@dfinity/principal';
 import { MyLink } from './MyNavigate';
 import { createActor as createRepositoryIndexActor } from "../../declarations/repository";
 import { createActor as createBatteryActor } from "../../declarations/battery";
-import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did';
+import { SharedPackageInfo } from '../../declarations/repository/repository.did';
 import { Bootstrapper } from '../../declarations/bootstrapper/bootstrapper.did';
 import { ErrorBoundary, ErrorHandler } from "../../lib/ErrorBoundary";
 import { ErrorContext, ErrorProvider } from '../../lib/ErrorContext';
@@ -36,6 +36,7 @@ import { package_manager } from '../../declarations/package_manager';
 import { cycles_ledger } from '../../declarations/cycles_ledger';
 import { getPublicKeyFromPrivateKey, signPrincipal } from "../../../icpack-js";
 import Settings from './Settings';
+import { SharedRealPackageInfo } from '../../declarations/main_indirect/main_indirect.did';
 
 function App() {
   return (

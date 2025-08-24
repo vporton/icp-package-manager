@@ -201,26 +201,25 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     owners: Set.Set<Principal>;
   }>();
 
-  // private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
-  //   let ?v = Map.get(packages, Text.compare, name) else {
-  //     return #err("no such package");
-  //   };
-  //   #ok(Common.shareFullPackageInfo(v.pkg));
-  // };
+  private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
+    let ?v = Map.get(packages, Text.compare, name) else {
+      return #err("no such package");
+    };
+    #ok(Common.shareFullPackageInfo(v.pkg));
+  };
 
-  // TODO@P2: Uncomment.
-  // public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
-  //   switch (_getFullPackageInfo(name)) {
-  //     case (#ok v) v;
-  //     case (#err e) throw Error.reject(e);
-  //   };
-  // };
+  public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
+    switch (_getFullPackageInfo(name)) {
+      case (#ok v) v;
+      case (#err e) throw Error.reject(e);
+    };
+  };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
   public shared({caller}) func addPackageVersion(
     name: Common.PackageName,
-    tmpl: Common.SharedModuleForTemplate,
-    modules: [(Text, Common.SharedModuleBase<Blob>)],
+    tmpl: Common.SharedPackageInfoTemplate,
+    modules: [(Text, Common.SharedModule)],
   ): async () {
     let info = Common.fillPackageInfoTemplate(tmpl, modules);
 
