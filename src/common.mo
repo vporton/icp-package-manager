@@ -382,7 +382,6 @@ module {
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
-    // FIXME@P1: Should use List.List instead of Map.Map.
     public type FullPackageInfo = {
         packages: List.List<IndexedPackageInfo>; // TODO@P1: Rename?
         versionsMap: Map.Map<Version, IndexedPackageInfo>;
