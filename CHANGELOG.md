@@ -1,3 +1,11 @@
+2025 Aug 25
+
+* Written code for uploading every version (untested).
+
+2025 Aug 23
+
+* Switched to `core` lib instead of `base`.
+
 2025 Aug 1
 
 * Add UI for copying the principal to clipboard.
