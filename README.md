@@ -5,6 +5,8 @@ For testing use `stable` branch! In some branches you need to run
 git submodule update --init --recursive
 ```
 
+For latest features, see `autoVersions` branch.
+
 [PLANS](PLANS.md) lists current works.
 
 ICP Package Manager is an analogue of Linux package managers, but for ICP. It allows to install the code of provided packages (in the future they will be provided by DAOs akin Linux distros) into a user's "own" subnet, giving the user sovereignity over his software and greater execution speed thanks to interoperating software installed in the same subnet.
