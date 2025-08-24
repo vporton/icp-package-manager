@@ -1,7 +1,5 @@
 Remaining things TODO
 
-- FIXME@P1 "wallet (3 ICP)" should be "wallet (3 TCycles)"
-
 - TODO@P3 Pay back to all users with a minted token.
 
 - TODO@P3 Change the owner of PM and wallet.

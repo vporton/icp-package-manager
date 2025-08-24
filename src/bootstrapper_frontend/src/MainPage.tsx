@@ -167,7 +167,7 @@ function MainPage2(props: {ok: boolean, principal: Principal | undefined, agent:
             </p>
           );
         })}
-        <p>Additional packages to be installed: {additionalPackages.map(p => <span key={p.packageName}><code>{p.packageName}</code> ({Number(p.installCost) / 10**12} ICP){" "}</span>)}</p>
+        <p>Additional packages to be installed: {additionalPackages.map(p => <span key={p.packageName}><code>{p.packageName}</code> ({Number(p.installCost) / 10**12} TCycles){" "}</span>)}</p>
         <p>
           <label>
             <input type="checkbox" checked={addWalletPackage} onChange={e => setAddWalletPackage(e.target.checked)}/>{" "}
