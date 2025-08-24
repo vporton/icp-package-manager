@@ -390,13 +390,11 @@ module {
     };
 
     // Remark: There can be same named real package and a virtual package (of different versions).
-    // TODO@P2: Remove this?
     public type SharedFullPackageInfo = {
         listByVersion: [SharedPackageInfo]; // Pass version instead as a part of package?
         versionsMap: [(Version, Int)]; // position in `listByVersion`
     };
 
-    // TODO@P2: Remove this?
     public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
         {
             listByVersion = Iter.toArray(
@@ -408,7 +406,6 @@ module {
             versionsMap = []; // FIXME@P1: Fill it.
         };
 
-    // TODO@P2: Remove this?
     public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
         {
             listByVersion = List.fromArray(Array.fromIter<IndexedPackageInfo>(
