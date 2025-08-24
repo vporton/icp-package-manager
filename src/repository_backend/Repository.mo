@@ -11,6 +11,7 @@ import Result "mo:core/Result";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
 import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
 
@@ -216,7 +217,6 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   // };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
-  // FIXME@P1: Don't store, if `modules` is unchanged. [FIXME@P1: But if `tmpl` is changed, then we need to store it.]
   public shared({caller}) func addPackageVersion(
     name: Common.PackageName,
     tmpl: Common.SharedPackageInfoTemplate,
@@ -232,7 +232,12 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info});
+        let ?previous = List.last(p.pkg.packages) else {
+          Runtime.unreachable(); // FIXME@P3: It may be reached due to `setFullPackageInfo()`.
+        };
+        if (Common.sharePackageInfo(info) != Common.sharePackageInfo(previous.package)) { // TODO@P3: inefficient
+          List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info});
+        };
       };
       case null {
         await* onlyPackageCreator(caller);
