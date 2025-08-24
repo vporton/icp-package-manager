@@ -1,4 +1,5 @@
-import { SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
+import { TupleType } from "typescript";
+import { CheckInitializedCallback, SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
 
 const pmReal = {
     modules: [
@@ -14,7 +15,7 @@ const pmReal = {
     recommends: [],
     functions: [],
     permissions: [],
-    checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [any],
+    checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [CheckInitializedCallback],
     frontendModule: ['frontend'] as [string],
 };
 const pmInfo: SharedPackageInfoTemplate = {
