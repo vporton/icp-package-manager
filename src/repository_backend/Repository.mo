@@ -232,7 +232,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
           case (#err e) throw Error.reject(e);
         };
 
-        List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info}); // FIXME@P1: Uncomment
+        List.add(p.pkg.packages, {serial = List.size(p.pkg.packages); package = info});
       };
       case null {
         await* onlyPackageCreator(caller);
