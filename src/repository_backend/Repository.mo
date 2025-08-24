@@ -219,8 +219,8 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
   public shared({caller}) func addPackageVersion(
     name: Common.PackageName,
-    tmpl: Common.SharedPackageInfoTemplate,
-    modules: [(Text, Common.SharedModule)],
+    tmpl: Common.SharedModuleForTemplate,
+    modules: [(Text, Common.SharedModuleBase<Blob>)],
   ): async () {
     let info = Common.fillPackageInfoTemplate(tmpl, modules);
 

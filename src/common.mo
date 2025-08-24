@@ -18,9 +18,11 @@ import CyclesLedger "canister:cycles_ledger";
 module {
     public type PackageName = Text;
 
+    // TODO@P1: Remove it and use text for Git hashes, etc.?
     // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.
     public type Version = Text;
 
+    // TODO@P1: Remove it?
     public type VersionRange = (Version, Version);
 
     /// Common properties of package and virtual package.
@@ -35,6 +37,63 @@ module {
         developer: ?CyclesLedger.Account;
     };
 
+    public type Location = (canister: Principal, id: Blob); // `id` is a 128-bit hash of the module code.
+
+    public type ModuleEvent = {
+        #CodeInstalledForAllCanisters;
+        #CodeUpgradedForAllCanisters;
+        #WithdrawCycles;
+    };
+
+    /// Shared/query method name.
+    public type MethodName = {method: Text};
+
+    // `L` may be `Location` or `Blob`.
+    public type ModuleCodeBase<L> = {
+        #Wasm : L;
+        #Assets : {
+            wasm: L;
+            assets: Principal;
+        };
+    };
+
+    type ModuleCode = ModuleCodeBase<Location>;
+
+    public type SharedModuleBase<L> = {
+        code: ModuleCodeBase<L>;
+        installByDefault: Bool;
+        forceReinstall: Bool;
+        canisterVersion: ?Nat64; // sender_canister_version
+        callbacks: [(ModuleEvent, MethodName)];
+    };
+
+    public type SharedModule = SharedModuleBase<Location>;
+
+    public type SharedModuleForTemplate = SharedModuleBase<Blob>;
+
+    // TODO@P2: Ensure that functions receive args without template parameters (for conversion to TypeScript).
+    // TODO@P3: Remove unnecessary types.
+    public type ModuleBase<L> = {
+        code: ModuleCodeBase<L>;
+        installByDefault: Bool;
+        forceReinstall: Bool; // used with such canisters as `MainIndirect`.
+        canisterVersion: ?Nat64; // sender_canister_version
+        callbacks: Map.Map<ModuleEvent, MethodName>;
+    };
+
+    public type Module = ModuleBase<Location>;
+
+    public type IndexedPackageInfo = {
+        serial: Nat;
+        package: PackageInfo;
+    };
+
+    // Remark: There can be same named real package and a virtual package (of different versions).
+    public type FullPackageInfo = {
+        listByVersion: List.List<IndexedPackageInfo>;
+        versionsMap: Map.Map<Version, IndexedPackageInfo>;
+    };
+
     // Probably, not very efficient.
     public func amendedGUID(guid: Blob, name: PackageName): Blob {
         let b = Array.empty<Nat8>();
@@ -42,14 +101,6 @@ module {
         let b2 = Array.concat(b1, Blob.toArray(Text.encodeUtf8(name)));
         let h256 = Sha256.fromArray(#sha256, b2);
         Blob.fromArray(Array.sliceToArray<Nat8>(Blob.toArray(h256), 0, 16)); // 128-bit hash
-    };
-
-    public type Location = (canister: Principal, id: Blob); // `id` is a 128-bit hash of the module code.
-
-    public type ModuleEvent = {
-        #CodeInstalledForAllCanisters;
-        #CodeUpgradedForAllCanisters;
-        #WithdrawCycles;
     };
 
     public func moduleEventToNat(e: ModuleEvent): Nat {
@@ -64,34 +115,7 @@ module {
         Nat.compare(moduleEventToNat(a), moduleEventToNat(b));
     };
 
-    /// Shared/query method name.
-    public type MethodName = {method: Text};
-
-    public type ModuleCode = {
-        #Wasm : Location;
-        #Assets : {
-            wasm: Location;
-            assets: Principal;
-        };
-    };
-
-    public type SharedModule = {
-        code: ModuleCode;
-        installByDefault: Bool;
-        forceReinstall: Bool;
-        canisterVersion: ?Nat64; // sender_canister_version
-        callbacks: [(ModuleEvent, MethodName)];
-    };
-
-    public type Module = {
-        code: ModuleCode;
-        installByDefault: Bool;
-        forceReinstall: Bool; // used with such canisters as `MainIndirect`.
-        canisterVersion: ?Nat64; // sender_canister_version
-        callbacks: Map.Map<ModuleEvent, MethodName>;
-    };
-
-    public func shareModule(m: Module): SharedModule =
+    public func shareModule<L>(m: ModuleBase<L>): SharedModuleBase<L> =
         {
             code = m.code;
             installByDefault = m.installByDefault;
@@ -100,7 +124,7 @@ module {
             callbacks = Iter.toArray(Map.entries<ModuleEvent, MethodName>(m.callbacks));
         };
 
-    public func unshareModule(m: SharedModule): Module =
+    public func unshareModule<L>(m: SharedModuleBase<L>): ModuleBase<L> =
         {
             code = m.code;
             installByDefault = m.installByDefault;
@@ -109,21 +133,9 @@ module {
             callbacks = Map.fromIter(m.callbacks.vals(), moduleEventCompare);
         };
 
-    public type ModuleUploadCode = {
-        #Wasm : Blob;
-        #Assets : {
-            wasm: Blob;
-            assets: Principal;
-        };
-    };
+    public type ModuleUploadCode = ModuleCodeBase<Blob>;
 
-    public type ModuleUpload = {
-        code: ModuleUploadCode;
-        installByDefault: Bool;
-        forceReinstall: Bool;
-        canisterVersion: ?Nat64; // sender_canister_version
-        callbacks: [(ModuleEvent, MethodName)];
-    };
+    public type ModuleUpload = SharedModuleBase<Blob>;
 
     /// If `how` is `#methodName`, then the module is considered initialized when
     /// the method is called and doesn't trap.
@@ -137,8 +149,8 @@ module {
         };
     };
 
-    public type SharedRealPackageInfoBase<Module> = {
-        modules: [(Text, Module)]; // Modules are named for correct upgrades.
+    public type SharedRealPackageInfoBase<L> = {
+        modules: [(Text, SharedModuleBase<L>)]; // Modules are named for correct upgrades.
         dependencies: [(PackageName, ?[VersionRange])];
         suggests: [(PackageName, ?[VersionRange])];
         recommends: [(PackageName, ?[VersionRange])];
@@ -148,15 +160,15 @@ module {
         frontendModule: ?Text;
     };
 
-    /// See `RealPackageInfo`.
-    public type SharedRealPackageInfo = SharedRealPackageInfoBase<SharedModule>;
+    /// See `RealPackageInfoBase`.
+    public type SharedRealPackageInfo = SharedRealPackageInfoBase<Location>;
 
     /// `dependencies`, `suggests`, `recommends` (akin Debian) are currently not supported.
     /// Package's `functions` (currently not supported) are unrelated to Motoko functions.
     /// `modules` are named canisters. (Names are needed for example to know which module should be
     /// replaced by which during an upgrade.)
-    public type RealPackageInfo = {
-        modules: Map.Map<Text, Module>; // Modules are named for correct upgrades. `Bool` means "install by default".
+    public type RealPackageInfoBase<L> = {
+        modules: Map.Map<Text, ModuleBase<L>>; // Modules are named for correct upgrades. `Bool` means "install by default".
         dependencies: [(PackageName, ?[VersionRange])];
         suggests: [(PackageName, ?[VersionRange])];
         recommends: [(PackageName, ?[VersionRange])];
@@ -166,12 +178,45 @@ module {
         frontendModule: ?Text;
     };
 
-    public func shareRealPackageInfo(package: RealPackageInfo): SharedRealPackageInfo =
+    public type RealPackageInfo = RealPackageInfoBase<Location>;
+
+    public type SharedPackageInfoBase<L> = {
+        base: CommonPackageInfo;
+        specific: {
+            #real : SharedRealPackageInfoBase<L>;
+            #virtual : VirtualPackageInfo;
+        };
+    };
+
+    public type SharedPackageInfo = SharedPackageInfoBase<Location>;
+
+    /// See `RealPackageInfoBase`.
+    public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<None>;
+
+    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None>;
+
+    /// Yet unsupported.
+    public type VirtualPackageInfo = {
+        choice: [(PackageName, ?[VersionRange])];
+        default: PackageName;
+    };
+
+    public type PackageInfoBase<L> = {
+        base: CommonPackageInfo;
+        specific: {
+            #real : RealPackageInfoBase<L>;
+            #virtual : VirtualPackageInfo;
+        };
+    };
+
+    public type PackageInfo = PackageInfoBase<Location>;
+
+    public func shareRealPackageInfo(package: RealPackageInfoBase<Location>): SharedRealPackageInfoBase<Location> =
         {
             modules = Iter.toArray(
-                Iter.map<(Text, Module), (Text, SharedModule)>(
+                Iter.map<(Text, ModuleBase<Location>), (Text, SharedModuleBase<Location>)>(
                     Map.entries(package.modules),
-                    func ((k, m): (Text, Module)): (Text, SharedModule) = (k, shareModule(m)),
+                    func ((k, m): (Text, ModuleBase<Location>)): (Text, SharedModuleBase<Location>) = (k, shareModule(m)),
                 ),
             );
             dependencies = package.dependencies;
@@ -183,12 +228,12 @@ module {
             frontendModule = package.frontendModule;
         };
 
-    public func unshareRealPackageInfo(package: SharedRealPackageInfo): RealPackageInfo =
+    public func unshareRealPackageInfo(package: SharedRealPackageInfoBase<Location>): RealPackageInfoBase<Location> =
         {
             modules = Map.fromIter(
-                Iter.map<(Text, SharedModule), (Text, Module)>(
+                Iter.map<(Text, SharedModuleBase<Location>), (Text, ModuleBase<Location>)>(
                     package.modules.vals(),
-                    func ((k, m): (Text, SharedModule)): (Text, Module) = (k, unshareModule(m)),
+                    func ((k, m): (Text, SharedModuleBase<Location>)): (Text, ModuleBase<Location>) = (k, unshareModule(m)),
                 ),
                 Text.compare,
             );
@@ -201,17 +246,16 @@ module {
             frontendModule = package.frontendModule;
         };
 
-    /// See `RealPackageInfo`.
-    public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<None>;
-
-    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None>;
-
     // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
-    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModule)]): RealPackageInfo =
+    // FIXME@P1: Fix this function.
+    // FIXME@P1: Need to upload?
+    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModuleBase<Blob>)]): RealPackageInfoBase<Blob> =
         {
-            modules = Map.fromIter(
-                Iter.map<(Text, SharedModule), (Text, Module)>(modules.vals(),
-                func ((k, v): (Text, SharedModule)): (Text, Module) = (k, unshareModule(v))), Text.compare);
+            modules = Map.fromIter<Text, ModuleBase<Blob>>( // FIXME@P1: `Location` is not `Blob`   .
+                Iter.map<(Text, SharedModuleBase<Blob>), (Text, ModuleBase<Blob>)>(modules.vals(),
+                func ((k, v): (Text, SharedModuleBase<Blob>)): (Text, ModuleBase<Blob>) = (k, unshareModule(v))),
+                Text.compare,
+            );
             dependencies = template.dependencies;
             suggests = template.suggests;
             recommends = template.recommends;
@@ -221,7 +265,7 @@ module {
             frontendModule = template.frontendModule;
         };
 
-    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModule)]): PackageInfo =
+    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModuleBase<Blob>)]): PackageInfoBase<Blob> =
         {
             base = template.base;
             specific = switch (template.specific) {
@@ -229,30 +273,6 @@ module {
                 case (#virtual x) #virtual x;
             };
         };
-
-    /// Yet unsupported.
-    public type VirtualPackageInfo = {
-        choice: [(PackageName, ?[VersionRange])];
-        default: PackageName;
-    };
-
-    public type SharedPackageInfoBase<Module> = {
-        base: CommonPackageInfo;
-        specific: {
-            #real : SharedRealPackageInfoBase<Module>;
-            #virtual : VirtualPackageInfo;
-        };
-    };
-
-    public type SharedPackageInfo = SharedPackageInfoBase<SharedModule>;
-
-    public type PackageInfo = {
-        base: CommonPackageInfo;
-        specific: {
-            #real : RealPackageInfo;
-            #virtual : VirtualPackageInfo;
-        };
-    };
 
     public func sharePackageInfo(info: PackageInfo): SharedPackageInfo =
         {
@@ -303,6 +323,16 @@ module {
         var pinned: Bool;
     };
 
+    public type SharedInstalledPackageInfo = {
+        id: InstallationId;
+        package: SharedPackageInfo;
+        packageRepoCanister: Principal;
+        modulesInstalledByDefault: [(Text, Principal)];
+        additionalModules: [(Text, [Principal])];
+        pubKey: ?Blob;
+        pinned: Bool;
+    };
+
     private func additionalModulesIter(additionalModules: Map.Map<Text, List.List<Principal>>)
         : Iter.Iter<(Text, Principal)>
     {
@@ -323,16 +353,6 @@ module {
 
     public func numberOfModules(pkg: InstalledPackageInfo): Nat {
         Map.size(pkg.modulesInstalledByDefault) + Iter.size(additionalModulesIter(pkg.additionalModules));
-    };
-
-    public type SharedInstalledPackageInfo = {
-        id: InstallationId;
-        package: SharedPackageInfo;
-        packageRepoCanister: Principal;
-        modulesInstalledByDefault: [(Text, Principal)];
-        additionalModules: [(Text, [Principal])];
-        pubKey: ?Blob;
-        pinned: Bool;
     };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
@@ -376,17 +396,6 @@ module {
     //     versionsMap: [(Version, Version)];
     // };
 
-    public type IndexedPackageInfo = {
-        serial: Nat;
-        package: PackageInfo;
-    };
-
-    // Remark: There can be same named real package and a virtual package (of different versions).
-    public type FullPackageInfo = {
-        listByVersion: List.List<IndexedPackageInfo>;
-        versionsMap: Map.Map<Version, IndexedPackageInfo>;
-    };
-
     // TODO@P2: Remove this?
     // public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
     //     {
@@ -415,7 +424,7 @@ module {
     //         );
     //     };
 
-    public func extractModuleLocation(code: ModuleCode): (Principal, Blob) =
+    public func extractModuleLocation(code: ModuleCodeBase<Location>): (Principal, Blob) =
         switch (code) {
             case (#Wasm wasmModuleLocation) {
                 wasmModuleLocation;

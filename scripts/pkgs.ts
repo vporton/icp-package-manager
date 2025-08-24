@@ -1,4 +1,3 @@
-import { TupleType } from "typescript";
 import { CheckInitializedCallback, SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
 
 const pmReal = {
