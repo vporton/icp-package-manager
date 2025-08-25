@@ -390,7 +390,7 @@ module {
     // Remark: There can be same named real package and a virtual package (of different versions).
     public type SharedFullPackageInfo = {
         listByVersion: [SharedPackageInfo]; // Pass version instead as a part of package?
-        versionsMap: [(Version, Int)]; // position in `listByVersion`
+        versionsMap: [(Version, Nat)]; // position in `listByVersion`
     };
 
     public func shareFullPackageInfo(info: FullPackageInfo): SharedFullPackageInfo =
@@ -401,12 +401,14 @@ module {
                     func (i: PackageInfo): SharedPackageInfo = sharePackageInfo(i),
                 ),
             );
-            versionsMap = []; // FIXME@P1: Fill it.
+            versionsMap = Iter.toArray(Iter.map<(Version, IndexedPackageInfo), (Version, Nat)>(
+                Map.entries<Version, IndexedPackageInfo>(info.versionsMap),
+                func (p: (Version, IndexedPackageInfo)): (Version, Nat) = (p.0, p.1.serial)),
+            );
         };
 
-    public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo =
-        {
-            listByVersion = List.fromArray(Array.fromIter<IndexedPackageInfo>(
+    public func unshareFullPackageInfo(info: SharedFullPackageInfo): FullPackageInfo {
+        let listByVersion = List.fromArray<IndexedPackageInfo>(Array.fromIter<IndexedPackageInfo>(
                 Iter.map<(Nat, SharedPackageInfo), IndexedPackageInfo>(
                     Iter.enumerate<SharedPackageInfo>(
                         info.listByVersion.vals(),
@@ -414,11 +416,20 @@ module {
                     func (p: (Nat, SharedPackageInfo)): IndexedPackageInfo = {serial = p.0; package = unsharePackageInfo(p.1)},
                 ),
             ));
+        {
+            listByVersion;
             versionsMap = Map.fromIter(
-                [].vals(), // FIXME@P1: Fill it.
+                Iter.map<(Version, Nat), (Version, IndexedPackageInfo)>(
+                    info.versionsMap.vals(),
+                    func (p: (Version, Nat)): (Version, IndexedPackageInfo) {
+                        let pkg = info.listByVersion[p.1];
+                        (p.0, {serial = p.1; package = unsharePackageInfo(pkg)})
+                    }
+                ),
                 Text.compare,
             );
         };
+    };
 
     public func extractModuleLocation(code: ModuleCodeBase<Location>): (Principal, Blob) =
         switch (code) {
