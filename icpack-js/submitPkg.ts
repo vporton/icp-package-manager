@@ -9,6 +9,8 @@ import { HttpAgent, Identity } from '@dfinity/agent';
 import { Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
 import canisterIds from '../canister_ids.json';
 import { assert } from 'console';
+import { exec } from 'child_process';
+import { copyFile, rename } from 'fs/promises';
 
 dotenv_config({ path: '.env' });
 
@@ -36,7 +38,7 @@ export async function submit(packages: {
     name: string,
     tmpl: SharedPackageInfoTemplate,
     modules: [string, SharedModule][],
-}[], identity: Identity, useLocalRepo: boolean) {
+}[], identity: Identity, useLocalRepo: boolean, recompileCommand: string) {
     assert(process.env.DFX_NETWORK === 'local');
     // TODO@P1: Use save these two variables to `.env` (and for reliability to yet a location?)
     // FIXME@P1: `local` and `ic` may be compiled with different settings by `MOPS_ENV` in `mops.toml`.
@@ -56,6 +58,19 @@ export async function submit(packages: {
 
     const repoActor: Repository = createRepository(pm, {agent: remoteAgent});
     const pmActor = createPackageManager(pm, {agent: localAgent});
+
+    // Recompile the remote version.
+    try {
+        await copyFile('.env', '.env.local');
+        await exec(recompileCommand, {
+            env: {
+                'DFX_NETWORK': 'ic', // TODO@P1: Ensure that it overrides `.env`.
+                'MOPS_ENV': 'ic',
+            },
+        });
+    } finally {
+        await rename('.env.local', '.env');
+    }
 
     for (const pkg of packages) {
         try {
