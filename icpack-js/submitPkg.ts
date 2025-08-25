@@ -28,9 +28,10 @@ function ask(question: string): Promise<string> {
 }
 
 export function getRemoteCanisterId(name: string, useLocalRepo: boolean): Principal {
-    return Principal.fromText(useLocalRepo
-        ? process.env[`CANISTER_ID_${name.toUpperCase()}`]!
-        : (canisterIds[name as keyof typeof canisterIds] as {ic: string}).ic);
+    return Principal.fromText(process.env[`CANISTER_ID_${name.toUpperCase()}`]!);
+    // return Principal.fromText(useLocalRepo
+    //     ? process.env[`CANISTER_ID_${name.toUpperCase()}`]!
+    //     : (canisterIds[name as keyof typeof canisterIds] as {ic: string}).ic);
 }
 
 // TODO@P1: Use the Git hash (and ask user for more version strings?)
