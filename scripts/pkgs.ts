@@ -102,10 +102,14 @@ const pmExampleBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters
 const walletFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/wallet_frontend/wallet_frontend.wasm.gz`));
 const walletBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/wallet_backend/wallet_backend.wasm`));
 
-async function main({useLocalRepo}: {useLocalRepo: boolean}) {
+async function main() {
     const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
-    const agent = await HttpAgent.create({identity, host: useLocalRepo ? "http://localhost:8080" : undefined, shouldFetchRootKey: useLocalRepo});
+    const agent = await HttpAgent.create({
+        identity,
+        host: process.env.DFX_NETWORK == 'local' ? "http://localhost:8080" : undefined,
+        shouldFetchRootKey: process.env.DFX_NETWORK == 'local',
+    });
     const repositoryIndex = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
     const pmFrontendModule = await repositoryIndex.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
@@ -214,4 +218,4 @@ async function main({useLocalRepo}: {useLocalRepo: boolean}) {
     }], identity)
 }
 
-main({useLocalRepo: true}); // TODO@P1: `useLocalRepo` option.
+main(); // TODO@P1: `useLocalRepo` option.
