@@ -29,12 +29,8 @@ async function main() {
     const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
 
-    // const agent = new HttpAgent({host: isLocal ? "http://localhost:8080" : undefined, identity}); // TODO@P3: Use `HttpAgent.create`.
-    // if (process.env.DFX_NETWORK === 'local') {
-    //     agent.fetchRootKey();
-    // }
+    const agent = await HttpAgent.create({host: isLocal ? "http://localhost:8080" : undefined, identity, shouldFetchRootKey: isLocal});
 
-    // TODO@P1: Create remote repository.
     const repositoryIndex: Repository = Actor.createActor(repositoryIndexIdl, {agent, canisterId: process.env.CANISTER_ID_REPOSITORY!});
     console.log("repository init...");
     try {
