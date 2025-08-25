@@ -41,8 +41,8 @@ export async function submit(packages: {
     modules: [string, SharedModule][],
 }[], identity: Identity, useLocalRepo: boolean, recompileCommand: string) {
     // TODO@P1: Use save these two variables to `.env` (and for reliability to yet a location?)
-    // FIXME@P1: `local` and `ic` may be compiled with different settings by `MOPS_ENV` in `mops.toml`.
-    let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite
+    //          For non-local it should be also saved somewhere else because `.env` may be lost.
+    let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite // FIXME@P1: `local` and `ic` values may be different.
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
