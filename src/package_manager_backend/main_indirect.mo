@@ -30,7 +30,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 }) = this {
     // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
-    //     throw Error.reject("argument userArg is wrong");
+    //     Runtime.trap("argument userArg is wrong");
     // };
 
     stable var initialized = false;
@@ -64,7 +64,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            throw Error.reject("main_indirect: not initialized");
+            Runtime.trap("main_indirect: not initialized");
         };
     };
 
@@ -92,7 +92,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 
     func onlyOwner(caller: Principal, msg: Text): async* () {
         if (not Set.contains<Principal>(owners, Principal.compare, caller)) {
-            throw Error.reject("not the owner: " # msg);
+            Runtime.trap("not the owner: " # msg);
         };
     };
 
@@ -164,11 +164,11 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             //     (cyclesAmount + 100_000_000_000) * Itertools.fold<?Common.PackageInfo, Nat>( // TODO@P3: 100_000_000_000 is install_code() amount.
             //         packages2.vals(), 0, func (acc: Nat, pkg: ?Common.PackageInfo) {
             //             let ?pkg2 = pkg else {
-            //                 throw Error.reject("programming error");
+            //                 Runtime.trap("programming error");
             //             };
             //             let #real specific = pkg2.specific else {
             //                 // TODO@P3: Support virtual packages.
-            //                 throw Error.reject("programming error");
+            //                 Runtime.trap("programming error");
             //             };
             //             acc + specific.modules.size()
             //         });
@@ -204,7 +204,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         }
         catch (e) {
             Debug.print("installPackagesWrapper: " # Error.message(e));
-            throw Error.reject(Error.message(e));
+            Runtime.trap(Error.message(e));
         };
     };
 
@@ -266,7 +266,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         catch (e) {
             let msg = "installModule: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         };
     };
 
@@ -424,7 +424,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                                 canister_id;
                             }, 1059 * wasm_module.size());
                         } else {
-                            throw Error.reject(Error.message(e));
+                            Runtime.trap(Error.message(e));
                         };
                     };
                     canister_id;
@@ -541,7 +541,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 //         catch (e) {
 //             let msg = "checkCodeInstalled: " # Error.message(e);
 //             Debug.print(msg);
-//             throw Error.reject(msg);
+//             Runtime.trap(msg);
 //         };
 //    };
 

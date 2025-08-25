@@ -8,7 +8,7 @@ import Int64 "mo:core/Int64";
 import Nat64 "mo:core/Nat64";
 import Nat32 "mo:core/Nat32";
 import Time "mo:core/Time";
-import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import Common "../common";
 import Account "../lib/Account";
 import AccountID "mo:account-identifier";
@@ -74,7 +74,7 @@ persistent actor class Wallet({
     public shared({caller}) func setOwner(signature: Blob): async () {
         switch (await* UserAuth.checkOwnerSignature(packageManager, installationId, caller, signature)) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -84,7 +84,7 @@ persistent actor class Wallet({
     public query({caller}) func getLimitAmounts(): async {amountAddCheckbox: ?Float; amountAddInput: ?Float} {
         switch (onlyOwner(caller, "getLimitAmounts")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -104,7 +104,7 @@ persistent actor class Wallet({
     public shared({caller}) func setLimitAmounts(values: {amountAddCheckbox: ?Float; amountAddInput: ?Float}): async () {
         switch (onlyOwner(caller, "setLimitAmounts")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -124,7 +124,7 @@ persistent actor class Wallet({
     public query({caller}) func getTokens(): async [Token] {
         switch (onlyOwner(caller, "getTokens")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -139,7 +139,7 @@ persistent actor class Wallet({
     public shared({caller}) func addToken(token: Token): async () {
         switch (onlyOwner(caller, "addToken")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -149,7 +149,7 @@ persistent actor class Wallet({
             case (?data) {
                 for (t in data.tokens.vals()) {
                     if (t.canisterId == token.canisterId) {
-                        throw Error.reject("token already exists");
+                        Runtime.trap("token already exists");
                     };
                 };
                 data.tokens := Array.concat(data.tokens, [token]);
@@ -163,7 +163,7 @@ persistent actor class Wallet({
     public shared({caller}) func removeToken(canisterId: Principal): async () {
         switch (onlyOwner(caller, "removeToken")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -182,7 +182,7 @@ persistent actor class Wallet({
     public shared({caller}) func addArchiveCanister(canisterId: Principal, archiveCanisterId: Principal): async () {
                 switch (onlyOwner(caller, "addArchiveCanister")) {
             case (#err(msg)) {
-                throw Error.reject(msg);
+                Runtime.trap(msg);
             };
             case (#ok()) {};
         };
@@ -221,7 +221,7 @@ persistent actor class Wallet({
         }
         catch(e) {
             Debug.print("Wallet isAllInitialized: " # Error.message(e));
-            throw Error.reject(Error.message(e));
+            Runtime.trap(Error.message(e));
         };
     };
 

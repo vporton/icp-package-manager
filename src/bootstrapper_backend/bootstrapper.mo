@@ -16,7 +16,7 @@ import Nat64 "mo:core/Nat64";
 import Int "mo:core/Int";
 import Time "mo:core/Time";
 import Float "mo:core/Float";
-import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
 import List "mo:core/List";
 import Blob "mo:core/Blob";
@@ -45,7 +45,7 @@ persistent actor class Bootstrapper() = this {
     /// TODO@P3: Do we need this check?
     private func checkItself(caller: Principal): async* () {
         if (caller != Principal.fromActor(this)) {
-            throw Error.reject("can be called only by itself");
+            Runtime.trap("can be called only by itself");
         };
     };
 
@@ -59,7 +59,7 @@ persistent actor class Bootstrapper() = this {
         // ignore Cycles.accept<system>(); // TODO@P3
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
-            throw Error.reject("icpack isn't a real package");
+            Runtime.trap("icpack isn't a real package");
         };
         let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(icPackPkgReal.modules.vals(), Text.compare);
 
@@ -82,23 +82,23 @@ persistent actor class Bootstrapper() = this {
         };
 
         let ?frontend = Map.get(installedModules, Text.compare, "frontend") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?backend = Map.get(installedModules, Text.compare, "backend") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?simpleIndirect = Map.get(installedModules, Text.compare, "simple_indirect") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?mainIndirect = Map.get(installedModules, Text.compare, "main_indirect") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?battery = Map.get(installedModules, Text.compare, "battery") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
 
         let ?mFrontend = Map.get(modulesToInstall, Text.compare, "frontend") else {
-            throw Error.reject("module not found");
+            Runtime.trap("module not found");
         };
         let wasmModuleLocation = Common.extractModuleLocation(mFrontend.code);
         let wasm_module = await Repository.getWasmModule(wasmModuleLocation.1);
@@ -144,7 +144,7 @@ persistent actor class Bootstrapper() = this {
         let amountToMove = await Data.removeUserCycleBalance(user);
 
         if (amountToMove < ((Common.minimalFunding - Common.cycles_transfer_fee): Nat)) {
-            throw Error.reject("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
+            Runtime.trap("You are required to put at least 13T cycles. Unspent cycles will be put onto your installed canisters and you will be able to claim them back.");
         };
 
         // TODO@P3: `- 5*Common.cycles_transfer_fee` and likewise seems to have superfluous multipliers.
@@ -152,7 +152,7 @@ persistent actor class Bootstrapper() = this {
         let {installedModules} = await /*(with cycles = amountToMove)*/ doBootstrapFrontend(frontendTweakPubKey, user, amountToMove);
 
         let ?battery = Iter.filter(installedModules.vals(), func (x: (Text, Principal)): Bool = x.0 == "battery").next() else {
-            throw Error.reject("error getting battery");
+            Runtime.trap("error getting battery");
         };
         let cyclesToBattery = amountToMove - env.bootstrapFrontendCost;
         await (with cycles = cyclesToBattery - Common.cycles_transfer_fee) ic.deposit_cycles({canister_id = battery.1});
@@ -180,8 +180,8 @@ persistent actor class Bootstrapper() = this {
 
         let tweaker = await Data.getFrontendTweaker(frontendTweakPubKey);
         switch (UserAuth.verifySignature(frontendTweakPubKey, user, signature)) {
-            case (#err e) throw Error.reject(e);
-            case (#ok false) throw Error.reject("account validation failed");
+            case (#err e) Runtime.trap(e);
+            case (#ok false) Runtime.trap("account validation failed");
             case (#ok true) {};
         };
 
@@ -224,7 +224,7 @@ persistent actor class Bootstrapper() = this {
 
         let icPackPkg = await Repository.getPackage("icpack", "stable");
         let #real icPackPkgReal = icPackPkg.specific else {
-            throw Error.reject("icpack isn't a real package");
+            Runtime.trap("icpack isn't a real package");
         };
 
         let modulesToInstall = Map.fromIter<Text, Common.SharedModule>(icPackPkgReal.modules.vals(), Text.compare);
@@ -232,16 +232,16 @@ persistent actor class Bootstrapper() = this {
         // We bootstrap backend at this stage:
         let installedModules2 = Map.fromIter<Text, Principal>(installedModules.vals(), Text.compare);
         let ?backend = Map.get(installedModules2, Text.compare, "backend") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?mainIndirect = Map.get(installedModules2, Text.compare, "main_indirect") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?simpleIndirect = Map.get(installedModules2, Text.compare, "simple_indirect") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
         let ?battery = Map.get(installedModules2, Text.compare, "battery") else {
-            throw Error.reject("module not deployed");
+            Runtime.trap("module not deployed");
         };
 
         let controllers = [simpleIndirect, mainIndirect, backend, battery, user, Principal.fromActor(this)]; // TODO@P3: duplicate code
@@ -275,7 +275,7 @@ persistent actor class Bootstrapper() = this {
                 continue install;
             };
             let ?m = Map.get(modulesToInstall, Text.compare, moduleName) else {
-                throw Error.reject("module not found");
+                Runtime.trap("module not found");
             };
             await* Install.myInstallCode({
                 installationId = 0;
@@ -427,7 +427,7 @@ persistent actor class Bootstrapper() = this {
             amount = revenue - Common.cycles_transfer_fee;
         });
         let #Ok tx = res2 else {
-            throw Error.reject("transfer failed: " # debug_show(res2));
+            Runtime.trap("transfer failed: " # debug_show(res2));
         };
 
         let res3 = await CyclesLedger.withdraw({
@@ -437,7 +437,7 @@ persistent actor class Bootstrapper() = this {
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
         let #Ok tx3 = res3 else {
-            throw Error.reject("transfer failed: " # debug_show(res3));
+            Runtime.trap("transfer failed: " # debug_show(res3));
         };
 
         // Update user cycle balance in BootstrapperData
@@ -465,7 +465,7 @@ persistent actor class Bootstrapper() = this {
             amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
-            throw Error.reject("transfer failed: " # debug_show(res));
+            Runtime.trap("transfer failed: " # debug_show(res));
         };
         let res2 = await ICPLedger.icrc1_transfer({
             to = {owner = revenueRecipient; subaccount = null};
@@ -476,14 +476,14 @@ persistent actor class Bootstrapper() = this {
             amount = revenue - Common.icp_transfer_fee;
         });
         let #Ok tx2 = res2 else {
-            throw Error.reject("transfer failed: " # debug_show(res2));
+            Runtime.trap("transfer failed: " # debug_show(res2));
         };
         let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
         let #Ok cyclesAmount = res3 else {
-            throw Error.reject("notify_top_up failed: " # debug_show(res2));
+            Runtime.trap("notify_top_up failed: " # debug_show(res2));
         };
 
         // Update user cycle balance in BootstrapperData

@@ -162,5 +162,3 @@ Remaining things TODO
 - TODO@P3 Ability to remove ancient versions of a package.
 
 - TODO@P3 I use `filterMap` where it's enough to use `map` (due to `Runtime.unreachable`.
-
-- TODO@P1 `Runtime.trap` instead of `throw`.

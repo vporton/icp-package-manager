@@ -1,5 +1,6 @@
 import ICE "mo:core/InternetComputer"; // TODO@P3: Rename.
 import Cycles "mo:core/Cycles";
+import Runtime "mo:core/Runtime";
 import Error "mo:core/Error";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
@@ -24,7 +25,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
 }) = this {
     // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
-    //     throw Error.reject("argument userArg is wrong");
+    //     Runtime.trap("argument userArg is wrong");
     // };
 
     stable var initialized = false;
@@ -62,7 +63,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            throw Error.reject("simple_indirect: not initialized");
+            Runtime.trap("simple_indirect: not initialized");
         };
     };
 
@@ -90,7 +91,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
 
     func onlyOwner(caller: Principal, msg: Text): async* () {
         if (not Set.contains(owners, Principal.compare, caller)) {
-            throw Error.reject("not the owner: " # msg);
+            Runtime.trap("not the owner: " # msg);
         };
     };
 
@@ -110,7 +111,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
                 let msg = "Indirect caller (" # method.name # "): " # Error.message(e);
                 Debug.print(msg);
                 if (method.error == #abort or Error.code(e) == #call_error {err_code = 302}) { // CanisterMethodNotFound
-                    throw Error.reject(msg);
+                    Runtime.trap(msg);
                 };
             };
         };
@@ -132,7 +133,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "canister_info: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         };
     };
 
@@ -146,7 +147,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "canister_status: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -160,7 +161,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "clear_chunk_store: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -174,7 +175,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "create_canister: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -188,7 +189,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "delete_canister: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -202,7 +203,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "delete_canister_snapshot: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -216,7 +217,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "deposit_cycles: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -230,14 +231,14 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "ecdsa_public_key: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
     public composite query({caller}) func fetch_canister_logs(args: IC.FetchCanisterLogsArgs): async IC.FetchCanisterLogsResult {
         // TODO@P2: duplicate code
         if (not Set.contains(owners, Principal.compare, caller)) {
-            throw Error.reject("not the owner: " # "fetch_canister_logs");
+            Runtime.trap("not the owner: " # "fetch_canister_logs");
         };
 
         try {
@@ -246,7 +247,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "fetch_canister_logs: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -260,7 +261,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "http_request: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -274,7 +275,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "install_chunked_code: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -288,7 +289,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "install_code: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -302,7 +303,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "list_canister_snapshots: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -316,7 +317,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "load_canister_snapshot: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -330,7 +331,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "node_metrics_history: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -344,7 +345,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "provisional_create_canister_with_cycles: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -358,7 +359,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "provisional_top_up_canister: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -372,7 +373,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "raw_rand: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -386,7 +387,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "schnorr_public_key: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -400,7 +401,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "sign_with_ecdsa: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -414,7 +415,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "sign_with_schnorr: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -428,7 +429,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "start_canister: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -442,7 +443,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "stop_canister: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -456,7 +457,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "stored_chunks: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -470,7 +471,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "take_canister_snapshot: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -484,7 +485,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "uninstall_code: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -498,7 +499,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "update_settings: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -512,7 +513,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "upload_chunk: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 
@@ -523,7 +524,7 @@ shared({caller = initialCaller}) persistent actor class SimpleIndirect({
         catch (e) {
             let msg = "withdrawCycles: " # Error.message(e);
             Debug.print(msg);
-            throw Error.reject(msg);
+            Runtime.trap(msg);
         }
     };
 };

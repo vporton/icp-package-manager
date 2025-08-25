@@ -2,7 +2,7 @@ import Principal "mo:core/Principal";
 import Array "mo:core/Array";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
-import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import List "mo:core/List";
 
 // TODO@P3: Allow only the user to see his bookmarks?
@@ -18,10 +18,10 @@ persistent actor class Bookmarks(initialOwner: Principal) {
 
     public shared({caller}) func init(args: {bootstrapper: Principal}): async () {
         if (caller != initialOwner) {
-            throw Error.reject("bookmarks: not the initiaizer");
+            Runtime.trap("bookmarks: not the initiaizer");
         };
         if (initialized) {
-            throw Error.reject("bookmarks: already initialized");
+            Runtime.trap("bookmarks: already initialized");
         };
         bootstrapper := args.bootstrapper;
         initialized := true;
@@ -59,7 +59,7 @@ persistent actor class Bookmarks(initialOwner: Principal) {
     /// Returns whether bookmark already existed.
     public shared({caller}) func addBookmark({b: Bookmark; battery = _: Principal; user: Principal}): async Bool {
         if (caller != bootstrapper) {
-            throw Error.reject("bookmarks: not the owner");
+            Runtime.trap("bookmarks: not the owner");
         };
 
         // let res = await CyclesLedger.icrc2_transfer_from({

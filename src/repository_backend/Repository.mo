@@ -10,7 +10,6 @@ import Option "mo:core/Option";
 import Result "mo:core/Result";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
-import Error "mo:core/Error";
 import Runtime "mo:core/Runtime";
 import Sha256 "mo:sha2/Sha256";
 import Common "../common";
@@ -23,13 +22,13 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   private func onlyOwner(caller: Principal): async* () {
     if (not Set.contains(owners, Principal.compare, caller)) {
-      throw Error.reject("not an owner");
+      Runtime.trap("not an owner");
     }
   };
 
   private func onlyPackageCreator(caller: Principal): async* () {
     if (not Set.contains(owners, Principal.compare, caller) and not Set.contains(packageCreators, Principal.compare, caller)) {
-      throw Error.reject("not an owner");
+      Runtime.trap("not an owner");
     }
   };
 
@@ -86,7 +85,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     await* onlyOwner(caller);
     
     if (initialized) {
-      throw Error.reject("already initialized");
+      Runtime.trap("already initialized");
     };
 
     initialized := true;
@@ -189,7 +188,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   public query func getWasmModule(key: Blob): async Blob { 
     let ?v = Map.get(wasms, Blob.compare, key) else {
-      throw Error.reject("no such module");
+      Runtime.trap("no such module");
     };
     v;
   };
@@ -211,7 +210,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   public query func getFullPackageInfo(name: Common.PackageName): async Common.SharedFullPackageInfo {
     switch (_getFullPackageInfo(name)) {
       case (#ok v) v;
-      case (#err e) throw Error.reject(e);
+      case (#err e) Runtime.trap(e);
     };
   };
 
@@ -229,7 +228,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
       case (?p) {
         switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
           case (#ok) {};
-          case (#err e) throw Error.reject(e);
+          case (#err e) Runtime.trap(e);
         };
 
         let ?previous = List.last(p.pkg.listByVersion) else {
@@ -271,7 +270,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   //     case (?p) {
   //       switch (onlyPackageOwner(caller, name)) { // TODO@P3: queries by name second time.
   //         case (#ok) {};
-  //         case (#err e) throw Error.reject(e);
+  //         case (#err e) Runtime.trap(e);
   //       };
   //     };
   //     case null {
@@ -293,10 +292,10 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
     let ?fullInfo = Map.get(packages, Text.compare, name) else {
-      throw Error.reject("no such package");
+      Runtime.trap("no such package");
     };
     let ?t = Map.get(fullInfo.pkg.versionsMap, Text.compare, version) else {
-      throw Error.reject("no such package version");
+      Runtime.trap("no such package version");
     };
     Common.sharePackageInfo(t.package);
   };

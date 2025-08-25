@@ -1,6 +1,6 @@
 import Principal "mo:core/Principal";
 import Blob "mo:core/Blob";
-import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
@@ -35,14 +35,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func changeOwner(newOwner: Principal) {
         if (not Principal.isController(caller)) {
-            throw Error.reject("bootstrapper_data: not a controller");
+            Runtime.trap("bootstrapper_data: not a controller");
         };
         owner := newOwner;
     };
 
     public shared({caller}) func setOwner(newOwner: Principal) {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
 
@@ -51,7 +51,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func putFrontendTweaker(pubKey: PubKey, tweaker: FrontendTweaker): async () {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
 
@@ -61,7 +61,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func getFrontendTweaker(pubKey: PubKey): async FrontendTweaker {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
 
@@ -81,14 +81,14 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
             };
         };
         let ?res = Map.get(frontendTweakers, Blob.compare, pubKey) else {
-            throw Error.reject("no such frontend or key expired");
+            Runtime.trap("no such frontend or key expired");
         };
         res;
     };
 
     public shared({caller}) func deleteFrontendTweaker(pubKey: PubKey): async () {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
 
@@ -99,7 +99,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
     // User cycle balance management functions
     public query({caller}) func getUserCycleBalance(user: Principal): async Nat {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
         
@@ -111,7 +111,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func updateUserCycleBalance(user: Principal, newBalance: Nat): async () {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
         
@@ -120,7 +120,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func addToUserCycleBalance(user: Principal, amount: Nat): async () {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
         
@@ -133,7 +133,7 @@ persistent actor class BootstrapperData(initialOwner: Principal) = this {
 
     public shared({caller}) func removeUserCycleBalance(user: Principal): async Nat {
         switch (onlyOwner(caller)) {
-            case (#err e) throw Error.reject(e);
+            case (#err e) Runtime.trap(e);
             case (#ok) {};
         };
         

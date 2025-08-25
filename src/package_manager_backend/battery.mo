@@ -1,6 +1,6 @@
 /// Battery canister or battery module is a canister that holds cycles and delivers them to other canisters.
 import Timer "mo:core/Timer";
-import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import Debug "mo:core/Debug";
 import Principal "mo:core/Principal";
 import Int "mo:core/Int";
@@ -44,7 +44,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
 
     func onlyOwner(caller: Principal, msg: Text): async* () {
         if (Map.get(owners, Principal.compare, caller) == null) {
-            throw Error.reject("not the owner: " # msg);
+            Runtime.trap("not the owner: " # msg);
         };
     };
 
@@ -78,7 +78,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
     public shared({caller}) func init() : async () {
         await* onlyOwner(caller, "init");
         if (initialized) {
-            throw Error.reject("already initialized");
+            Runtime.trap("already initialized");
         };
 
         initTimer<system>();
@@ -88,7 +88,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
 
     public query func b44c4a9beec74e1c8a7acbe46256f92f_isInitialized(): async () {
         if (not initialized) {
-            throw Error.reject("battery: not initialized");
+            Runtime.trap("battery: not initialized");
         };
     };
 
@@ -279,10 +279,10 @@ shared({caller = initialOwner}) persistent actor class Battery({
 
     public shared({caller}) func withdrawCycles3(amount: Nat, payee: Principal) : async () {
         if (not Principal.isController(caller)) { // important to use controllers not owners, for this to be initialized during bootstrapping
-            throw Error.reject("withdrawCycles3: caller is not allowed");
+            Runtime.trap("withdrawCycles3: caller is not allowed");
         };
         if (Cycles.balance() < amount) {
-            throw Error.reject("not enough cycles");
+            Runtime.trap("not enough cycles");
         };
         await (with cycles = amount) IC.ic.deposit_cycles({canister_id = payee});
     };
@@ -305,7 +305,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
             amount = revenue - Common.cycles_transfer_fee;
         });
         let #Ok tx = res2 else {
-            throw Error.reject("revenue transfer failed: " # debug_show(res2));
+            Runtime.trap("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await CyclesLedger.withdraw({
@@ -315,7 +315,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
             created_at_time = null; // ?(Nat64.fromNat(Int.abs(Time.now())));
         });
         let #Ok _ = res else {
-            throw Error.reject("transfer failed: " # debug_show(res));
+            Runtime.trap("transfer failed: " # debug_show(res));
         };
     };
 
@@ -335,7 +335,7 @@ shared({caller = initialOwner}) persistent actor class Battery({
             amount = revenue - Common.icp_transfer_fee;
         });
         let #Ok tx2 = res2 else {
-            throw Error.reject("revenue transfer failed: " # debug_show(res2));
+            Runtime.trap("revenue transfer failed: " # debug_show(res2));
         };
 
         let res = await ICPLedger.icrc1_transfer({
@@ -350,14 +350,14 @@ shared({caller = initialOwner}) persistent actor class Battery({
             amount = icpBalance - revenue - Common.icp_transfer_fee;
         });
         let #Ok tx = res else {
-            throw Error.reject("transfer failed: " # debug_show(res));
+            Runtime.trap("transfer failed: " # debug_show(res));
         };
         let res3 = await CMC.notify_top_up({
             block_index = Nat64.fromNat(tx);
             canister_id = Principal.fromActor(this);
         });
         let #Ok cyclesAmount = res3 else {
-            throw Error.reject("notify_top_up failed: " # debug_show(res3));
+            Runtime.trap("notify_top_up failed: " # debug_show(res3));
         };
 
         {balance = cyclesAmount};

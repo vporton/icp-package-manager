@@ -1,5 +1,4 @@
 /// TODO@P3: Methods to query for all installed packages.
-import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import List "mo:core/List";
 import Option "mo:core/Option";
@@ -15,6 +14,7 @@ import Int "mo:core/Int";
 import Float "mo:core/Float";
 import Blob "mo:core/Blob";
 import Bool "mo:core/Bool";
+import Runtime "mo:core/Runtime";
 import Error "mo:core/Error";
 import Cycles "mo:core/Cycles";
 import Common "../common";
@@ -42,7 +42,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 }) = this {
     // let ?userArgValue: ?{
     // } = from_candid(userArg) else {
-    //     throw Error.reject("argument userArg is wrong");
+    //     Runtime.trap("argument userArg is wrong");
     // };
 
     public type HalfInstalledPackageInfo = {
@@ -189,7 +189,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         try {
             switch (onlyOwner(caller, "init")) {
                 case (#err err) {
-                    throw Error.reject(err);
+                    Runtime.trap(err);
                 };
                 case (#ok) {};
             };
@@ -201,14 +201,14 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         }
         catch(e) {
             Debug.print("PM init: " # Error.message(e));
-            throw Error.reject(Error.message(e));
+            Runtime.trap(Error.message(e));
         };
     };
 
     // public shared({caller}) func setOwners(newOwners: [Principal]): async () {
     //     switch (onlyOwner(caller, "setOwners")) {
     //         case (#err err) {
-    //             throw Error.reject(err);
+    //             Runtime.trap(err);
     //         };
     //         case (#ok) {};
     //     };
@@ -222,7 +222,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func addAdditionalOwner(newOwner: Principal): async () {
         switch (onlyOwner(caller, "addOwner")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -233,7 +233,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func removeAdditionalOwner(oldOwner: Principal): async () {
         switch (onlyOwner(caller, "removeOwner")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -256,7 +256,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public composite query func isAllInitialized(): async () {
         try {
             if (not initialized) {
-                throw Error.reject("package_manager: not initialized");
+                Runtime.trap("package_manager: not initialized");
             };
             // TODO@P3: need b44c4a9beec74e1c8a7acbe46256f92f_isInitialized() method in this canister, too? Maybe, remove the prefix?
             let _ = getMainIndirect().b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
@@ -264,10 +264,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             let _ = batteryActor.b44c4a9beec74e1c8a7acbe46256f92f_isInitialized();
             let _ = do {
                 let ?pkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
-                    throw Error.reject("package manager is not yet installed");
+                    Runtime.trap("package manager is not yet installed");
                 };
                 let ?frontend = Map.get(pkg.modulesInstalledByDefault, Text.compare, "frontend") else {
-                    throw Error.reject("programming error 1");
+                    Runtime.trap("programming error 1");
                 };
                 let f: Asset.AssetCanister = actor(Principal.toText(frontend));
                 f.get({key = "/index.html"; accept_encodings = ["gzip"]});
@@ -277,7 +277,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         }
         catch(e) {
             Debug.print("PM isAllInitialized: " # Error.message(e));
-            throw Error.reject(Error.message(e));
+            Runtime.trap(Error.message(e));
         };
     };
 
@@ -297,7 +297,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func setMainIndirect(main_indirect_v: MainIndirect.MainIndirect): async () {
         switch (onlyOwner(caller, "")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -429,7 +429,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -509,7 +509,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "uninstallPackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -574,7 +574,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "upgradePackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -632,7 +632,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }): async () {
         switch (onlyOwner(caller, "upgradeStart")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -654,7 +654,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                     await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
                 };
                 case (#err err) {
-                    throw Error.reject("Error in upgradeStart: " # err);
+                    Runtime.trap("Error in upgradeStart: " # err);
                 };
             };
         };
@@ -671,13 +671,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }): async () {
         switch (onlyOwner(caller, "onUpgradeOrInstallModule")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
-            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
+            Runtime.trap("no such upgrade: " # debug_show(upgradeId));
         };
         ignore Map.insert(upgrade.modulesInstalledByDefault, Text.compare, moduleName, canister_id);
 
@@ -699,7 +699,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 }]);
             };
             let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
-                throw Error.reject("no such installed package");
+                Runtime.trap("no such installed package");
             };
             inst.packageRepoCanister := upgrade.newRepo;
             inst.package := upgrade.package;
@@ -709,10 +709,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         // Call the user's callback if provided
         let #real real = upgrade.package.specific else {
-            throw Error.reject("trying to directly install a virtual package");
+            Runtime.trap("trying to directly install a virtual package");
         };
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
-            throw Error.reject("no such installed package");
+            Runtime.trap("no such installed package");
         };
         label r for ((moduleName, module_) in Map.entries(real.modules)) {
             let ?cbPrincipal = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName) else {
@@ -759,7 +759,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         switch (onlyOwner(caller, "onDeleteCanister")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -783,7 +783,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                         ignore Map.delete(info.all, Nat.compare, uninst.installationId);
                         if (info.default == uninst.installationId) {
                             let ?(last, {}) = Map.reverseEntries(info.all).next() else {
-                                throw Error.reject("programming error");
+                                Runtime.trap("programming error");
                             };
                             info.default := last;
                         };
@@ -811,7 +811,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "facilitateBootstrap")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -831,7 +831,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         });
 
         // let ?battery = coreModules.get("battery") else {
-        //     throw Error.reject("error getting battery");
+        //     Runtime.trap("error getting battery");
         // };
         {minInstallationId}
     };
@@ -868,7 +868,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }) {
         switch (onlyOwner(caller, "installStart")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -876,7 +876,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         for (p0 in packages.keys()) {
             let p = packages[p0];
             let #real realPackage = p.package.specific else {
-                throw Error.reject("trying to directly install a virtual package");
+                Runtime.trap("trying to directly install a virtual package");
             };
 
             let package2 = Common.unsharePackageInfo(p.package); // TODO@P3: why used twice below? seems to be a mis-programming.
@@ -920,20 +920,20 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             Iter.toArray(Map.entries(pkg.modulesInstalledByDefault));
         } else {
             let ?pkg0 = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, 0) else {
-                throw Error.reject("package manager not installed");
+                Runtime.trap("package manager not installed");
             };
             Iter.toArray(Map.entries(pkg0.modulesInstalledByDefault));
         };
         let coreModules = Map.fromIter<Text, Principal>(bi.vals(), Text.compare);
         var moduleNumber = 0;
         let ?backend = Map.get(coreModules, Text.compare, "backend") else {
-            throw Error.reject("error getting backend");
+            Runtime.trap("error getting backend");
         };
         let ?main_indirect = Map.get(coreModules, Text.compare, "main_indirect") else {
-            throw Error.reject("error getting main_indirect");
+            Runtime.trap("error getting main_indirect");
         };
         let ?simple_indirect = Map.get(coreModules, Text.compare, "simple_indirect") else {
-            throw Error.reject("error getting simple_indirect");
+            Runtime.trap("error getting simple_indirect");
         };
         let batteryActor = actor(Principal.toText(battery)) : actor {
             withdrawCycles3: shared (cyclesAmount: Nat, withdrawer: Principal) -> async ();
@@ -984,7 +984,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     ): async* () {
         var posTmp = 0;
         let #real newPkgReal = pkg.package.specific else {
-            throw Error.reject("trying to directly install a virtual package");
+            Runtime.trap("trying to directly install a virtual package");
         };
         // TODO@P3: upgrading a real package into virtual or vice versa
         let newPkgModules = newPkgReal.modules;
@@ -998,10 +998,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         // TODO@P3: repeated calculation
         let ?oldPkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, pkg.installationId) else {
-            throw Error.reject("no such package installation");
+            Runtime.trap("no such package installation");
         };
         // let #real oldPkgReal = oldPkg.package.specific else {
-        //     throw Error.reject("trying to directly upgrade a virtual package");
+        //     Runtime.trap("trying to directly upgrade a virtual package");
         // };
         // let oldPkgModules = oldPkgReal.modules; // Corrected: Use oldPkgReal modules.
         // let oldPkgModulesHash = Map.fromIter<Text, Common.Module>(oldPkgModules.entries(), oldPkgModules.size(), Text.equal, Text.hash);
@@ -1012,7 +1012,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
             let canister_id = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, name);
             let ?wasmModule = Map.get<Text, Common.Module>(newPkgModules, Text.compare, name) else {
-                throw Error.reject("programming error: no such module");
+                Runtime.trap("programming error: no such module");
             };
             getMainIndirect().upgradeOrInstallModule({
                 upgradeId = p0;
@@ -1057,7 +1057,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         switch (onlyOwner(caller, "onInstallCode")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1066,7 +1066,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         ignore Cycles.accept<system>(Cycles.available());
 
         let ?inst = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Nat.compare, installationId) else {
-            throw Error.reject("no such package"); // better message
+            Runtime.trap("no such package"); // better message
         };
         switch (moduleName) {
             case (?name) {
@@ -1075,7 +1075,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case null {};
         };
         let #real realPackage = inst.package.specific else { // TODO@P3: fails with virtual packages
-            throw Error.reject("trying to directly install a virtual installation");
+            Runtime.trap("trying to directly install a virtual installation");
         };
         // Note that we have different algorithms for zero and non-zero number of callbacks (TODO@P3: check).
         inst.remainingModules -= 1;
@@ -1085,7 +1085,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 switch (Map.get(module4.callbacks, Common.moduleEventCompare, #CodeInstalledForAllCanisters)) {
                     case (?callbackName) {
                         let ?cbPrincipal = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName2) else {
-                            throw Error.reject("programming error 3");
+                            Runtime.trap("programming error 3");
                         };
                         ignore getSimpleIndirect().callAll([{
                             canister = cbPrincipal;
@@ -1121,7 +1121,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     private func _updateAfterInstall({installationId: Common.InstallationId}): async* () {
         let ?ourHalfInstalled = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Nat.compare, installationId) else {
-            throw Error.reject("package installation has not been started");
+            Runtime.trap("package installation has not been started");
         };
         // let pubKey : ?Blob = null;
         ignore Map.insert<Nat, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId, {
@@ -1151,7 +1151,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     //     let ?installation = installedPackages.get(installationId) else {
-    //         throw Error.reject("no such installed installation");
+    //         Runtime.trap("no such installed installation");
     //     };
     //     let part: repository.repository = actor (Principal.toText(installation.packageRepoCanister));
     //     let packageInfo = await part.getPackage(installation.name, installation.version);
@@ -1178,7 +1178,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     //     // let part: Common.RepositoryRO = actor (Principal.toText(canister));
     //     // let installation = await part.getPackage(packageName, version);
     //     let #real realPackage = packageInfo.specific else {
-    //         throw Error.reject("trying to directly install a virtual installation");
+    //         Runtime.trap("trying to directly install a virtual installation");
     //     };
 
     //     await* _finishUninstallPackage({
@@ -1213,7 +1213,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     //     };
     //     installedPackages.delete(installationId);
     //     let ?byName = installedPackagesByName.get(ourHalfInstalled.name) else {
-    //         throw Error.reject("programming error: can't get package by name");
+    //         Runtime.trap("programming error: can't get package by name");
     //     };
     //     if (Array.size(byName) == 1) {
     //         installedPackagesByName.delete(ourHalfInstalled.name);
@@ -1234,7 +1234,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getAllCanisters(): async [({packageName: Text; guid: Blob}, [(Text, Principal)])] {
         switch (onlyOwner(caller, "getAllCanisters")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1252,13 +1252,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getInstalledPackage(id: Common.InstallationId): async Common.SharedInstalledPackageInfo {
         switch (onlyOwner(caller, "getInstalledPackage")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?result = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
-            throw Error.reject("no such installed package");
+            Runtime.trap("no such installed package");
         };
         Common.installedPackageInfoShare(result);
     };
@@ -1267,16 +1267,16 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getModulePrincipal(installationId: Common.InstallationId, moduleName: Text): async Principal {
         switch (onlyOwner(caller, "getModulePrincipal")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
-            throw Error.reject("no such installation");
+            Runtime.trap("no such installation");
         };
         let ?m = Map.get(inst.modulesInstalledByDefault, Text.compare, moduleName) else {
-            throw Error.reject("no such module");
+            Runtime.trap("no such module");
         };
         m;
     };
@@ -1286,7 +1286,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "getInstalledPackagesInfoByName")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1309,7 +1309,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getAllInstalledPackages(): async [(Common.InstallationId, Common.SharedInstalledPackageInfo)] {
         switch (onlyOwner(caller, "getAllInstalledPackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1335,13 +1335,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func setInstallationPubKey(id: Common.InstallationId, pubKey: Blob): async () {
         switch (onlyOwner(caller, "setInstallationPubKey")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
-            throw Error.reject("no such installation");
+            Runtime.trap("no such installation");
         };
         info.pubKey := ?pubKey;
     };
@@ -1353,7 +1353,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }] {
         switch (onlyOwner(caller, "getHalfInstalledPackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1379,7 +1379,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }] {
         switch (onlyOwner(caller, "getHalfUninstalledPackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1405,7 +1405,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }] {
         switch (onlyOwner(caller, "getHalfUpgradedPackages")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1428,13 +1428,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getHalfInstalledPackageModulesById(installationId: Common.InstallationId): async [(Text, Principal)] {
         switch (onlyOwner(caller, "getHalfInstalledPackageModulesById")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?res = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Int.compare, installationId) else {
-            throw Error.reject("no such package");
+            Runtime.trap("no such package");
         };
         // TODO@P3: May be a little bit slow.
         Iter.toArray<(Text, Principal)>(Map.entries(res.modulesInstalledByDefault));
@@ -1477,13 +1477,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func setPinned(installationId: Common.InstallationId, pinned: Bool): async () {
         switch (onlyOwner(caller, "setPinned")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, installationId) else {
-            throw Error.reject("no such installed package");
+            Runtime.trap("no such installed package");
         };
         inst.pinned := pinned;
     };
@@ -1493,7 +1493,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     ): async () {
         switch (onlyOwner(caller, "removeStalled")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1534,7 +1534,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getNewCanisterCycles(): async Nat {
         switch (onlyOwner(caller, "getNewCanisterCycles")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1547,7 +1547,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func addRepository(canister: Principal, name: Text): async () {
         switch (onlyOwner(caller, "addRepository")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1558,7 +1558,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func removeRepository(canister: Principal): async () {
         switch (onlyOwner(caller, "removeRepository")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1571,7 +1571,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public query({caller}) func getRepositories(): async [{canister: Principal; name: Text}] {
         switch (onlyOwner(caller, "getRepositories")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1582,7 +1582,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func setDefaultInstalledPackage(name: Common.PackageName, guid: Blob, installationId: Common.InstallationId): async () {
         switch (onlyOwner(caller, "setDefaultInstalledPackage")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1592,7 +1592,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             all: Map.Map<Common.InstallationId, {}>;
             var default: Common.InstallationId;
         }>(installedPackagesByName, Blob.compare, guid2) else {
-            throw Error.reject("no such package");
+            Runtime.trap("no such package");
         };
         data.default := installationId;
     };
@@ -1612,7 +1612,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }): async () {
         switch (onlyOwner(caller, "copyAssetsIfAny")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1646,7 +1646,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     {
         switch (onlyOwner(caller, "startModularUpgrade")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
@@ -1656,7 +1656,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         
         // Extract modules for cycles calculation
         let #real newPkgReal = newPkg.specific else {
-            throw Error.reject("trying to directly upgrade a virtual package");
+            Runtime.trap("trying to directly upgrade a virtual package");
         };
 
         let upgradeId = nextUpgradeId;
@@ -1695,7 +1695,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 };
             };
             case (#err err) {
-                throw Error.reject("Error in startModularUpgrade: " # err);
+                Runtime.trap("Error in startModularUpgrade: " # err);
             };
         };
         
@@ -1709,27 +1709,27 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     }): async {completed: Bool} {
         switch (onlyOwner(caller, "upgradeModule")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
-            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
+            Runtime.trap("no such upgrade: " # debug_show(upgradeId));
         };
 
         let #real newPkgReal = upgrade.package.specific else {
-            throw Error.reject("trying to directly upgrade a virtual package");
+            Runtime.trap("trying to directly upgrade a virtual package");
         };
         let newPkgModules = newPkgReal.modules;
 
         let ?wasmModule = Map.get(newPkgModules, Text.compare, moduleName) else {
-            throw Error.reject("no such module: " # moduleName);
+            Runtime.trap("no such module: " # moduleName);
         };
 
         // Get the old package info
         let ?oldPkg = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
-            throw Error.reject("no such package installation");
+            Runtime.trap("no such package installation");
         };
 
         let canister_id = Map.get(oldPkg.modulesInstalledByDefault, Text.compare, moduleName);
@@ -1772,17 +1772,17 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     } {
         switch (onlyOwner(caller, "getModularUpgradeStatus")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
-            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
+            Runtime.trap("no such upgrade: " # debug_show(upgradeId));
         };
 
         let #real newPkgReal = upgrade.package.specific else {
-            throw Error.reject("trying to directly upgrade a virtual package");
+            Runtime.trap("trying to directly upgrade a virtual package");
         };
         let totalModules = Map.size(newPkgReal.modules);
         let completedModules = totalModules - upgrade.remainingModules;
@@ -1805,16 +1805,16 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     ): async () {
         switch (onlyOwner(caller, "completeModularUpgrade")) {
             case (#err err) {
-                throw Error.reject(err);
+                Runtime.trap(err);
             };
             case (#ok) {};
         };
 
         let ?upgrade = Map.get<Common.UpgradeId, HalfUpgradedPackageInfo>(halfUpgradedPackages, Int.compare, upgradeId) else {
-            throw Error.reject("no such upgrade: " # debug_show(upgradeId));
+            Runtime.trap("no such upgrade: " # debug_show(upgradeId));
         };
         let ?inst = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, upgrade.installationId) else {
-            throw Error.reject("no such installed package for upgrade: " # debug_show(upgrade.installationId));
+            Runtime.trap("no such installed package for upgrade: " # debug_show(upgrade.installationId));
         };
 
         // Update package info
