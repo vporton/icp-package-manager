@@ -27,7 +27,7 @@ function ask(question: string): Promise<string> {
     );
 }
 
-export function getRemoteCanisterId(name: string, useLocalRepo: boolean): Principal {
+export function getRemoteCanisterId(name: string): Principal {
     return Principal.fromText(process.env[`CANISTER_ID_${name.toUpperCase()}`]!);
     // return Principal.fromText(useLocalRepo
     //     ? process.env[`CANISTER_ID_${name.toUpperCase()}`]!
@@ -47,7 +47,7 @@ export async function submit(packages: {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
     const pm = Principal.fromText(pmStr!);
-    let repo = getRemoteCanisterId('repository', useLocalRepo);
+    let repo = getRemoteCanisterId('repository');
 
     const agent = await HttpAgent.create({
         host: process.env.DFX_NETWORK === 'local' ? "http://localhost:8080" : undefined,
