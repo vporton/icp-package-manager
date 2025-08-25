@@ -208,8 +208,8 @@ async function main({useLocalRepo}: {useLocalRepo: boolean}) {
         name: "wallet",
         tmpl: walletInfo,
         modules: [
-            ["frontend", exampleFrontend],
-            ["backend", exampleBackend],
+            ["frontend", walletFrontend],
+            ["backend", walletBackend],
         ],
     }], identity)
 }
