@@ -59,7 +59,7 @@ export async function submit(packages: {
         identity,
     });
 
-    const repoActor: Repository = createRepository(pm, {agent});
+    const repoActor: Repository = createRepository(repo, {agent});
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
