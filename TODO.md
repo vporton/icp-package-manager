@@ -164,6 +164,3 @@ Remaining things TODO
 - TODO@P3 I use `filterMap` where it's enough to use `map` (due to `Runtime.unreachable`.
 
 - TODO@P1 `Runtime.trap` instead of `throw`.
-
-- TODO@P1 What to do if an erroneous update has been recorded into the list? How to fix it? Maybe, develop immediately for `ic` rather than `local`
-          to reduce the likelihood of this?
