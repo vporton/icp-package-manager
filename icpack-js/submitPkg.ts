@@ -58,15 +58,6 @@ export async function submit(packages: {
     const repoActor: Repository = createRepository(pm, {agent});
     const pmActor = createPackageManager(pm, {agent});
 
-    // Recompile the remote version.
-    // FIXME@P1: needed?
-    await exec(recompileCommand, {
-        env: {
-            'DFX_NETWORK': 'ic', // TODO@P1: Ensure that it overrides `.env`.
-            'MOPS_ENV': 'ic',
-        },
-    });
-
     for (const pkg of packages) {
         try {
             // pmActor.TODO@P1; // Upgrade
