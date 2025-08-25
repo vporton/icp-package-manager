@@ -90,7 +90,7 @@ const walletInfo: SharedPackageInfoTemplate = {
     specific: {real: walletReal},
 };
 
-const net = process.env.DFX_NETWORK;
+const net = process.env.DFX_NETWORK!;
 
 const frontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz`));
 const pmBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/package_manager/package_manager.wasm`));
@@ -107,8 +107,8 @@ async function main() {
     const identity = decodeFile(key);
     const agent = await HttpAgent.create({
         identity,
-        host: process.env.DFX_NETWORK == 'local' ? "http://localhost:8080" : undefined,
-        shouldFetchRootKey: process.env.DFX_NETWORK == 'local',
+        host: net === 'local' ? "http://localhost:8080" : undefined,
+        shouldFetchRootKey: net === 'local',
     });
     const repositoryIndex = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
     const pmFrontendModule = await repositoryIndex.uploadModule({
