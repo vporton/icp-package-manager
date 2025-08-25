@@ -45,6 +45,7 @@ export async function submit(packages: {
 }[], identity: Identity) {
     // TODO@P1: Use save these two variables to `.env` (and for reliability to yet a location?)
     //          For non-local it should be also saved somewhere else because `.env` may be lost.
+    // TODO@P1: Also prevent the user from "inheriting" the `TEST_CANISTER_ID_PACKAGE_MANAGER` between `local` and `ic` networks.
     let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite // FIXME@P1: `local` and `ic` values may be different.
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
