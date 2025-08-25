@@ -191,6 +191,7 @@ async function main() {
         ],
     });
 
+    // FIXME@P1: Also pass `installationId` to `submit`.
     await submit([{
         name: "icpack",
         tmpl: pmInfo,
