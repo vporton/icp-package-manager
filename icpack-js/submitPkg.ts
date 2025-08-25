@@ -74,6 +74,8 @@ export async function submit(packages: {
 
     for (const pkg of packages) {
         try {
+            // FIXME@P1: We upgrade the local version, but list the remote one. Will it work?
+            // FIXME@P1: Need to use different hashes for local and remote versions.
             // pmActor.TODO@P1; // Upgrade
         } catch (e) {
             console.error(`Failed to upgrade package ${pkg.name}: ${e}`);
