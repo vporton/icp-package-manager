@@ -60,9 +60,11 @@ export async function submit(packages: {
 
     for (const pkg of packages) {
         try {
+            // FIXME@P1: Upgrade only if changed.
             // pmActor.TODO@P1; // Upgrade
         } catch (e) {
             console.error(`Failed to upgrade package ${pkg.name}: ${e}`);
+            alert(`Failed to upgrade package ${pkg.name}: ${e}`); // TODO@P3: better dialog box
             return;
         }
         if (await repoActor.addPackageVersion(pkg.name, pkg.tmpl, pkg.modules)) {
