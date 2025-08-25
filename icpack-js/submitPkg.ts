@@ -5,12 +5,15 @@ import { config as dotenv_config } from 'dotenv';
 import readline from 'readline';
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 import { createActor as createRepository } from '../src/declarations/repository';
+import { Location } from '../src/declarations/repository/repository.did';
 import { HttpAgent, Identity } from '@dfinity/agent';
 import { Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
 import canisterIds from '../canister_ids.json';
 import { assert } from 'console';
 import { exec } from 'child_process';
 import { copyFile, rename } from 'fs/promises';
+import { ICManagementCanister } from "@dfinity/ic-management";
+import { IDL } from '@dfinity/candid';
 
 dotenv_config({ path: '.env' });
 
@@ -59,9 +62,43 @@ export async function submit(packages: {
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
+        for (const [moduleName, m] of pkg.modules) {
+        const canisterId = await pmActor.getModulePrincipal(installationId, moduleName); // FIXME@P1: Where to store `installationId`?
+        const moduleCode = m.code;
+        const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
+            ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm; // TODO@P1: Check that it's correct.
+        const [repoCanister, wasmId] = wasmModuleLocation;
+        const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
+        const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
         try {
             // FIXME@P1: Upgrade only if changed.
-            // pmActor.TODO@P1; // Upgrade
+            // TODO@P3: Support only enhanced orthogonal persistence?
+            const { installCode } = ICManagementCanister.create({
+                agent,
+            });
+            try {
+                await installCode({
+                    mode: { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] },
+                    canisterId,
+                    wasmModule: wasmModuleBytes,
+                    arg: new Uint8Array(IDL.Record({}).encodeValue({})),
+                });
+            }
+            catch (e) {
+                if (/Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./
+                    .test((e as any).toString()))
+                {
+                    await installCode({
+                        mode: { upgrade: [{ wasm_memory_persistence: [{keep: null}], skip_pre_upgrade: [false] }] },
+                        canisterId: canisterId,
+                        wasmModule: wasmModuleBytes,
+                        arg: new Uint8Array(IDL.Record({}).encodeValue({})),
+                    });
+                } else {
+                    throw e;
+                }
+            }
+            // TODO@P1: Copy frontend assets.
         } catch (e) {
             console.error(`Failed to upgrade package ${pkg.name}: ${e}`);
             alert(`Failed to upgrade package ${pkg.name}: ${e}`); // TODO@P3: better dialog box
