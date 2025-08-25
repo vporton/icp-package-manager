@@ -39,7 +39,7 @@ export async function submit(packages: {
     name: string,
     tmpl: SharedPackageInfoTemplate,
     modules: [string, SharedModule][],
-}[], identity: Identity, useLocalRepo: boolean, recompileCommand: string) {
+}[], identity: Identity) {
     // TODO@P1: Use save these two variables to `.env` (and for reliability to yet a location?)
     //          For non-local it should be also saved somewhere else because `.env` may be lost.
     let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite // FIXME@P1: `local` and `ic` values may be different.
