@@ -249,7 +249,7 @@ module {
     // FIXME@P1: Need to upload?
     private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModule)]): RealPackageInfo =
         {
-            modules = Map.fromIter<Text, Module>( // FIXME@P1: `Location` is not `Blob`   .
+            modules = Map.fromIter<Text, Module>( // FIXME@P1: `Location` is not `Blob`.
                 Iter.map<(Text, SharedModule), (Text, Module)>(modules.vals(),
                 func ((k, v): (Text, SharedModule)): (Text, Module) = (k, unshareModule(v))),
                 Text.compare,
