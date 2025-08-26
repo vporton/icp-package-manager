@@ -27,7 +27,7 @@ const pmReal = {
 const pmInfo: SharedPackageInfoTemplate = {
     base: {
         name: "icpack",
-        version: "0.0.1", // FIXME@P1: It's superfluous here.
+        version: undefined as never,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Package manager",
@@ -53,7 +53,7 @@ const efReal = {
 const pmEFInfo: SharedPackageInfoTemplate = {
     base: {
         name: "example",
-        version: "0.0.1",
+        version: undefined as never,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Example package",
@@ -79,7 +79,7 @@ const walletReal = {
 const walletInfo: SharedPackageInfoTemplate = {
     base: {
         name: "wallet",
-        version: "0.0.1",
+        version: undefined as never,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Wallet for IC Pack",
