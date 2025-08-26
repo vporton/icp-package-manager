@@ -51,6 +51,7 @@ export async function submit(packages: {
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
+
     const pm = Principal.fromText(pmStr!);
     let repo = getRemoteCanisterId('repository');
 
@@ -64,6 +65,14 @@ export async function submit(packages: {
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
+        let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.name.toUpperCase()}`]; // FIXME@P1: prefix not processed by Vite
+        if (installationIdStr === undefined) {
+            throw new Error(`Installation ID for ${pkg.name} is not specified.`);
+        }
+        if (installationIdStr !== 'none' && !/^[0-9]+$/.test(installationIdStr)) {
+            throw new Error(`Invalid installation ID for ${pkg.name}: ${installationIdStr} (must be a natural number or "none")`);
+        }
+        let installationId = installationIdStr === 'none' ? undefined : Number.parseInt(installationIdStr);
         for (const [moduleName, m] of pkg.modules) {
         const canisterId = await pmActor.getModulePrincipal(installationId, moduleName); // FIXME@P1: Where to store `installationId`?
         const moduleCode = m.code;
@@ -72,13 +81,13 @@ export async function submit(packages: {
         const [repoCanister, wasmId] = wasmModuleLocation;
         const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-        try { // FIXME: Also needs to create a new installation if it doesn't exist.
+        try { // FIXME: Also needs to create a new installation if it doesn't exist (with caution).
             // FIXME@P1: Upgrade only if changed.
             // TODO@P3: Support only enhanced orthogonal persistence?
             const { installCode } = ICManagementCanister.create({
                 agent,
             });
-            try {
+            try { // FIXME@P1: This is a partial installation code. It for example doesn't update the package version.
                 await installCode({
                     mode: { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] },
                     canisterId,
