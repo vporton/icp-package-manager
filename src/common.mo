@@ -241,8 +241,6 @@ module {
         };
 
     // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
-    // FIXME@P1: Fix this function.
-    // FIXME@P1: Need to upload?
     private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModule)]): RealPackageInfo =
         {
             modules = Map.fromIter<Text, Module>(
