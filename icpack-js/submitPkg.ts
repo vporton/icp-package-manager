@@ -14,6 +14,7 @@ import { exec } from 'child_process';
 import { copyFile, rename } from 'fs/promises';
 import { ICManagementCanister } from "@dfinity/ic-management";
 import { IDL } from '@dfinity/candid';
+import { waitTillInitialized } from '../src/lib/install';
 
 dotenv_config({ path: '.env' });
 dotenv_config({ path: `.icpack-config.${process.env.DFX_NETWORK}` });
@@ -72,17 +73,30 @@ export async function submit(packages: {
         if (installationIdStr !== 'none' && !/^[0-9]+$/.test(installationIdStr)) {
             throw new Error(`Invalid installation ID for ${pkg.name}: ${installationIdStr} (must be a natural number or "none")`);
         }
-        let installationId = installationIdStr === 'none' ? undefined : Number.parseInt(installationIdStr);
+        let installationId = installationIdStr === 'none' ? undefined : BigInt(installationIdStr);
+        if (installationId === undefined) {
+            const {minInstallationId: realInstallationId} = await pmActor.installPackages({
+                packages: [{
+                    packageName: pkg.name,
+                    version: "0.0.1", // FIXME@P1
+                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), // FIXME@P1
+                    arg: new Uint8Array(),
+                    initArg: [],
+                }],
+                user: identity.getPrincipal(),
+                afterInstallCallback: [],
+            });
+            await waitTillInitialized(agent, pm, realInstallationId);
+            installationId = realInstallationId;
+        }
         for (const [moduleName, m] of pkg.modules) {
-        const canisterId = await pmActor.getModulePrincipal(installationId, moduleName); // FIXME@P1: Where to store `installationId`?
-        const moduleCode = m.code;
-        const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
-            ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm; // TODO@P1: Check that it's correct.
-        const [repoCanister, wasmId] = wasmModuleLocation;
-        const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
-        const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-        try {
-            // FIXME@P1: Also needs to create a new installation if it doesn't exist (with caution).
+            let canisterId = await pmActor.getModulePrincipal(installationId, moduleName);
+            const moduleCode = m.code;
+            const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
+                ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm; // TODO@P1: Check that it's correct.
+            const [repoCanister, wasmId] = wasmModuleLocation;
+            const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
+            const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
             // FIXME@P1: Upgrade only if changed.
             // TODO@P3: Support only enhanced orthogonal persistence?
             const { installCode } = ICManagementCanister.create({
@@ -110,12 +124,8 @@ export async function submit(packages: {
                     throw e;
                 }
             }
-            // TODO@P1: Copy frontend assets.
-        } catch (e) {
-            console.error(`Failed to upgrade package ${pkg.name}: ${e}`);
-            alert(`Failed to upgrade package ${pkg.name}: ${e}`); // TODO@P3: better dialog box
-            return;
         }
+        // TODO@P1: Copy frontend assets.
         if (await repoActor.addPackageVersion(pkg.name, pkg.tmpl, pkg.modules)) {
             console.log(`Package ${pkg.name} code was updated.`);
         } else {
