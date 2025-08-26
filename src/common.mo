@@ -21,16 +21,18 @@ module {
     public type VersionRange = (Version, Version);
 
     /// Common properties of package and virtual package.
-    public type CommonPackageInfo = {
+    public type CommonPackageInfoBase<V> = {
         guid: Blob;
         name: PackageName;
-        version: Version;
+        version: V;
         price: Nat;
         upgradePrice: Nat;
         shortDescription: Text;
         longDescription: Text;
         developer: ?CyclesLedger.Account;
     };
+
+    public type CommonPackageInfo = CommonPackageInfoBase<Version>;
 
     public type Location = (canister: Principal, id: Blob); // `id` is a 128-bit hash of the module code.
 
@@ -173,20 +175,20 @@ module {
 
     public type RealPackageInfo = RealPackageInfoBase<Location>;
 
-    public type SharedPackageInfoBase<L> = {
-        base: CommonPackageInfo;
+    public type SharedPackageInfoBase<L, V> = {
+        base: CommonPackageInfoBase<V>;
         specific: {
             #real : SharedRealPackageInfoBase<L>;
             #virtual : VirtualPackageInfo;
         };
     };
 
-    public type SharedPackageInfo = SharedPackageInfoBase<Location>;
+    public type SharedPackageInfo = SharedPackageInfoBase<Location, Version>;
 
     /// See `RealPackageInfoBase`.
     public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<None>;
 
-    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None>;
+    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None, None>;
 
     /// Yet unsupported.
     public type VirtualPackageInfo = {
@@ -194,15 +196,15 @@ module {
         default: PackageName;
     };
 
-    public type PackageInfoBase<L> = {
-        base: CommonPackageInfo;
+    public type PackageInfoBase<L, V> = {
+        base: CommonPackageInfoBase<V>;
         specific: {
             #real : RealPackageInfoBase<L>;
             #virtual : VirtualPackageInfo;
         };
     };
 
-    public type PackageInfo = PackageInfoBase<Location>;
+    public type PackageInfo = PackageInfoBase<Location, Version>;
 
     public func shareRealPackageInfo(package: RealPackageInfoBase<Location>): SharedRealPackageInfoBase<Location> =
         {
@@ -256,9 +258,18 @@ module {
             frontendModule = template.frontendModule;
         };
 
-    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModule)]): PackageInfo =
+    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModule)], version: Version): PackageInfo =
         {
-            base = template.base;
+            base = {
+                guid = template.base.guid;
+                name = template.base.name;
+                version;
+                price = template.base.price;
+                upgradePrice = template.base.upgradePrice;
+                shortDescription = template.base.shortDescription;
+                longDescription = template.base.longDescription;
+                developer = template.base.developer;
+            };
             specific = switch (template.specific) {
                 case (#real x) #real(fillRealPackageInfoTemplate(x, modules));
                 case (#virtual x) #virtual x;

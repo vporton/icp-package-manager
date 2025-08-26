@@ -191,6 +191,8 @@ async function main() {
         ],
     });
 
+    const version = await commandOutput("git rev-parse HEAD"); // FIXME@P1: Use it AFTER commit.
+
     await submit([{
         name: "icpack",
         tmpl: pmInfo,
@@ -215,7 +217,7 @@ async function main() {
             ["frontend", walletFrontend],
             ["backend", walletBackend],
         ],
-    }], identity)
+    }], identity, version);
 }
 
 main();

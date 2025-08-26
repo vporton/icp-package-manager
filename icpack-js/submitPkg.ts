@@ -43,8 +43,10 @@ export function getRemoteCanisterId(name: string): Principal {
 export async function submit(packages: {
     name: string,
     tmpl: SharedPackageInfoTemplate,
-    modules: [string, SharedModule][],
-}[], identity: Identity) {
+    modules: [string, SharedModule][], // TODO@P1: Use this version string.
+}[],
+    identity: Identity,
+    version: string) {
     // TODO@P1: Use save this variable to `.env`.
     //          It should be also saved somewhere else because `.env` may be lost.
     // TODO@P1: Also prevent the user from "inheriting" the `TEST_CANISTER_ID_PACKAGE_MANAGER` between `local` and `ic` networks.
@@ -126,7 +128,7 @@ export async function submit(packages: {
             }
         }
         // TODO@P1: Copy frontend assets.
-        if (await repoActor.addPackageVersion(pkg.name, pkg.tmpl, pkg.modules)) {
+        if (await repoActor.addPackageVersion(pkg.name, pkg.tmpl, pkg.modules, version)) {
             console.log(`Package ${pkg.name} code was updated.`);
         } else {
             console.log(`Package ${pkg.name} code was not updated.`);

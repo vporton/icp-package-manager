@@ -220,8 +220,9 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     name: Common.PackageName,
     tmpl: Common.SharedPackageInfoTemplate,
     modules: [(Text, Common.SharedModule)],
+    version: Common.Version,
   ): async Bool {
-    let info = Common.fillPackageInfoTemplate(tmpl, modules);
+    let info = Common.fillPackageInfoTemplate(tmpl, modules, version);
 
     let p = Map.get(packages, Text.compare, name);
     switch (p) {
