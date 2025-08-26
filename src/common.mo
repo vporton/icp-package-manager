@@ -22,7 +22,6 @@ module {
     // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.
     public type Version = Text;
 
-    // TODO@P1: Remove it?
     public type VersionRange = (Version, Version);
 
     /// Common properties of package and virtual package.
