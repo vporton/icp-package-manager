@@ -5,14 +5,11 @@ import Text "mo:core/Text";
 import Types "mo:core/Types";
 import List "mo:core/List";
 import Map "mo:core/Map";
-import Int "mo:core/Int";
-import Nat32 "mo:core/Nat32";
 import Nat "mo:core/Nat";
 import Blob "mo:core/Blob";
 import Nat8 "mo:core/Nat8";
 import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
-import Account "lib/Account";
 import CyclesLedger "canister:cycles_ledger";
 
 module {
