@@ -16,6 +16,7 @@ import { ICManagementCanister } from "@dfinity/ic-management";
 import { IDL } from '@dfinity/candid';
 
 dotenv_config({ path: '.env' });
+dotenv_config({ path: `.icpack-config.${process.env.DFX_NETWORK}` });
 
 function ask(question: string): Promise<string> {
     const rl = readline.createInterface({
@@ -46,7 +47,7 @@ export async function submit(packages: {
     // TODO@P1: Use save this variable to `.env`.
     //          It should be also saved somewhere else because `.env` may be lost.
     // TODO@P1: Also prevent the user from "inheriting" the `TEST_CANISTER_ID_PACKAGE_MANAGER` between `local` and `ic` networks.
-    let pmStr = process.env.TEST_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite // FIXME@P1: `local` and `ic` values may be different.
+    let pmStr = process.env.USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
@@ -71,7 +72,7 @@ export async function submit(packages: {
         const [repoCanister, wasmId] = wasmModuleLocation;
         const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-        try {
+        try { // FIXME: Also needs to create a new installation if it doesn't exist.
             // FIXME@P1: Upgrade only if changed.
             // TODO@P3: Support only enhanced orthogonal persistence?
             const { installCode } = ICManagementCanister.create({
