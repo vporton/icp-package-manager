@@ -219,4 +219,4 @@ async function main() {
     }], identity)
 }
 
-main(); // TODO@P1: `useLocalRepo` option.
+main();
