@@ -15,8 +15,7 @@ import CyclesLedger "canister:cycles_ledger";
 module {
     public type PackageName = Text;
 
-    // TODO@P1: Remove it and use text for Git hashes, etc.?
-    // Can be like `6.8.4` or like `stable`, `unstable`, `prerelease`.
+    // It can be Git hash or like `6.8.4` or like `stable`, `unstable`, `prerelease`.
     public type Version = Text;
 
     public type VersionRange = (Version, Version);
