@@ -81,7 +81,8 @@ export async function submit(packages: {
         const [repoCanister, wasmId] = wasmModuleLocation;
         const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
         const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
-        try { // FIXME: Also needs to create a new installation if it doesn't exist (with caution).
+        try {
+            // FIXME@P1: Also needs to create a new installation if it doesn't exist (with caution).
             // FIXME@P1: Upgrade only if changed.
             // TODO@P3: Support only enhanced orthogonal persistence?
             const { installCode } = ICManagementCanister.create({
