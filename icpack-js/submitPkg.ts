@@ -43,7 +43,7 @@ export async function submit(
     packages: {
         name: string,
         tmpl: SharedPackageInfoTemplate,
-        modules: [string, SharedModule][], // TODO@P1: Use this version string.
+        modules: [string, SharedModule][],
     }[],
     identity: Identity,
     version: string) {
@@ -80,7 +80,7 @@ export async function submit(
             const {minInstallationId: realInstallationId} = await pmActor.installPackages({
                 packages: [{
                     packageName: pkg.name,
-                    version: version,
+                    version,
                     repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), // FIXME@P1
                     arg: new Uint8Array(),
                     initArg: [],
