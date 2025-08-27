@@ -68,12 +68,12 @@ export async function submit(
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
-        let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.name.toUpperCase()}`]; // FIXME@P1: prefix not processed by Vite
+        let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`]; // FIXME@P1: prefix not processed by Vite
         if (installationIdStr === undefined) {
-            throw new Error(`Installation ID for ${pkg.name} is not specified.`);
+            throw new Error(`Installation ID for ${pkg.tmpl.base.name} is not specified.`);
         }
         if (installationIdStr !== 'none' && !/^[0-9]+$/.test(installationIdStr)) {
-            throw new Error(`Invalid installation ID for ${pkg.name}: ${installationIdStr} (must be a natural number or "none")`);
+            throw new Error(`Invalid installation ID for ${pkg.tmpl.base.name}: ${installationIdStr} (must be a natural number or "none")`);
         }
         let installationId = installationIdStr === 'none' ? undefined : BigInt(installationIdStr);
         if (installationId === undefined) {
@@ -128,10 +128,10 @@ export async function submit(
             }
         }
         // TODO@P1: Copy frontend assets.
-        if (await repoActor.addPackageVersion(pkg.name, pkg.tmpl, pkg.modules, version)) {
-            console.log(`Package ${pkg.name} code was updated.`);
+        if (await repoActor.addPackageVersion(pkg.tmpl.base.name, pkg.tmpl, pkg.modules, version)) {
+            console.log(`Package ${pkg.tmpl.base.name} code was updated.`);
         } else {
-            console.log(`Package ${pkg.name} code was not updated.`);
+            console.log(`Package ${pkg.tmpl.base.name} code was not updated.`);
         }
     }
 }
