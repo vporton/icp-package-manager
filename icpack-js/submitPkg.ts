@@ -39,11 +39,12 @@ export function getRemoteCanisterId(name: string): Principal {
     //     : (canisterIds[name as keyof typeof canisterIds] as {ic: string}).ic);
 }
 
-export async function submit(packages: {
-    name: string,
-    tmpl: SharedPackageInfoTemplate,
-    modules: [string, SharedModule][], // TODO@P1: Use this version string.
-}[],
+export async function submit(
+    packages: {
+        name: string,
+        tmpl: SharedPackageInfoTemplate,
+        modules: [string, SharedModule][], // TODO@P1: Use this version string.
+    }[],
     identity: Identity,
     version: string) {
     // TODO@P1: Use save this variable to `.env`.
