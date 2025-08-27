@@ -1,5 +1,6 @@
 #!/usr/bin/env -S npx tsx
 
+import fs from 'fs';
 import { Principal } from '@dfinity/principal';
 import { config as dotenv_config } from 'dotenv';
 import readline from 'readline';
@@ -48,13 +49,27 @@ export async function submit(
     identity: Identity,
     version: string)
 {
-    // TODO@P1: Use save this variable to `.env`.
-    //          It should be also saved somewhere else because `.env` may be lost.
-    // TODO@P1: Also prevent the user from "inheriting" the `TEST_CANISTER_ID_PACKAGE_MANAGER` between `local` and `ic` networks.
+    const vars = new Map<string, string>();
     let pmStr = process.env.USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
+    vars.set('USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER', pmStr);
+    for (const pkg of packages) {
+        const instVarName = `USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`;
+        let installationIdStr = process.env[instVarName];
+        if (installationIdStr === undefined || installationIdStr === "") {
+            installationIdStr = await ask(`Installation ID for ${pkg.tmpl.base.name}: `);
+        }
+        if (!/^[0-9]+$/.test(installationIdStr)) {
+            throw new Error(`Invalid installation ID for ${pkg.tmpl.base.name}: ${installationIdStr} (must be a natural number)`);
+        }
+        vars.set(instVarName, installationIdStr);
+    }
+    fs.writeFileSync(
+        `.icpack-config.${process.env.DFX_NETWORK}`,
+        Array.from(vars.entries()).map(([k, v]) => `${k}=${v}`).join('\n')
+    );
 
     const pm = Principal.fromText(pmStr!);
 
@@ -67,8 +82,7 @@ export async function submit(
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
-        const repoActor: Repository = createRepository(pkg.repo, {agent});
-        let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`]; // FIXME@P1: prefix not processed by Vite
+        let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`];
         if (installationIdStr === undefined) {
             throw new Error(`Installation ID for ${pkg.tmpl.base.name} is not specified.`);
         }
@@ -76,6 +90,7 @@ export async function submit(
             throw new Error(`Invalid installation ID for ${pkg.tmpl.base.name}: ${installationIdStr} (must be a natural number or "none")`);
         }
         let installationId = installationIdStr === 'none' ? undefined : BigInt(installationIdStr);
+        const repoActor: Repository = createRepository(pkg.repo, {agent});
         if (installationId === undefined) {
             const {minInstallationId: realInstallationId} = await pmActor.installPackages({
                 packages: [{
