@@ -125,6 +125,7 @@ export async function submit(
                 // Convert both to Uint8Array for comparison and compare first 16 bytes
                 const wasmIdArray = new Uint8Array(wasmId as any);
                 const moduleHashArray = new Uint8Array(module_hash as any);
+                // TODO@P1: Upgrade only if changed also in backend upgrade code. Use that code here instead of the below.
                 if (wasmIdArray.slice(0, 16).every((byte, i) => byte === moduleHashArray[i])) { // Upgrade only if changed.
                     continue;
                 }
