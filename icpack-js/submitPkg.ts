@@ -110,7 +110,7 @@ export async function submit(
             let canisterId = await pmActor.getModulePrincipal(installationId, moduleName);
             const moduleCode = m.code;
             const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
-                ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm; // TODO@P1: Check that it's correct.
+                ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm;
             const [repoCanister, wasmId] = wasmModuleLocation;
             const wasmRepo = createRepository(repoCanister, {agent});
             const wasmModule = await wasmRepo.getWasmModule(wasmId);
