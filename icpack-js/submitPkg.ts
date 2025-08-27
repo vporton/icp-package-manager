@@ -39,7 +39,6 @@ export function getRemoteCanisterId(name: string): Principal {
     //     : (canisterIds[name as keyof typeof canisterIds] as {ic: string}).ic);
 }
 
-// TODO@P1: Use the Git hash (and ask user for more version strings?)
 export async function submit(packages: {
     name: string,
     tmpl: SharedPackageInfoTemplate,
