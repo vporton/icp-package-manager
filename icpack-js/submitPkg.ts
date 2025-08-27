@@ -41,7 +41,6 @@ export function getRemoteCanisterId(name: string): Principal {
 
 export async function submit(
     packages: {
-        name: string,
         tmpl: SharedPackageInfoTemplate,
         modules: [string, SharedModule][],
     }[],
@@ -80,7 +79,7 @@ export async function submit(
         if (installationId === undefined) {
             const {minInstallationId: realInstallationId} = await pmActor.installPackages({
                 packages: [{
-                    packageName: pkg.name,
+                    packageName: pkg.tmpl.base.name,
                     version,
                     repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), // FIXME@P1
                     arg: new Uint8Array(),
