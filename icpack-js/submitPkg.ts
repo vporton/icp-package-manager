@@ -46,7 +46,8 @@ export async function submit(
         modules: [string, SharedModule][],
     }[],
     identity: Identity,
-    version: string) {
+    version: string)
+{
     // TODO@P1: Use save this variable to `.env`.
     //          It should be also saved somewhere else because `.env` may be lost.
     // TODO@P1: Also prevent the user from "inheriting" the `TEST_CANISTER_ID_PACKAGE_MANAGER` between `local` and `ic` networks.
