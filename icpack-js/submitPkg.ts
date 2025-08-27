@@ -128,7 +128,7 @@ export async function submit(
             }
         }
         // TODO@P1: Copy frontend assets.
-        if (await repoActor.addPackageVersion(pkg.tmpl.base.name, pkg.tmpl, pkg.modules, version)) {
+        if (await repoActor.addPackageVersion(pkg.tmpl, pkg.modules, version)) {
             console.log(`Package ${pkg.tmpl.base.name} code was updated.`);
         } else {
             console.log(`Package ${pkg.tmpl.base.name} code was not updated.`);

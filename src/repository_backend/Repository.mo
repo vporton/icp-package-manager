@@ -215,13 +215,14 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   };
 
   // TODO@P2: Shouldn't `tmpl` be stored in the backend, for consistency?
+  // TODO@P2: Check that package name hasn't changed.
   /// Returns `true` if the package version was added, `false` if it was already present.
   public shared({caller}) func addPackageVersion(
-    name: Common.PackageName,
     tmpl: Common.SharedPackageInfoTemplate,
     modules: [(Text, Common.SharedModule)],
     version: Common.Version,
   ): async Bool {
+    let name = tmpl.base.name;
     let info = Common.fillPackageInfoTemplate(tmpl, modules, version);
 
     let p = Map.get(packages, Text.compare, name);
