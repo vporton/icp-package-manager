@@ -80,7 +80,7 @@ export async function submit(
             const {minInstallationId: realInstallationId} = await pmActor.installPackages({
                 packages: [{
                     packageName: pkg.name,
-                    version: "0.0.1", // FIXME@P1
+                    version: version,
                     repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), // FIXME@P1
                     arg: new Uint8Array(),
                     initArg: [],
