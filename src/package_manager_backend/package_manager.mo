@@ -649,7 +649,6 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 initArg = newPkgData.initArg;
             })) {
                 case (#ok {halfUpgradedInfo; modulesToDelete; allModulesCount}) {
-                    // Debug.print("XXX: " # debug_show(halfUpgradedInfo.remainingModules) # " delete: " # debug_show(modulesToDelete.size()));
                     ignore Map.insert(halfUpgradedPackages, Int.compare, minUpgradeId + newPkgNum, halfUpgradedInfo);
                     await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
                 };
