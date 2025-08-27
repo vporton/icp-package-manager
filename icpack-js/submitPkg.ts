@@ -50,7 +50,7 @@ export async function submit(
     version: string)
 {
     const vars = new Map<string, string>();
-    let pmStr = process.env.USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER; // FIXME@P1: prefix not processed by Vite
+    let pmStr = process.env.USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER;
     if (pmStr === undefined || pmStr === "") {
         pmStr = await ask("Enter the package manager canister principal: ");
     }
