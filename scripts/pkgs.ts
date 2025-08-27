@@ -110,15 +110,15 @@ async function main() {
         host: net === 'local' ? "http://localhost:8080" : undefined,
         shouldFetchRootKey: net === 'local',
     });
-    const repositoryIndex = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
-    const pmFrontendModule = await repositoryIndex.uploadModule({
+    const repository = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
+    const pmFrontendModule = await repository.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
         installByDefault: true,
         forceReinstall: false,
         callbacks: [],
         canisterVersion: [],
     });
-    const pmBackendModule = await repositoryIndex.uploadModule({
+    const pmBackendModule = await repository.uploadModule({
         code: {Wasm: pmBackendBlob},
         installByDefault: true,
         forceReinstall: false,
@@ -128,14 +128,14 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const exampleFrontend = await repositoryIndex.uploadModule({
+    const exampleFrontend = await repository.uploadModule({
         code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
         callbacks: [],
     });
-    const exampleBackend = await repositoryIndex.uploadModule({
+    const exampleBackend = await repository.uploadModule({
         code: {Wasm: pmExampleBackendBlob},
         installByDefault: true,
         forceReinstall: false,
@@ -144,14 +144,14 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const walletFrontend = await repositoryIndex.uploadModule({
+    const walletFrontend = await repository.uploadModule({
         code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_WALLET_FRONTEND!), wasm: walletFrontendBlob}},
         installByDefault: true,
         forceReinstall: false,
         canisterVersion: [],
         callbacks: [],
     });
-    const walletBackend = await repositoryIndex.uploadModule({
+    const walletBackend = await repository.uploadModule({
         code: {Wasm: walletBackendBlob},
         installByDefault: true,
         forceReinstall: false,
@@ -160,7 +160,7 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmMainIndirectModule = await repositoryIndex.uploadModule({
+    const pmMainIndirectModule = await repository.uploadModule({
         code: {Wasm: pmMainIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
@@ -170,7 +170,7 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmSimpleIndirectModule = await repositoryIndex.uploadModule({
+    const pmSimpleIndirectModule = await repository.uploadModule({
         code: {Wasm: pmSimpleIndirectBlob},
         installByDefault: true,
         forceReinstall: true,
@@ -180,7 +180,7 @@ async function main() {
             [{WithdrawCycles: null}, {method: "withdrawCycles"}],
         ],
     });
-    const pmBatteryModule = await repositoryIndex.uploadModule({
+    const pmBatteryModule = await repository.uploadModule({
         code: {Wasm: pmBatteryBlob},
         installByDefault: true,
         forceReinstall: false,
@@ -195,6 +195,7 @@ async function main() {
     const version = await commandOutput("git rev-parse HEAD"); // FIXME@P1: Use it AFTER commit.
 
     await submit([{
+        repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
         tmpl: pmInfo,
         modules: [
             ["battery", pmBatteryModule],
@@ -204,12 +205,14 @@ async function main() {
             ["simple_indirect", pmSimpleIndirectModule],
         ],
     }, {
+        repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
         tmpl: pmEFInfo,
         modules: [
             ["example1", exampleFrontend],
             ["example2", exampleBackend],
         ],
     }, {
+        repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
         tmpl: walletInfo,
         modules: [
             ["frontend", walletFrontend],

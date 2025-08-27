@@ -41,6 +41,7 @@ export function getRemoteCanisterId(name: string): Principal {
 
 export async function submit(
     packages: {
+        repo: Principal,
         tmpl: SharedPackageInfoTemplate,
         modules: [string, SharedModule][],
     }[],
@@ -56,7 +57,6 @@ export async function submit(
     }
 
     const pm = Principal.fromText(pmStr!);
-    let repo = getRemoteCanisterId('repository');
 
     const agent = await HttpAgent.create({
         host: process.env.DFX_NETWORK === 'local' ? "http://localhost:8080" : undefined,
@@ -64,10 +64,10 @@ export async function submit(
         identity,
     });
 
-    const repoActor: Repository = createRepository(repo, {agent});
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
+        const repoActor: Repository = createRepository(pkg.repo, {agent});
         let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`]; // FIXME@P1: prefix not processed by Vite
         if (installationIdStr === undefined) {
             throw new Error(`Installation ID for ${pkg.tmpl.base.name} is not specified.`);
@@ -81,7 +81,7 @@ export async function submit(
                 packages: [{
                     packageName: pkg.tmpl.base.name,
                     version,
-                    repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), // FIXME@P1
+                    repo: pkg.repo,
                     arg: new Uint8Array(),
                     initArg: [],
                 }],
@@ -97,7 +97,8 @@ export async function submit(
             const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
                 ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm; // TODO@P1: Check that it's correct.
             const [repoCanister, wasmId] = wasmModuleLocation;
-            const wasmModule = await repoActor.getWasmModule(wasmId); // TODO@P1: Should use `repoCanister` instead.
+            const wasmRepo = createRepository(repoCanister, {agent});
+            const wasmModule = await wasmRepo.getWasmModule(wasmId);
             const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule;
             // FIXME@P1: Upgrade only if changed.
             // TODO@P3: Support only enhanced orthogonal persistence?
