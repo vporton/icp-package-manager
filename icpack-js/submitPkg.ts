@@ -93,13 +93,12 @@ export async function submit(
         const repoActor: Repository = createRepository(pkg.repo, {agent});
         if (installationId === undefined) {
             const {minInstallationId: realInstallationId} = await pmActor.installPackage({
-                packages: [{
-                    packageName: pkg.tmpl.base.name,
+                package: {
                     version,
                     repo: pkg.repo,
                     arg: new Uint8Array(),
                     initArg: [],
-                }],
+                },
                 user: identity.getPrincipal(),
                 afterInstallCallback: [],
             });

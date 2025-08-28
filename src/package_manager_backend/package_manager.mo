@@ -31,6 +31,8 @@ import env "mo:env";
 import Battery "battery";
 import Install "../install";
 
+// TODO@P2: Here and in main_indirect.mo: Remove references to `packageName`.
+
 shared({caller = initialCaller}) persistent actor class PackageManager({
     packageManager: Principal; // may be the bootstrapper instead.
     mainIndirect: Principal;
@@ -414,7 +416,6 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
     public shared({caller}) func installPackage({
         package: {
-            packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
@@ -467,7 +468,6 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             minInstallationId; // TODO@P2: Rename here and in other places.
             package = {
                 repo = package.repo;
-                packageName = package.packageName;
                 version = package.version;
                 arg = package.arg;
                 initArg = package.initArg;
@@ -1505,7 +1505,6 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         minInstallationId: Common.InstallationId;
         package: {
             repo: Common.RepositoryRO;
-            packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
