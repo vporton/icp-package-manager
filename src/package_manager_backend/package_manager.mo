@@ -564,8 +564,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
         };
-        let p = package; // TODO@P3: Remove superfluous variable.
-        let info = await p.repo.getPackage(p.packageName, p.version);
+        let info = await package.repo.getPackage(package.packageName, package.version);
         if (info.base.upgradePrice != 0) {
             switch (info.base.developer) {
                 case (?developer) {
