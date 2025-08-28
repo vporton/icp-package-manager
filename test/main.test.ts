@@ -289,15 +289,15 @@ describe('My Test Suite', () => {
         });
         await waitTillInitialized(backendAgent, pmInst.get('backend')!, upgradeableInstallationId);
         console.log("Upgrading `upgradeable` package...");
-        await packageManager.upgradePackages({
-            packages: [{
+        await packageManager.upgradePackage({
+            package: {
                 installationId: upgradeableInstallationId,
                 packageName: "upgradeable",
                 version: "0.0.2",
                 repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
                 arg: new Uint8Array(),
                 initArg: [],
-            }],
+            },
             afterUpgradeCallback: [],
             user: backendUser,
         });

@@ -556,15 +556,15 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     /// and only then delete modules to be deleted. That's because deleted modules may contain
     /// important data that needs to be imported. Also having deleting modules at the end
     /// does not prevent the package to start fully function before this.
-    public shared({caller}) func upgradePackages({
-        packages: [{
+    public shared({caller}) func upgradePackage({
+        package: {
             installationId: Common.InstallationId;
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         user: Principal;
         afterUpgradeCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -572,7 +572,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
-        switch (onlyOwner(caller, "upgradePackages")) {
+        switch (onlyOwner(caller, "upgradePackage")) {
             case (#err err) {
                 Runtime.trap(err);
             };
@@ -582,24 +582,23 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
         };
-        label l for (p in packages.vals()) {
-            let info = await p.repo.getPackage(p.packageName, p.version);
-            if (info.base.upgradePrice != 0) {
-                let ?developer = info.base.developer else {
-                    await batteryActor.depositCycles(
-                        info.base.upgradePrice - Common.cycles_transfer_fee,
-                        {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
-                    );
-                    continue l;
-                };
-                let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.upgradePrice) * env.paidAppRevenueShare));
-                let developerAmount = info.base.upgradePrice - revenue;
+        let p = package; // TODO@P3: Remove superfluous variable.
+        let info = await p.repo.getPackage(p.packageName, p.version);
+        if (info.base.upgradePrice != 0) {
+            let ?developer = info.base.developer else {
                 await batteryActor.depositCycles(
-                    revenue - Common.cycles_transfer_fee,
+                    info.base.upgradePrice - Common.cycles_transfer_fee,
                     {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
                 );
-                await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
+                continue l;
             };
+            let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.upgradePrice) * env.paidAppRevenueShare));
+            let developerAmount = info.base.upgradePrice - revenue;
+            await batteryActor.depositCycles(
+                revenue - Common.cycles_transfer_fee,
+                {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
+            );
+            await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
         };
 
         let minUpgradeId = nextUpgradeId;
