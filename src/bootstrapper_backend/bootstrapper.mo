@@ -311,7 +311,7 @@ persistent actor class Bootstrapper() = this {
                 /// Additional packages to install after bootstrapping.
                 preinstalledModules: [(Text, Principal)];
             }) -> async {minInstallationId: Common.InstallationId};
-            installPackages: shared ({
+            installPackage: shared ({
                 packages: [{
                     packageName: Common.PackageName;
                     version: Common.Version;
@@ -352,7 +352,7 @@ persistent actor class Bootstrapper() = this {
             });
         };
 
-        ignore await backendActor.installPackages({
+        ignore await backendActor.installPackage({
             packages = Iter.toArray(Iter.map<{
                 packageName: Common.PackageName;
                 version: Common.Version;

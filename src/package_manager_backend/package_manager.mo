@@ -194,7 +194,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 case (#ok) {};
             };
 
-            ignore Set.insert(systemOwners, Principal.compare, Principal.fromActor(this)); // self-usage to call `this.installPackages`. // TODO@P3: needed?
+            ignore Set.insert(systemOwners, Principal.compare, Principal.fromActor(this)); // self-usage to call `this.installPackage`. // TODO@P3: needed?
             ignore Set.delete(systemOwners, Principal.compare, packageManager); // delete bootstrapper
 
             initialized := true;
@@ -412,7 +412,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         };
     };
 
-    public shared({caller}) func installPackages({
+    public shared({caller}) func installPackage({
         package: {
             packageName: Common.PackageName;
             version: Common.Version;
@@ -480,6 +480,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         });
     };
 
+    // TODO@P3: For one package.
     public shared({caller}) func uninstallPackages({
         packages: [Common.InstallationId];
         user: Principal;
@@ -1438,7 +1439,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         : async* {minInstallationId: Common.InstallationId}
     {
         // Cycles are passed to `main_indirect` in other place of the code.
-        mainIndirect.installPackagesWrapper({
+        mainIndirect.installPackageWrapper({
             minInstallationId;
             package;
             pmPrincipal;

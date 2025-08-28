@@ -79,7 +79,7 @@
         <mxCell id="8vLrs7TOPBqVclJcaYAg-3" value="Package manager" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="110" width="270" height="370" as="geometry" />
         </mxCell>
-        <mxCell id="yhu626VlGzJRChlpP-3W-2" value="installPackages:&lt;br&gt;Create installationId" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
+        <mxCell id="yhu626VlGzJRChlpP-3W-2" value="installPackage:&lt;br&gt;Create installationId" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">
           <mxGeometry x="20" y="40" width="220" height="40" as="geometry" />
         </mxCell>
         <mxCell id="yhu626VlGzJRChlpP-3W-7" value="&lt;div&gt;installStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-3" vertex="1">

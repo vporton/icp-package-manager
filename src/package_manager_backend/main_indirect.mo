@@ -111,7 +111,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
     };
 
     /// Internal.
-    public shared({caller}) func installPackagesWrapper({ // TODO@P3: Rename.
+    public shared({caller}) func installPackageWrapper({ // TODO@P3: Rename.
         pmPrincipal: Principal;
         package: {
             repo: Common.RepositoryRO;
@@ -129,7 +129,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         bootstrapping: Bool;
     }): () {
         try {
-            await* onlyOwner(caller, "installPackagesWrapper");
+            await* onlyOwner(caller, "installPackageWrapper");
 
             let pkg = await package.repo.getPackage(package.packageName, package.version);
             let package2: Common.PackageInfo = Common.unsharePackageInfo(pkg);
@@ -185,7 +185,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             });
         }
         catch (e) {
-            Debug.print("installPackagesWrapper: " # Error.message(e));
+            Debug.print("installPackageWrapper: " # Error.message(e));
             Runtime.trap(Error.message(e));
         };
     };

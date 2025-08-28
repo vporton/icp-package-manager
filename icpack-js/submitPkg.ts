@@ -92,7 +92,7 @@ export async function submit(
         let installationId = installationIdStr === 'none' ? undefined : BigInt(installationIdStr);
         const repoActor: Repository = createRepository(pkg.repo, {agent});
         if (installationId === undefined) {
-            const {minInstallationId: realInstallationId} = await pmActor.installPackages({
+            const {minInstallationId: realInstallationId} = await pmActor.installPackage({
                 packages: [{
                     packageName: pkg.tmpl.base.name,
                     version,

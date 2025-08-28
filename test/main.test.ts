@@ -244,7 +244,7 @@ describe('My Test Suite', () => {
             const { cycles } = await canisterStatus(canister_id);
             console.log(`Cycles in canister '${moduleName}': ${Number(cycles.toString())/10**12}T`);
         }
-        const {minInstallationId: exampleInstallationId} = await packageManager.installPackages({
+        const {minInstallationId: exampleInstallationId} = await packageManager.installPackage({
             packages: [{
                 packageName: "example",
                 version: "0.0.1",
@@ -276,7 +276,7 @@ describe('My Test Suite', () => {
         }
 
         console.log("Installing `upgradeable` package...");
-        const {minInstallationId: upgradeableInstallationId} = await packageManager.installPackages({
+        const {minInstallationId: upgradeableInstallationId} = await packageManager.installPackage({
             packages: [{
                 packageName: "upgradeable",
                 version: "0.0.1",
