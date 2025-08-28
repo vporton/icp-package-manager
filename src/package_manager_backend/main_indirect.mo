@@ -136,7 +136,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installStart: ({
-                    minInstallationId: Common.InstallationId;
+                    minInstallationId: Common.InstallationId; // TODO@P2: Rename here and in other places.
                     afterInstallCallback: ?{
                         canister: Principal; name: Text; data: Blob;
                     };

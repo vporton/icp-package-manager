@@ -464,7 +464,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
-            minInstallationId;
+            minInstallationId; // TODO@P2: Rename here and in other places.
             package = {
                 repo = package.repo;
                 packageName = package.packageName;
@@ -617,7 +617,6 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func upgradePackageStep({
         package: {
             installationId: Common.InstallationId;
-            packageName: Common.PackageName; // TODO@P2: It can be restored from `installationId`.
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
@@ -636,6 +635,12 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             };
             case (#ok) {};
         };
+
+        let installedPackage = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, package.installationId) else {
+            Runtime.trap("no such installed package");
+        };
+        let packageName = installedPackage.package.base.name;
+        let version = installedPackage.package.base.version;
 
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
