@@ -170,7 +170,7 @@ function ChooseVersion2(props: {
             } else {
                 // Regular upgrade for non-icpack packages
                 const cur = props.guid0 !== undefined ? await glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, props.guid0) : undefined;
-                const upgradeResult = await package_manager.upgradePackage({
+                const upgradeResult = await package_manager.upgradePackageStep({
                     package: {
                         installationId: props.oldInstallation!,
                         packageName: props.packageName!,

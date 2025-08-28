@@ -532,11 +532,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         {minUninstallationId};
     };
 
+    /// One step of upgrading package. (Upgrade package is a sequence of such migration steps.)
+    ///
     /// We first add new and upgrade existing modules (including executing hooks)
     /// and only then delete modules to be deleted. That's because deleted modules may contain
     /// important data that needs to be imported. Also having deleting modules at the end
     /// does not prevent the package to start fully function before this.
-    public shared({caller}) func upgradePackage({
+    public shared({caller}) func upgradePackageStep({
         package: {
             installationId: Common.InstallationId;
             packageName: Common.PackageName;
@@ -552,7 +554,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minUpgradeId: Common.UpgradeId}
     {
-        switch (onlyOwner(caller, "upgradePackage")) {
+        switch (onlyOwner(caller, "upgradePackageStep")) {
             case (#err err) {
                 Runtime.trap(err);
             };

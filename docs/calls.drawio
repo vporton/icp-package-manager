@@ -103,7 +103,7 @@
         <mxCell id="8vLrs7TOPBqVclJcaYAg-12" value="Package manager" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="610" y="110" width="270" height="370" as="geometry" />
         </mxCell>
-        <mxCell id="APH5WXeS6YXflVMqeEUV-14" value="PackageMananger.upgradePackage:&lt;br&gt;Create upgradeId" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-12" vertex="1">
+        <mxCell id="APH5WXeS6YXflVMqeEUV-14" value="PackageMananger.upgradePackageStep:&lt;br&gt;Create upgradeId" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-12" vertex="1">
           <mxGeometry x="20" y="40" width="210" height="40" as="geometry" />
         </mxCell>
         <mxCell id="APH5WXeS6YXflVMqeEUV-17" value="&lt;div&gt;PackageManager.upgradeStart:&lt;/div&gt;&lt;div&gt;Initialize half-installed,&lt;/div&gt;&lt;div&gt;[Install every module]&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="8vLrs7TOPBqVclJcaYAg-12" vertex="1">

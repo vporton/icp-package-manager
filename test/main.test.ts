@@ -289,7 +289,7 @@ describe('My Test Suite', () => {
         });
         await waitTillInitialized(backendAgent, pmInst.get('backend')!, upgradeableInstallationId);
         console.log("Upgrading `upgradeable` package...");
-        await packageManager.upgradePackage({
+        await packageManager.upgradePackageStep({
             package: {
                 installationId: upgradeableInstallationId,
                 packageName: "upgradeable",
