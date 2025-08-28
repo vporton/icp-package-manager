@@ -316,7 +316,7 @@ module {
     };
 
     public type InstalledPackageInfo = {
-        id: InstallationId;
+        id: InstallationId; // TODO@P1: It should not be here.
         var package: PackageInfo;
         var packageRepoCanister: Principal;
         var modulesInstalledByDefault: Map.Map<Text, Principal>;
