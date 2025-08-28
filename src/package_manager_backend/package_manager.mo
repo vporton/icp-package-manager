@@ -532,6 +532,82 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         {minUninstallationId};
     };
 
+    public shared({caller}) func upgradePackage({
+        package: {
+            installationId: Common.InstallationId;
+            version: Common.Version;
+            repo: Common.RepositoryRO;
+            arg: Blob;
+            initArg: ?Blob;
+        };
+        user: Principal;
+        afterUpgradeCallback: ?{
+            canister: Principal; name: Text; data: Blob;
+        };
+    }) : async () {
+        switch (onlyOwner(caller, "upgradePackage")) {
+            case (#err err) {
+                Runtime.trap(err);
+            };
+            case (#ok) {};
+        };
+
+        let ?installedPackage = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, package.installationId) else {
+            Runtime.trap("no such installed package");
+        };
+        let packageName = installedPackage.package.base.name;
+        let startVersion = installedPackage.package.base.version;
+        let fullPackage = Common.unshareFullPackageInfo(await package.repo.getFullPackageInfo(packageName));
+        let ?startIndexedPackage = Map.get<Common.Version, Common.IndexedPackageInfo>(fullPackage.versionsMap, Text.compare, startVersion) else {
+            Runtime.trap("no old version");
+        };
+        let startSerial = startIndexedPackage.serial;
+        let endVersion = package.version;
+        let ?endIndexedPackage = Map.get<Common.Version, Common.IndexedPackageInfo>(fullPackage.versionsMap, Text.compare, endVersion) else {
+            Runtime.trap("no new version");
+        };
+        let endSerial = endIndexedPackage.serial;
+        if (startSerial == endSerial) {
+            return; // already up to date
+        } else if (startSerial > endSerial) {
+            Runtime.trap("downgrading packages is not supported");
+        };
+
+        let arg = Iter.toArray(
+            Iter.concat<{
+                canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
+            }>(
+                Iter.map<Nat, {
+                    canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
+                }>(
+                    Nat.rangeInclusive(startSerial+1, endSerial),
+                    func (serial: Nat) = {
+                        canister = Principal.fromActor(this);
+                        name = "upgradePackageStep";
+                        data = to_candid({
+                            // TODO@P1
+                        });
+                        error = #abort;
+                    }
+                ),
+                switch (afterUpgradeCallback) {
+                    case (?afterUpgradeCallback) {
+                        Iter.singleton({
+                            canister = afterUpgradeCallback.canister;
+                            name = afterUpgradeCallback.name;
+                            data = afterUpgradeCallback.data;
+                            error = #abort;
+                        });
+                    };
+                    case null {
+                        Iter.empty();
+                    };
+                },
+            ),
+        );
+        ignore getSimpleIndirect().callAll(arg);
+    };
+
     /// One step of upgrading package. (Upgrade package is a sequence of such migration steps.)
     ///
     /// We first add new and upgrade existing modules (including executing hooks)
@@ -541,7 +617,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func upgradePackageStep({
         package: {
             installationId: Common.InstallationId;
-            packageName: Common.PackageName;
+            packageName: Common.PackageName; // TODO@P2: It can be restored from `installationId`.
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;

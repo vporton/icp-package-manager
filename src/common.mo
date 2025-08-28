@@ -186,9 +186,9 @@ module {
     public type SharedPackageInfo = SharedPackageInfoBase<Location, Version>;
 
     /// See `RealPackageInfoBase`.
-    public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<None>;
+    public type RealSharedPackageInfoTemplate = SharedRealPackageInfoBase<()>;
 
-    public type SharedPackageInfoTemplate = SharedPackageInfoBase<None, None>;
+    public type SharedPackageInfoTemplate = SharedPackageInfoBase<(), ()>;
 
     /// Yet unsupported.
     public type VirtualPackageInfo = {
@@ -312,6 +312,7 @@ module {
         getReleases: query () -> async [(Text, ?Text)];
         getPackage: query (name: PackageName, version: Version) -> async SharedPackageInfo;
         getWasmModule: query (sk: Blob) -> async Blob;
+        getFullPackageInfo: query (name: PackageName) -> async SharedFullPackageInfo;
     };
 
     public type InstalledPackageInfo = {
