@@ -413,13 +413,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public shared({caller}) func installPackages({
-        packages: [{
+        package: {
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         user: Principal;
         afterInstallCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -435,65 +435,44 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         };
 
         let minInstallationId = nextInstallationId;
-        nextInstallationId += packages.size();
+        nextInstallationId += 1;
 
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
         };
-        label l for (p in packages.vals()) {
-            let info = await p.repo.getPackage(p.packageName, p.version);
-            if (info.base.price != 0) {
-                let ?developer = info.base.developer else {
-                    // Dishonest to the developer? What else we can do?
+        let info = await package.repo.getPackage(package.packageName, package.version);
+        if (info.base.price != 0) {
+            switch (info.base.developer) {
+                case (?developer) {
+                    let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
+                    let developerAmount = info.base.price - revenue;
                     await batteryActor.depositCycles(
-                        info.base.price - Common.cycles_transfer_fee,
+                        revenue - Common.cycles_transfer_fee,
                         {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
                     );
-                    continue l;
+                    await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
                 };
-                let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.price) * env.paidAppRevenueShare));
-                let developerAmount = info.base.price - revenue;
+                case null {
+                // Dishonest to the developer? What else we can do?
                 await batteryActor.depositCycles(
-                    revenue - Common.cycles_transfer_fee,
+                    info.base.price - Common.cycles_transfer_fee,
                     {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
                 );
-                await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
+                };
             };
         };
 
         await* _installModulesGroup({ // TODO@P3: Rename this function.
             mainIndirect = getMainIndirect();
             minInstallationId;
-            packages = Iter.toArray(Iter.map<
-                {
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                    repo: Common.RepositoryRO;
-                    arg: Blob;
-                    initArg: ?Blob;
-                },
-                {
-                    repo: Common.RepositoryRO;
-                    packageName: Common.PackageName;
-                    version: Common.Version;
-                    arg: Blob;
-                    initArg: ?Blob;
-                    preinstalledModules: [(Text, Principal)];
-                },
-            >(packages.vals(), func (p: {
-                repo: Common.RepositoryRO;
-                packageName: Common.PackageName;
-                version: Common.Version;
-                arg: Blob;
-                initArg: ?Blob;
-            }) = {
-                repo = p.repo;
-                packageName = p.packageName;
-                version = p.version;
-                arg = p.arg;
-                initArg = p.initArg;
+            package = {
+                repo = package.repo;
+                packageName = package.packageName;
+                version = package.version;
+                arg = package.arg;
+                initArg = package.initArg;
                 preinstalledModules = [];
-            }));
+            };
             pmPrincipal = Principal.fromActor(this);
             user;
             afterInstallCallback;
@@ -585,28 +564,31 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         let p = package; // TODO@P3: Remove superfluous variable.
         let info = await p.repo.getPackage(p.packageName, p.version);
         if (info.base.upgradePrice != 0) {
-            let ?developer = info.base.developer else {
-                await batteryActor.depositCycles(
-                    info.base.upgradePrice - Common.cycles_transfer_fee,
-                    {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
-                );
-                continue l;
+            switch (info.base.developer) {
+                case (?developer) {
+                    let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.upgradePrice) * env.paidAppRevenueShare));
+                    let developerAmount = info.base.upgradePrice - revenue;
+                    await batteryActor.depositCycles(
+                        revenue - Common.cycles_transfer_fee,
+                        {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
+                    );
+                    await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
+                };
+                case null {
+                    await batteryActor.depositCycles(
+                        info.base.upgradePrice - Common.cycles_transfer_fee,
+                        {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
+                    );
+                };
             };
-            let revenue = Int.abs(Float.toInt(Float.fromInt(info.base.upgradePrice) * env.paidAppRevenueShare));
-            let developerAmount = info.base.upgradePrice - revenue;
-            await batteryActor.depositCycles(
-                revenue - Common.cycles_transfer_fee,
-                {owner = Principal.fromText(env.revenueRecipient); subaccount = null},
-            );
-            await batteryActor.depositCycles(developerAmount - Common.cycles_transfer_fee, developer);
         };
 
         let minUpgradeId = nextUpgradeId;
-        nextUpgradeId += Array.size(packages);
+        nextUpgradeId += 1;
 
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
-            packages;
+            package;
             user;
             afterUpgradeCallback;
         });
@@ -618,13 +600,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     public shared({caller}) func upgradeStart({
         minUpgradeId: Common.UpgradeId;
         user: Principal;
-        packages: [{
+        package: {
             installationId: Common.InstallationId;
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         afterUpgradeCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
@@ -636,24 +618,22 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        for (newPkgNum in packages.keys()) {
-            let newPkgData = packages[newPkgNum];
-            let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO@P3: Need to unshare the entire variable?
-            
-            switch (prepareUpgradeData({
-                installationId = newPkgData.installationId;
-                newPkg;
-                newRepo = Principal.fromActor(newPkgData.repo);
-                arg = newPkgData.arg;
-                initArg = newPkgData.initArg;
-            })) {
-                case (#ok {halfUpgradedInfo; modulesToDelete; allModulesCount}) {
-                    ignore Map.insert(halfUpgradedPackages, Int.compare, minUpgradeId + newPkgNum, halfUpgradedInfo);
-                    await* doUpgradeFinish(minUpgradeId + newPkgNum, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
-                };
-                case (#err err) {
-                    Runtime.trap("Error in upgradeStart: " # err);
-                };
+        let newPkgData = package; // TODO@P3: Remove superfluous variable.
+        let newPkg = Common.unsharePackageInfo(newPkgData.package); // TODO@P3: Need to unshare the entire variable?
+        
+        switch (prepareUpgradeData({
+            installationId = newPkgData.installationId;
+            newPkg;
+            newRepo = Principal.fromActor(newPkgData.repo);
+            arg = newPkgData.arg;
+            initArg = newPkgData.initArg;
+        })) {
+            case (#ok {halfUpgradedInfo; modulesToDelete; allModulesCount}) {
+                ignore Map.insert(halfUpgradedPackages, Int.compare, minUpgradeId, halfUpgradedInfo);
+                await* doUpgradeFinish(minUpgradeId, halfUpgradedInfo, newPkgData.installationId, user, afterUpgradeCallback); // TODO@P3: Use named arguments.
+            };
+            case (#err err) {
+                Runtime.trap("Error in upgradeStart: " # err);
             };
         };
     };
@@ -821,7 +801,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         ignore await* _installModulesGroup({
             mainIndirect = actor(Principal.toText(mainIndirect));
             minInstallationId;
-            packages = [{packageName; version; repo; preinstalledModules; arg; initArg}]; // HACK
+            package = {packageName; version; repo; preinstalledModules; arg; initArg}; // HACK
             pmPrincipal = Principal.fromActor(this);
             user;
             afterInstallCallback = null;
@@ -855,13 +835,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             canister: Principal; name: Text; data: Blob;
         };
         user: Principal;
-        packages: [{
+        package: {
             package: Common.SharedPackageInfo;
             repo: Common.RepositoryRO;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         bootstrapping: Bool;
     }) {
         switch (onlyOwner(caller, "installStart")) {
@@ -871,32 +851,30 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        for (p0 in packages.keys()) {
-            let p = packages[p0];
-            let #real realPackage = p.package.specific else {
-                Runtime.trap("trying to directly install a virtual package");
-            };
-
-            let package2 = Common.unsharePackageInfo(p.package); // TODO@P3: why used twice below? seems to be a mis-programming.
-            let numModules = realPackage.modules.size();
-
-            let preinstalledModules = Map.fromIter<Text, Principal>(p.preinstalledModules.vals(), Text.compare);
-
-            let ourHalfInstalled: HalfInstalledPackageInfo = {
-                package = package2;
-                packageRepoCanister = Principal.fromActor(p.repo);
-                modulesInstalledByDefault = preinstalledModules;
-                minInstallationId;
-                afterInstallCallback;
-                bootstrapping;
-                var remainingModules = numModules;
-                arg = p.arg;
-                initArg = p.initArg;
-            };
-            ignore Map.insert(halfInstalledPackages, Int.compare, minInstallationId + p0, ourHalfInstalled);
-
-            await* doInstallFinish(minInstallationId + p0, ourHalfInstalled);
+        let p = package; // TODO@P3: Remove superfluous variable.
+        let #real realPackage = p.package.specific else {
+            Runtime.trap("trying to directly install a virtual package");
         };
+
+        let package2 = Common.unsharePackageInfo(p.package); // TODO@P3: why used twice below? seems to be a mis-programming.
+        let numModules = realPackage.modules.size();
+
+        let preinstalledModules = Map.fromIter<Text, Principal>(p.preinstalledModules.vals(), Text.compare);
+
+        let ourHalfInstalled: HalfInstalledPackageInfo = {
+            package = package2;
+            packageRepoCanister = Principal.fromActor(p.repo);
+            modulesInstalledByDefault = preinstalledModules;
+            minInstallationId;
+            afterInstallCallback;
+            bootstrapping;
+            var remainingModules = numModules;
+            arg = p.arg;
+            initArg = p.initArg;
+        };
+        ignore Map.insert(halfInstalledPackages, Int.compare, minInstallationId, ourHalfInstalled);
+
+        await* doInstallFinish(minInstallationId, ourHalfInstalled);
     };
 
     // TODO@P3: Check that all useful code has been moved from here and delete this function.
@@ -1442,14 +1420,14 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     private func _installModulesGroup({
         mainIndirect: MainIndirect.MainIndirect;
         minInstallationId: Common.InstallationId;
-        packages: [{
+        package: {
             repo: Common.RepositoryRO;
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         pmPrincipal: Principal;
         user: Principal;
         afterInstallCallback: ?{
@@ -1462,7 +1440,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         // Cycles are passed to `main_indirect` in other place of the code.
         mainIndirect.installPackagesWrapper({
             minInstallationId;
-            packages;
+            package;
             pmPrincipal;
             user;
             afterInstallCallback;

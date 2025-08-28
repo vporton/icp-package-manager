@@ -113,14 +113,14 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
     /// Internal.
     public shared({caller}) func installPackagesWrapper({ // TODO@P3: Rename.
         pmPrincipal: Principal;
-        packages: [{
+        package: {
             repo: Common.RepositoryRO;
             packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         minInstallationId: Common.InstallationId;
         user: Principal;
         afterInstallCallback: ?{
@@ -131,12 +131,8 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         try {
             await* onlyOwner(caller, "installPackagesWrapper");
 
-            let packages2 = Array.toVarArray<?Common.PackageInfo>(Array.repeat<?Common.PackageInfo>(null, Array.size(packages)));
-            for (i in packages.keys()) {
-                // unsafe operation, run in main_indirect:
-                let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
-                packages2[i] := ?(Common.unsharePackageInfo(pkg));
-            };
+            let pkg = await package.repo.getPackage(package.packageName, package.version);
+            let package2: Common.PackageInfo = Common.unsharePackageInfo(pkg);
 
             let pm = actor (Principal.toText(pmPrincipal)) : actor {
                 installStart: ({
@@ -145,13 +141,13 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                         canister: Principal; name: Text; data: Blob;
                     };
                     user: Principal;
-                    packages: [{
+                    package: {
                         package: Common.SharedPackageInfo;
                         repo: Common.RepositoryRO;
                         preinstalledModules: [(Text, Principal)];
                         arg: Blob;
                         initArg: ?Blob;
-                    }];
+                    };
                     bootstrapping: Bool;
                 }) -> async ();
             };
@@ -173,32 +169,18 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             //             acc + specific.modules.size()
             //         });
             // };
-            let pkgx = Iter.toArray(Iter.filterMap<Nat, {
-                    package: Common.SharedPackageInfo;
-                    repo: Common.RepositoryRO;
-                    preinstalledModules: [(Text, Principal)];
-                    arg: Blob;
-                    initArg: ?Blob;
-                }>(
-                    packages.keys(),
-                    func (i: Nat) = do {
-                        let ?pkg = packages2[i] else {
-                            Runtime.unreachable();
-                        };
-                        ?{
-                            package = Common.sharePackageInfo(pkg);
-                            repo = packages[i].repo;
-                            preinstalledModules = packages[i].preinstalledModules;
-                            arg = packages[i].arg;
-                            initArg = packages[i].initArg;
-                        };
-                    },
-                ));
+            let pkgx = {
+                package = Common.sharePackageInfo(package2); // TODO@P3: Remove share/unshare back.
+                repo = package.repo;
+                preinstalledModules = package.preinstalledModules;
+                arg = package.arg;
+                initArg = package.initArg;
+            };
             await /*(with cycles = totalCyclesAmount)*/ pm.installStart({ // Cycles are already delivered to `main_indirect`.
                 minInstallationId;
                 afterInstallCallback;
                 user;
-                packages = pkgx;
+                package = pkgx;
                 bootstrapping;
             });
         }
@@ -272,14 +254,14 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
 
     public shared({caller}) func upgradePackageWrapper({
         minUpgradeId: Common.UpgradeId;
-        packages: [{
+        package: {
             installationId: Common.InstallationId;
             packageName: Common.PackageName;
             version: Common.Version;
             repo: Common.RepositoryRO;
             arg: Blob;
             initArg: ?Blob;
-        }];
+        };
         user: Principal;
         afterUpgradeCallback: ?{
             canister: Principal; name: Text; data: Blob;
@@ -288,25 +270,20 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         try {
             await* onlyOwner(caller, "upgradePackageWrapper");
 
-            let newPackages = Array.toVarArray<?Common.PackageInfo>(Array.repeat<?Common.PackageInfo>(null, Array.size(packages)));
-            for (i in packages.keys()) {
-                // TODO@P3: Run in parallel.
-                // unsafe operation, run in main_indirect:
-                let pkg = await packages[i].repo.getPackage(packages[i].packageName, packages[i].version);
-                newPackages[i] := ?(Common.unsharePackageInfo(pkg));
-            };
+            let pkg = await package.repo.getPackage(package.packageName, package.version);
+            let newPackage: Common.PackageInfo = Common.unsharePackageInfo(pkg); // TODO@P3: Rename.
 
             let backendObj = actor(Principal.toText(packageManager)): actor {
                 upgradeStart: shared ({
                     minUpgradeId: Common.UpgradeId;
                     user: Principal;
-                    packages: [{
+                    package: {
                         installationId: Common.InstallationId;
                         package: Common.SharedPackageInfo;
                         repo: Common.RepositoryRO;
                         arg: Blob;
                         initArg: ?Blob;
-                    }];
+                    };
                     afterUpgradeCallback: ?{
                         canister: Principal; name: Text; data: Blob;
                     };
@@ -315,27 +292,19 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             await backendObj.upgradeStart({
                 minUpgradeId;
                 user;
-                packages = Iter.toArray(Iter.filterMap<Nat, {
+                package: { // TODO@P3: Remove the explicit type?
                     installationId: Common.InstallationId;
                     package: Common.SharedPackageInfo;
                     repo: Common.RepositoryRO;
                     arg: Blob;
                     initArg: ?Blob;
-                }>(
-                    packages.keys(),
-                    func (i: Nat) = do {
-                        let ?pkg = newPackages[i] else {
-                            Runtime.unreachable();
-                        };
-                        ?{
-                            installationId = packages[i].installationId;
-                            package = Common.sharePackageInfo(pkg);
-                            repo = packages[i].repo;
-                            arg = packages[i].arg;
-                            initArg = packages[i].initArg;
-                        };
-                    },
-                ));
+                } = {
+                    installationId = package.installationId;
+                    package = pkg;
+                    repo = package.repo;
+                    arg = package.arg;
+                    initArg = package.initArg;
+                };
                 afterUpgradeCallback;
             });
         }
