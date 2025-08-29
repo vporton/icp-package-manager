@@ -872,7 +872,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     })
         : async {minInstallationId: Common.InstallationId}
     {
-        switch (onlyOwner(caller, "facilitateBootstrap")) {
+        switch (onlyOwner(caller, "facilitateBootstrap")) { // TODO@P3: Here and in other places: make `Runtime.trap` inside `onlyOwner`.
             case (#err err) {
                 Runtime.trap(err);
             };
