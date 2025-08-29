@@ -1,3 +1,4 @@
+import Error "mo:core/Error";
 import Principal "mo:core/Principal";
 import Debug "mo:core/Debug";
 import Map "mo:core/Map";

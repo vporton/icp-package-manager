@@ -1,14 +1,15 @@
-import { Location, ModuleCode, SharedFullPackageInfo } from '../../../declarations/repository/repository.did.js';
+import { Location } from '../../../declarations/repository/repository.did.js';
 import { Actor, Agent, ActorSubclass } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { _SERVICE as Repository } from '../../../declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../../../declarations/repository';
-import { PackageManager, SharedModule, SharedRealPackageInfo } from '../../../declarations/package_manager/package_manager.did';
+import { PackageManager, SharedModule } from '../../../declarations/package_manager/package_manager.did';
 import { GlobalContextType } from "../state";
 import { ICManagementCanister } from '@dfinity/ic-management';
 import { IDL } from '@dfinity/candid';
 import { idlFactory as assetIdlFactory } from '../../../bootstrapper_frontend/src/misc/frontend.did';
 import type { _SERVICE as AssetService, Permission } from '../../../bootstrapper_frontend/src/misc/frontend.did';
+import { SharedRealPackageInfo } from '../../../declarations/main_indirect/main_indirect.did.js';
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
     const total = chunks.reduce((acc, c) => acc + c.length, 0);

@@ -113,13 +113,13 @@ function ChooseVersion2(props: {
             const cyclesAmount = await balance();
 
             const {minInstallationId: id} = await glob.packageManager!.installPackage({
-                packages: [{
+                package: {
                     packageName: props.packageName!,
                     version: chosenVersion!,
                     repo: props.repo!,
                     arg: new Uint8Array(),
                     initArg: [],
-                }],
+                },
                 user: principal!,
                 afterInstallCallback: [],
             });

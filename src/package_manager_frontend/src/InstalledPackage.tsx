@@ -4,13 +4,13 @@ import { getIsLocal } from "../../lib/state";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { SharedInstalledPackageInfo } from "../../declarations/package_manager/package_manager.did";
 import Button from "react-bootstrap/Button";
-import { SharedPackageInfo, SharedRealPackageInfo } from '../../declarations/repository/repository.did.js';
 import { GlobalContext } from "./state";
 import Accordion from "react-bootstrap/Accordion";
 import Modal from "react-bootstrap/Modal";
 import { myUseNavigate } from "./MyNavigate";
 import { createActor as createWalletActor } from '../../declarations/wallet_backend';
 import Alert from "react-bootstrap/Alert";
+import { SharedRealPackageInfo } from "../../declarations/main_indirect/main_indirect.did";
 
 function uint8ArrayToUrlSafeBase64(uint8Array: Uint8Array) {
     const binaryString = String.fromCharCode(...uint8Array);
