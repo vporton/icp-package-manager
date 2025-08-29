@@ -418,6 +418,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         package: {
             version: Common.Version;
             repo: Common.RepositoryRO;
+            packageName: Common.PackageName;
             arg: Blob;
             initArg: ?Blob;
         };
@@ -468,6 +469,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             minInstallationId; // TODO@P2: Rename here and in other places.
             package = {
                 repo = package.repo;
+                packageName = package.packageName;
                 version = package.version;
                 arg = package.arg;
                 initArg = package.initArg;
@@ -636,7 +638,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             case (#ok) {};
         };
 
-        let installedPackage = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, package.installationId) else {
+        let ?installedPackage = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, package.installationId) else {
             Runtime.trap("no such installed package");
         };
         let packageName = installedPackage.package.base.name;
@@ -645,7 +647,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         let batteryActor = actor(Principal.toText(battery)) : actor {
             depositCycles: shared (Nat, CyclesLedger.Account) -> async ();
         };
-        let info = await package.repo.getPackage(package.packageName, package.version);
+        let info = await package.repo.getPackage(packageName, version);
         if (info.base.upgradePrice != 0) {
             switch (info.base.developer) {
                 case (?developer) {
@@ -671,7 +673,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
 
         getMainIndirect().upgradePackageWrapper({
             minUpgradeId;
-            package;
+            package = {package with packageName};
             user;
             afterUpgradeCallback;
         });
@@ -1505,6 +1507,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         minInstallationId: Common.InstallationId;
         package: {
             repo: Common.RepositoryRO;
+            packageName: Common.PackageName;
             version: Common.Version;
             preinstalledModules: [(Text, Principal)];
             arg: Blob;

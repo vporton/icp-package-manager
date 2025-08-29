@@ -270,9 +270,6 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         try {
             await* onlyOwner(caller, "upgradePackageWrapper");
 
-            let pkg = await package.repo.getPackage(package.packageName, package.version);
-            let newPackage: Common.PackageInfo = Common.unsharePackageInfo(pkg); // TODO@P3: Rename.
-
             let backendObj = actor(Principal.toText(packageManager)): actor {
                 upgradeStart: shared ({
                     minUpgradeId: Common.UpgradeId;
@@ -288,7 +285,13 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                         canister: Principal; name: Text; data: Blob;
                     };
                 }) -> async ();
+                getInstalledPackage: query (id: Common.InstallationId) -> async Common.SharedInstalledPackageInfo;
             };
+
+            let installedPackage = await backendObj.getInstalledPackage(package.installationId); // TODO@P2: During the ping-pong, it's retrieved several times.
+            let pkg = await package.repo.getPackage(installedPackage.package.base.name, package.version);
+            let newPackage: Common.PackageInfo = Common.unsharePackageInfo(pkg); // TODO@P3: Rename.
+
             await backendObj.upgradeStart({
                 minUpgradeId;
                 user;
