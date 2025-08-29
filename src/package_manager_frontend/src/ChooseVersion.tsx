@@ -13,7 +13,7 @@ import { myUseNavigate } from "./MyNavigate";
 import { GlobalContext } from "./state";
 import { waitTillInitialized } from "../../lib/install";
 import { ErrorContext } from "../../lib/ErrorContext";
-import { InstallationId, PackageName, PackageManager, Version } from '../../declarations/package_manager/package_manager.did';
+import { InstallationId, PackageName, PackageManager, Version, SharedPackageInfo } from '../../declarations/package_manager/package_manager.did';
 import { BusyContext } from "../../lib/busy.js";
 import Alert from "react-bootstrap/Alert";
 import { performModularUpgrade } from './lib/modularUpgrade';
@@ -77,12 +77,13 @@ function ChooseVersion2(props: {
             const index: Repository = Actor.createActor(repositoryIndexIdl, {canisterId: props.repo!, agent: defaultAgent});
             index.getFullPackageInfo(props.packageName!).then(fullInfo => {
                 const versionsMap = new Map(fullInfo.versionsMap);
-                const p2: [string, string][] = fullInfo.packages.map(pkg => [pkg[0], versionsMap.get(pkg[0]) ?? pkg[0]]);
-                const v = fullInfo.versionsMap.map(([name, version]) => [`${name} → ${version}`, version] as [string, string]).concat(p2);
+                const mainMap = fullInfo.versionsMap.map(pkg => [pkg[0], fullInfo.listByVersion[Number(pkg[1])]] as [string, SharedPackageInfo]);
+                const p2: [string, string][] = mainMap.map(pkg => [pkg[0], pkg[1].base.version]);
+                const v = p2.map(([name, version]) => [`${name} → ${version}`, version] as [string, string]);
                 setVersions(v);
-                setVersionPrices(new Map(fullInfo.packages.map(pkg => [pkg[0], BigInt((pkg[1] as any).base.price)])));
-                setVersionUpgradePrices(new Map(fullInfo.packages.map(pkg => [pkg[0], BigInt((pkg[1] as any).base.upgradePrice)])));
-                const guid2 = fullInfo.packages[0][1].base.guid;
+                setVersionPrices(new Map(mainMap.map(pkg => [pkg[0], BigInt((pkg[1] as any).base.price)])));
+                setVersionUpgradePrices(new Map(mainMap.map(pkg => [pkg[0], BigInt((pkg[1] as any).base.upgradePrice)])));
+                const guid2 = mainMap[0][1].base.guid;
                 if (guid2 !== undefined) {
                     const guidArray = guid2 instanceof Uint8Array ? guid2 : new Uint8Array(guid2);
                     if (v !== undefined && glob.packageManager !== undefined) {
@@ -173,7 +174,6 @@ function ChooseVersion2(props: {
                 const upgradeResult = await package_manager.upgradePackageStep({
                     package: {
                         installationId: props.oldInstallation!,
-                        packageName: props.packageName!,
                         version: chosenVersion!,
                         repo: props.repo!,
                         arg: new Uint8Array(),
