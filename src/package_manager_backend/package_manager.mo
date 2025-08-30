@@ -607,6 +607,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                 },
             ),
         );
+        // TODO@P1: Copy frontend assets. (Do it only once, not for each step.)
         ignore getSimpleIndirect().callAll(arg);
     };
 

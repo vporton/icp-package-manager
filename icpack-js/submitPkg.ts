@@ -118,7 +118,6 @@ export async function submit(
                 afterUpgradeCallback: [],
             })
         }
-        // TODO@P1: Copy frontend assets in upgrade.
         if (await repoActor.addPackageVersion(pkg.tmpl, pkg.modules, version)) {
             console.log(`Package ${pkg.tmpl.base.name} code was updated.`);
         } else {
