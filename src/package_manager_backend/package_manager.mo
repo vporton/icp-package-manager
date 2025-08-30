@@ -587,7 +587,15 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                         canister = Principal.fromActor(this);
                         name = "upgradePackageStep";
                         data = to_candid({
-                            // TODO@P1
+                            package = {
+                                installationId = package.installationId;
+                                version = package.version;
+                                repo = package.repo;
+                                arg = package.arg;
+                                initArg = package.initArg;
+                            };
+                            user;
+                            afterUpgradeCallback;
                         });
                         error = #abort;
                     }
@@ -625,7 +633,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             arg: Blob;
             initArg: ?Blob;
         };
-        user: Principal;
+        user: Principal; // TODO@P2: Remove?
         afterUpgradeCallback: ?{
             canister: Principal; name: Text; data: Blob;
         };
