@@ -587,7 +587,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                     }>(
                         Nat.rangeInclusive(startSerial+1, endSerial),
                         func (serial: Nat) = {
-                            canister = Principal.fromActor(this); // FIXME@P1: This is not the canister that should be upgraded.
+                            canister = Principal.fromActor(this);
                             name = "upgradePackageStep";
                             data = to_candid({
                                 package = {
