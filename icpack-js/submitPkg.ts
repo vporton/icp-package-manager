@@ -118,56 +118,7 @@ export async function submit(
                 afterUpgradeCallback: [],
             })
         }
-        // FIXME@P1: Rewrite this with a single backend call.
-        for (const [moduleName, m] of pkg.modules) {
-            let canisterId = await pmActor.getModulePrincipal(installationId, moduleName);
-            const { installCode, canisterStatus } = ICManagementCanister.create({
-                agent,
-            });
-            const moduleCode = m.code;
-            const wasmModuleLocation: Location = (moduleCode as any).Wasm !== undefined
-                ? (moduleCode as any).Wasm : (moduleCode as any).Assets.wasm;
-            const repoCanister = wasmModuleLocation[0];
-            const wasmId = wasmModuleLocation[1];
-            const wasmRepo = createRepository(repoCanister, {agent});
-            const wasmModule = await wasmRepo.getWasmModule(wasmId);
-            // TODO@P2: Don't transfer `wasmModuleBytes` through the browser.
-            const wasmModuleBytes = Array.isArray(wasmModule) ? new Uint8Array(wasmModule) : wasmModule; // TODO@P3: Simplify.
-            const {module_hash} = await canisterStatus(canisterId);
-            /* block */ {
-                // Convert both to Uint8Array for comparison and compare first 16 bytes
-                const wasmIdArray = new Uint8Array(wasmId as any);
-                const moduleHashArray = new Uint8Array(module_hash as any);
-                // TODO@P1: Upgrade only if changed also in backend upgrade code. Use that code here instead of the below.
-                if (wasmIdArray.slice(0, 16).every((byte, i) => byte === moduleHashArray[i])) { // Upgrade only if changed.
-                    continue;
-                }
-            }
-            // TODO@P3: Support only enhanced orthogonal persistence?
-            try { // FIXME@P1: This is a partial installation code. It for example doesn't update the package version.
-                await installCode({
-                    mode: { upgrade: [{ wasm_memory_persistence: [], skip_pre_upgrade: [false] }] },
-                    canisterId,
-                    wasmModule: wasmModuleBytes,
-                    arg: new Uint8Array(IDL.Record({}).encodeValue({})),
-                });
-            }
-            catch (e) {
-                if (/Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option\./
-                    .test((e as any).toString()))
-                {
-                    await installCode({
-                        mode: { upgrade: [{ wasm_memory_persistence: [{keep: null}], skip_pre_upgrade: [false] }] },
-                        canisterId: canisterId,
-                        wasmModule: wasmModuleBytes,
-                        arg: new Uint8Array(IDL.Record({}).encodeValue({})),
-                    });
-                } else {
-                    throw e;
-                }
-            }
-        }
-        // TODO@P1: Copy frontend assets.
+        // TODO@P1: Copy frontend assets in upgrade.
         if (await repoActor.addPackageVersion(pkg.tmpl, pkg.modules, version)) {
             console.log(`Package ${pkg.tmpl.base.name} code was updated.`);
         } else {
