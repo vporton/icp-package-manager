@@ -116,7 +116,7 @@ export async function submit(
                 },
                 user: identity.getPrincipal(),
                 afterUpgradeCallback: [],
-            })
+            });
         }
         if (await repoActor.addPackageVersion(pkg.tmpl, pkg.modules, version)) {
             console.log(`Package ${pkg.tmpl.base.name} code was updated.`);
