@@ -1,4 +1,5 @@
 /// Canister that takes on itself potentially non-returning calls.
+import Option "mo:core/Option";
 import Runtime "mo:core/Runtime";
 import Error "mo:core/Error";
 import List "mo:core/List";
@@ -486,7 +487,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         simpleIndirect: Principal;
         mainIndirect: Principal;
         user: Principal;
-    }): asynс () {
+    }): async () {
         try {
             await* onlyOwner(caller, "copyAssetsIfAny");
 

@@ -587,7 +587,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                     }>(
                         Nat.rangeInclusive(startSerial+1, endSerial),
                         func (serial: Nat) = {
-                            canister = Principal.fromActor(this);
+                            canister = Principal.fromActor(this); // FIXME@P1: This is not the canister that should be upgraded.
                             name = "upgradePackageStep";
                             data = to_candid({
                                 package = {
@@ -616,19 +616,21 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                             Iter.empty();
                         };
                     }),
-                Iter.singleton({ // Copy frontend assets. (Do it only once, not for each step.)
-                    canister = Principal.fromActor(this);
-                    name = "copyAssetsIfAny";
-                    data = to_candid({
-                        wasmModule = Common.unshareModule(wasmModule);
-                        canister_id = newCanisterId;
-                        simpleIndirect;
-                        mainIndirect;
-                        user;
-
-                    });
-                    error = #abort;
-                }),
+                Iter.map( // Copy frontend assets. (Do it only once, not for each step.)
+                    Common.modulesIterator(installedPackage),
+                    func (m: (Text, Principal)) = {
+                            canister = m.1;
+                            name = "copyAssetsIfAny";
+                            data = to_candid({
+                                wasmModule = Common.unshareModule(wasmModule);
+                                canister_id = newCanisterId;
+                                simpleIndirect;
+                                mainIndirect;
+                                user;
+                            });
+                            error = #abort;
+                        }
+                ),
             ),
         );
         ignore getSimpleIndirect().callAll(arg);
