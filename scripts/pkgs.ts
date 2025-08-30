@@ -191,7 +191,7 @@ async function main() {
         ],
     });
 
-    // FIXME@P1: Ask for more version strings.
+    // FIXME@P1: Ask for more version strings. (Hm, there are several packages.)
     const version = await commandOutput("git rev-parse HEAD"); // FIXME@P1: Use it AFTER commit.
 
     await submit([{
