@@ -316,7 +316,7 @@ module {
     };
 
     public type InstalledPackageInfo = {
-        id: InstallationId; // TODO@P1: It should not be here.
+        // id: InstallationId; // TODO@P1: It should not be here.
         var package: PackageInfo;
         var packageRepoCanister: Principal;
         var modulesInstalledByDefault: Map.Map<Text, Principal>;
@@ -327,7 +327,7 @@ module {
     };
 
     public type SharedInstalledPackageInfo = {
-        id: InstallationId;
+        // id: InstallationId;
         package: SharedPackageInfo;
         packageRepoCanister: Principal;
         modulesInstalledByDefault: [(Text, Principal)];
@@ -359,7 +359,7 @@ module {
     };
 
     public func installedPackageInfoShare(info: InstalledPackageInfo): SharedInstalledPackageInfo = {
-        id = info.id;
+        // id = info.id;
         package = sharePackageInfo(info.package);
         packageRepoCanister = info.packageRepoCanister;
         modulesInstalledByDefault = Iter.toArray(Map.entries(info.modulesInstalledByDefault));
@@ -374,7 +374,7 @@ module {
     };
 
     public func installedPackageInfoUnshare(info: SharedInstalledPackageInfo): InstalledPackageInfo = {
-        id = info.id;
+        // id = info.id;
         var package = unsharePackageInfo(info.package);
         var packageRepoCanister = info.packageRepoCanister;
         var modulesInstalledByDefault = Map.fromIter(

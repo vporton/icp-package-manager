@@ -88,7 +88,7 @@ function ChooseVersion2(props: {
                     const guidArray = guid2 instanceof Uint8Array ? guid2 : new Uint8Array(guid2);
                     if (v !== undefined && glob.packageManager !== undefined) {
                         glob.packageManager!.getInstalledPackagesInfoByName(props.packageName!, guidArray).then(installed => {
-                            setInstalledVersions(new Map(installed.all.map(e => [e.package.base.version, 1])));
+                            setInstalledVersions(new Map(installed.all.map(e => [e[1].package.base.version, 1])));
                         });
                     }
                 }

@@ -1352,7 +1352,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
     };
 
     public query({caller}) func getInstalledPackagesInfoByName(name: Text, guid: Blob)
-        : async {all: [Common.SharedInstalledPackageInfo]; default: Common.InstallationId}
+        : async {all: [(Common.InstallationId, Common.SharedInstalledPackageInfo)]; default: Common.InstallationId}
     {
         switch (onlyOwner(caller, "getInstalledPackagesInfoByName")) {
             case (#err err) {
@@ -1365,13 +1365,13 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         let ?data = Map.get<Blob, {all: Map.Map<Common.InstallationId, {}>; var default: Common.InstallationId}>(installedPackagesByName, Blob.compare, guid2) else {
             return {all = []; default = 0};
         };
-        let all = Iter.toArray(Iter.filterMap<(Common.InstallationId, {}), Common.SharedInstalledPackageInfo>(
+        let all = Iter.toArray(Iter.filterMap<(Common.InstallationId, {}), (Common.InstallationId, Common.SharedInstalledPackageInfo)>(
             Map.entries(data.all),
-            func (id: Common.InstallationId, {}): ?Common.SharedInstalledPackageInfo {
+            func (id: Common.InstallationId, {}): ?(Common.InstallationId, Common.SharedInstalledPackageInfo) {
                 let ?info = Map.get<Common.InstallationId, Common.InstalledPackageInfo>(installedPackages, Nat.compare, id) else {
                     Runtime.unreachable();
                 };
-                ?(Common.installedPackageInfoShare(info));
+                ?(id, Common.installedPackageInfoShare(info));
             }));
         {all; default = data.default};
     };
