@@ -344,11 +344,14 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
                     let {module_hash} = await IC.ic.canister_status({canister_id});
-                    if (wasmModuleLocation.1 == Blob.fromArray(Array.sliceToArray(Blob.toArray(module_hash)), 0, 16)) {
-                        // The canister is not changed.
-                        // TODO@P2: Do we need to do anything here? Like callbacks?
-                        canister_id;
-                    } else {
+                    // If the canister is not changed, do we need to do anything here? Like callbacks?
+                    let needInstall = switch (module_hash) {
+                        case (?module_hash) {
+                            wasmModuleLocation.1 != Blob.fromArray(Array.sliceToArray(Blob.toArray(module_hash), 0, 16))
+                        };
+                        case null true;
+                    };
+                    if (needInstall) {
                         let mode2 = if (wasmModule.forceReinstall) {
                             #reinstall
                         } else {
