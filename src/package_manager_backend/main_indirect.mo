@@ -343,42 +343,20 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
             let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
-                    let mode2 = if (wasmModule.forceReinstall) {
-                        #reinstall
+                    let {module_hash} = IC.ic.canister_status({canister_id});
+                    if (wasmModuleLocation.1 == Blob.fromArray(Array.sliceToArray(Blob.toArray(module_hash)), 0, 16)) {
+                        // The canister is not changed.
+                        // TODO@P2: Do we need to do anything here? Like callbacks?
+                        canister_id;
                     } else {
-                        #upgrade (?{ wasm_memory_persistence = null; skip_pre_upgrade = ?false });
-                    };
-                    let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
-                    // TODO@P3: How many cycles to add?
-                    try {
-                        // https://github.com/vporton/measure-install_code
-                        await (with cycles = 1059 * wasm_module.size()) simple.install_code({
-                            sender_canister_version = null; // TODO@P3: Set appropriate value.
-                            arg = to_candid({
-                                packageManager;
-                                mainIndirect;
-                                simpleIndirect;
-                                battery;
-                                user;
-                                installationId;
-                                upgradeId;
-                                userArg = arg;
-                            });
-                            wasm_module;
-                            mode = mode2;
-                            canister_id;
-                        }, 1059 * wasm_module.size());
-                    }
-                    catch (e) {
-                        if (not wasmModule.forceReinstall and
-                            Text.contains(Error.message(e), #text "Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option.")
-                        ) {
-                            // EOP canisters upgrade with `wasm_memory_persistence = null` fails.
-                            let mode3 = if (wasmModule.forceReinstall) {
-                                #reinstall;
-                            } else {
-                                #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
-                            };
+                        let mode2 = if (wasmModule.forceReinstall) {
+                            #reinstall
+                        } else {
+                            #upgrade (?{ wasm_memory_persistence = null; skip_pre_upgrade = ?false });
+                        };
+                        let simple: SimpleIndirect.SimpleIndirect = actor(Principal.toText(simpleIndirect));
+                        // TODO@P3: How many cycles to add?
+                        try {
                             // https://github.com/vporton/measure-install_code
                             await (with cycles = 1059 * wasm_module.size()) simple.install_code({
                                 sender_canister_version = null; // TODO@P3: Set appropriate value.
@@ -386,17 +364,46 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                                     packageManager;
                                     mainIndirect;
                                     simpleIndirect;
+                                    battery;
                                     user;
                                     installationId;
                                     upgradeId;
                                     userArg = arg;
                                 });
                                 wasm_module;
-                                mode = mode3;
+                                mode = mode2;
                                 canister_id;
                             }, 1059 * wasm_module.size());
-                        } else {
-                            Runtime.trap(Error.message(e));
+                        }
+                        catch (e) {
+                            if (not wasmModule.forceReinstall and
+                                Text.contains(Error.message(e), #text "Missing upgrade option: Enhanced orthogonal persistence requires the `wasm_memory_persistence` upgrade option.")
+                            ) {
+                                // EOP canisters upgrade with `wasm_memory_persistence = null` fails.
+                                let mode3 = if (wasmModule.forceReinstall) {
+                                    #reinstall;
+                                } else {
+                                    #upgrade (?{ wasm_memory_persistence = ?#keep; skip_pre_upgrade = ?false });
+                                };
+                                // https://github.com/vporton/measure-install_code
+                                await (with cycles = 1059 * wasm_module.size()) simple.install_code({
+                                    sender_canister_version = null; // TODO@P3: Set appropriate value.
+                                    arg = to_candid({
+                                        packageManager;
+                                        mainIndirect;
+                                        simpleIndirect;
+                                        user;
+                                        installationId;
+                                        upgradeId;
+                                        userArg = arg;
+                                    });
+                                    wasm_module;
+                                    mode = mode3;
+                                    canister_id;
+                                }, 1059 * wasm_module.size());
+                            } else {
+                                Runtime.trap(Error.message(e));
+                            };
                         };
                     };
                     canister_id;

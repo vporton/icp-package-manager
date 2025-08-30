@@ -202,7 +202,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   private func _getFullPackageInfo(name: Common.PackageName): Result.Result<Common.SharedFullPackageInfo, Text> {
     let ?v = Map.get(packages, Text.compare, name) else {
-      return #err("no such package");
+      return #err("no such package: " # name);
     };
     #ok(Common.shareFullPackageInfo(v.pkg));
   };
@@ -294,7 +294,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
 
   public query func getPackage(name: Common.PackageName, version: Common.Version): async Common.SharedPackageInfo {
     let ?fullInfo = Map.get(packages, Text.compare, name) else {
-      Runtime.trap("no such package");
+      Runtime.trap("no such package: " # name);
     };
     let ?t = Map.get(fullInfo.pkg.versionsMap, Text.compare, version) else {
       Runtime.trap("no such package version");

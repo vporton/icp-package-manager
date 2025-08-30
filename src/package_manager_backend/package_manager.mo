@@ -1127,7 +1127,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         ignore Cycles.accept<system>(Cycles.available());
 
         let ?inst = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Nat.compare, installationId) else {
-            Runtime.trap("no such package"); // better message
+            Runtime.trap("no such installed package"); // better message
         };
         switch (moduleName) {
             case (?name) {
@@ -1495,7 +1495,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
         };
 
         let ?res = Map.get<Common.InstallationId, HalfInstalledPackageInfo>(halfInstalledPackages, Int.compare, installationId) else {
-            Runtime.trap("no such package");
+            Runtime.trap("no such installed package");
         };
         // TODO@P3: May be a little bit slow.
         Iter.toArray<(Text, Principal)>(Map.entries(res.modulesInstalledByDefault));
@@ -1653,7 +1653,7 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             all: Map.Map<Common.InstallationId, {}>;
             var default: Common.InstallationId;
         }>(installedPackagesByName, Blob.compare, guid2) else {
-            Runtime.trap("no such package");
+            Runtime.trap("no such installed package");
         };
         data.default := installationId;
     };

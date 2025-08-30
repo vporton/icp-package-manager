@@ -96,6 +96,7 @@ export async function submit(
                 package: {
                     version,
                     repo: pkg.repo,
+                    packageName: pkg.tmpl.base.name,
                     arg: new Uint8Array(),
                     initArg: [],
                 },
@@ -104,7 +105,20 @@ export async function submit(
             });
             await waitTillInitialized(agent, pm, realInstallationId);
             installationId = realInstallationId;
+        } else {
+            await pmActor.upgradePackage({
+                package: {
+                    installationId,
+                    version,
+                    repo: pkg.repo,
+                    arg: new Uint8Array(),
+                    initArg: [],
+                },
+                user: identity.getPrincipal(),
+                afterUpgradeCallback: [],
+            })
         }
+        // FIXME@P1: Rewrite this with a single backend call.
         for (const [moduleName, m] of pkg.modules) {
             let canisterId = await pmActor.getModulePrincipal(installationId, moduleName);
             const { installCode, canisterStatus } = ICManagementCanister.create({
