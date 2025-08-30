@@ -486,7 +486,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
         simpleIndirect: Principal;
         mainIndirect: Principal;
         user: Principal;
-    }): async* () {
+    }): asynс () {
         try {
             await* onlyOwner(caller, "copyAssetsIfAny");
 
