@@ -343,7 +343,7 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
             let wasm_module = await repository.getWasmModule(wasmModuleLocation.1);
             let newCanisterId = switch (canister_id) {
                 case (?canister_id) {
-                    let {module_hash} = IC.ic.canister_status({canister_id});
+                    let {module_hash} = await IC.ic.canister_status({canister_id});
                     if (wasmModuleLocation.1 == Blob.fromArray(Array.sliceToArray(Blob.toArray(module_hash)), 0, 16)) {
                         // The canister is not changed.
                         // TODO@P2: Do we need to do anything here? Like callbacks?
