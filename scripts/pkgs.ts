@@ -111,6 +111,7 @@ async function main() {
         shouldFetchRootKey: net === 'local',
     });
     const repository = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
+    // FIXME@P1: Don't repeat module properties in Git post-commit script:
     const pmFrontendModule = await repository.uploadModule({
         code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
         installByDefault: true,
