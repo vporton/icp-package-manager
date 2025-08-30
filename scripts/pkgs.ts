@@ -10,11 +10,11 @@ import { HttpAgent } from "@dfinity/agent";
 const pmReal = {
     modules: [
         // TODO@P3: using magic with TS types
-        ['battery', []], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
-        ['backend', []],
-        ['frontend', []],
-        ['main_indirect', []],
-        ['simple_indirect', []],
+        ['battery', []] as [string, []], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
+        ['backend', []] as [string, []],
+        ['frontend', []] as [string, []],
+        ['main_indirect', []] as [string, []],
+        ['simple_indirect', []] as [string, []],
     ],
     dependencies: [],
     suggests: [],
@@ -39,8 +39,8 @@ const pmInfo: SharedPackageInfoTemplate = {
 };
 const efReal = {
     modules: [
-        ['example1', undefined],
-        ['example2', undefined],
+        ['example1', []] as [string, []],
+        ['example2', []] as [string, []],
     ],
     dependencies: [],
     suggests: [],
@@ -65,8 +65,8 @@ const pmEFInfo: SharedPackageInfoTemplate = {
 };
 const walletReal = {
     modules: [
-        ['frontend', undefined],
-        ['backend', undefined],
+        ['frontend', []] as [string, []],
+        ['backend', []] as [string, []],
     ],
     dependencies: [],
     suggests: [],
