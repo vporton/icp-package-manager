@@ -164,3 +164,5 @@ Remaining things TODO
 - TODO@P3 I use `filterMap` where it's enough to use `map` (due to `Runtime.unreachable`.
 
 - FIXME@P2 Many-stages upgrade in frontend of package manager.
+
+- FIXME@P1 How to manage multiple versions of UI? Creating a canister is costly.
