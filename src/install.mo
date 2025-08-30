@@ -81,7 +81,7 @@ module {
             sender_canister_version = wasmModule.canisterVersion;
         });
 
-        await* copyAssetsIfAny({
+        await* copyAssetsIfAny({ // TODO@P2: Ensure that it's called only once in multi-step upgrade.
             wasmModule;
             canister_id;
             simpleIndirect;

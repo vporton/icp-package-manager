@@ -579,43 +579,58 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             Iter.concat<{
                 canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
             }>(
-                Iter.map<Nat, {
+                Iter.concat<{
                     canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
                 }>(
-                    Nat.rangeInclusive(startSerial+1, endSerial),
-                    func (serial: Nat) = {
-                        canister = Principal.fromActor(this);
-                        name = "upgradePackageStep";
-                        data = to_candid({
-                            package = {
-                                installationId = package.installationId;
-                                version = package.version;
-                                repo = package.repo;
-                                arg = package.arg;
-                                initArg = package.initArg;
-                            };
-                            user;
-                            afterUpgradeCallback;
-                        });
-                        error = #abort;
-                    }
-                ),
-                switch (afterUpgradeCallback) {
-                    case (?afterUpgradeCallback) {
-                        Iter.singleton({
-                            canister = afterUpgradeCallback.canister;
-                            name = afterUpgradeCallback.name;
-                            data = afterUpgradeCallback.data;
+                    Iter.map<Nat, {
+                        canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
+                    }>(
+                        Nat.rangeInclusive(startSerial+1, endSerial),
+                        func (serial: Nat) = {
+                            canister = Principal.fromActor(this);
+                            name = "upgradePackageStep";
+                            data = to_candid({
+                                package = {
+                                    installationId = package.installationId;
+                                    version = package.version;
+                                    repo = package.repo;
+                                    arg = package.arg;
+                                    initArg = package.initArg;
+                                };
+                                user;
+                                afterUpgradeCallback;
+                            });
                             error = #abort;
-                        });
-                    };
-                    case null {
-                        Iter.empty();
-                    };
-                },
+                        }
+                    ),
+                    switch (afterUpgradeCallback) {
+                        case (?afterUpgradeCallback) {
+                            Iter.singleton({
+                                canister = afterUpgradeCallback.canister;
+                                name = afterUpgradeCallback.name;
+                                data = afterUpgradeCallback.data;
+                                error = #abort;
+                            });
+                        };
+                        case null {
+                            Iter.empty();
+                        };
+                    }),
+                Iter.singleton({ // Copy frontend assets. (Do it only once, not for each step.)
+                    canister = Principal.fromActor(this);
+                    name = "copyAssetsIfAny";
+                    data = to_candid({
+                        wasmModule = Common.unshareModule(wasmModule);
+                        canister_id = newCanisterId;
+                        simpleIndirect;
+                        mainIndirect;
+                        user;
+
+                    });
+                    error = #abort;
+                }),
             ),
         );
-        // TODO@P1: Copy frontend assets. (Do it only once, not for each step.)
         ignore getSimpleIndirect().callAll(arg);
     };
 

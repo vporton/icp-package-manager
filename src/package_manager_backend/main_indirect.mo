@@ -464,16 +464,36 @@ shared({caller = initialCaller}) persistent actor class MainIndirect({
                 }) -> async ();
             };
             await backendObj.onUpgradeOrInstallModule({upgradeId; moduleName; canister_id = newCanisterId; afterUpgradeCallback});
-            await* Install.copyAssetsIfAny({
-                wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
-                canister_id = newCanisterId;
-                simpleIndirect;
-                mainIndirect;
-                user;
-            });
+            if (Option.isSome(canister_id)) {
+                await* Install.copyAssetsIfAny({
+                    wasmModule = Common.unshareModule(wasmModule); // TODO@P3: duplicate call above
+                    canister_id = newCanisterId;
+                    simpleIndirect;
+                    mainIndirect;
+                    user;
+                });
+            };
+            // For upgrade do it only on the last step
         }
         catch (e) {
             Debug.print("upgradeOrInstallModule: " # Error.message(e));
+        };
+    };
+
+    public shared({caller}) func copyAssetsIfAny({
+        wasmModule: Common.SharedModule;
+        canister_id: Principal;
+        simpleIndirect: Principal;
+        mainIndirect: Principal;
+        user: Principal;
+    }): async* () {
+        try {
+            await* onlyOwner(caller, "copyAssetsIfAny");
+
+            await* Install.copyAssetsIfAny({wasmModule = Common.unshareModule(wasmModule); canister_id; simpleIndirect; mainIndirect; user});
+        }
+        catch (e) {
+            Debug.print("copyAssetsIfAny: " # Error.message(e));
         };
     };
 
