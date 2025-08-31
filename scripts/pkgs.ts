@@ -63,7 +63,7 @@ const pmReal: SharedRealPackageInfoBase_1 = {
     functions: [],
     permissions: [],
     checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [CheckInitializedCallback],
-    frontendModule: ['frontend'] as [string],
+    frontendModule: ['frontend'],
 };
 const pmInfo: SharedPackageInfoTemplate = {
     base: {
