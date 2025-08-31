@@ -6,15 +6,8 @@ import { config as dotenv_config } from 'dotenv';
 import readline from 'readline';
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 import { createActor as createRepository } from '../src/declarations/repository';
-import { Location } from '../src/declarations/repository/repository.did';
 import { HttpAgent, Identity } from '@dfinity/agent';
 import { Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
-import canisterIds from '../canister_ids.json';
-import { assert } from 'console';
-import { exec } from 'child_process';
-import { copyFile, rename } from 'fs/promises';
-import { ICManagementCanister } from "@dfinity/ic-management";
-import { IDL } from '@dfinity/candid';
 import { waitTillInitialized } from '../src/lib/install';
 
 dotenv_config({ path: '.env' });
