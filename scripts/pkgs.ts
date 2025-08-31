@@ -1,20 +1,61 @@
 import { readFileSync } from "fs";
 import { submit } from "../icpack-js/submitPkg";
-import { CheckInitializedCallback, SharedPackageInfoTemplate } from "../src/declarations/repository/repository.did";
+import { CheckInitializedCallback, SharedModule, SharedModuleBase_1, SharedPackageInfoTemplate, SharedRealPackageInfoBase_1 } from "../src/declarations/repository/repository.did";
 import { decodeFile } from "./lib/key";
 import { commandOutput } from "../src/lib/scripts";
 import { createActor as createRepository } from '../src/declarations/repository';
 import { Principal } from "@dfinity/principal";
 import { HttpAgent } from "@dfinity/agent";
 
-const pmReal = {
+const pmReal: SharedRealPackageInfoBase_1 = {
     modules: [
-        // TODO@P3: using magic with TS types
-        ['battery', []] as [string, []], // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
-        ['backend', []] as [string, []],
-        ['frontend', []] as [string, []],
-        ['main_indirect', []] as [string, []],
-        ['simple_indirect', []] as [string, []],
+        ['battery', { // `battery` needs to be initialized first for bootstrapping, because creating other modules use the battery.
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [
+                [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
+        ['backend', {
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [
+                [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
+        ['frontend', {
+            code: {Assets: {wasm: null, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}}, // FIXME@P1: assets
+            installByDefault: true,
+            forceReinstall: false,
+            callbacks: [],
+            canisterVersion: [],
+        }],
+        ['main_indirect', {
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: true,
+            canisterVersion: [],
+            callbacks: [
+                [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
+        ['simple_indirect', {
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: true,
+            canisterVersion: [],
+            callbacks: [
+                [{CodeInstalledForAllCanisters: null}, {method: "init"}],
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
     ],
     dependencies: [],
     suggests: [],
@@ -27,7 +68,7 @@ const pmReal = {
 const pmInfo: SharedPackageInfoTemplate = {
     base: {
         name: "icpack",
-        version: undefined as never,
+        version: null,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Package manager",
@@ -37,10 +78,24 @@ const pmInfo: SharedPackageInfoTemplate = {
     },
     specific: {real: pmReal},
 };
-const efReal = {
+const efReal: SharedRealPackageInfoBase_1 = {
     modules: [
-        ['example1', []] as [string, []],
-        ['example2', []] as [string, []],
+        ['example1', {
+            code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), Wasm: null}}, // FIXME@P1: assets
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [],
+        }],
+        ['example2', {
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
     ],
     dependencies: [],
     suggests: [],
@@ -63,10 +118,24 @@ const pmEFInfo: SharedPackageInfoTemplate = {
     },
     specific: {real: efReal},
 };
-const walletReal = {
+const walletReal: SharedRealPackageInfoBase_1 = {
     modules: [
-        ['frontend', []] as [string, []],
-        ['backend', []] as [string, []],
+        ['frontend', {
+            code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_WALLET_FRONTEND!), wasm: null}}, // FIXME@P1: assets
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [],
+        }],
+        ['backend', {
+            code: {Wasm: null},
+            installByDefault: true,
+            forceReinstall: false,
+            canisterVersion: [],
+            callbacks: [
+                [{WithdrawCycles: null}, {method: "withdrawCycles"}],
+            ],
+        }],
     ],
     dependencies: [],
     suggests: [],
