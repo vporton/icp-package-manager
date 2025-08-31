@@ -575,6 +575,10 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
             Runtime.trap("downgrading packages is not supported");
         };
 
+        let #real real = installedPackage.package.specific else {
+            Runtime.trap("trying to directly install a virtual package");
+        };
+
         let arg = Iter.toArray(
             Iter.concat<{
                 canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
@@ -618,18 +622,23 @@ shared({caller = initialCaller}) persistent actor class PackageManager({
                     }),
                 Iter.map( // Copy frontend assets. (Do it only once, not for each step.)
                     Common.modulesIterator(installedPackage),
-                    func (m: (Text, Principal)) = {
-                            canister = m.1;
-                            name = "copyAssetsIfAny";
-                            data = to_candid({
-                                wasmModule = Common.unshareModule(wasmModule);
-                                canister_id = newCanisterId;
-                                simpleIndirect;
-                                mainIndirect;
-                                user;
-                            });
-                            error = #abort;
-                        }
+                    func (m: (Text, Principal)): {
+                        canister: Principal; name: Text; data: Blob; error: { #abort; #keepDoing };
+                    } = {
+                        canister = mainIndirect;
+                        name = "copyAssetsIfAny";
+                        data = to_candid({
+                            wasmModule = switch (Map.get(real.modules, Text.compare, m.0)) {
+                                case (?v) v.code;
+                                case null Runtime.trap("module not found");
+                            };
+                            canister_id = m.1;
+                            simpleIndirect;
+                            mainIndirect;
+                            user;
+                        });
+                        error = #abort;
+                    },
                 ),
             ),
         );
