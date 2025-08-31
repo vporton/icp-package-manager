@@ -8,6 +8,7 @@ import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Blob "mo:core/Blob";
 import Nat8 "mo:core/Nat8";
+import Runtime "mo:core/Runtime";
 import Sha256 "mo:sha2/Sha256";
 import Itertools "mo:itertools/Iter";
 import CyclesLedger "canister:cycles_ledger";
@@ -54,7 +55,7 @@ module {
         };
     };
 
-    type ModuleCode = ModuleCodeBase<Location>;
+    public type ModuleCode = ModuleCodeBase<Location>;
 
     public type SharedModuleBase<L> = {
         code: ModuleCodeBase<L>;
@@ -65,6 +66,8 @@ module {
     };
 
     public type SharedModule = SharedModuleBase<Location>;
+
+    public type SharedModuleTemplate = SharedModuleBase<()>;
 
     // TODO@P2: Ensure that functions receive args without template parameters (for conversion to TypeScript).
     // TODO@P3: Remove unnecessary types.
@@ -242,11 +245,36 @@ module {
         };
 
     // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
-    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, modules: [(Text, SharedModule)]): RealPackageInfo =
+    private func fillModuleTemplate(template: SharedModuleTemplate, code: ModuleCode): Module =
+        {
+            code = code;
+            installByDefault = template.installByDefault;
+            forceReinstall = template.forceReinstall;
+            canisterVersion = template.canisterVersion;
+            callbacks = Map.fromIter(template.callbacks.vals(), moduleEventCompare);
+        };
+
+
+    // TODO@P3: Use non-shared package info template for more efficiency and simplicity.
+    private func fillRealPackageInfoTemplate(template: RealSharedPackageInfoTemplate, codes: [(Text, ModuleCode)]): RealPackageInfo {
+        let codesMap = Map.fromIter<Text, ModuleCode>(codes.vals(), Text.compare);
         {
             modules = Map.fromIter<Text, Module>(
-                Iter.map<(Text, SharedModule), (Text, Module)>(modules.vals(),
-                func ((k, v): (Text, SharedModule)): (Text, Module) = (k, unshareModule(v))),
+                Iter.map<(Text, SharedModuleTemplate), (Text, Module)>(
+                    template.modules.vals(),
+                    func ((k, v): (Text, SharedModuleTemplate)): (Text, Module) =
+                        (k,
+                            fillModuleTemplate(
+                                v,
+                                switch (Map.get(codesMap, Text.compare, k)) {
+                                    case (?v) v;
+                                    case null {
+                                        Runtime.trap("Module code not found: " # k);
+                                    };
+                                },
+                            )
+                        ),
+                ),
                 Text.compare,
             );
             dependencies = template.dependencies;
@@ -257,8 +285,9 @@ module {
             checkInitializedCallback = template.checkInitializedCallback;
             frontendModule = template.frontendModule;
         };
+    };
 
-    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, SharedModule)], version: Version): PackageInfo =
+    public func fillPackageInfoTemplate(template: SharedPackageInfoTemplate, modules: [(Text, ModuleCode)], version: Version): PackageInfo =
         {
             base = {
                 guid = template.base.guid;

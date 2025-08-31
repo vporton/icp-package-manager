@@ -219,11 +219,11 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   /// Returns `true` if the package version was added, `false` if it was already present.
   public shared({caller}) func addPackageVersion(
     tmpl: Common.SharedPackageInfoTemplate,
-    modules: [(Text, Common.SharedModule)],
+    codes: [(Text, Common.ModuleCode)],
     version: Common.Version,
   ): async Bool {
     let name = tmpl.base.name;
-    let info = Common.fillPackageInfoTemplate(tmpl, modules, version);
+    let info = Common.fillPackageInfoTemplate(tmpl, codes, version);
 
     let p = Map.get(packages, Text.compare, name);
     switch (p) {
