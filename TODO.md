@@ -166,3 +166,5 @@ Remaining things TODO
 - FIXME@P2 Many-stages upgrade in frontend of package manager.
 
 - FIXME@P1 How to manage multiple versions of UI? Creating a canister is costly.
+
+- TODO@P2 If a package didn't change, don't store its version of Git commit.
