@@ -168,3 +168,5 @@ Remaining things TODO
 - FIXME@P1 How to manage multiple versions of UI? Creating a canister is costly.
 
 - TODO@P2 If a package didn't change, don't store its version of Git commit.
+
+- FIXME@P1 `submitPkg.ts` cannot update the PM, because it would try to update itself.
