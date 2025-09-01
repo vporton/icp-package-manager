@@ -4,10 +4,8 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { decodeFile } from "./lib/key";
 import { commandOutput } from "../src/lib/scripts";
-import { Repository, SharedRealPackageInfo } from '../src/declarations/repository/repository.did';
+import { Repository } from '../src/declarations/repository/repository.did';
 import { idlFactory as repositoryIndexIdl } from '../src/declarations/repository';
-import { SharedPackageInfo } from '../src/declarations/repository/repository.did';
-import { SharedFullPackageInfo } from '../src/declarations/repository/repository.did';
 import { config as dotenv_config } from 'dotenv';
 import node_fetch from 'node-fetch';
 
