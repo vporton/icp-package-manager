@@ -133,7 +133,7 @@ module {
 
     public type ModuleUploadCode = ModuleCodeBase<Blob>;
 
-    public type ModuleUpload = SharedModuleBase<Blob>;
+    // public type ModuleUpload = SharedModuleBase<Blob>;
 
     /// If `how` is `#methodName`, then the module is considered initialized when
     /// the method is called and doesn't trap.

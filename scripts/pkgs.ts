@@ -180,86 +180,16 @@ async function main() {
         shouldFetchRootKey: net === 'local',
     });
     const repository = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
-    // FIXME@P1: Don't repeat module properties in Git post-commit script:
-    const pmFrontendModule = await repository.uploadModule({
-        code: {Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}},
-        installByDefault: true,
-        forceReinstall: false,
-        callbacks: [],
-        canisterVersion: [],
-    });
-    const pmBackendModule = await repository.uploadModule({
-        code: {Wasm: pmBackendBlob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const exampleFrontend = await repository.uploadModule({
-        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [],
-    });
-    const exampleBackend = await repository.uploadModule({
-        code: {Wasm: pmExampleBackendBlob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const walletFrontend = await repository.uploadModule({
-        code: {Assets: {assets: Principal.fromText(process.env.CANISTER_ID_WALLET_FRONTEND!), wasm: walletFrontendBlob}},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [],
-    });
-    const walletBackend = await repository.uploadModule({
-        code: {Wasm: walletBackendBlob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmMainIndirectModule = await repository.uploadModule({
-        code: {Wasm: pmMainIndirectBlob},
-        installByDefault: true,
-        forceReinstall: true,
-        canisterVersion: [],
-        callbacks: [
-            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmSimpleIndirectModule = await repository.uploadModule({
-        code: {Wasm: pmSimpleIndirectBlob},
-        installByDefault: true,
-        forceReinstall: true,
-        canisterVersion: [],
-        callbacks: [
-            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
-    const pmBatteryModule = await repository.uploadModule({
-        code: {Wasm: pmBatteryBlob},
-        installByDefault: true,
-        forceReinstall: false,
-        canisterVersion: [],
-        callbacks: [
-            [{CodeInstalledForAllCanisters: null}, {method: "init"}],
-            [{WithdrawCycles: null}, {method: "withdrawCycles"}],
-        ],
-    });
+    // FIXME@P1: Check asset canisters.
+    const pmFrontendModule = await repository.uploadModule({Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}});
+    const pmBackendModule = await repository.uploadModule({Wasm: pmBackendBlob});
+    const exampleFrontend = await repository.uploadModule({Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}});
+    const exampleBackend = await repository.uploadModule({Wasm: pmExampleBackendBlob});
+    const walletFrontend = await repository.uploadModule({Assets: {assets: Principal.fromText(process.env.CANISTER_ID_WALLET_FRONTEND!), wasm: walletFrontendBlob}});
+    const walletBackend = await repository.uploadModule({Wasm: walletBackendBlob});
+    const pmMainIndirectModule = await repository.uploadModule({Wasm: pmMainIndirectBlob});
+    const pmSimpleIndirectModule = await repository.uploadModule({Wasm: pmSimpleIndirectBlob});
+    const pmBatteryModule = await repository.uploadModule({Wasm: pmBatteryBlob});
 
     // FIXME@P1: Ask for more version strings. (Hm, there are several packages.)
     const version = await commandOutput("git rev-parse HEAD"); // FIXME@P1: Use it AFTER commit.

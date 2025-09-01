@@ -7,7 +7,7 @@ import readline from 'readline';
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 import { createActor as createRepository } from '../src/declarations/repository';
 import { HttpAgent, Identity } from '@dfinity/agent';
-import { Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
+import { ModuleCode, Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
 import { waitTillInitialized } from '../src/lib/install';
 
 dotenv_config({ path: '.env' });
@@ -37,7 +37,7 @@ export async function submit(
     packages: {
         repo: Principal,
         tmpl: SharedPackageInfoTemplate,
-        modules: [string, SharedModule][],
+        modules: [string, ModuleCode][],
     }[],
     identity: Identity,
     version: string)

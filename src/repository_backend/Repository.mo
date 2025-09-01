@@ -142,23 +142,17 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     await* _uploadWasm(wasm);
   };
 
-  public shared({caller}) func uploadModule(module_: Common.ModuleUpload): async Common.SharedModule {
+  public shared({caller}) func uploadModule(module_: Common.ModuleUploadCode): async Common.ModuleCode {
     await* onlyPackageCreator(caller);
 
-    {
-      callbacks = module_.callbacks;
-      installByDefault = module_.installByDefault;
-      forceReinstall = module_.forceReinstall;
-      canisterVersion = module_.canisterVersion;
-      code = switch (module_.code) {
-        case (#Wasm blob) {
-            let {id} = await* _uploadWasm(blob);
-            #Wasm (Principal.fromActor(this), id);
-        };
-        case (#Assets {wasm: Blob; assets: Principal}) {
-          let {id} = await* _uploadWasm(wasm);
-          #Assets {wasm = (Principal.fromActor(this), id); assets};
-        };
+    switch (module_) {
+      case (#Wasm blob) {
+          let {id} = await* _uploadWasm(blob);
+          #Wasm (Principal.fromActor(this), id);
+      };
+      case (#Assets {wasm: Blob; assets: Principal}) {
+        let {id} = await* _uploadWasm(wasm);
+        #Assets {wasm = (Principal.fromActor(this), id); assets};
       };
     };
   };
