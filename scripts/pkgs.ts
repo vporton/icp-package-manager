@@ -108,7 +108,7 @@ const efReal: SharedRealPackageInfoBase_1 = {
 const pmEFInfo: SharedPackageInfoTemplate = {
     base: {
         name: "example",
-        version: undefined as never,
+        version: null,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Example package",
@@ -148,7 +148,7 @@ const walletReal: SharedRealPackageInfoBase_1 = {
 const walletInfo: SharedPackageInfoTemplate = {
     base: {
         name: "wallet",
-        version: undefined as never,
+        version: null,
         price: 0n,
         upgradePrice: 0n,
         shortDescription: "Wallet for IC Pack",
