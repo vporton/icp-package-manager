@@ -59,7 +59,7 @@ const pmReal: SharedRealPackageInfoBase_1 = {
     checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [CheckInitializedCallback],
     frontendModule: ['frontend'],
 };
-const pmInfo: SharedPackageInfoTemplate = {
+export const pmInfo: SharedPackageInfoTemplate = {
     base: {
         name: "icpack",
         version: null,
@@ -99,7 +99,7 @@ const efReal: SharedRealPackageInfoBase_1 = {
     checkInitializedCallback: [{moduleName: 'example1', how: {urlPath: '/index.html'}}] as [CheckInitializedCallback],
     frontendModule: ['example1'] as [string],
 };
-const pmEFInfo: SharedPackageInfoTemplate = {
+export const pmEFInfo: SharedPackageInfoTemplate = {
     base: {
         name: "example",
         version: null,
@@ -139,7 +139,7 @@ const walletReal: SharedRealPackageInfoBase_1 = {
     checkInitializedCallback: [{moduleName: 'backend', how: {methodName: 'isAllInitialized'}}] as [CheckInitializedCallback],
     frontendModule: ['frontend'] as [string],
 };
-const walletInfo: SharedPackageInfoTemplate = {
+export const walletInfo: SharedPackageInfoTemplate = {
     base: {
         name: "wallet",
         version: null,

@@ -42,6 +42,7 @@ export async function submit(
     identity: Identity,
     version: string)
 {
+    console.log("Starting submitting packages...");
     const vars = new Map<string, string>();
     let pmStr = process.env.USER_SPECIFIED_CANISTER_ID_PACKAGE_MANAGER;
     if (pmStr === undefined || pmStr === "") {
@@ -59,6 +60,7 @@ export async function submit(
         }
         vars.set(instVarName, installationIdStr);
     }
+    console.log("Outputting config...");
     fs.writeFileSync(
         `.icpack-config.${process.env.DFX_NETWORK}`,
         Array.from(vars.entries()).map(([k, v]) => `${k}=${v}`).join('\n')

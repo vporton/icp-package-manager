@@ -6,7 +6,7 @@ import { commandOutput } from "../src/lib/scripts";
 import { createActor as createRepository } from '../src/declarations/repository';
 import { Principal } from "@dfinity/principal";
 import { HttpAgent } from "@dfinity/agent";
-
+import { pmInfo, pmEFInfo, walletInfo } from "./lib/pkg-data";
 
 const net = process.env.DFX_NETWORK!;
 
@@ -21,6 +21,7 @@ const walletFrontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/w
 const walletBackendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/wallet_backend/wallet_backend.wasm`));
 
 async function main() {
+    console.log("Getting identity and initializing agent...");
     const key = await commandOutput("dfx identity export `dfx identity whoami`"); // secret key
     const identity = decodeFile(key);
     const agent = await HttpAgent.create({
@@ -28,8 +29,10 @@ async function main() {
         host: net === 'local' ? "http://localhost:8080" : undefined,
         shouldFetchRootKey: net === 'local',
     });
+    console.log("Creating repository actor...");
     const repository = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
     // FIXME@P1: Check asset canisters.
+    console.log("Uploading modules...");
     const pmFrontendModule = await repository.uploadModule({Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}});
     const pmBackendModule = await repository.uploadModule({Wasm: pmBackendBlob});
     const exampleFrontend = await repository.uploadModule({Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}});
@@ -42,6 +45,7 @@ async function main() {
 
     // FIXME@P1: Ask for more version strings. (Hm, there are several packages.)
     const version = await commandOutput("git rev-parse HEAD"); // FIXME@P1: Use it AFTER commit.
+    console.log(`Version from Git: ${version}`);
 
     await submit([{
         repo: Principal.fromText(process.env.CANISTER_ID_REPOSITORY!),
