@@ -214,7 +214,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
   public shared({caller}) func addPackageVersion(
     tmpl: Common.SharedPackageInfoTemplate,
     codes: [(Text, Common.ModuleCode)],
-    version: Common.Version,
+    version: Common.Version, // TODO@P2: Provide several versions?
   ): async Bool {
     // FIXME@P1: It does not update `versionMap`.
     let name = tmpl.base.name;
