@@ -34,7 +34,7 @@ async function main() {
     console.log("Creating repository actor...");
     const repository = createRepository(Principal.fromText(process.env.CANISTER_ID_REPOSITORY!), {agent});
     // FIXME@P1: Check asset canisters.
-    console.log("Uploading modules...");
+    console.log("Uploading modules..."); // FIXME@P3: duplicate code
     const pmFrontendModule = await repository.uploadModule({Assets: {wasm: frontendBlob, assets: Principal.fromText(process.env.CANISTER_ID_PACKAGE_MANAGER_FRONTEND!)}});
     const pmBackendModule = await repository.uploadModule({Wasm: pmBackendBlob});
     const exampleFrontend = await repository.uploadModule({Assets: {assets: Principal.fromText(process.env.CANISTER_ID_EXAMPLE_FRONTEND!), wasm: pmExampleFrontendBlob}});
