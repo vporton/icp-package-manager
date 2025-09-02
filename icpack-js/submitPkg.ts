@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 import fs from 'fs';
 import { Principal } from '@dfinity/principal';
 import { config as dotenv_config } from 'dotenv';
@@ -66,6 +64,7 @@ export async function submit(
         Array.from(vars.entries()).map(([k, v]) => `${k}=${v}`).join('\n')
     );
 
+    console.log("Creating agents...");
     const pm = Principal.fromText(pmStr!);
 
     const agent = await HttpAgent.create({
@@ -77,6 +76,7 @@ export async function submit(
     const pmActor = createPackageManager(pm, {agent});
 
     for (const pkg of packages) {
+        console.log(`Starting to submit package ${pkg.tmpl.base.name}...`);
         let installationIdStr = process.env[`USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`];
         if (installationIdStr === undefined) {
             throw new Error(`Installation ID for ${pkg.tmpl.base.name} is not specified.`);

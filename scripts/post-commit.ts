@@ -1,3 +1,5 @@
+#!/usr/bin/env -S npx tsx
+
 import { readFileSync } from "fs";
 import { submit } from "../icpack-js/submitPkg";
 import { CheckInitializedCallback, SharedModule, SharedModuleBase_1, SharedPackageInfoTemplate, SharedRealPackageInfoBase_1 } from "../src/declarations/repository/repository.did";
