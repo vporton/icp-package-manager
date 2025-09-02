@@ -216,7 +216,6 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     codes: [(Text, Common.ModuleCode)],
     version: Common.Version, // TODO@P2: Provide several versions?
   ): async Bool {
-    // FIXME@P1: It does not update `versionMap`.
     let name = tmpl.base.name;
     let info = Common.fillPackageInfoTemplate(tmpl, codes, version);
 
@@ -233,7 +232,9 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
         };
         let changed = Common.sharePackageInfo(info) != Common.sharePackageInfo(previous.package); // TODO@P3: inefficient
         if (changed) {
-          List.add(p.pkg.listByVersion, {serial = List.size(p.pkg.listByVersion); package = info});
+          let indexed = {serial = List.size(p.pkg.listByVersion); package = info};
+          List.add(p.pkg.listByVersion, indexed);
+          ignore Map.insert<Common.Version, Common.IndexedPackageInfo>(p.pkg.versionsMap, Text.compare, version, indexed);
         };
 
         changed;
@@ -249,10 +250,20 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
             Set.singleton<Principal>(caller);
           };
         };
+        let indexed = {serial = 0; package = info};
         ignore Map.insert<Text, {
           pkg: Common.FullPackageInfo;
           owners: Set.Set<Principal>;
-        }>(packages, Text.compare, name, {owners; pkg = {listByVersion = List.singleton<Common.IndexedPackageInfo>({serial = 0; package = info}); versionsMap = Map.empty<Common.Version, Common.IndexedPackageInfo>()}});
+        }>(
+          packages,
+          Text.compare,
+          name,
+          {
+            owners;
+            pkg = {listByVersion = List.singleton<Common.IndexedPackageInfo>(indexed);
+            versionsMap = Map.singleton<Common.Version, Common.IndexedPackageInfo>(version, indexed)}
+          },
+        );
 
         true;
       };
