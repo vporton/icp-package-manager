@@ -10,6 +10,9 @@ import { Principal } from "@dfinity/principal";
 import { HttpAgent } from "@dfinity/agent";
 import { pmInfo, pmEFInfo, walletInfo } from "./lib/pkg-data";
 
+dotenv_config({ path: '.env' });
+dotenv_config({ path: `.icpack-config.${process.env.DFX_NETWORK}` });
+
 const net = process.env.DFX_NETWORK!;
 
 const frontendBlob = Uint8Array.from(readFileSync(`.dfx/${net}/canisters/bootstrapper_frontend/bootstrapper_frontend.wasm.gz`));

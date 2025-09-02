@@ -8,9 +8,6 @@ import { HttpAgent, Identity } from '@dfinity/agent';
 import { ModuleCode, Repository, SharedModule, SharedPackageInfoTemplate } from '../src/declarations/repository/repository.did';
 import { waitTillInitialized } from '../src/lib/install';
 
-dotenv_config({ path: '.env' });
-dotenv_config({ path: `.icpack-config.${process.env.DFX_NETWORK}` });
-
 function ask(question: string): Promise<string> {
     const rl = readline.createInterface({
         input: process.stdin,

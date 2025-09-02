@@ -61,7 +61,7 @@ async function main() {
     const pmBatteryModule = await repository.uploadModule({Wasm: pmBatteryBlob});
 
     console.log("Creating PM package...");
-    await repository.addPackageVersion(
+    await repository.addPackageVersion( // TODO@P2: What if it already exists?
         pmInfo,
         [ // TODO@P3: duplicate code
             ["battery", pmBatteryModule],
@@ -71,7 +71,7 @@ async function main() {
             ["simple_indirect", pmSimpleIndirectModule],
         ],
         "0.0.1",
-    })
+    );
 
     console.log("Cleaning unused WASMs...");
     await repository.cleanUnusedWasms();
