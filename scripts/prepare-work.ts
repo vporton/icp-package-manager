@@ -14,6 +14,8 @@ dotenv_config({ path: '.env' });
 
 global.fetch = node_fetch as any;
 
+const net = process.env.DFX_NETWORK!;
+
 const isLocal = process.env.DFX_NETWORK === 'local';
 
 if (isLocal) {

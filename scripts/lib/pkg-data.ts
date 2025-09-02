@@ -1,5 +1,8 @@
 import { Principal } from "@dfinity/principal";
 import { CheckInitializedCallback, SharedPackageInfoTemplate, SharedRealPackageInfoBase_1 } from "../../src/declarations/repository/repository.did";
+import { config as dotenv_config } from 'dotenv';
+
+dotenv_config({ path: '.env' }); // FIXME@P3: hack
 
 const pmReal: SharedRealPackageInfoBase_1 = {
     modules: [

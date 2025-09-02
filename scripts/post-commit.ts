@@ -9,6 +9,7 @@ import { createActor as createRepository } from '../src/declarations/repository'
 import { Principal } from "@dfinity/principal";
 import { HttpAgent } from "@dfinity/agent";
 import { pmInfo, pmEFInfo, walletInfo } from "./lib/pkg-data";
+import { config as dotenv_config } from 'dotenv';
 
 dotenv_config({ path: '.env' });
 dotenv_config({ path: `.icpack-config.${process.env.DFX_NETWORK}` });

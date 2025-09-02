@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { Principal } from '@dfinity/principal';
-import { config as dotenv_config } from 'dotenv';
 import readline from 'readline';
 import { createActor as createPackageManager } from '../src/declarations/package_manager';
 import { createActor as createRepository } from '../src/declarations/repository';
