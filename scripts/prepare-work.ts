@@ -72,7 +72,7 @@ async function main() {
             ["main_indirect", pmMainIndirectModule],
             ["simple_indirect", pmSimpleIndirectModule],
         ],
-        "0.0.1",
+        "stable",
     );
 
     console.log("Cleaning unused WASMs...");

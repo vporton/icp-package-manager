@@ -216,6 +216,7 @@ shared ({caller = initialOwner}) persistent actor class Repository() = this {
     codes: [(Text, Common.ModuleCode)],
     version: Common.Version,
   ): async Bool {
+    // FIXME@P1: It does not update `versionMap`.
     let name = tmpl.base.name;
     let info = Common.fillPackageInfoTemplate(tmpl, codes, version);
 
