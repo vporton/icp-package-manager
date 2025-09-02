@@ -47,7 +47,7 @@ export async function submit(
         const instVarName = `USER_SPECIFIED_INSTALL_ID_${pkg.tmpl.base.name.toUpperCase()}`;
         let installationIdStr = process.env[instVarName];
         if (installationIdStr === undefined || installationIdStr === "") {
-            installationIdStr = await ask(`Installation ID for ${pkg.tmpl.base.name} (empty string to install anew): `); // FIXME@P1
+            installationIdStr = await ask(`Installation ID for ${pkg.tmpl.base.name} (empty string to install anew): `);
         }
         if (!/^([0-9]+|none|)$/.test(installationIdStr)) {
             throw new Error(`Invalid installation ID for ${pkg.tmpl.base.name}: ${installationIdStr} (must be a natural number)`);
