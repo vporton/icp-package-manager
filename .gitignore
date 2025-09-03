@@ -26,6 +26,7 @@ dist/
 # settings
 .env
 /.env-*.mo
+.icpack-config.local
 
 .mops
 .qodo
