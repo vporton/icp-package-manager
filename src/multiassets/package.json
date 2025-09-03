@@ -1,0 +1,29 @@
+{
+  "name": "multiassets",
+  "version": "0.0.1",
+  "description": "A hack for storing content of multiple asset canisters",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vporton/icp-package-manager.git"
+  },
+  "keywords": [
+    "assets",
+    "asset",
+    "canister",
+    "frontend",
+    "IC",
+    "ICP",
+    "Internet",
+    "Computer"
+  ],
+  "author": "Victor Porton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vporton/icp-package-manager/issues"
+  },
+  "homepage": "https://github.com/vporton/icp-package-manager#readme"
+}
