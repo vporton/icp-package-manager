@@ -26,7 +26,7 @@ persistent actor class Wallet({
     installationId: Nat;
     packageManager: Principal;
 }) = this {
-    stable var owner = Principal.fromText("2vxsx-fae");
+    stable var owner = Principal.fromText("2vxsx-fae"); // Anonymous principal - will be replaced by actual user via setOwner method
 
     private func onlyOwner(caller: Principal, msg: Text): Result.Result<(), Text> {
         if (not Principal.isAnonymous(owner) and caller != owner) {

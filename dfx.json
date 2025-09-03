@@ -330,8 +330,7 @@
           "name": "candid:service"
         }
       ],
-      "type": "motoko",
-      "init_arg": "record { user = principal \"2vxsx-fae\" }"
+      "type": "motoko"
     },
     "wallet_frontend": {
       "args": "--enhanced-orthogonal-persistence",
