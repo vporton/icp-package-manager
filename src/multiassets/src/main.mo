@@ -19,7 +19,7 @@ persistent actor MultiAssets {
         }];
 	};
 
-    let assets = Map.empty<Key, Asset>();
+    let assets = Map.empty<Key, Asset>(); // TODO@P2: Don't duplicate assets with the same sha256.
 
     public func store(key: Key, asset: Asset): async () {
         ignore Map.insert<Key, Asset>(assets, Text.compare, key, asset);
