@@ -37,8 +37,8 @@ persistent actor MultiAssets {
             let v = iter.next();
             switch (v) {
                 case (?(k, v)) {
-                    if (Text.startsWith(k, prefix)) {
-                        result.add(v);
+                    if (Text.startsWith(k, #text prefix)) {
+                        List.add(result, v);
                     } else {
                         break r;
                     };
