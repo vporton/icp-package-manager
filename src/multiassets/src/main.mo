@@ -43,12 +43,29 @@ persistent actor MultiAssets {
                         break r;
                     };
                 };
-                case (null) {
+                case null {
                     break r;
                 };
             };
         };
         List.toArray(result);
+    };
+
+    public func clearByPrefix(prefix: Key): async () {
+        label r loop {
+            let iter = Map.entriesFrom(assets, Text.compare, prefix);
+            let v = iter.next();
+            switch (v) {
+                case (?(k, v)) {
+                    if (not Text.startsWith(k, #text prefix)) {
+                        break r;
+                    };
+                };
+                case null {
+                    break r;
+                };
+            };
+        };
     };
 }
 
