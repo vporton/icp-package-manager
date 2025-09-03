@@ -7,7 +7,6 @@ persistent actor MultiAssets {
 	type Key = Text;
 
 	type Asset = {
-		key: Key;
 		content_type: Text;
         max_age : ?Nat64;
         headers : ?[Asset.HeaderField];
@@ -22,8 +21,8 @@ persistent actor MultiAssets {
 
     let assets = Map.empty<Key, Asset>();
 
-    public func store(asset: Asset): async () {
-        ignore Map.insert<Key, Asset>(assets, Text.compare, asset.key, asset);
+    public func store(key: Key, asset: Asset): async () {
+        ignore Map.insert<Key, Asset>(assets, Text.compare, key, asset);
     };
 
     public func get(key: Key): async ?Asset {
