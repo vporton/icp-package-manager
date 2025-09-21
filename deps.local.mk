@@ -90,6 +90,14 @@ build@main_indirect: .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm 
 	dfx canister create --network $(NETWORK) main_indirect
 	dfx build --no-deps --network $(NETWORK) main_indirect
 
+.PHONY: build@multiassets
+.PRECIOUS: .dfx/$(NETWORK)/canisters/multiassets/multiassets.wasm .dfx/$(NETWORK)/canisters/multiassets/multiassets.did
+build@multiassets: .dfx/$(NETWORK)/canisters/multiassets/multiassets.wasm .dfx/$(NETWORK)/canisters/multiassets/multiassets.did
+
+.dfx/$(NETWORK)/canisters/multiassets/multiassets.wasm .dfx/$(NETWORK)/canisters/multiassets/multiassets.did: src/multiassets/src/main.mo
+	dfx canister create --network $(NETWORK) multiassets
+	dfx build --no-deps --network $(NETWORK) multiassets
+
 .PHONY: build@nns-cycles-minting
 .PRECIOUS: .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.wasm .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.did
 build@nns-cycles-minting: .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.wasm .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.did
@@ -307,6 +315,13 @@ generate@main_indirect: src/declarations/main_indirect/main_indirect.did.js src/
 src/declarations/main_indirect/main_indirect.did.js src/declarations/main_indirect/index.js src/declarations/main_indirect/main_indirect.did.d.ts src/declarations/main_indirect/index.d.ts src/declarations/main_indirect/main_indirect.did: .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.wasm .dfx/$(NETWORK)/canisters/main_indirect/main_indirect.did
 	dfx generate --no-compile --network $(NETWORK) main_indirect
 
+.PHONY: generate@multiassets
+.PRECIOUS: src/declarations/multiassets/multiassets.did.js src/declarations/multiassets/index.js src/declarations/multiassets/multiassets.did.d.ts src/declarations/multiassets/index.d.ts src/declarations/multiassets/multiassets.did
+generate@multiassets: src/declarations/multiassets/multiassets.did.js src/declarations/multiassets/index.js src/declarations/multiassets/multiassets.did.d.ts src/declarations/multiassets/index.d.ts src/declarations/multiassets/multiassets.did
+
+src/declarations/multiassets/multiassets.did.js src/declarations/multiassets/index.js src/declarations/multiassets/multiassets.did.d.ts src/declarations/multiassets/index.d.ts src/declarations/multiassets/multiassets.did: .dfx/$(NETWORK)/canisters/multiassets/multiassets.wasm .dfx/$(NETWORK)/canisters/multiassets/multiassets.did
+	dfx generate --no-compile --network $(NETWORK) multiassets
+
 .PHONY: generate@nns-cycles-minting
 .PRECIOUS: src/declarations/nns-cycles-minting/nns-cycles-minting.did.js src/declarations/nns-cycles-minting/index.js src/declarations/nns-cycles-minting/nns-cycles-minting.did.d.ts src/declarations/nns-cycles-minting/index.d.ts src/declarations/nns-cycles-minting/nns-cycles-minting.did
 generate@nns-cycles-minting: src/declarations/nns-cycles-minting/nns-cycles-minting.did.js src/declarations/nns-cycles-minting/index.js src/declarations/nns-cycles-minting/nns-cycles-minting.did.d.ts src/declarations/nns-cycles-minting/index.d.ts src/declarations/nns-cycles-minting/nns-cycles-minting.did
@@ -446,8 +461,6 @@ generate@wallet_frontend: src/declarations/wallet_frontend/wallet_frontend.did.j
 
 src/declarations/wallet_frontend/wallet_frontend.did.js src/declarations/wallet_frontend/index.js src/declarations/wallet_frontend/wallet_frontend.did.d.ts src/declarations/wallet_frontend/index.d.ts src/declarations/wallet_frontend/wallet_frontend.did: .dfx/$(NETWORK)/canisters/wallet_frontend/assetstorage.wasm.gz
 	dfx generate --no-compile --network $(NETWORK) wallet_frontend
-
-src/common.mo: src/lib/Account.mo
 
 src/common.mo: .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.wasm.gz .dfx/$(NETWORK)/canisters/cycles_ledger/cycles_ledger.did
 
@@ -689,6 +702,15 @@ deploy-self@main_indirect: .dfx/$(NETWORK)/canisters/main_indirect/main_indirect
 
 .PHONY: deploy@main_indirect
 deploy@main_indirect: deploy@bootstrapper deploy@nns-ledger deploy@nns-cycles-minting deploy-self@main_indirect
+
+.PHONY: deploy-self@multiassets
+deploy-self@multiassets: .dfx/$(NETWORK)/canisters/multiassets/multiassets.wasm .dfx/$(NETWORK)/canisters/multiassets/multiassets.did
+	dfx deploy --no-compile --network $(NETWORK) $(DEPLOY_FLAGS) $(DEPLOY_FLAGS.multiassets) multiassets
+
+
+
+.PHONY: deploy@multiassets
+deploy@multiassets: deploy-self@multiassets
 
 .PHONY: deploy-self@nns-cycles-minting
 deploy-self@nns-cycles-minting: .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.wasm .dfx/$(NETWORK)/canisters/nns-cycles-minting/nns-cycles-minting.did

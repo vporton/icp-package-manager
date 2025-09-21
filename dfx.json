@@ -347,6 +347,10 @@
       "type": "assets",
       "workspace": "wallet_frontend"
     },
+    "multiassets": {
+      "type": "motoko",
+      "main": "src/multiassets/src/main.mo"
+    },
     "upgrade_example_backend1_v1": {
       "args": "--enhanced-orthogonal-persistence",
       "main": "examples/upgrade_example_backend/0.0.1/main1.mo",

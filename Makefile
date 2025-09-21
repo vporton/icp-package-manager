@@ -33,6 +33,11 @@ deploy: deploy@bootstrapper_frontend deploy-self@package_manager_frontend deploy
 	generate@example_frontend generate@package_manager_frontend deploy-backend \
 	generate@wallet_backend deploy-self@wallet_frontend
 
+# FIXME@P1: `git rev-parse HEAD` must run after a commit.
+build-wallet_frontend:
+	cd src/wallet_frontend && npm run build
+	./scripts/fill-multiassets.sh $(NETWORK) "wallet/`git rev-parse HEAD`/" src/wallet_frontend/dist
+
 .PHONY: deploy-backend
 deploy-backend: prepare build@battery build@main_indirect build@package_manager build@simple_indirect deploy@repository deploy@bookmark generate@battery \
   deploy@internet_identity generate@swap-factory generate@repository init
